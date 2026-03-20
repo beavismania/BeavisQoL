@@ -2,9 +2,11 @@ local ADDON_NAME, BeavisAddon = ...
 
 local Content = BeavisAddon.Content
 
--- Laden der Meta Infos 
+-- Home ist eher Landingpage als Einstellungsseite und zeigt nur feste Infos plus schnelle Links.
 local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "Unbekannt"
 local name = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or "Unbekannt"
+local TWITCH_URL = "https://www.twitch.tv/beavismania"
+local WEBSITE_URL = "https://www.beavismania.de"
 
 local PageHome = CreateFrame("Frame", nil, Content)
 PageHome:SetAllPoints()
@@ -110,6 +112,7 @@ TwitchText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 TwitchText:SetTextColor(1, 1, 1, 1)
 TwitchText:SetText("Besuche meinen Kanal und begleite mich live auf twitch.tv/beavismania")
 
+-- Der Hover-Effekt bleibt dezent, damit sich die Karten wie klickbare Panels anfühlen.
 TwitchPanel:SetScript("OnEnter", function()
     TwitchBg:SetColorTexture(0.14, 0.14, 0.14, 0.96)
 end)
@@ -119,10 +122,11 @@ TwitchPanel:SetScript("OnLeave", function()
 end)
 
 TwitchPanel:SetScript("OnClick", function()
-    if LaunchURL then
-        LaunchURL("https://www.twitch.tv/beavismania")
+    -- Für Links nutzen wir denselben Copy-Dialog wie auf der Versionsseite.
+    if BeavisAddon.ShowLinkPopup then
+        BeavisAddon.ShowLinkPopup("Twitch-Kanal öffnen", TWITCH_URL)
     else
-        print("Twitch: https://www.twitch.tv/beavismania")
+        print("Twitch: " .. TWITCH_URL)
     end
 end)
 
@@ -183,10 +187,11 @@ DiscordPanel:SetScript("OnLeave", function()
 end)
 
 DiscordPanel:SetScript("OnClick", function()
-    if LaunchURL then
-        LaunchURL("https://www.beavismania.de")
+    -- Wie auf der Versionsseite: kein Browser-Call, sondern nur der Copy-Dialog.
+    if BeavisAddon.ShowLinkPopup then
+        BeavisAddon.ShowLinkPopup("Beavismania öffnen", WEBSITE_URL)
     else
-        print("Website: https://www.beavismania.de")
+        print("Website: " .. WEBSITE_URL)
     end
 end)
 

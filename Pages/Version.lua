@@ -2,6 +2,8 @@ local ADDON_NAME, BeavisAddon = ...
 
 local Content = BeavisAddon.Content
 
+-- Die Versionsseite zeigt nur TOC-Infos und Kontaktmöglichkeiten.
+-- Sie bleibt absichtlich statisch, damit man hier nichts verstellen kann.
 local PageVersion = CreateFrame("Frame", nil, Content)
 PageVersion:SetAllPoints()
 PageVersion:Hide()
@@ -14,8 +16,8 @@ local addonTitle = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or ADDON_NAME
 local addonVersion = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "Unbekannt"
 local addonAuthor = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Author") or "Unbekannt"
 
--- Interface lässt sich nicht zuverlässig direkt aus TOC-Metadata lesen,
--- daher eigene X-Felder verwenden
+-- Die Interface-Version liest Blizzard hier nicht immer sauber aus.
+-- Darum ziehen wir sie über eigene X-Felder aus der TOC.
 local addonGameVersion = C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-GameVersion") or "Nicht hinterlegt"
 local addonGameVersionLabel = C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-GameVersionLabel") or "Nicht hinterlegt"
 
@@ -25,6 +27,7 @@ local WEBSITE_URL = "https://www.beavismania.de"
 -- Popup für Link / Copy
 -- ========================================
 
+-- Addons dürfen keine Browser-Links öffnen. Deshalb zeigen wir die URL nur in einem Copy-Popup an.
 local WebsitePopup = CreateFrame("Frame", nil, PageVersion)
 WebsitePopup:SetSize(520, 170)
 WebsitePopup:SetPoint("CENTER", PageVersion, "CENTER", 0, 0)
@@ -95,12 +98,23 @@ WebsiteCloseButton:SetScript("OnClick", function()
     WebsitePopup:Hide()
 end)
 
+-- Kleiner Helfer, damit beide Buttons dasselbe Popup mit passendem Titel nutzen.
 local function ShowWebsitePopup(titleText)
     WebsitePopupTitle:SetText(titleText or "Beavismania öffnen")
     WebsiteEditBox:SetText(WEBSITE_URL)
     WebsitePopup:Show()
     WebsiteEditBox:SetFocus()
     WebsiteEditBox:HighlightText()
+end
+
+local ShowWebsitePopupFallback = ShowWebsitePopup
+ShowWebsitePopup = function(titleText)
+    -- Wenn die zentrale Popup-Hilfe da ist, nutzen wir dieselbe Logik wie auf Home.
+    if BeavisAddon.ShowLinkPopup then
+        BeavisAddon.ShowLinkPopup(titleText or "Beavismania öffnen", WEBSITE_URL)
+    else
+        ShowWebsitePopupFallback(titleText)
+    end
 end
 
 -- ========================================
@@ -141,12 +155,12 @@ IntroText:SetText("Hier findest du die wichtigsten Infos zur aktuellen Addon-Ver
 -- Info-Karten
 -- ========================================
 
+-- Drei Karten reichen hier für die wichtigsten Metadaten.
 local InfoRow = CreateFrame("Frame", nil, PageVersion)
 InfoRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 InfoRow:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
 InfoRow:SetHeight(90)
 
--- Karte 1: Addon-Version
 local VersionCard = CreateFrame("Frame", nil, InfoRow)
 VersionCard:SetPoint("TOPLEFT", InfoRow, "TOPLEFT", 0, 0)
 VersionCard:SetSize(220, 90)
@@ -167,7 +181,6 @@ VersionValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
 VersionValue:SetTextColor(1, 0.82, 0, 1)
 VersionValue:SetText(addonVersion)
 
--- Karte 2: Autor
 local AuthorCard = CreateFrame("Frame", nil, InfoRow)
 AuthorCard:SetPoint("LEFT", VersionCard, "RIGHT", 14, 0)
 AuthorCard:SetSize(220, 90)
@@ -188,7 +201,6 @@ AuthorValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
 AuthorValue:SetTextColor(1, 0.82, 0, 1)
 AuthorValue:SetText(addonAuthor)
 
--- Karte 3: Spielversion
 local InterfaceCard = CreateFrame("Frame", nil, InfoRow)
 InterfaceCard:SetPoint("LEFT", AuthorCard, "RIGHT", 14, 0)
 InterfaceCard:SetPoint("RIGHT", InfoRow, "RIGHT", 0, 0)
@@ -220,6 +232,7 @@ InterfaceSubValue:SetText("TOC Version: " .. tostring(addonGameVersion))
 -- Aktionsbereich
 -- ========================================
 
+-- Der Bereich bleibt bewusst schlicht. Hier soll man einfach schnell zu Feedback und Ideen kommen.
 local ActionPanel = CreateFrame("Frame", nil, PageVersion)
 ActionPanel:SetPoint("TOPLEFT", InfoRow, "BOTTOMLEFT", 0, -18)
 ActionPanel:SetPoint("TOPRIGHT", InfoRow, "BOTTOMRIGHT", 0, -18)

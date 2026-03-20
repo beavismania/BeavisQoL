@@ -2,6 +2,7 @@ local ADDON_NAME, BeavisAddon = ...
 
 local Content = BeavisAddon.Content
 
+-- Platzhalter, bis hier echte globale Einstellungen landen.
 local PageSettings = CreateFrame("Frame", nil, Content)
 PageSettings:SetAllPoints()
 PageSettings:Hide()

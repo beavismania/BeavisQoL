@@ -4,11 +4,13 @@ local Content = BeavisAddon.Content
 local MAX_LEVEL = 90
 local UPDATE_INTERVAL = 0.2
 
+-- Die Seite trennt zwischen gespeicherten Daten und der gerade laufenden Session.
+-- So können wir live anzeigen, ohne dauernd in die SavedVariables zu schreiben.
 local PageLevelTime = CreateFrame("Frame", nil, Content)
 PageLevelTime:SetAllPoints()
 PageLevelTime:Hide()
 
--- SICHERE INITIALISIERUNG DER DATENBANK
+-- Datenbank sauber anlegen
 if not BeavisAddonCharDB then BeavisAddonCharDB = {} end
 if not BeavisAddonCharDB.LevelTime then BeavisAddonCharDB.LevelTime = {} end
 local LevelDB = BeavisAddonCharDB.LevelTime
@@ -19,6 +21,7 @@ local currentSessionStartTime = nil
 -- Daten-Initialisierung
 -- ========================================
 
+-- Für jedes Level legen wir einen Eintrag an, damit später keine nil-Sonderfälle auftauchen.
 local function InitializeLevelTimeData()
     BeavisAddonCharDB = BeavisAddonCharDB or {}
     BeavisAddonCharDB.LevelTime = BeavisAddonCharDB.LevelTime or {}
@@ -38,6 +41,7 @@ InitializeLevelTimeData()
 -- Hilfsfunktionen
 -- ========================================
 
+-- Zeiten im UI möglichst kompakt darstellen.
 local function TimeToString(seconds)
     seconds = math.floor(seconds or 0)
 
@@ -69,6 +73,7 @@ local function IsAtMaxLevel()
     return GetCurrentCharLevel() >= MAX_LEVEL
 end
 
+-- Hier zählen wir nur die Zeit seit dem letzten Level-Up.
 local function GetCurrentSessionElapsed()
     if not currentSessionStartTime or not currentSessionLevel then
         return 0
@@ -81,6 +86,7 @@ local function GetCurrentSessionElapsed()
     return math.max(0, math.floor(GetTime() - currentSessionStartTime))
 end
 
+-- Startet die Messung für das aktuelle Level neu.
 local function StartSessionForCurrentLevel()
     local currentLevel = GetCurrentCharLevel()
 
@@ -99,6 +105,8 @@ local function StopSessionTracking()
     currentSessionStartTime = nil
 end
 
+-- Erst beim Speichern wandert die Session wirklich in die Datenbank.
+-- So vermeiden wir unnötige Schreiberei während des Spielens.
 local function SaveCurrentSessionToDatabase()
     if not currentSessionLevel or not currentSessionStartTime then
         return
@@ -115,6 +123,7 @@ local function SaveCurrentSessionToDatabase()
     end
 end
 
+-- Beim aktuellen Level rechnen wir die laufende Session auf den gespeicherten Wert drauf.
 local function GetDisplayedLevelTime(level)
     local time = LevelDB[level] or 0
 
@@ -135,6 +144,7 @@ local function GetTotalLevelingTime()
     return total
 end
 
+-- Der Balken zeigt nur den Fortschritt über die Levelnummern, nicht die aktuellen XP.
 local function GetProgressPercent()
     local currentLevel = GetCurrentCharLevel()
 
@@ -168,7 +178,7 @@ OverviewBorder:SetPoint("BOTTOMRIGHT", OverviewPanel, "BOTTOMRIGHT", 0, 0)
 OverviewBorder:SetHeight(1)
 OverviewBorder:SetColorTexture(1, 0.82, 0, 0.9)
 
--- Info-Button oben rechts
+-- Der kleine Info-Button erklärt den Tracker, ohne die Seite mit Text vollzupacken.
 local InfoButton = CreateFrame("Button", nil, OverviewPanel)
 InfoButton:SetSize(24, 24)
 InfoButton:SetPoint("TOPRIGHT", OverviewPanel, "TOPRIGHT", -8, -8)
@@ -188,8 +198,8 @@ InfoButton.Text = InfoText
 
 InfoButton:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:AddLine("Levelzeit-Tracker", 1, 1, 1, 1)
-    GameTooltip:AddLine("Der Levelzeit-Tracker zählt nur die tatsächlich gespielte Zeit, während das Addon aktiv ist.", 0.9, 0.9, 0.9, 1, true)
+    GameTooltip:AddLine("Levelzeit-Tracker", 1, 1, 1)
+    GameTooltip:AddLine("Der Levelzeit-Tracker zählt nur die tatsächlich gespielte Zeit, während das Addon aktiv ist.", 0.9, 0.9, 0.9, true)
     GameTooltip:Show()
     InfoCircle:SetColorTexture(0.15, 0.6, 1, 0.35)
 end)
@@ -328,6 +338,7 @@ LevelListScrollFrame:SetScrollChild(LevelListContent)
 
 local LevelRows = {}
 
+-- Die Zeilen bauen wir einmal und zeigen sie später nur noch an oder aus.
 for level = 1, MAX_LEVEL do
     local Row = CreateFrame("Frame", nil, LevelListContent)
     Row:SetHeight(24)
@@ -372,10 +383,12 @@ end
 -- Refresh
 -- ========================================
 
+-- Hier bauen wir die komplette Anzeige neu auf.
 local function RefreshLevelList()
     local currentLevel = GetCurrentCharLevel()
     local visibleLevels = {}
 
+    -- Nur Level mit erfasster Zeit werden angezeigt. Das hält die Liste kompakt.
     for level = 1, MAX_LEVEL do
         local displayTime = GetDisplayedLevelTime(level)
 
@@ -409,6 +422,7 @@ local function RefreshLevelList()
 
         row.TimeText:SetText(TimeToString(levelData.time))
 
+        -- Das aktuelle Level bekommt eine eigene Markierung, damit man es sofort sieht.
         if levelData.level == currentLevel and currentLevel < MAX_LEVEL then
             row.Background:SetColorTexture(0.18, 0.30, 0.18, 0.75)
             row.LevelNumText:SetTextColor(1, 0.82, 0, 1)
@@ -467,6 +481,7 @@ end
 -- Update-Timer
 -- ========================================
 
+-- Ein kleiner UI-Timer hält die Anzeige aktuell.
 local UpdateFrame = CreateFrame("Frame", nil, PageLevelTime)
 local elapsedSinceUpdate = 0
 
@@ -485,6 +500,7 @@ end)
 -- Events
 -- ========================================
 
+-- Start, Level-Up und Logout reichen für den ganzen Lebenszyklus des Trackers.
 local LevelWatcher = CreateFrame("Frame")
 LevelWatcher:RegisterEvent("PLAYER_LOGIN")
 LevelWatcher:RegisterEvent("PLAYER_LEVEL_UP")
@@ -503,6 +519,7 @@ LevelWatcher:SetScript("OnEvent", function(_, event, ...)
         C_Timer.After(0.2, RefreshLevelList)
 
     elseif event == "PLAYER_LEVEL_UP" then
+        -- Erst die alte Session sichern, dann direkt die neue für das frische Level starten.
         SaveCurrentSessionToDatabase()
 
         local newLevel = ...
@@ -521,7 +538,7 @@ LevelWatcher:SetScript("OnEvent", function(_, event, ...)
     end
 end)
 
--- Initial einmal laden
+-- Falls die Seite vor den Events sichtbar wird, haben wir hier noch einen direkten Startpfad.
 InitializeLevelTimeData()
 
 if IsAtMaxLevel() then
