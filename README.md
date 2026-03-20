@@ -31,7 +31,18 @@ Das Ziel ist nicht, alles auf einmal zu bauen, sondern nach und nach sinnvolle F
 
 ### Manuell über GitHub
 
-1. Projekt als ZIP herunterladen oder klonen.
+Wichtig:
+Wenn du das Addon als ZIP laden willst, nutze nach Moeglichkeit die Datei aus
+den GitHub Releases.
+
+Der normale GitHub-Quellcode-Download ueber `Code` -> `Download ZIP` erzeugt
+immer einen Ordnernamen wie `BeavisQoL-main`. Das ist ein GitHub-Standard und
+nicht die eigentliche Addon-Ordnerstruktur.
+
+Die Release-ZIP dieses Projekts entpackt dagegen direkt in einen Ordner
+`BeavisQoL`.
+
+1. Release-ZIP herunterladen oder das Repository klonen.
 2. Den Addon-Ordner nach  
    `World of Warcraft/_retail_/Interface/AddOns/`  
    kopieren.
