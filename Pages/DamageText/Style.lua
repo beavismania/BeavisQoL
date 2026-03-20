@@ -1,7 +1,7 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-BeavisAddon.DamageText = BeavisAddon.DamageText or {}
-local DamageText = BeavisAddon.DamageText
+BeavisQoL.DamageText = BeavisQoL.DamageText or {}
+local DamageText = BeavisQoL.DamageText
 
 local BUILTIN_FONTS = {
     { key = "blizzard", label = "Blizzard Standard" },
@@ -75,34 +75,34 @@ local function CaptureOriginals()
 end
 
 function DamageText.GetDamageTextDB()
-    BeavisAddonDB = BeavisAddonDB or {}
-    BeavisAddonDB.damageText = BeavisAddonDB.damageText or {}
+    BeavisQoLDB = BeavisQoLDB or {}
+    BeavisQoLDB.damageText = BeavisQoLDB.damageText or {}
 
-    if BeavisAddonDB.damageText.enabled == nil then
-        BeavisAddonDB.damageText.enabled = false
+    if BeavisQoLDB.damageText.enabled == nil then
+        BeavisQoLDB.damageText.enabled = false
     end
 
-    if type(BeavisAddonDB.damageText.fontKey) ~= "string" or BeavisAddonDB.damageText.fontKey == "" then
-        BeavisAddonDB.damageText.fontKey = "blizzard"
+    if type(BeavisQoLDB.damageText.fontKey) ~= "string" or BeavisQoLDB.damageText.fontKey == "" then
+        BeavisQoLDB.damageText.fontKey = "blizzard"
     end
 
-    if type(BeavisAddonDB.damageText.worldTextScale) ~= "number" then
-        BeavisAddonDB.damageText.worldTextScale = 1.0
+    if type(BeavisQoLDB.damageText.worldTextScale) ~= "number" then
+        BeavisQoLDB.damageText.worldTextScale = 1.0
     end
 
-    if type(BeavisAddonDB.damageText.worldTextGravity) ~= "number" then
-        BeavisAddonDB.damageText.worldTextGravity = 0.5
+    if type(BeavisQoLDB.damageText.worldTextGravity) ~= "number" then
+        BeavisQoLDB.damageText.worldTextGravity = 0.5
     end
 
-    if type(BeavisAddonDB.damageText.worldTextRampDuration) ~= "number" then
-        BeavisAddonDB.damageText.worldTextRampDuration = 1.0
+    if type(BeavisQoLDB.damageText.worldTextRampDuration) ~= "number" then
+        BeavisQoLDB.damageText.worldTextRampDuration = 1.0
     end
 
-    return BeavisAddonDB.damageText
+    return BeavisQoLDB.damageText
 end
 
 local function GetCustomFontOptions()
-    local customFonts = rawget(_G, "BeavisAddon_CustomFonts")
+    local customFonts = rawget(_G, "BeavisQoL_CustomFonts")
     if type(customFonts) ~= "table" then
         return {}
     end

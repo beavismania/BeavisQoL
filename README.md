@@ -35,13 +35,13 @@ Das Ziel ist nicht, alles auf einmal zu bauen, sondern nach und nach sinnvolle F
 2. Den Addon-Ordner nach  
    `World of Warcraft/_retail_/Interface/AddOns/`  
    kopieren.
-3. Darauf achten, dass der Ordner am Ende **`BeavisAddon`** heißt.
+3. Darauf achten, dass der Ordner am Ende **`BeavisQoL`** heißt.
 4. World of Warcraft starten oder die UI neu laden.
 
 Beispielpfad unter Windows:
 
 ```text
-World of Warcraft\_retail_\Interface\AddOns\BeavisAddon
+World of Warcraft\_retail_\Interface\AddOns\BeavisQoL
 ```
 
 ## Nutzung

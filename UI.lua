@@ -1,7 +1,7 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
 -- Das Hauptfenster bauen wir hier einmal zentral auf. Alle anderen Dateien hängen sich später daran.
-local BeavisFrame = CreateFrame("Frame", "BeavisMainFrame", UIParent, "BasicFrameTemplateWithInset")
+local BeavisFrame = CreateFrame("Frame", "BeavisQoLMainFrame", UIParent, "BasicFrameTemplateWithInset")
 BeavisFrame:SetSize(UIParent:GetWidth() * 0.7, UIParent:GetHeight() * 0.7)
 BeavisFrame:RegisterForDrag("LeftButton")
 BeavisFrame:SetScript("OnDragStart", BeavisFrame.StartMoving)
@@ -13,21 +13,21 @@ BeavisFrame:SetToplevel(true)
 BeavisFrame:SetFrameStrata("HIGH")
 BeavisFrame:Hide()
 
-BeavisAddon.Frame = BeavisFrame
+BeavisQoL.Frame = BeavisFrame
 
 if UISpecialFrames then
     local alreadyRegistered = false
 
     -- Nur Frames in UISpecialFrames reagieren auf ESC. Darum tragen wir uns hier einmal ein.
     for _, frameName in ipairs(UISpecialFrames) do
-        if frameName == "BeavisMainFrame" then
+        if frameName == "BeavisQoLMainFrame" then
             alreadyRegistered = true
             break
         end
     end
 
     if not alreadyRegistered then
-        table.insert(UISpecialFrames, "BeavisMainFrame")
+        table.insert(UISpecialFrames, "BeavisQoLMainFrame")
     end
 end
 
@@ -57,8 +57,8 @@ end)
 local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "Unbekannt"
 local name = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or "Unbekannt"
 
-BeavisAddon.Version = version
-BeavisAddon.Title = name
+BeavisQoL.Version = version
+BeavisQoL.Title = name
 
 -- Header, Sidebar und Seitenbereich hängen direkt am Hauptfenster.
 -- Header
@@ -67,7 +67,7 @@ Header:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 8, -28)
 Header:SetPoint("TOPRIGHT", BeavisFrame, "TOPRIGHT", -8, -28)
 Header:SetHeight(72)
 
-BeavisAddon.Header = Header
+BeavisQoL.Header = Header
 
 -- Eine schlichte Linie trennt den Header vom Rest des Fensters.
 local HeaderBorder = Header:CreateTexture(nil, "ARTWORK")
@@ -80,7 +80,7 @@ HeaderBorder:SetColorTexture(1, 0.82, 0, 0.9)
 local Logo = Header:CreateTexture(nil, "ARTWORK")
 Logo:SetSize(64, 64)
 Logo:SetPoint("LEFT", Header, "LEFT", 12, 0)
-Logo:SetTexture("Interface\\AddOns\\BeavisAddon\\Media\\logo.tga")
+Logo:SetTexture("Interface\\AddOns\\BeavisQoL\\Media\\logo.tga")
 
 local Title = Header:CreateFontString(nil, "OVERLAY")
 Title:SetPoint("LEFT", Logo, "RIGHT", 12, 0)
@@ -95,7 +95,7 @@ Sidebar:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 8, -110)
 Sidebar:SetPoint("BOTTOMLEFT", BeavisFrame, "BOTTOMLEFT", 8, 8)
 Sidebar:SetWidth(180)
 
-BeavisAddon.Sidebar = Sidebar
+BeavisQoL.Sidebar = Sidebar
 
 -- Die Sidebar bekommt nur einen leichten Hintergrund und eine rechte Trennlinie.
 local SidebarBg = Sidebar:CreateTexture(nil, "BACKGROUND")
@@ -113,7 +113,7 @@ local Content = CreateFrame("Frame", nil, BeavisFrame)
 Content:SetPoint("TOPLEFT", Sidebar, "TOPRIGHT", 8, 0)
 Content:SetPoint("BOTTOMRIGHT", BeavisFrame, "BOTTOMRIGHT", -8, 8)
 
-BeavisAddon.Content = Content
+BeavisQoL.Content = Content
 
 local ContentBg = Content:CreateTexture(nil, "BACKGROUND")
 ContentBg:SetAllPoints()
@@ -190,7 +190,7 @@ LinkCloseButton:SetPoint("BOTTOMRIGHT", LinkPopup, "BOTTOMRIGHT", -16, 12)
 LinkCloseButton:SetText("Schließen")
 LinkCloseButton:SetScript("OnClick", HideLinkPopup)
 
-function BeavisAddon.ShowLinkPopup(titleText, urlText)
+function BeavisQoL.ShowLinkPopup(titleText, urlText)
     if not urlText or urlText == "" then
         return
     end

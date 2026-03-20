@@ -1,34 +1,34 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-BeavisAddon.Misc = BeavisAddon.Misc or {}
-local Misc = BeavisAddon.Misc
+BeavisQoL.Misc = BeavisQoL.Misc or {}
+local Misc = BeavisQoL.Misc
 
 -- Gemeinsame Misc-DB mit allen Defaults an einer Stelle pro Modul.
 function Misc.GetMiscDB()
-    BeavisAddonDB = BeavisAddonDB or {}
-    BeavisAddonDB.misc = BeavisAddonDB.misc or {}
+    BeavisQoLDB = BeavisQoLDB or {}
+    BeavisQoLDB.misc = BeavisQoLDB.misc or {}
 
-    if BeavisAddonDB.misc.autoSellJunk == nil then
-        BeavisAddonDB.misc.autoSellJunk = false
+    if BeavisQoLDB.misc.autoSellJunk == nil then
+        BeavisQoLDB.misc.autoSellJunk = false
     end
 
-    if BeavisAddonDB.misc.autoRepair == nil then
-        BeavisAddonDB.misc.autoRepair = false
+    if BeavisQoLDB.misc.autoRepair == nil then
+        BeavisQoLDB.misc.autoRepair = false
     end
 
-    if BeavisAddonDB.misc.autoRepairGuild == nil then
-        BeavisAddonDB.misc.autoRepairGuild = false
+    if BeavisQoLDB.misc.autoRepairGuild == nil then
+        BeavisQoLDB.misc.autoRepairGuild = false
     end
 
-    if BeavisAddonDB.misc.easyDelete == nil then
-        BeavisAddonDB.misc.easyDelete = false
+    if BeavisQoLDB.misc.easyDelete == nil then
+        BeavisQoLDB.misc.easyDelete = false
     end
 
-    if BeavisAddonDB.misc.fastLoot == nil then
-        BeavisAddonDB.misc.fastLoot = false
+    if BeavisQoLDB.misc.fastLoot == nil then
+        BeavisQoLDB.misc.fastLoot = false
     end
 
-    return BeavisAddonDB.misc
+    return BeavisQoLDB.misc
 end
 
 function Misc.IsFastLootEnabled()

@@ -1,8 +1,8 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
-BeavisAddon.LFG = BeavisAddon.LFG or {}
-local LFG = BeavisAddon.LFG
+local Content = BeavisQoL.Content
+BeavisQoL.LFG = BeavisQoL.LFG or {}
+local LFG = BeavisQoL.LFG
 
 -- Die LFG-Seite sammelt nur Komfortfunktionen für den Blizzard-Group-Finder.
 local PageLFG = CreateFrame("Frame", nil, Content)
@@ -111,4 +111,4 @@ end)
 
 PageLFG:RefreshState()
 
-BeavisAddon.Pages.LFG = PageLFG
+BeavisQoL.Pages.LFG = PageLFG

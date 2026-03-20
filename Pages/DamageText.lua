@@ -1,8 +1,8 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
-BeavisAddon.DamageText = BeavisAddon.DamageText or {}
-local DamageText = BeavisAddon.DamageText
+local Content = BeavisQoL.Content
+BeavisQoL.DamageText = BeavisQoL.DamageText or {}
+local DamageText = BeavisQoL.DamageText
 
 -- Die Seite kann mit Hinweisen und Reglern schnell länger werden.
 -- Darum hängt sie wie Misc an einem eigenen ScrollFrame.
@@ -33,7 +33,7 @@ end
 local function CreateValueSlider(parent, labelText, minValue, maxValue, step)
     sliderCounter = sliderCounter + 1
 
-    local sliderName = "BeavisAddonDamageTextSlider" .. sliderCounter
+    local sliderName = "BeavisQoLDamageTextSlider" .. sliderCounter
     local slider = CreateFrame("Slider", sliderName, parent, "OptionsSliderTemplate")
     slider:SetOrientation("HORIZONTAL")
     slider:SetMinMaxValues(minValue, maxValue)
@@ -253,7 +253,7 @@ FontPickerPreviewText:SetTextColor(1, 1, 1, 1)
 FontPickerPreviewText:SetShadowOffset(1, -1)
 FontPickerPreviewText:SetShadowColor(0, 0, 0, 1)
 
-local FontPickerPopup = CreateFrame("Frame", nil, BeavisAddon.Frame or UIParent, BackdropTemplateMixin and "BackdropTemplate")
+local FontPickerPopup = CreateFrame("Frame", nil, BeavisQoL.Frame or UIParent, BackdropTemplateMixin and "BackdropTemplate")
 FontPickerPopup:SetSize(320, 260)
 FontPickerPopup:SetFrameStrata("DIALOG")
 FontPickerPopup:SetClampedToScreen(true)
@@ -635,4 +635,4 @@ end)
 PageDamageText:UpdateScrollLayout()
 PageDamageText:RefreshState()
 
-BeavisAddon.Pages.DamageText = PageDamageText
+BeavisQoL.Pages.DamageText = PageDamageText

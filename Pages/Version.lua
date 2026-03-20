@@ -1,6 +1,6 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
+local Content = BeavisQoL.Content
 
 -- Die Versionsseite zeigt nur TOC-Infos und Kontaktmöglichkeiten.
 -- Sie bleibt absichtlich statisch, damit man hier nichts verstellen kann.
@@ -110,8 +110,8 @@ end
 local ShowWebsitePopupFallback = ShowWebsitePopup
 ShowWebsitePopup = function(titleText)
     -- Wenn die zentrale Popup-Hilfe da ist, nutzen wir dieselbe Logik wie auf Home.
-    if BeavisAddon.ShowLinkPopup then
-        BeavisAddon.ShowLinkPopup(titleText or "Beavismania öffnen", WEBSITE_URL)
+    if BeavisQoL.ShowLinkPopup then
+        BeavisQoL.ShowLinkPopup(titleText or "Beavismania öffnen", WEBSITE_URL)
     else
         ShowWebsitePopupFallback(titleText)
     end
@@ -285,4 +285,4 @@ WebsiteHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 WebsiteHint:SetTextColor(0.85, 0.85, 0.85, 1)
 WebsiteHint:SetText("www.beavismania.de")
 
-BeavisAddon.Pages.Version = PageVersion
+BeavisQoL.Pages.Version = PageVersion

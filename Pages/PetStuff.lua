@@ -1,8 +1,8 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
-BeavisAddon.PetStuff = BeavisAddon.PetStuff or {}
-local PetStuff = BeavisAddon.PetStuff
+local Content = BeavisQoL.Content
+BeavisQoL.PetStuff = BeavisQoL.PetStuff or {}
+local PetStuff = BeavisQoL.PetStuff
 
 -- Eine kleine Seite mit genau einem Thema und einem Schalter.
 local PagePetStuff = CreateFrame("Frame", nil, Content)
@@ -119,4 +119,4 @@ end)
 
 PagePetStuff:RefreshState()
 
-BeavisAddon.Pages.PetStuff = PagePetStuff
+BeavisQoL.Pages.PetStuff = PagePetStuff

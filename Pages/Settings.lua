@@ -1,6 +1,6 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
+local Content = BeavisQoL.Content
 
 -- Platzhalter, bis hier echte globale Einstellungen landen.
 local PageSettings = CreateFrame("Frame", nil, Content)
@@ -13,4 +13,4 @@ PageSettingsText:SetFont("Fonts\\FRIZQT__.TTF", 20, "")
 PageSettingsText:SetTextColor(1, 0.82, 0, 1)
 PageSettingsText:SetText("Das sind die Einstellungen")
 
-BeavisAddon.Pages.Settings = PageSettings
+BeavisQoL.Pages.Settings = PageSettings

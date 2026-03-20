@@ -5,8 +5,8 @@
 ## Interface: 120001 
 ##X-GameVersion: 120001
 ## X-GameVersionLabel: Patch 12.0.1
-## SavedVariables: BeavisAddonDB
-## SavedVariablesPerCharacter: BeavisAddonCharDB
+## SavedVariables: BeavisQoLDB
+## SavedVariablesPerCharacter: BeavisQoLCharDB
 ## X-ReleaseDate: 2026-03-20
 
 # =========================
@@ -47,4 +47,4 @@ Pages\PetStuff.lua
 Pages\LFG.lua
 Pages\DamageText.lua
 Tree.lua
-MiniMapButton.lua
+MinimapButton.lua

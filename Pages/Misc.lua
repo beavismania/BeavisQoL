@@ -1,8 +1,8 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
-BeavisAddon.Misc = BeavisAddon.Misc or {}
-local Misc = BeavisAddon.Misc
+local Content = BeavisQoL.Content
+BeavisQoL.Misc = BeavisQoL.Misc or {}
+local Misc = BeavisQoL.Misc
 
 -- Die Misc-Seite ist lang genug für einen eigenen ScrollFrame.
 -- So können neue QoL-Module dazukommen, ohne dass unten etwas abgeschnitten wirkt.
@@ -385,4 +385,4 @@ end)
 PageMisc:UpdateScrollLayout()
 PageMisc:RefreshState()
 
-BeavisAddon.Pages.Misc = PageMisc
+BeavisQoL.Pages.Misc = PageMisc

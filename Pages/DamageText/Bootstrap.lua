@@ -6,7 +6,7 @@ local ADDON_NAME = ...
 -- ADDON_LOADED und setzt den Font dann so früh wie möglich.
 
 local function GetConfiguredFontKey()
-    local db = rawget(_G, "BeavisAddonDB")
+    local db = rawget(_G, "BeavisQoLDB")
     if type(db) ~= "table" or type(db.damageText) ~= "table" then
         return nil
     end
@@ -35,7 +35,7 @@ local function GetBuiltinFontPath(fontKey)
 end
 
 local function GetCustomFontPath(fontKey)
-    local customFonts = rawget(_G, "BeavisAddon_CustomFonts")
+    local customFonts = rawget(_G, "BeavisQoL_CustomFonts")
     if type(customFonts) ~= "table" then
         return nil
     end
