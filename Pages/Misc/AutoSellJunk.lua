@@ -63,7 +63,7 @@ function Misc.SellAllJunk()
 
             -- quality == 0 entspricht grauen Items.
             if itemInfo and itemInfo.hyperlink and itemInfo.quality == 0 then
-                -- GetItemInfo/GetItemDetails liefert sehr viele Werte zurueck.
+                -- GetItemInfo/GetItemDetails liefert sehr viele Werte zurück.
                 -- Mit select(11, ...) greifen wir gezielt den Vendor-Preis ab.
                 local sellPrice = select(11, GetItemDetails(itemInfo.hyperlink)) or 0
 

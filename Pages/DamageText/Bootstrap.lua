@@ -58,8 +58,8 @@ local function ResolveConfiguredFontPath()
         return nil
     end
 
-    -- Erst eingebaute Fonts pruefen, danach die Custom-Font-Liste.
-    -- So bleibt "blizzard" ohne Zusatzdateien gueltig, waehrend eigene Fonts
+    -- Erst eingebaute Fonts prüfen, danach die Custom-Font-Liste.
+    -- So bleibt "blizzard" ohne Zusatzdateien gültig, während eigene Fonts
     -- denselben Auswahlweg nutzen.
     return GetBuiltinFontPath(fontKey) or GetCustomFontPath(fontKey)
 end
@@ -73,8 +73,8 @@ local function ApplyBootstrapFont()
 
     _G.BeavisDamageTextOriginalFont = _G.BeavisDamageTextOriginalFont or DAMAGE_TEXT_FONT or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
     _G.BeavisDamageTextBootstrapFont = fontPath
-    -- DAMAGE_TEXT_FONT wird hier schon im Bootstrap gesetzt, damit der fruehe
-    -- Combat Text moeglichst gar nicht erst mit der alten Schrift sichtbar wird.
+    -- DAMAGE_TEXT_FONT wird hier schon im Bootstrap gesetzt, damit der frühe
+    -- Combat Text möglichst gar nicht erst mit der alten Schrift sichtbar wird.
     DAMAGE_TEXT_FONT = fontPath
 end
 

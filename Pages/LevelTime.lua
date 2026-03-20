@@ -4,7 +4,7 @@ local Content = BeavisQoL.Content
 local MAX_LEVEL = 90
 local UPDATE_INTERVAL = 0.2
 -- MAX_LEVEL und UPDATE_INTERVAL sind die beiden zentralen Stellschrauben:
--- MAX_LEVEL bestimmt die Groesse des Datenmodells
+-- MAX_LEVEL bestimmt die Größe des Datenmodells
 -- UPDATE_INTERVAL betrifft nur die UI-Aktualisierung, nicht das Speichern.
 
 -- Die Seite trennt zwischen gespeicherten Daten und der gerade laufenden Session.
@@ -391,7 +391,7 @@ local function RefreshLevelList()
     local currentLevel = GetCurrentCharLevel()
     local visibleLevels = {}
     -- Die Liste zeigt absichtlich nur Level mit bereits gemessener Zeit.
-    -- Das bleibt fuer neue Charaktere deutlich lesbarer als 90 Null-Zeilen.
+    -- Das bleibt für neue Charaktere deutlich lesbarer als 90 Null-Zeilen.
 
     -- Nur Level mit erfasster Zeit werden angezeigt. Das hält die Liste kompakt.
     for level = 1, MAX_LEVEL do

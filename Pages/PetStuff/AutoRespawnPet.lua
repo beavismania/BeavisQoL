@@ -3,9 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.PetStuff = BeavisQoL.PetStuff or {}
 local PetStuff = BeavisQoL.PetStuff
 
--- Dieses Modul merkt sich den zuletzt aktiven Begleiter und versucht spaeter,
--- ihn nach Login, Ladebildschirm oder Mount-Dismiss wieder zu beschwoeren.
--- Die Variablen unten leben bewusst nur waehrend der aktuellen Session.
+-- Dieses Modul merkt sich den zuletzt aktiven Begleiter und versucht später,
+-- ihn nach Login, Ladebildschirm oder Mount-Dismiss wieder zu beschwören.
+-- Die Variablen unten leben bewusst nur während der aktuellen Session.
 local lastKnownActivePetGUID = nil
 local respawnQueued = false
 local respawnWanted = false
@@ -66,7 +66,7 @@ local function HasSavedPet(petGUID)
     return true
 end
 
--- Wir bevorzugen die frischere Laufzeit-Kopie und fallen nur auf die DB zurueck,
+-- Wir bevorzugen die frischere Laufzeit-Kopie und fallen nur auf die DB zurück,
 -- wenn in dieser Session noch kein aktives Pet gesehen wurde.
 local function GetDesiredPetGUID()
     return lastKnownActivePetGUID or GetSavedPetGUID()
@@ -98,7 +98,7 @@ local function CanSummonPetNow()
     return C_PetJournal and C_PetJournal.SummonPetByGUID
 end
 
--- Manche Events feuern minimal zu frueh, waehrend Blizzard den Pet-Zustand
+-- Manche Events feuern minimal zu früh, während Blizzard den Pet-Zustand
 -- intern noch nachzieht. Ein kurzer Timer macht das Verhalten robuster.
 local function QueueEnsurePet(delay)
     if respawnQueued then
@@ -118,7 +118,7 @@ function PetStuff.EnsureLastPetActive()
     local currentPetGUID = GetSummonedPetGUID()
     if currentPetGUID and currentPetGUID ~= "" then
         -- Wenn bereits ein Begleiter aktiv ist, merken wir ihn uns nur als
-        -- neues Ziel und muessen keinen weiteren Beschwoerungsversuch starten.
+        -- neues Ziel und müssen keinen weiteren Beschwörungsversuch starten.
         SaveLastPetGUID(currentPetGUID)
         respawnWanted = false
         return
@@ -126,8 +126,8 @@ function PetStuff.EnsureLastPetActive()
 
     local petGUID = GetDesiredPetGUID()
     if not HasSavedPet(petGUID) then
-        -- Ungueltige GUIDs werden bewusst aus RAM und DB entfernt, damit wir
-        -- nicht bei jedem spaeteren Event wieder ins Leere beschwoeren.
+        -- Ungültige GUIDs werden bewusst aus RAM und DB entfernt, damit wir
+        -- nicht bei jedem späteren Event wieder ins Leere beschwören.
         lastKnownActivePetGUID = nil
         PetStuff.GetPetStuffDB().lastPetGUID = nil
         respawnWanted = false
@@ -135,8 +135,8 @@ function PetStuff.EnsureLastPetActive()
     end
 
     -- Ab hier wissen wir:
-    -- Es gibt kein aktives Pet, aber ein gueltiges Wunsch-Pet fuer den
-    -- naechsten erlaubten Beschwoerungsversuch.
+    -- Es gibt kein aktives Pet, aber ein gültiges Wunsch-Pet für den
+    -- nächsten erlaubten Beschwörungsversuch.
     respawnWanted = true
 
     if not CanSummonPetNow() then
@@ -161,7 +161,7 @@ function PetStuff.SetAutoRespawnPetEnabled(value)
     PetStuff.GetPetStuffDB().autoRespawnPet = value and true or false
 
     if value then
-        -- Beim Aktivieren uebernehmen wir sofort den letzten bekannten Kandidaten
+        -- Beim Aktivieren übernehmen wir sofort den letzten bekannten Kandidaten
         -- und stossen einen schnellen ersten Sync an.
         lastKnownActivePetGUID = lastKnownActivePetGUID or GetSavedPetGUID()
         respawnWanted = GetDesiredPetGUID() ~= nil
@@ -227,7 +227,7 @@ PetWatcher:SetScript("OnEvent", function(_, event, ...)
 
     if event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
         -- Auf dem Mount darf kein Begleiter draussen sein. Darum merken wir uns
-        -- waehrenddessen nur den Wunsch und versuchen es erst danach erneut.
+        -- währenddessen nur den Wunsch und versuchen es erst danach erneut.
         if IsMounted and IsMounted() then
             respawnWanted = GetDesiredPetGUID() ~= nil
         else

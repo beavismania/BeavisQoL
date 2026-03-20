@@ -12,7 +12,7 @@ end
 local addonTitle = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or ADDON_NAME
 
 -- Position und Sichtbarkeit sollen zwischen Sessions erhalten bleiben.
--- Genau diese Struktur erwartet LibDBIcon spaeter fuer sein internes Speichern.
+-- Genau diese Struktur erwartet LibDBIcon später für sein internes Speichern.
 BeavisQoLDB = BeavisQoLDB or {}
 BeavisQoLDB.minimap = BeavisQoLDB.minimap or {
     hide = false,
@@ -39,7 +39,7 @@ local launcher = LDB:NewDataObject(ADDON_NAME, {
 
     OnClick = function(_, button)
         -- Shift wird hier bewusst als globaler Schnellbefehl priorisiert.
-        -- So funktioniert das Reloaden unabhaengig von der Maustaste immer gleich.
+        -- So funktioniert das Reloaden unabhängig von der Maustaste immer gleich.
         -- Shift hat Vorrang, damit der schnelle Reload immer klappt.
         if IsShiftKeyDown() then
             ReloadUI()
