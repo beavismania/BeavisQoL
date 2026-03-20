@@ -1,21 +1,23 @@
 local ADDON_NAME, BeavisAddon = ...
 
--- Eingebettete Libraries holen
+-- Die beiden LDB-Bibliotheken sind die Grundlage für den Minimap-Button.
 local LDB = LibStub("LibDataBroker-1.1", true)
 local LDBIcon = LibStub("LibDBIcon-1.0", true)
 
--- Falls eine Library doch nicht geladen wurde, Datei sauber abbrechen
+-- Ohne beide Libraries gibt es hier nichts zu tun.
 if not LDB or not LDBIcon then
     return
 end
 
--- SavedVariables vorbereiten
+local addonTitle = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or ADDON_NAME
+
+-- Position und Sichtbarkeit sollen zwischen Sessions erhalten bleiben.
 BeavisAddonDB = BeavisAddonDB or {}
 BeavisAddonDB.minimap = BeavisAddonDB.minimap or {
     hide = false,
 }
 
--- Hilfsfunktion: Hauptfenster umschalten
+-- Slash-Command und Minimap-Button sollen sich gleich verhalten.
 local function ToggleMainWindow()
     if not BeavisAddon.Frame then
         return
@@ -28,17 +30,18 @@ local function ToggleMainWindow()
     end
 end
 
--- LibDataBroker-Objekt anlegen
+-- Linksklick öffnet das Fenster, Shift-Klick lädt die UI neu.
 local launcher = LDB:NewDataObject(ADDON_NAME, {
     type = "launcher",
-    text = "Beavis Mega Addon",
+    text = addonTitle,
     icon = "Interface\\AddOns\\BeavisAddon\\Media\\logo.tga",
 
     OnClick = function(_, button)
-        if button == "LeftButton" then
+        -- Shift hat Vorrang, damit der schnelle Reload immer klappt.
+        if IsShiftKeyDown() then
+            ReloadUI()
+        elseif button == "LeftButton" then
             ToggleMainWindow()
-        elseif button == "RightButton" then
-            print("BeavisAddon: Rechtsklick erkannt")
         end
     end,
 
@@ -47,17 +50,18 @@ local launcher = LDB:NewDataObject(ADDON_NAME, {
             return
         end
 
-        tooltip:AddLine("Beavis Mega Addon", 1, 0.82, 0)
+        -- Der Tooltip zeigt nur die drei Aktionen, die der Button wirklich kann.
+        tooltip:AddLine(addonTitle, 1, 0.82, 0)
         tooltip:AddLine(" ")
         tooltip:AddLine("Linksklick: Fenster öffnen / schließen", 1, 1, 1)
-        tooltip:AddLine("Rechtsklick: Platzhalter", 0.8, 0.8, 0.8)
+        tooltip:AddLine("Shift-Klick: UI neu laden", 1, 1, 1)
         tooltip:AddLine("Drag: Position ändern", 1, 1, 1)
     end,
 })
 
--- Minimap-Button registrieren
+-- LibDBIcon kümmert sich um Position, Anzeigen und Verstecken.
 LDBIcon:Register(ADDON_NAME, launcher, BeavisAddonDB.minimap)
 
--- Referenz im Addon speichern
+-- Die Referenzen behalten wir, falls später noch Einstellungen dazukommen.
 BeavisAddon.MinimapLauncher = launcher
 BeavisAddon.MinimapIcon = LDBIcon

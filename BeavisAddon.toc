@@ -1,23 +1,50 @@
 ## Title: Beavis Quality of Life
 ## Notes: Beavis QoL
 ## Author: Beavis
-## Version: 0.0.1 Alpha
+## Version: 0.0.2 Alpha
 ## Interface: 120001 
 ##X-GameVersion: 120001
 ## X-GameVersionLabel: Patch 12.0.1
 ## SavedVariables: BeavisAddonDB
 ## SavedVariablesPerCharacter: BeavisAddonCharDB
+## X-ReleaseDate: 2026-03-20
+
+# =========================
+# Changelog
+# =========================
+# 2026-03-20 - 0.0.2 Alpha
+# - Erste spielbare Alpha-Version
+# - Hauptfenster mit Sidebar, Home- und Versionsseite
+# - Levelzeit-Tracker mit gespeicherten Charakterdaten
+# - Misc-Module: Auto Sell Junk, Auto Repair, Easy Delete, Fast Loot
+# - Pet Stuff: Auto Respawn Pet
+# - LFG: Länderflaggen in der Premade-Gruppensuche
+# - Combat Text mit Font-Auswahl und Stil-Reglern
+# - Minimap-Button und Slash-Command /beavis
 
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 
+Media\Fonts\CustomFonts.lua
+Pages\DamageText\Bootstrap.lua
 Core.lua
+Pages\DamageText\Style.lua
 UI.lua
+Pages\Misc\AutoSellJunk.lua
+Pages\Misc\AutoRepair.lua
+Pages\Misc\EasyDelete.lua
+Pages\Misc\FastLoot.lua
+Pages\PetStuff\AutoRespawnPet.lua
+Pages\LFG\Flags.lua
 Pages\Home.lua
 Pages\Version.lua
 Pages\Settings.lua
 Pages\LevelTime.lua
+Pages\Misc.lua
+Pages\PetStuff.lua
+Pages\LFG.lua
+Pages\DamageText.lua
 Tree.lua
 MiniMapButton.lua

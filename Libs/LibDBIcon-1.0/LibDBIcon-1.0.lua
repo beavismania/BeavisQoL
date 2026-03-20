@@ -18,6 +18,7 @@ lib.callbackRegistered = lib.callbackRegistered or nil
 lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
 lib.radius = lib.radius or 5
 local next, Minimap, CreateFrame, AddonCompartmentFrame = next, Minimap, CreateFrame, AddonCompartmentFrame
+local GetMinimapShape = rawget(_G, "GetMinimapShape")
 lib.tooltip = lib.tooltip or CreateFrame("GameTooltip", "LibDBIconTooltip", UIParent, "GameTooltipTemplate")
 local isDraggingButton = false
 

@@ -3,10 +3,11 @@ local ADDON_NAME, BeavisAddon = ...
 local Sidebar = BeavisAddon.Sidebar
 local Pages = BeavisAddon.Pages
 
+-- Die Gruppen starten eingeklappt, damit die Sidebar auch mit mehr Modulen ruhig bleibt.
 local GeneralExpanded = false
 local ModuleExpanded = false
 
--- Hilfsfunktion: Seite anzeigen
+-- Die Seiten liegen einfach übereinander. Darum reicht es, immer nur eine einzublenden.
 local function ShowPage(pageToShow)
     if not pageToShow then
         return
@@ -38,7 +39,6 @@ TreeGeneralText:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
 TreeGeneralText:SetTextColor(1, 0.82, 0, 1)
 TreeGeneralText:SetText("Allgemein")
 
--- Eintrag: Home
 local TreeHomeButton = CreateFrame("Button", nil, Sidebar)
 TreeHomeButton:SetSize(140, 20)
 
@@ -49,7 +49,6 @@ TreeHomeText:SetJustifyH("LEFT")
 TreeHomeText:SetTextColor(1, 1, 1, 1)
 TreeHomeText:SetText("Home")
 
--- Eintrag: Version
 local TreeVersionButton = CreateFrame("Button", nil, Sidebar)
 TreeVersionButton:SetSize(140, 20)
 
@@ -60,7 +59,6 @@ TreeVersionText:SetJustifyH("LEFT")
 TreeVersionText:SetTextColor(1, 1, 1, 1)
 TreeVersionText:SetText("Version")
 
--- Eintrag: Einstellungen
 local TreeSettingsButton = CreateFrame("Button", nil, Sidebar)
 TreeSettingsButton:SetSize(140, 20)
 
@@ -90,7 +88,6 @@ TreeModuleText:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
 TreeModuleText:SetTextColor(1, 0.82, 0, 1)
 TreeModuleText:SetText("Module")
 
--- Eintrag: Levelzeit
 local TreeLevelTimeButton = CreateFrame("Button", nil, Sidebar)
 TreeLevelTimeButton:SetSize(140, 20)
 
@@ -101,15 +98,60 @@ TreeLevelTimeText:SetJustifyH("LEFT")
 TreeLevelTimeText:SetTextColor(1, 1, 1, 1)
 TreeLevelTimeText:SetText("Levelzeit")
 
+local TreeMiscButton = CreateFrame("Button", nil, Sidebar)
+TreeMiscButton:SetSize(140, 20)
+
+local TreeMiscText = TreeMiscButton:CreateFontString(nil, "OVERLAY")
+TreeMiscText:SetAllPoints()
+TreeMiscText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+TreeMiscText:SetJustifyH("LEFT")
+TreeMiscText:SetTextColor(1, 1, 1, 1)
+TreeMiscText:SetText("Misc")
+
+local TreePetStuffButton = CreateFrame("Button", nil, Sidebar)
+TreePetStuffButton:SetSize(140, 20)
+
+local TreePetStuffText = TreePetStuffButton:CreateFontString(nil, "OVERLAY")
+TreePetStuffText:SetAllPoints()
+TreePetStuffText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+TreePetStuffText:SetJustifyH("LEFT")
+TreePetStuffText:SetTextColor(1, 1, 1, 1)
+TreePetStuffText:SetText("Pet Stuff")
+
+local TreeLFGButton = CreateFrame("Button", nil, Sidebar)
+TreeLFGButton:SetSize(140, 20)
+
+local TreeLFGText = TreeLFGButton:CreateFontString(nil, "OVERLAY")
+TreeLFGText:SetAllPoints()
+TreeLFGText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+TreeLFGText:SetJustifyH("LEFT")
+TreeLFGText:SetTextColor(1, 1, 1, 1)
+TreeLFGText:SetText("Gruppensuche")
+
+local TreeDamageTextButton = CreateFrame("Button", nil, Sidebar)
+TreeDamageTextButton:SetSize(140, 20)
+
+local TreeDamageTextText = TreeDamageTextButton:CreateFontString(nil, "OVERLAY")
+TreeDamageTextText:SetAllPoints()
+TreeDamageTextText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+TreeDamageTextText:SetJustifyH("LEFT")
+TreeDamageTextText:SetTextColor(1, 1, 1, 1)
+TreeDamageTextText:SetText("Combat Text")
+
 -- ========================================
 -- Aktiven Tree-Eintrag färben
 -- ========================================
 
+-- Die aktive Farbe setzen wir zentral, damit die Buttons simpel bleiben.
 local function SetActiveTreeItem(activeText)
     TreeHomeText:SetTextColor(1, 1, 1, 1)
     TreeSettingsText:SetTextColor(1, 1, 1, 1)
     TreeVersionText:SetTextColor(1, 1, 1, 1)
     TreeLevelTimeText:SetTextColor(1, 1, 1, 1)
+    TreeMiscText:SetTextColor(1, 1, 1, 1)
+    TreePetStuffText:SetTextColor(1, 1, 1, 1)
+    TreeLFGText:SetTextColor(1, 1, 1, 1)
+    TreeDamageTextText:SetTextColor(1, 1, 1, 1)
 
     if activeText then
         activeText:SetTextColor(1, 0.82, 0, 1)
@@ -120,48 +162,57 @@ end
 -- Tree Layout dynamisch aufbauen
 -- ========================================
 
+-- Das Layout wird nach jedem Auf- oder Zuklappen neu aufgebaut.
+-- Bei der kleinen Zahl an Einträgen ist das robuster als feste Y-Offsets.
 local function UpdateTreeLayout()
     TreeGeneralButton:ClearAllPoints()
     TreeHomeButton:ClearAllPoints()
+    TreeVersionButton:ClearAllPoints()
     TreeSettingsButton:ClearAllPoints()
     TreeModuleButton:ClearAllPoints()
     TreeLevelTimeButton:ClearAllPoints()
+    TreeMiscButton:ClearAllPoints()
+    TreePetStuffButton:ClearAllPoints()
+    TreeLFGButton:ClearAllPoints()
+    TreeDamageTextButton:ClearAllPoints()
 
     TreeHomeButton:Hide()
+    TreeVersionButton:Hide()
     TreeSettingsButton:Hide()
     TreeLevelTimeButton:Hide()
-    TreeVersionButton:Hide()
+    TreeMiscButton:Hide()
+    TreePetStuffButton:Hide()
+    TreeLFGButton:Hide()
+    TreeDamageTextButton:Hide()
 
     local groupX = 12
     local childX = 28
     local currentY = -20
 
--- Allgemein
-TreeGeneralButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
+    -- Erst "Allgemein", danach hängt die Modulgruppe direkt darunter.
+    TreeGeneralButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
 
-if GeneralExpanded then
-    TreeGeneralIndicator:SetText("-")
+    if GeneralExpanded then
+        TreeGeneralIndicator:SetText("-")
 
-    currentY = currentY - 28
-    TreeHomeButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-    TreeHomeButton:Show()
+        currentY = currentY - 28
+        TreeHomeButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+        TreeHomeButton:Show()
 
-    currentY = currentY - 26
-    TreeVersionButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-    TreeVersionButton:Show()
+        currentY = currentY - 26
+        TreeVersionButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+        TreeVersionButton:Show()
 
-    currentY = currentY - 26
-    TreeSettingsButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-    TreeSettingsButton:Show()
+        currentY = currentY - 26
+        TreeSettingsButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+        TreeSettingsButton:Show()
 
-    currentY = currentY - 32
-else
-    TreeGeneralIndicator:SetText("+")
-    currentY = currentY - 38
-end
+        currentY = currentY - 32
+    else
+        TreeGeneralIndicator:SetText("+")
+        currentY = currentY - 38
+    end
 
-
-    -- Module
     TreeModuleButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
 
     if ModuleExpanded then
@@ -170,6 +221,22 @@ end
         currentY = currentY - 28
         TreeLevelTimeButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
         TreeLevelTimeButton:Show()
+
+        currentY = currentY - 26
+        TreeMiscButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+        TreeMiscButton:Show()
+
+        currentY = currentY - 26
+        TreePetStuffButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+        TreePetStuffButton:Show()
+
+        currentY = currentY - 26
+        TreeLFGButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+        TreeLFGButton:Show()
+
+        currentY = currentY - 26
+        TreeDamageTextButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+        TreeDamageTextButton:Show()
     else
         TreeModuleIndicator:SetText("+")
     end
@@ -179,6 +246,8 @@ end
 -- Klicklogik
 -- ========================================
 
+-- Die Buttons klappen Gruppen auf oder wechseln die Seite.
+-- Alles, was den eigentlichen Inhalt betrifft, bleibt in den Seiten-Dateien.
 TreeGeneralButton:SetScript("OnClick", function()
     GeneralExpanded = not GeneralExpanded
     UpdateTreeLayout()
@@ -188,14 +257,15 @@ TreeModuleButton:SetScript("OnClick", function()
     ModuleExpanded = not ModuleExpanded
     UpdateTreeLayout()
 end)
-TreeVersionButton:SetScript("OnClick", function()
-    ShowPage(Pages.Version)
-    SetActiveTreeItem(TreeVersionText)
-end)
 
 TreeHomeButton:SetScript("OnClick", function()
     ShowPage(Pages.Home)
     SetActiveTreeItem(TreeHomeText)
+end)
+
+TreeVersionButton:SetScript("OnClick", function()
+    ShowPage(Pages.Version)
+    SetActiveTreeItem(TreeVersionText)
 end)
 
 TreeSettingsButton:SetScript("OnClick", function()
@@ -208,10 +278,31 @@ TreeLevelTimeButton:SetScript("OnClick", function()
     SetActiveTreeItem(TreeLevelTimeText)
 end)
 
+TreeMiscButton:SetScript("OnClick", function()
+    ShowPage(Pages.Misc)
+    SetActiveTreeItem(TreeMiscText)
+end)
+
+TreePetStuffButton:SetScript("OnClick", function()
+    ShowPage(Pages.PetStuff)
+    SetActiveTreeItem(TreePetStuffText)
+end)
+
+TreeLFGButton:SetScript("OnClick", function()
+    ShowPage(Pages.LFG)
+    SetActiveTreeItem(TreeLFGText)
+end)
+
+TreeDamageTextButton:SetScript("OnClick", function()
+    ShowPage(Pages.DamageText)
+    SetActiveTreeItem(TreeDamageTextText)
+end)
+
 -- ========================================
 -- Startzustand
 -- ========================================
 
+-- Home ist die neutralste Startseite und bleibt deshalb der Standard.
 UpdateTreeLayout()
 ShowPage(Pages.Home)
 SetActiveTreeItem(TreeHomeText)
