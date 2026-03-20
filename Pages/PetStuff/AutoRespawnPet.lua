@@ -1,7 +1,7 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-BeavisAddon.PetStuff = BeavisAddon.PetStuff or {}
-local PetStuff = BeavisAddon.PetStuff
+BeavisQoL.PetStuff = BeavisQoL.PetStuff or {}
+local PetStuff = BeavisQoL.PetStuff
 
 local lastKnownActivePetGUID = nil
 local respawnQueued = false
@@ -9,14 +9,14 @@ local respawnWanted = false
 local lastSummonAttemptAt = 0
 
 function PetStuff.GetPetStuffDB()
-    BeavisAddonDB = BeavisAddonDB or {}
-    BeavisAddonDB.petStuff = BeavisAddonDB.petStuff or {}
+    BeavisQoLDB = BeavisQoLDB or {}
+    BeavisQoLDB.petStuff = BeavisQoLDB.petStuff or {}
 
-    if BeavisAddonDB.petStuff.autoRespawnPet == nil then
-        BeavisAddonDB.petStuff.autoRespawnPet = false
+    if BeavisQoLDB.petStuff.autoRespawnPet == nil then
+        BeavisQoLDB.petStuff.autoRespawnPet = false
     end
 
-    return BeavisAddonDB.petStuff
+    return BeavisQoLDB.petStuff
 end
 
 function PetStuff.IsAutoRespawnPetEnabled()

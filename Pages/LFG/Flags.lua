@@ -1,7 +1,7 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-BeavisAddon.LFG = BeavisAddon.LFG or {}
-local LFG = BeavisAddon.LFG
+BeavisQoL.LFG = BeavisQoL.LFG or {}
+local LFG = BeavisQoL.LFG
 
 -- Applicant- und Suchergebnis-Hooks kommen getrennt rein, weil Blizzard beides zu unterschiedlichen Zeitpunkten laden kann.
 local applicantHookInstalled = false
@@ -95,14 +95,14 @@ local US_REALM_FLAGS = {
 }
 
 function LFG.GetLFGDB()
-    BeavisAddonDB = BeavisAddonDB or {}
-    BeavisAddonDB.lfg = BeavisAddonDB.lfg or {}
+    BeavisQoLDB = BeavisQoLDB or {}
+    BeavisQoLDB.lfg = BeavisQoLDB.lfg or {}
 
-    if BeavisAddonDB.lfg.flagsEnabled == nil then
-        BeavisAddonDB.lfg.flagsEnabled = false
+    if BeavisQoLDB.lfg.flagsEnabled == nil then
+        BeavisQoLDB.lfg.flagsEnabled = false
     end
 
-    return BeavisAddonDB.lfg
+    return BeavisQoLDB.lfg
 end
 
 function LFG.IsFlagsEnabled()

@@ -1,4 +1,4 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
 -- Die beiden LDB-Bibliotheken sind die Grundlage für den Minimap-Button.
 local LDB = LibStub("LibDataBroker-1.1", true)
@@ -12,21 +12,21 @@ end
 local addonTitle = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or ADDON_NAME
 
 -- Position und Sichtbarkeit sollen zwischen Sessions erhalten bleiben.
-BeavisAddonDB = BeavisAddonDB or {}
-BeavisAddonDB.minimap = BeavisAddonDB.minimap or {
+BeavisQoLDB = BeavisQoLDB or {}
+BeavisQoLDB.minimap = BeavisQoLDB.minimap or {
     hide = false,
 }
 
 -- Slash-Command und Minimap-Button sollen sich gleich verhalten.
 local function ToggleMainWindow()
-    if not BeavisAddon.Frame then
+    if not BeavisQoL.Frame then
         return
     end
 
-    if BeavisAddon.Frame:IsShown() then
-        BeavisAddon.Frame:Hide()
+    if BeavisQoL.Frame:IsShown() then
+        BeavisQoL.Frame:Hide()
     else
-        BeavisAddon.Frame:Show()
+        BeavisQoL.Frame:Show()
     end
 end
 
@@ -34,7 +34,7 @@ end
 local launcher = LDB:NewDataObject(ADDON_NAME, {
     type = "launcher",
     text = addonTitle,
-    icon = "Interface\\AddOns\\BeavisAddon\\Media\\logo.tga",
+    icon = "Interface\\AddOns\\BeavisQoL\\Media\\logo.tga",
 
     OnClick = function(_, button)
         -- Shift hat Vorrang, damit der schnelle Reload immer klappt.
@@ -60,8 +60,8 @@ local launcher = LDB:NewDataObject(ADDON_NAME, {
 })
 
 -- LibDBIcon kümmert sich um Position, Anzeigen und Verstecken.
-LDBIcon:Register(ADDON_NAME, launcher, BeavisAddonDB.minimap)
+LDBIcon:Register(ADDON_NAME, launcher, BeavisQoLDB.minimap)
 
 -- Die Referenzen behalten wir, falls später noch Einstellungen dazukommen.
-BeavisAddon.MinimapLauncher = launcher
-BeavisAddon.MinimapIcon = LDBIcon
+BeavisQoL.MinimapLauncher = launcher
+BeavisQoL.MinimapIcon = LDBIcon

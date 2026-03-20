@@ -1,7 +1,7 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Sidebar = BeavisAddon.Sidebar
-local Pages = BeavisAddon.Pages
+local Sidebar = BeavisQoL.Sidebar
+local Pages = BeavisQoL.Pages
 
 -- Die Gruppen starten eingeklappt, damit die Sidebar auch mit mehr Modulen ruhig bleibt.
 local GeneralExpanded = false

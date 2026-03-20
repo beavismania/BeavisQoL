@@ -1,18 +1,18 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
 -- Hier sammeln die Seiten-Dateien ihre Frames ein.
-BeavisAddon.Pages = BeavisAddon.Pages or {}
+BeavisQoL.Pages = BeavisQoL.Pages or {}
 
 SLASH_BEAVIS1 = "/beavis"
 SlashCmdList["BEAVIS"] = function(msg)
     -- Der Slash-Command macht nur das Fenster auf und zu. Alles andere läuft über die UI.
-    if not BeavisAddon.Frame then
+    if not BeavisQoL.Frame then
         return
     end
 
-    if BeavisAddon.Frame:IsShown() then
-        BeavisAddon.Frame:Hide()
+    if BeavisQoL.Frame:IsShown() then
+        BeavisQoL.Frame:Hide()
     else
-        BeavisAddon.Frame:Show()
+        BeavisQoL.Frame:Show()
     end
 end

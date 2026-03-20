@@ -3,7 +3,7 @@ local fontBasePath = "Interface\\AddOns\\" .. tostring(ADDON_NAME) .. "\\fonts\\
 
 -- Für Combat Text funktionieren klassische Addon-Fontpfade in WoW am zuverlässigsten.
 -- Darum zeigen alle Einträge auf den separaten fonts-Ordner im Addon.
-BeavisAddon_CustomFonts = {
+BeavisQoL_CustomFonts = {
     { key = "alte_haas_grotesk", label = "Alte Haas Grotesk", path = fontBasePath .. "AlteHaasGroteskBold.ttf" },
     { key = "bangers", label = "Bangers", path = fontBasePath .. "Bangers.ttf" },
     { key = "big_noodle_titling", label = "Big Noodle Titling", path = fontBasePath .. "bignoodletitling.ttf" },

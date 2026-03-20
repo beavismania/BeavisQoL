@@ -1,6 +1,6 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
+local Content = BeavisQoL.Content
 local MAX_LEVEL = 90
 local UPDATE_INTERVAL = 0.2
 
@@ -11,9 +11,9 @@ PageLevelTime:SetAllPoints()
 PageLevelTime:Hide()
 
 -- Datenbank sauber anlegen
-if not BeavisAddonCharDB then BeavisAddonCharDB = {} end
-if not BeavisAddonCharDB.LevelTime then BeavisAddonCharDB.LevelTime = {} end
-local LevelDB = BeavisAddonCharDB.LevelTime
+if not BeavisQoLCharDB then BeavisQoLCharDB = {} end
+if not BeavisQoLCharDB.LevelTime then BeavisQoLCharDB.LevelTime = {} end
+local LevelDB = BeavisQoLCharDB.LevelTime
 local currentSessionLevel = nil
 local currentSessionStartTime = nil
 
@@ -23,10 +23,10 @@ local currentSessionStartTime = nil
 
 -- Für jedes Level legen wir einen Eintrag an, damit später keine nil-Sonderfälle auftauchen.
 local function InitializeLevelTimeData()
-    BeavisAddonCharDB = BeavisAddonCharDB or {}
-    BeavisAddonCharDB.LevelTime = BeavisAddonCharDB.LevelTime or {}
+    BeavisQoLCharDB = BeavisQoLCharDB or {}
+    BeavisQoLCharDB.LevelTime = BeavisQoLCharDB.LevelTime or {}
 
-    LevelDB = BeavisAddonCharDB.LevelTime
+    LevelDB = BeavisQoLCharDB.LevelTime
 
     for level = 1, MAX_LEVEL do
         if LevelDB[level] == nil then
@@ -549,4 +549,4 @@ end
 
 C_Timer.After(0.2, RefreshLevelList)
 
-BeavisAddon.Pages.LevelTime = PageLevelTime
+BeavisQoL.Pages.LevelTime = PageLevelTime

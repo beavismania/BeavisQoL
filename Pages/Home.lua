@@ -1,6 +1,6 @@
-local ADDON_NAME, BeavisAddon = ...
+local ADDON_NAME, BeavisQoL = ...
 
-local Content = BeavisAddon.Content
+local Content = BeavisQoL.Content
 
 -- Home ist eher Landingpage als Einstellungsseite und zeigt nur feste Infos plus schnelle Links.
 local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "Unbekannt"
@@ -86,7 +86,7 @@ TwitchBorder:SetColorTexture(1, 0.82, 0, 0.9)
 local TwitchLogo = TwitchPanel:CreateTexture(nil, "ARTWORK")
 TwitchLogo:SetSize(36, 36)
 TwitchLogo:SetPoint("TOPLEFT", TwitchPanel, "TOPLEFT", 16, -16)
-TwitchLogo:SetTexture("Interface\\AddOns\\BeavisAddon\\Media\\twitch.tga")
+TwitchLogo:SetTexture("Interface\\AddOns\\BeavisQoL\\Media\\twitch.tga")
 
 local TwitchTitle = TwitchPanel:CreateFontString(nil, "OVERLAY")
 TwitchTitle:SetPoint("LEFT", TwitchLogo, "RIGHT", 10, 6)
@@ -123,8 +123,8 @@ end)
 
 TwitchPanel:SetScript("OnClick", function()
     -- Für Links nutzen wir denselben Copy-Dialog wie auf der Versionsseite.
-    if BeavisAddon.ShowLinkPopup then
-        BeavisAddon.ShowLinkPopup("Twitch-Kanal öffnen", TWITCH_URL)
+    if BeavisQoL.ShowLinkPopup then
+        BeavisQoL.ShowLinkPopup("Twitch-Kanal öffnen", TWITCH_URL)
     else
         print("Twitch: " .. TWITCH_URL)
     end
@@ -152,7 +152,7 @@ DiscordBorder:SetColorTexture(1, 0.82, 0, 0.9)
 local DiscordLogo = DiscordPanel:CreateTexture(nil, "ARTWORK")
 DiscordLogo:SetSize(36, 36)
 DiscordLogo:SetPoint("TOPLEFT", DiscordPanel, "TOPLEFT", 16, -16)
-DiscordLogo:SetTexture("Interface\\AddOns\\BeavisAddon\\Media\\discord.tga")
+DiscordLogo:SetTexture("Interface\\AddOns\\BeavisQoL\\Media\\discord.tga")
 
 local DiscordTitle = DiscordPanel:CreateFontString(nil, "OVERLAY")
 DiscordTitle:SetPoint("LEFT", DiscordLogo, "RIGHT", 10, 6)
@@ -188,11 +188,11 @@ end)
 
 DiscordPanel:SetScript("OnClick", function()
     -- Wie auf der Versionsseite: kein Browser-Call, sondern nur der Copy-Dialog.
-    if BeavisAddon.ShowLinkPopup then
-        BeavisAddon.ShowLinkPopup("Beavismania öffnen", WEBSITE_URL)
+    if BeavisQoL.ShowLinkPopup then
+        BeavisQoL.ShowLinkPopup("Beavismania öffnen", WEBSITE_URL)
     else
         print("Website: " .. WEBSITE_URL)
     end
 end)
 
-BeavisAddon.Pages.Home = PageHome
+BeavisQoL.Pages.Home = PageHome
