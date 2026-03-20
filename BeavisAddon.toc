@@ -1,0 +1,23 @@
+## Title: Beavis Quality of Life
+## Notes: Beavis QoL
+## Author: Beavis
+## Version: 0.0.1 Alpha
+## Interface: 120001 
+##X-GameVersion: 120001
+## X-GameVersionLabel: Patch 12.0.1
+## SavedVariables: BeavisAddonDB
+## SavedVariablesPerCharacter: BeavisAddonCharDB
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+Core.lua
+UI.lua
+Pages\Home.lua
+Pages\Version.lua
+Pages\Settings.lua
+Pages\LevelTime.lua
+Tree.lua
+MiniMapButton.lua
