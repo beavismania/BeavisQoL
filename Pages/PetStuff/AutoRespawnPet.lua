@@ -3,11 +3,17 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.PetStuff = BeavisQoL.PetStuff or {}
 local PetStuff = BeavisQoL.PetStuff
 
+-- Dieses Modul merkt sich den zuletzt aktiven Begleiter und versucht spaeter,
+-- ihn nach Login, Ladebildschirm oder Mount-Dismiss wieder zu beschwoeren.
+-- Die Variablen unten leben bewusst nur waehrend der aktuellen Session.
 local lastKnownActivePetGUID = nil
 local respawnQueued = false
 local respawnWanted = false
 local lastSummonAttemptAt = 0
 
+-- Zentraler Zugriff auf den Pet-Teil der SavedVariables.
+-- Hier werden auch Default-Werte nachgezogen, damit der Rest des Moduls
+-- mit einer stabilen Struktur arbeiten kann.
 function PetStuff.GetPetStuffDB()
     BeavisQoLDB = BeavisQoLDB or {}
     BeavisQoLDB.petStuff = BeavisQoLDB.petStuff or {}
@@ -60,6 +66,8 @@ local function HasSavedPet(petGUID)
     return true
 end
 
+-- Wir bevorzugen die frischere Laufzeit-Kopie und fallen nur auf die DB zurueck,
+-- wenn in dieser Session noch kein aktives Pet gesehen wurde.
 local function GetDesiredPetGUID()
     return lastKnownActivePetGUID or GetSavedPetGUID()
 end
@@ -90,6 +98,8 @@ local function CanSummonPetNow()
     return C_PetJournal and C_PetJournal.SummonPetByGUID
 end
 
+-- Manche Events feuern minimal zu frueh, waehrend Blizzard den Pet-Zustand
+-- intern noch nachzieht. Ein kurzer Timer macht das Verhalten robuster.
 local function QueueEnsurePet(delay)
     if respawnQueued then
         return
@@ -107,6 +117,8 @@ end
 function PetStuff.EnsureLastPetActive()
     local currentPetGUID = GetSummonedPetGUID()
     if currentPetGUID and currentPetGUID ~= "" then
+        -- Wenn bereits ein Begleiter aktiv ist, merken wir ihn uns nur als
+        -- neues Ziel und muessen keinen weiteren Beschwoerungsversuch starten.
         SaveLastPetGUID(currentPetGUID)
         respawnWanted = false
         return
@@ -114,12 +126,17 @@ function PetStuff.EnsureLastPetActive()
 
     local petGUID = GetDesiredPetGUID()
     if not HasSavedPet(petGUID) then
+        -- Ungueltige GUIDs werden bewusst aus RAM und DB entfernt, damit wir
+        -- nicht bei jedem spaeteren Event wieder ins Leere beschwoeren.
         lastKnownActivePetGUID = nil
         PetStuff.GetPetStuffDB().lastPetGUID = nil
         respawnWanted = false
         return
     end
 
+    -- Ab hier wissen wir:
+    -- Es gibt kein aktives Pet, aber ein gueltiges Wunsch-Pet fuer den
+    -- naechsten erlaubten Beschwoerungsversuch.
     respawnWanted = true
 
     if not CanSummonPetNow() then
@@ -128,6 +145,7 @@ function PetStuff.EnsureLastPetActive()
 
     local now = GetTime and GetTime() or 0
     if now > 0 and (now - lastSummonAttemptAt) < 1.5 then
+        -- Schutz gegen Event-Bursts und doppelte Summon-Aufrufe kurz hintereinander.
         return
     end
 
@@ -143,6 +161,8 @@ function PetStuff.SetAutoRespawnPetEnabled(value)
     PetStuff.GetPetStuffDB().autoRespawnPet = value and true or false
 
     if value then
+        -- Beim Aktivieren uebernehmen wir sofort den letzten bekannten Kandidaten
+        -- und stossen einen schnellen ersten Sync an.
         lastKnownActivePetGUID = lastKnownActivePetGUID or GetSavedPetGUID()
         respawnWanted = GetDesiredPetGUID() ~= nil
         QueueEnsurePet(0.1)
@@ -166,6 +186,8 @@ PetWatcher:RegisterEvent("PLAYER_UNGHOST")
 
 PetWatcher:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+        -- Session-Zustand und gespeicherter Zustand werden hier einmal sauber
+        -- abgeglichen, bevor weitere Events dazwischenfunken.
         local petGUID = GetSummonedPetGUID()
 
         if petGUID and petGUID ~= "" then
@@ -204,6 +226,8 @@ PetWatcher:SetScript("OnEvent", function(_, event, ...)
     end
 
     if event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
+        -- Auf dem Mount darf kein Begleiter draussen sein. Darum merken wir uns
+        -- waehrenddessen nur den Wunsch und versuchen es erst danach erneut.
         if IsMounted and IsMounted() then
             respawnWanted = GetDesiredPetGUID() ~= nil
         else

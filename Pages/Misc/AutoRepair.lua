@@ -3,6 +3,8 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 local GetCoinText = (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString) or rawget(_G, "GetCoinTextureString")
+-- AutoRepair teilt sich wie die anderen Misc-Module dieselbe Unter-DB.
+-- Dadurch kann die Misc-Seite spaeter alle Schalter an einer Stelle lesen.
 
 -- Gemeinsame Misc-DB mit allen Defaults an einer Stelle pro Modul.
 function Misc.GetMiscDB()
@@ -78,6 +80,10 @@ function Misc.TryAutoRepair()
     if not canRepair or not repairCost or repairCost <= 0 then
         return
     end
+    -- Die Reihenfolge ist absichtlich:
+    -- 1. optionaler Guild-Bank-Versuch
+    -- 2. sonst eigenes Gold
+    -- So wird persoenliches Gold nur als Fallback verwendet.
 
     -- Wenn gewünscht, bekommt die Gilde den ersten Versuch.
     if db.autoRepairGuild and CanGuildBankRepair and CanGuildBankRepair() then

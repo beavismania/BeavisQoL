@@ -3,6 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 local Content = BeavisQoL.Content
 local MAX_LEVEL = 90
 local UPDATE_INTERVAL = 0.2
+-- MAX_LEVEL und UPDATE_INTERVAL sind die beiden zentralen Stellschrauben:
+-- MAX_LEVEL bestimmt die Groesse des Datenmodells
+-- UPDATE_INTERVAL betrifft nur die UI-Aktualisierung, nicht das Speichern.
 
 -- Die Seite trennt zwischen gespeicherten Daten und der gerade laufenden Session.
 -- So können wir live anzeigen, ohne dauernd in die SavedVariables zu schreiben.
@@ -387,6 +390,8 @@ end
 local function RefreshLevelList()
     local currentLevel = GetCurrentCharLevel()
     local visibleLevels = {}
+    -- Die Liste zeigt absichtlich nur Level mit bereits gemessener Zeit.
+    -- Das bleibt fuer neue Charaktere deutlich lesbarer als 90 Null-Zeilen.
 
     -- Nur Level mit erfasster Zeit werden angezeigt. Das hält die Liste kompakt.
     for level = 1, MAX_LEVEL do
@@ -486,6 +491,8 @@ local UpdateFrame = CreateFrame("Frame", nil, PageLevelTime)
 local elapsedSinceUpdate = 0
 
 UpdateFrame:SetScript("OnUpdate", function(_, elapsed)
+    -- Dieser Timer aktualisiert nur die Anzeige.
+    -- Gespeichert wird weiterhin nur an Lebenszyklus-Punkten wie Level-Up oder Logout.
     elapsedSinceUpdate = elapsedSinceUpdate + elapsed
 
     if elapsedSinceUpdate < UPDATE_INTERVAL then

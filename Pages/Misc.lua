@@ -3,6 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 local Content = BeavisQoL.Content
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
+-- Diese Datei ist bewusst nur die UI-Huelle der Misc-Seite.
+-- Die eigentliche Logik der einzelnen Features lebt in den Dateien unter
+-- Pages/Misc/*.lua, damit Anzeige und Verhalten sauber getrennt bleiben.
 
 -- Die Misc-Seite ist lang genug für einen eigenen ScrollFrame.
 -- So können neue QoL-Module dazukommen, ohne dass unten etwas abgeschnitten wirkt.
@@ -275,6 +278,9 @@ function PageMisc:RefreshState()
     if Misc.IsFastLootEnabled then
         fastLootEnabled = Misc.IsFastLootEnabled()
     end
+    -- Die Seite fragt die Modul-Funktionen bewusst nur optional ab.
+    -- So bleibt die UI robust, selbst wenn ein Teilmodul spaeter einmal
+    -- umgebaut oder voruebergehend nicht geladen sein sollte.
 
     AutoSellCheckbox:SetChecked(autoSellEnabled)
     AutoRepairCheckbox:SetChecked(autoRepairEnabled)
@@ -297,6 +303,9 @@ end
 
 -- Die Höhe setzen wir aus den sichtbaren Blöcken zusammen.
 function PageMisc:UpdateScrollLayout()
+    -- Statt den Inhalt an feste Pixelpositionen zu ketten, berechnen wir die
+    -- Gesamtgroesse aus allen Panels. Das ist fuer spaetere Erweiterungen
+    -- deutlich wartbarer als viele verstreute Einzel-Offsets.
     local contentWidth = math.max(1, PageMiscScrollFrame:GetWidth())
     local contentHeight = 20
         + IntroPanel:GetHeight()

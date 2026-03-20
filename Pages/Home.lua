@@ -1,6 +1,8 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
+-- Home ist absichtlich eher Landingpage als Settings-Panel:
+-- feste Begruessung, kurze Einordnung und zwei schnelle Aktionskarten.
 
 -- Home ist eher Landingpage als Einstellungsseite und zeigt nur feste Infos plus schnelle Links.
 local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "Unbekannt"
@@ -68,6 +70,9 @@ CardsRow:SetHeight(145)
 -- Twitch-Karte
 -- =========================
 
+-- Beide Karten sind echte Buttons, aber optisch wie Info-Panels gestaltet.
+-- Dadurch bleibt die Startseite ruhig und fuehlt sich nicht wie eine Leiste
+-- voller klassischer WoW-Buttons an.
 local TwitchPanel = CreateFrame("Button", nil, CardsRow)
 TwitchPanel:SetPoint("TOPLEFT", CardsRow, "TOPLEFT", 0, 0)
 TwitchPanel:SetPoint("BOTTOMLEFT", CardsRow, "BOTTOMLEFT", 0, 0)

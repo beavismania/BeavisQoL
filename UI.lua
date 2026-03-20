@@ -13,6 +13,9 @@ BeavisFrame:SetToplevel(true)
 BeavisFrame:SetFrameStrata("HIGH")
 BeavisFrame:Hide()
 
+-- Diese Referenz ist der gemeinsame Einstieg fuer alle anderen Module.
+-- Seiten, Popups und Hilfsfunktionen koennen sich dadurch spaeter einfach
+-- an das bereits existierende Hauptfenster anhaengen.
 BeavisQoL.Frame = BeavisFrame
 
 if UISpecialFrames then
@@ -190,6 +193,8 @@ LinkCloseButton:SetPoint("BOTTOMRIGHT", LinkPopup, "BOTTOMRIGHT", -16, 12)
 LinkCloseButton:SetText("Schließen")
 LinkCloseButton:SetScript("OnClick", HideLinkPopup)
 
+-- Zentraler Helfer fuer alle Seiten, die dem Nutzer nur eine kopierbare URL
+-- anzeigen sollen, statt ein eigenes Popup nachzubauen.
 function BeavisQoL.ShowLinkPopup(titleText, urlText)
     if not urlText or urlText == "" then
         return
