@@ -1,7 +1,7 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
--- Die Seite existiert schon jetzt als Platzhalter im Tree, damit spaetere
+-- Die Seite existiert schon jetzt als Platzhalter im Tree, damit spätere
 -- globale Addon-Optionen einen festen Ort haben und die Navigation nicht
 -- noch einmal umgebaut werden muss.
 

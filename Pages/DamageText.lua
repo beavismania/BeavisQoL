@@ -19,8 +19,8 @@ local PageDamageTextContent = CreateFrame("Frame", nil, PageDamageTextScrollFram
 PageDamageTextContent:SetSize(1, 1)
 PageDamageTextScrollFrame:SetScrollChild(PageDamageTextContent)
 
--- isRefreshing trennt "UI wird aus Daten gefuellt" von "Benutzer aendert Werte".
--- Ohne diese Sperre wuerden Slider-Aktualisierungen beim Refresh sofort wieder
+-- isRefreshing trennt "UI wird aus Daten gefüllt" von "Benutzer aendert Werte".
+-- Ohne diese Sperre würden Slider-Aktualisierungen beim Refresh sofort wieder
 -- ihre Apply-Funktionen ausloesen.
 local isRefreshing = false
 local sliderCounter = 0
@@ -36,7 +36,7 @@ end
 local function CreateValueSlider(parent, labelText, minValue, maxValue, step)
     sliderCounter = sliderCounter + 1
 
-    -- OptionsSliderTemplate liest Teile seines Aufbaus ueber einen globalen Namen.
+    -- OptionsSliderTemplate liest Teile seines Aufbaus über einen globalen Namen.
     -- Deshalb bekommt jeder Slider hier einen eindeutigen Frame-Namen.
     local sliderName = "BeavisQoLDamageTextSlider" .. sliderCounter
     local slider = CreateFrame("Slider", sliderName, parent, "OptionsSliderTemplate")
@@ -371,8 +371,8 @@ local function RefreshFontPickerEntries()
 
     FontPickerContent:SetWidth(contentWidth)
 
-    -- Die Eintraege werden nur beim ersten Oeffnen wirklich erzeugt.
-    -- Danach werden sie nur neu befuellt und neu angezeigt.
+    -- Die Einträge werden nur beim ersten Öffnen wirklich erzeugt.
+    -- Danach werden sie nur neu befüllt und neu angezeigt.
     for index, fontOption in ipairs(sortedFonts) do
         local entry = fontPickerEntries[index]
         if not entry then
@@ -482,7 +482,7 @@ local RampSlider = CreateValueSlider(AppearancePanel, "Ramp Duration", 0.1, 3.0,
 RampSlider:SetPoint("TOPLEFT", GravitySlider, "BOTTOMLEFT", 0, -44)
 
 local function SetControlColors(enabled)
-    -- Diese Funktion steuert nur Optik und Interaktivitaet der Widgets.
+    -- Diese Funktion steuert nur Optik und Interaktivität der Widgets.
     -- Die echten Werte liegen weiterhin im DamageText-Modul.
     local titleColor = enabled and 1 or 0.50
     local hintColor = enabled and 0.80 or 0.45
@@ -640,7 +640,7 @@ PageDamageText:SetScript("OnShow", function()
     PageDamageTextScrollFrame:SetVerticalScroll(0)
 end)
 
--- Das Popup wird beim Verlassen der Seite geschlossen, damit es nicht ueber
+-- Das Popup wird beim Verlassen der Seite geschlossen, damit es nicht über
 -- anderen Addon-Seiten stehen bleibt.
 PageDamageText:HookScript("OnHide", function()
     HideFontPicker()

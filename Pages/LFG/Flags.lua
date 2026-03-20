@@ -113,7 +113,7 @@ function LFG.IsFlagsEnabled()
 end
 
 -- Manche Blizzard-Felder kommen inzwischen als "secret value" rein.
--- Solche Werte duerfen wir nicht wie normale Strings behandeln.
+-- Solche Werte dürfen wir nicht wie normale Strings behandeln.
 local function IsSecretValue(value)
     if not issecretvalue then
         return false
@@ -397,7 +397,7 @@ local function EnsureFlagFrame(parent)
         return parent.BeavisCountryFlag
     end
 
-    -- Der Frame wird nur einmal erzeugt und danach fuer spaetere Updates
+    -- Der Frame wird nur einmal erzeugt und danach für spätere Updates
     -- wiederverwendet. Das spart Arbeit bei jeder Listen-Aktualisierung.
     local flagFrame = CreateFrame("Frame", nil, parent)
     flagFrame:SetSize(18, 12)
@@ -690,7 +690,7 @@ function LFG.ApplyFlagToSearchResult(resultFrame, ...)
         return
     end
 
-    -- leaderName kann inzwischen als Secret geliefert werden. Dann duerfen wir ihn nicht zerlegen.
+    -- leaderName kann inzwischen als Secret geliefert werden. Dann dürfen wir ihn nicht zerlegen.
     if IsSecretValue(searchResultInfo.leaderName) then
         flagFrame:Hide()
         return
@@ -711,7 +711,7 @@ function LFG.ApplyFlagToSearchResult(resultFrame, ...)
 end
 
 -- Kleiner Tiefenlauf durch den Frame-Baum.
--- Den brauchen wir, um bereits sichtbare Zeilen spaeter gezielt zu aktualisieren.
+-- Den brauchen wir, um bereits sichtbare Zeilen später gezielt zu aktualisieren.
 local function VisitFrameTree(frame, callback)
     if not frame then
         return
@@ -756,7 +756,7 @@ end
 local function TryInstallHooks()
     if not applicantHookInstalled and type(LFGListApplicationViewer_UpdateApplicantMember) == "function" then
         -- hooksecurefunc haengt unser Verhalten nur an Blizzard an und ersetzt
-        -- keine Originalfunktion. Das ist fuer UI-Addons deutlich robuster.
+        -- keine Originalfunktion. Das ist für UI-Addons deutlich robuster.
         hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(memberFrame, applicantID, memberIdx)
             LFG.ApplyFlagToApplicantMember(memberFrame, applicantID, memberIdx)
         end)

@@ -7,8 +7,8 @@ local Misc = BeavisQoL.Misc
 local OriginalDeleteDialogs = {}
 -- Statt einzelne Popup-Frames zu hooken, arbeiten wir hier eine Ebene tiefer:
 -- Blizzard liest sein Verhalten aus StaticPopupDialogs. Wenn wir diese
--- Definitionen austauschen, gilt die Aenderung automatisch ueberall dort,
--- wo spaeter dieselben Delete-Popups erzeugt werden.
+-- Definitionen austauschen, gilt die Aenderung automatisch überall dort,
+-- wo später dieselben Delete-Popups erzeugt werden.
 
 local function CaptureOriginalDeleteDialogs()
     if not StaticPopupDialogs then
