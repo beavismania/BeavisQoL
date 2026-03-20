@@ -1,5 +1,8 @@
 local ADDON_NAME, BeavisQoL = ...
 
+-- Tree.lua setzt auf die UI-Teile aus UI.lua auf:
+-- Sidebar = linker Navigationsbereich
+-- Pages   = Sammlung aller Seiten-Frames, die spaeter ein-/ausgeblendet werden.
 local Sidebar = BeavisQoL.Sidebar
 local Pages = BeavisQoL.Pages
 
@@ -24,6 +27,9 @@ end
 -- Tree Gruppe: Allgemein
 -- ========================================
 
+-- Die Buttons werden alle sofort erzeugt, aber ihre Positionen kommen erst
+-- spaeter in UpdateTreeLayout(). So kann dieselbe Layout-Funktion sowohl
+-- eingeklappte als auch aufgeklappte Gruppen sauber behandeln.
 local TreeGeneralButton = CreateFrame("Button", nil, Sidebar)
 TreeGeneralButton:SetSize(160, 20)
 
@@ -165,6 +171,9 @@ end
 -- Das Layout wird nach jedem Auf- oder Zuklappen neu aufgebaut.
 -- Bei der kleinen Zahl an Einträgen ist das robuster als feste Y-Offsets.
 local function UpdateTreeLayout()
+    -- Wir starten jeden Neuaufbau mit einem neutralen Zustand:
+    -- Positionen loeschen, Unterpunkte verstecken und danach von oben nach unten
+    -- frisch setzen. Das ist robuster als viele voneinander abhaengige Offsets.
     TreeGeneralButton:ClearAllPoints()
     TreeHomeButton:ClearAllPoints()
     TreeVersionButton:ClearAllPoints()

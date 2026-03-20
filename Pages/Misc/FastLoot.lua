@@ -2,6 +2,9 @@ local ADDON_NAME, BeavisQoL = ...
 
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
+-- FastLoot lebt komplett event-getrieben:
+-- LOOT_READY = Beute einsammeln
+-- LOOT_OPENED = Fenster bei Bedarf direkt wieder ausblenden.
 
 -- Gemeinsame Misc-DB mit allen Defaults an einer Stelle pro Modul.
 function Misc.GetMiscDB()
@@ -38,6 +41,9 @@ end
 function Misc.SetFastLootEnabled(value)
     Misc.GetMiscDB().fastLoot = value and true or false
 end
+
+-- Die kleine Guard-Funktion buendelt das Schalter-Setting mit dem
+-- Blizzard-Autoloot-Modifier, damit das Standardverhalten respektiert wird.
 
 -- Den Blizzard-Autoloot-Modifier respektieren wir bewusst, damit das Standardverhalten nicht "falsch" wirkt.
 local function ShouldFastLoot()

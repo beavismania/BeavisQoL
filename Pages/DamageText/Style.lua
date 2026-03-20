@@ -3,6 +3,7 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.DamageText = BeavisQoL.DamageText or {}
 local DamageText = BeavisQoL.DamageText
 
+-- Fonts, die ohne Zusatzdateien direkt im WoW-Client vorhanden sind.
 local BUILTIN_FONTS = {
     { key = "blizzard", label = "Blizzard Standard" },
     { key = "frizqt", label = "Friz Quadrata", path = "Fonts\\FRIZQT__.TTF" },
@@ -11,18 +12,26 @@ local BUILTIN_FONTS = {
     { key = "arialn", label = "Arial Narrow", path = "Fonts\\ARIALN.TTF" },
 }
 
+-- Blizzard fuehrt fuer dieselbe Einstellung teils alte und neue CVar-Namen.
+-- Wir pruefen spaeter einfach alle bekannten Varianten und setzen die, die
+-- im aktuellen Client wirklich vorhanden sind.
 local WORLD_TEXT_CVARS = {
     scale = { "WorldTextScale_v2", "WorldTextScale" },
     gravity = { "WorldTextGravity_v2", "WorldTextGravity" },
     rampDuration = { "WorldTextRampDuration_v2", "WorldTextRampDuration" },
 }
 
+-- Diese FontObjects koennen bereits live verwendet werden.
+-- Wenn wir den Combat Text sichtbar aendern wollen, reicht DAMAGE_TEXT_FONT
+-- allein oft nicht aus; die laufenden FontObjects muessen mitgezogen werden.
 local RUNTIME_FONT_OBJECT_NAMES = {
     "CombatTextFont",
     "DamageNumberFont",
     "WorldFont",
 }
 
+-- Direkt beim Login und kurz danach erneut anwenden, weil Blizzard einige
+-- Combat-Text-Elemente erst verspaetet initialisiert.
 local STARTUP_APPLY_DELAYS = { 0, 0.5 }
 
 local originalDamageTextFont = rawget(_G, "BeavisDamageTextOriginalFont") or DAMAGE_TEXT_FONT or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
@@ -33,6 +42,8 @@ local debugProbeFrame = nil
 local debugProbeFontString = nil
 local legacyIsAddOnLoaded = rawget(_G, "IsAddOnLoaded")
 
+-- Urspruengliche FontObject-Werte einmal sichern, damit wir spaeter sauber
+-- zum Blizzard-Zustand zurueckkehren koennen.
 local function CaptureRuntimeFontObjectOriginals()
     for _, fontObjectName in ipairs(RUNTIME_FONT_OBJECT_NAMES) do
         if originalFontObjectStates[fontObjectName] == nil then
@@ -51,6 +62,8 @@ local function CaptureRuntimeFontObjectOriginals()
     end
 end
 
+-- Bevor wir Fonts oder CVars aendern, halten wir den Originalzustand fest.
+-- Das ist die Sicherheitsleine fuer ein sauberes RestoreDefaults().
 local function CaptureOriginals()
     CaptureRuntimeFontObjectOriginals()
 
@@ -74,6 +87,8 @@ local function CaptureOriginals()
     originalsCaptured = true
 end
 
+-- Der zentrale DB-Zugriff setzt gleichzeitig fehlende Default-Werte nach.
+-- So bleiben auch spaet hinzugefuegte Optionen fuer alte SavedVariables stabil.
 function DamageText.GetDamageTextDB()
     BeavisQoLDB = BeavisQoLDB or {}
     BeavisQoLDB.damageText = BeavisQoLDB.damageText or {}
@@ -126,6 +141,9 @@ local function GetCustomFontOptions()
     return options
 end
 
+-- Eingebaute und benutzerdefinierte Fonts werden hier zusammengefuehrt.
+-- Gleiche Keys werden bewusst nur einmal uebernommen, damit die UI spaeter
+-- eine eindeutige Auswahl anzeigt.
 local function BuildFontOptions()
     local options = {}
     local seenKeys = {}
@@ -177,6 +195,8 @@ function DamageText.GetPreviewFontPath(fontKey)
     return GetResolvedFontPath(fontKey)
 end
 
+-- Einige Clients kennen nur den alten, andere nur den neuen CVar-Namen.
+-- Wir setzen deshalb jeden vorhandenen Alias derselben Einstellung.
 local function SetWorldTextCVar(cvarNames, value)
     for _, cvarName in ipairs(cvarNames) do
         if GetCVar(cvarName) ~= nil then
@@ -248,6 +268,8 @@ function DamageText.IsConflictingAddonLoaded()
     return false
 end
 
+-- Ein verstecktes FontString reicht, um zu pruefen, ob ein Font-Pfad im
+-- laufenden Client ueberhaupt erfolgreich geladen werden kann.
 local function EnsureDebugProbe()
     if debugProbeFontString then
         return debugProbeFontString
@@ -260,6 +282,8 @@ local function EnsureDebugProbe()
     return debugProbeFontString
 end
 
+-- Diese Debug-Liste ist absichtlich textuell gehalten, damit man sie leicht
+-- in einer UI-Ausgabe oder einem Fehlerbericht mitlesen kann.
 function DamageText.GetDebugStatusLines()
     local lines = {}
     local db = DamageText.GetDamageTextDB()
@@ -312,6 +336,8 @@ function DamageText.GetDebugStatusLines()
     return lines
 end
 
+-- Bereits existierende FontObjects behalten sonst oft ihren alten Font-Pfad.
+-- Darum ziehen wir die live genutzten Objekte hier explizit mit.
 local function ApplyRuntimeFontObjects(fontPath)
     CaptureRuntimeFontObjectOriginals()
 
@@ -336,6 +362,8 @@ local function RestoreRuntimeFontObjects()
     end
 end
 
+-- Hauptpfad fuer "Feature ist aktiv": Font setzen, live genutzte FontObjects
+-- aktualisieren und die Bewegungs-/Anzeige-CVars fuer World Text anpassen.
 function DamageText.ApplyCurrentSettings()
     if not DamageText.IsEnabled() then
         return
@@ -363,6 +391,8 @@ function DamageText.RestoreDefaults()
     RestoreWorldTextCVars()
 end
 
+-- Blizzard setzt manche Fonts kurz nach dem Login noch einmal selbst.
+-- Ein kleiner Burst an Reapply-Timern macht das Feature deutlich robuster.
 local function ScheduleStartupApplyBurst()
     if not DamageText.IsEnabled() then
         return
@@ -431,6 +461,8 @@ function DamageText.SetWorldTextRampDuration(value)
     end
 end
 
+-- Der Watcher reagiert auch auf Blizzard_CombatText, weil genau dieses Addon
+-- spaet geladene Combat-Text-Elemente nachliefert, die wir erneut anfassen muessen.
 local DamageTextWatcher = CreateFrame("Frame")
 DamageTextWatcher:RegisterEvent("PLAYER_LOGIN")
 DamageTextWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")

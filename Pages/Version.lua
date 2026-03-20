@@ -1,6 +1,8 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
+-- Die Seite ist als reine "Read-only"-Infoseite gedacht:
+-- Metadaten anzeigen, Kontakt anbieten, aber keine eigentliche Konfiguration.
 
 -- Die Versionsseite zeigt nur TOC-Infos und Kontaktmöglichkeiten.
 -- Sie bleibt absichtlich statisch, damit man hier nichts verstellen kann.
@@ -109,6 +111,8 @@ end
 
 local ShowWebsitePopupFallback = ShowWebsitePopup
 ShowWebsitePopup = function(titleText)
+    -- Die lokale Popup-Variante bleibt als Fallback erhalten, damit die Seite
+    -- auch dann funktioniert, wenn die zentrale Popup-Hilfe einmal fehlt.
     -- Wenn die zentrale Popup-Hilfe da ist, nutzen wir dieselbe Logik wie auf Home.
     if BeavisQoL.ShowLinkPopup then
         BeavisQoL.ShowLinkPopup(titleText or "Beavismania öffnen", WEBSITE_URL)

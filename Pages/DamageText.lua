@@ -19,6 +19,9 @@ local PageDamageTextContent = CreateFrame("Frame", nil, PageDamageTextScrollFram
 PageDamageTextContent:SetSize(1, 1)
 PageDamageTextScrollFrame:SetScrollChild(PageDamageTextContent)
 
+-- isRefreshing trennt "UI wird aus Daten gefuellt" von "Benutzer aendert Werte".
+-- Ohne diese Sperre wuerden Slider-Aktualisierungen beim Refresh sofort wieder
+-- ihre Apply-Funktionen ausloesen.
 local isRefreshing = false
 local sliderCounter = 0
 
@@ -33,6 +36,8 @@ end
 local function CreateValueSlider(parent, labelText, minValue, maxValue, step)
     sliderCounter = sliderCounter + 1
 
+    -- OptionsSliderTemplate liest Teile seines Aufbaus ueber einen globalen Namen.
+    -- Deshalb bekommt jeder Slider hier einen eindeutigen Frame-Namen.
     local sliderName = "BeavisQoLDamageTextSlider" .. sliderCounter
     local slider = CreateFrame("Slider", sliderName, parent, "OptionsSliderTemplate")
     slider:SetOrientation("HORIZONTAL")
@@ -366,6 +371,8 @@ local function RefreshFontPickerEntries()
 
     FontPickerContent:SetWidth(contentWidth)
 
+    -- Die Eintraege werden nur beim ersten Oeffnen wirklich erzeugt.
+    -- Danach werden sie nur neu befuellt und neu angezeigt.
     for index, fontOption in ipairs(sortedFonts) do
         local entry = fontPickerEntries[index]
         if not entry then
@@ -475,6 +482,8 @@ local RampSlider = CreateValueSlider(AppearancePanel, "Ramp Duration", 0.1, 3.0,
 RampSlider:SetPoint("TOPLEFT", GravitySlider, "BOTTOMLEFT", 0, -44)
 
 local function SetControlColors(enabled)
+    -- Diese Funktion steuert nur Optik und Interaktivitaet der Widgets.
+    -- Die echten Werte liegen weiterhin im DamageText-Modul.
     local titleColor = enabled and 1 or 0.50
     local hintColor = enabled and 0.80 or 0.45
 
@@ -544,6 +553,9 @@ function PageDamageText:RefreshState()
     if DamageText.GetWorldTextRampDuration then
         worldTextRampDuration = DamageText.GetWorldTextRampDuration()
     end
+
+    -- Erst alle Werte aus dem Modul lesen, dann gesammelt ins UI schreiben.
+    -- So wirkt der Refresh wie ein konsistenter Snapshot.
 
     isRefreshing = true
     EnableCheckbox:SetChecked(enabled)
@@ -628,6 +640,8 @@ PageDamageText:SetScript("OnShow", function()
     PageDamageTextScrollFrame:SetVerticalScroll(0)
 end)
 
+-- Das Popup wird beim Verlassen der Seite geschlossen, damit es nicht ueber
+-- anderen Addon-Seiten stehen bleibt.
 PageDamageText:HookScript("OnHide", function()
     HideFontPicker()
 end)

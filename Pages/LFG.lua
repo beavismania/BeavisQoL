@@ -3,6 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 local Content = BeavisQoL.Content
 BeavisQoL.LFG = BeavisQoL.LFG or {}
 local LFG = BeavisQoL.LFG
+-- Auch diese Datei ist bewusst eine duenne UI-Schicht.
+-- Alles, was mit Group-Finder-Hooks, Realm-Erkennung und Flaggen-Rendering
+-- zu tun hat, lebt in Pages/LFG/Flags.lua.
 
 -- Die LFG-Seite sammelt nur Komfortfunktionen für den Blizzard-Group-Finder.
 local PageLFG = CreateFrame("Frame", nil, Content)

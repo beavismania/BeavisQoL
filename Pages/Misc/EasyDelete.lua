@@ -5,6 +5,10 @@ local Misc = BeavisQoL.Misc
 
 -- Hier merken wir uns die Blizzard-Originale, damit sich der Eingriff jederzeit sauber rückgängig machen lässt.
 local OriginalDeleteDialogs = {}
+-- Statt einzelne Popup-Frames zu hooken, arbeiten wir hier eine Ebene tiefer:
+-- Blizzard liest sein Verhalten aus StaticPopupDialogs. Wenn wir diese
+-- Definitionen austauschen, gilt die Aenderung automatisch ueberall dort,
+-- wo spaeter dieselben Delete-Popups erzeugt werden.
 
 local function CaptureOriginalDeleteDialogs()
     if not StaticPopupDialogs then
@@ -60,6 +64,9 @@ function Misc.ApplyEasyDelete()
     CaptureOriginalDeleteDialogs()
 
     if Misc.IsEasyDeleteEnabled() then
+        -- Wir ersetzen nur die "guten" Delete-Dialoge durch ihre weniger strenge
+        -- Standard-Variante. Das Verhalten bleibt also Blizzard-nah, nur die
+        -- Texteingabe wird umgangen.
         if StaticPopupDialogs["DELETE_ITEM"] then
             StaticPopupDialogs["DELETE_GOOD_ITEM"] = StaticPopupDialogs["DELETE_ITEM"]
         end

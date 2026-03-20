@@ -3,6 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 local Content = BeavisQoL.Content
 BeavisQoL.PetStuff = BeavisQoL.PetStuff or {}
 local PetStuff = BeavisQoL.PetStuff
+-- Die Datei ist nur der UI-Mantel fuer das Pet-Modul.
+-- Die eigentliche Event- und Wiederbeschwoerungslogik sitzt in
+-- Pages/PetStuff/AutoRespawnPet.lua.
 
 -- Eine kleine Seite mit genau einem Thema und einem Schalter.
 local PagePetStuff = CreateFrame("Frame", nil, Content)
@@ -93,6 +96,8 @@ AutoRespawnPetHint:SetText("Beschwört dein zuletzt aktives Begleiter-Pet nach d
 -- Die Seite liest ihren Zustand direkt aus dem Modul, damit UI und Logik zusammenbleiben.
 function PagePetStuff:RefreshState()
     local autoRespawnPetEnabled = false
+    -- Der Schalter liest nur den aktuellen Modulzustand aus und spiegelt ihn
+    -- in die Checkbox. Die Seite selbst fuehrt keine Pet-Logik aus.
 
     if PetStuff.IsAutoRespawnPetEnabled then
         autoRespawnPetEnabled = PetStuff.IsAutoRespawnPetEnabled()

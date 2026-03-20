@@ -3,6 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.LFG = BeavisQoL.LFG or {}
 local LFG = BeavisQoL.LFG
 
+-- Dieses Modul liest Realm-Namen aus dem Group Finder, ordnet sie einem Land zu
+-- und rendert kleine Flaggen direkt mit WoW-Texturen statt mit externen Bildern.
+
 -- Applicant- und Suchergebnis-Hooks kommen getrennt rein, weil Blizzard beides zu unterschiedlichen Zeitpunkten laden kann.
 local applicantHookInstalled = false
 local searchResultHookInstalled = false
@@ -109,6 +112,8 @@ function LFG.IsFlagsEnabled()
     return LFG.GetLFGDB().flagsEnabled == true
 end
 
+-- Manche Blizzard-Felder kommen inzwischen als "secret value" rein.
+-- Solche Werte duerfen wir nicht wie normale Strings behandeln.
 local function IsSecretValue(value)
     if not issecretvalue then
         return false
@@ -392,6 +397,8 @@ local function EnsureFlagFrame(parent)
         return parent.BeavisCountryFlag
     end
 
+    -- Der Frame wird nur einmal erzeugt und danach fuer spaetere Updates
+    -- wiederverwendet. Das spart Arbeit bei jeder Listen-Aktualisierung.
     local flagFrame = CreateFrame("Frame", nil, parent)
     flagFrame:SetSize(18, 12)
     flagFrame:Hide()
@@ -490,6 +497,8 @@ end
 local function GetAllFontStrings(frame)
     local fontStrings = {}
 
+    -- Blizzard benennt Text-Regionen nicht in jeder Ansicht gleich.
+    -- Darum sammeln wir rekursiv alle FontStrings eines Frame-Baums ein.
     local function CollectFontStrings(owner)
         for _, region in ipairs({ owner:GetRegions() }) do
             if region and region.GetObjectType and region:GetObjectType() == "FontString" then
@@ -553,6 +562,8 @@ local function GetSearchResultNameRegion(resultFrame)
     return resultFrame
 end
 
+-- Je nach Blizzard-Version oder Hook-Signatur liegt die SearchResult-ID an
+-- unterschiedlichen Stellen. Diese Funktion normalisiert alle Varianten.
 local function GetSearchResultID(resultFrame, ...)
     local function ReturnIfNumber(value)
         if type(value) == "number" then
@@ -699,6 +710,8 @@ function LFG.ApplyFlagToSearchResult(resultFrame, ...)
     RenderFlag(flagFrame, countryCode)
 end
 
+-- Kleiner Tiefenlauf durch den Frame-Baum.
+-- Den brauchen wir, um bereits sichtbare Zeilen spaeter gezielt zu aktualisieren.
 local function VisitFrameTree(frame, callback)
     if not frame then
         return
@@ -742,6 +755,8 @@ end
 -- Wir hooken bewusst die Blizzard-Update-Funktion statt selbst die ganze Liste nachzubauen.
 local function TryInstallHooks()
     if not applicantHookInstalled and type(LFGListApplicationViewer_UpdateApplicantMember) == "function" then
+        -- hooksecurefunc haengt unser Verhalten nur an Blizzard an und ersetzt
+        -- keine Originalfunktion. Das ist fuer UI-Addons deutlich robuster.
         hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(memberFrame, applicantID, memberIdx)
             LFG.ApplyFlagToApplicantMember(memberFrame, applicantID, memberIdx)
         end)

@@ -2,6 +2,9 @@ local ADDON_NAME, BeavisQoL = ...
 
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
+-- Die kleinen API-Fallbacks halten das Modul robuster gegen Blizzard-Umstellungen:
+-- je nach Client-Version liegen dieselben Infos teils unter C_* APIs,
+-- teils noch unter den aelteren globalen Funktionen.
 local GetItemDetails = (C_Item and C_Item.GetItemInfo) or rawget(_G, "GetItemInfo")
 local GetCoinText = (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString) or rawget(_G, "GetCoinTextureString")
 
@@ -60,6 +63,8 @@ function Misc.SellAllJunk()
 
             -- quality == 0 entspricht grauen Items.
             if itemInfo and itemInfo.hyperlink and itemInfo.quality == 0 then
+                -- GetItemInfo/GetItemDetails liefert sehr viele Werte zurueck.
+                -- Mit select(11, ...) greifen wir gezielt den Vendor-Preis ab.
                 local sellPrice = select(11, GetItemDetails(itemInfo.hyperlink)) or 0
 
                 if sellPrice > 0 then
