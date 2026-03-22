@@ -1,8 +1,13 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
+local L = BeavisQoL.L
 BeavisQoL.LFG = BeavisQoL.LFG or {}
 local LFG = BeavisQoL.LFG
+
+-- Diese Datei baut nur die sichtbare LFG-Seite.
+-- Die eigentliche Hook- und Flaggenlogik lebt getrennt in `Pages/LFG/Flags.lua`.
+
 -- Auch diese Datei ist bewusst eine duenne UI-Schicht.
 -- Alles, was mit Group-Finder-Hooks, Realm-Erkennung und Flaggen-Rendering
 -- zu tun hat, lebt in Pages/LFG/Flags.lua.
@@ -35,7 +40,7 @@ local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText("Gruppensuche")
+IntroTitle:SetText(L("LFG"))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -44,7 +49,7 @@ IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
-IntroText:SetText("Hier findest du Komfortfunktionen für die Premade-Gruppensuche.")
+IntroText:SetText(L("LFG_DESC"))
 
 -- ========================================
 -- Bereich: Länderflaggen
@@ -69,7 +74,7 @@ local FlagsTitle = FlagsPanel:CreateFontString(nil, "OVERLAY")
 FlagsTitle:SetPoint("TOPLEFT", FlagsPanel, "TOPLEFT", 18, -14)
 FlagsTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 FlagsTitle:SetTextColor(1, 0.82, 0, 1)
-FlagsTitle:SetText("Länderflaggen")
+FlagsTitle:SetText(L("FLAGS_TITLE"))
 
 local FlagsCheckbox = CreateFrame("CheckButton", nil, FlagsPanel, "UICheckButtonTemplate")
 FlagsCheckbox:SetPoint("TOPLEFT", FlagsTitle, "BOTTOMLEFT", -4, -12)
@@ -78,7 +83,7 @@ local FlagsLabel = FlagsPanel:CreateFontString(nil, "OVERLAY")
 FlagsLabel:SetPoint("LEFT", FlagsCheckbox, "RIGHT", 6, 0)
 FlagsLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 FlagsLabel:SetTextColor(1, 1, 1, 1)
-FlagsLabel:SetText("Aktiv")
+FlagsLabel:SetText(L("ACTIVE"))
 
 local FlagsHint = FlagsPanel:CreateFontString(nil, "OVERLAY")
 FlagsHint:SetPoint("TOPLEFT", FlagsCheckbox, "BOTTOMLEFT", 34, -2)
@@ -87,11 +92,17 @@ FlagsHint:SetJustifyH("LEFT")
 FlagsHint:SetJustifyV("TOP")
 FlagsHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 FlagsHint:SetTextColor(0.80, 0.80, 0.80, 1)
-FlagsHint:SetText("Zeigt in der Premade-Gruppensuche neben Bewerbern eine kleine Flagge auf Basis ihres Realms an.")
+FlagsHint:SetText(L("FLAGS_HINT"))
 
 -- Die Checkbox liest ihren Zustand direkt aus dem Modul, damit die Seite kaum eigene Logik braucht.
 function PageLFG:RefreshState()
     local flagsEnabled = false
+
+    IntroTitle:SetText(L("LFG"))
+    IntroText:SetText(L("LFG_DESC"))
+    FlagsTitle:SetText(L("FLAGS_TITLE"))
+    FlagsLabel:SetText(L("ACTIVE"))
+    FlagsHint:SetText(L("FLAGS_HINT"))
 
     if LFG.IsFlagsEnabled then
         flagsEnabled = LFG.IsFlagsEnabled()

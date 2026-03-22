@@ -1,6 +1,13 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
+local L = BeavisQoL.L
+
+-- LevelTime.lua trennt bewusst:
+-- 1. gespeicherte Zeit pro Level in der DB
+-- 2. die gerade laufende Session im Speicher
+-- 3. die reine UI-Darstellung
+
 local MAX_LEVEL = 90
 local UPDATE_INTERVAL = 0.2
 -- MAX_LEVEL und UPDATE_INTERVAL sind die beiden zentralen Stellschrauben:
@@ -201,8 +208,8 @@ InfoButton.Text = InfoText
 
 InfoButton:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:AddLine("Levelzeit-Tracker", 1, 1, 1)
-    GameTooltip:AddLine("Der Levelzeit-Tracker zählt nur die tatsächlich gespielte Zeit, während das Addon aktiv ist.", 0.9, 0.9, 0.9, true)
+    GameTooltip:AddLine(L("LEVELTIME_TOOLTIP_TITLE"), 1, 1, 1)
+    GameTooltip:AddLine(L("LEVELTIME_TOOLTIP_TEXT"), 0.9, 0.9, 0.9, true)
     GameTooltip:Show()
     InfoCircle:SetColorTexture(0.15, 0.6, 1, 0.35)
 end)
@@ -225,7 +232,7 @@ local CurrentLevelLabel = CurrentLevelCard:CreateFontString(nil, "OVERLAY")
 CurrentLevelLabel:SetPoint("TOPLEFT", CurrentLevelCard, "TOPLEFT", 10, -8)
 CurrentLevelLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 CurrentLevelLabel:SetTextColor(0.85, 0.85, 0.85, 1)
-CurrentLevelLabel:SetText("Aktuelles Level")
+CurrentLevelLabel:SetText(L("CURRENT_LEVEL"))
 
 local CurrentLevelValue = CurrentLevelCard:CreateFontString(nil, "OVERLAY")
 CurrentLevelValue:SetPoint("TOPLEFT", CurrentLevelLabel, "BOTTOMLEFT", 0, -6)
@@ -246,7 +253,7 @@ local CurrentLevelTimeLabel = CurrentLevelTimeCard:CreateFontString(nil, "OVERLA
 CurrentLevelTimeLabel:SetPoint("TOPLEFT", CurrentLevelTimeCard, "TOPLEFT", 10, -8)
 CurrentLevelTimeLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 CurrentLevelTimeLabel:SetTextColor(0.85, 0.85, 0.85, 1)
-CurrentLevelTimeLabel:SetText("Zeit auf aktuellem Level")
+CurrentLevelTimeLabel:SetText(L("TIME_ON_CURRENT_LEVEL"))
 
 local CurrentLevelTimeValue = CurrentLevelTimeCard:CreateFontString(nil, "OVERLAY")
 CurrentLevelTimeValue:SetPoint("TOPLEFT", CurrentLevelTimeLabel, "BOTTOMLEFT", 0, -6)
@@ -268,7 +275,7 @@ local TotalTimeLabel = TotalTimeCard:CreateFontString(nil, "OVERLAY")
 TotalTimeLabel:SetPoint("TOPLEFT", TotalTimeCard, "TOPLEFT", 10, -8)
 TotalTimeLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 TotalTimeLabel:SetTextColor(0.85, 0.85, 0.85, 1)
-TotalTimeLabel:SetText("Gesamtzeit")
+TotalTimeLabel:SetText(L("TOTAL_TIME"))
 
 local TotalTimeValue = TotalTimeCard:CreateFontString(nil, "OVERLAY")
 TotalTimeValue:SetPoint("TOPLEFT", TotalTimeLabel, "BOTTOMLEFT", 0, -6)
@@ -329,7 +336,7 @@ local LevelListTitle = LevelListContainer:CreateFontString(nil, "OVERLAY")
 LevelListTitle:SetPoint("TOPLEFT", LevelListContainer, "TOPLEFT", 10, -10)
 LevelListTitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
 LevelListTitle:SetTextColor(1, 0.82, 0, 1)
-LevelListTitle:SetText("Erfasste Levelzeiten")
+LevelListTitle:SetText(L("TRACKED_LEVEL_TIMES"))
 
 local LevelListScrollFrame = CreateFrame("ScrollFrame", nil, LevelListContainer, "UIPanelScrollFrameTemplate")
 LevelListScrollFrame:SetPoint("TOPLEFT", LevelListContainer, "TOPLEFT", 8, -30)
@@ -357,7 +364,7 @@ for level = 1, MAX_LEVEL do
     LevelNumText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
     LevelNumText:SetTextColor(1, 0.82, 0, 1)
     LevelNumText:SetJustifyH("LEFT")
-    LevelNumText:SetText("Level " .. level)
+    LevelNumText:SetText(L("LEVEL_LABEL"):format(level))
     Row.LevelNumText = LevelNumText
 
     local StatusText = Row:CreateFontString(nil, "OVERLAY")
@@ -431,7 +438,7 @@ local function RefreshLevelList()
         if levelData.level == currentLevel and currentLevel < MAX_LEVEL then
             row.Background:SetColorTexture(0.18, 0.30, 0.18, 0.75)
             row.LevelNumText:SetTextColor(1, 0.82, 0, 1)
-            row.StatusText:SetText("läuft gerade")
+            row.StatusText:SetText(L("LEVEL_RUNNING"))
             row.StatusText:SetTextColor(0.55, 1.00, 0.55, 1)
             row.TimeText:SetTextColor(1, 1, 1, 1)
         else
@@ -458,16 +465,16 @@ local function RefreshLevelList()
     TotalTimeValue:SetText(TimeToString(totalTime))
 
     if currentLevel >= MAX_LEVEL then
-        CurrentLevelTimeLabel:SetText("Status")
+        CurrentLevelTimeLabel:SetText(L("STATUS"))
         CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
         CurrentLevelTimeValue:SetTextColor(1, 0.82, 0, 1)
-        CurrentLevelTimeValue:SetText("Maximallevel erreicht")
+        CurrentLevelTimeValue:SetText(L("MAX_LEVEL_REACHED"))
 
         ProgressPercentText:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
         ProgressPercentText:SetTextColor(1, 0.82, 0, 1)
-        ProgressPercentText:SetText("Glückwunsch, du hast das Maximallevel erreicht.")
+        ProgressPercentText:SetText(L("MAX_LEVEL_CONGRATS"))
     else
-        CurrentLevelTimeLabel:SetText("Zeit auf aktuellem Level")
+        CurrentLevelTimeLabel:SetText(L("TIME_ON_CURRENT_LEVEL"))
         CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
         CurrentLevelTimeValue:SetTextColor(1, 1, 1, 1)
         CurrentLevelTimeValue:SetText(TimeToString(currentLevelTime))
@@ -480,6 +487,20 @@ local function RefreshLevelList()
     local progressPercent = GetProgressPercent()
     local barWidth = ProgressBarBg:GetWidth() * progressPercent
     ProgressBar:SetWidth(math.max(0, barWidth))
+end
+
+BeavisQoL.UpdateLevelTime = function()
+    CurrentLevelLabel:SetText(L("CURRENT_LEVEL"))
+    CurrentLevelTimeLabel:SetText(L("TIME_ON_CURRENT_LEVEL"))
+    TotalTimeLabel:SetText(L("TOTAL_TIME"))
+    LevelListTitle:SetText(L("TRACKED_LEVEL_TIMES"))
+
+    for level = 1, MAX_LEVEL do
+        local row = LevelRows[level]
+        row.LevelNumText:SetText(L("LEVEL_LABEL"):format(level))
+    end
+
+    RefreshLevelList()
 end
 
 -- ========================================

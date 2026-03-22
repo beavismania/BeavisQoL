@@ -3,6 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.LFG = BeavisQoL.LFG or {}
 local LFG = BeavisQoL.LFG
 
+-- Flags.lua ist das technische Herz des LFG-Moduls:
+-- Realm erkennen, Land ableiten, kleine Flagge zeichnen und Blizzard-Zeilen hooken.
+
 -- Dieses Modul liest Realm-Namen aus dem Group Finder, ordnet sie einem Land zu
 -- und rendert kleine Flaggen direkt mit WoW-Texturen statt mit externen Bildern.
 

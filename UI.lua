@@ -1,27 +1,66 @@
 local ADDON_NAME, BeavisQoL = ...
 
--- Das Hauptfenster bauen wir hier einmal zentral auf. Alle anderen Dateien hängen sich später daran.
+--[[
+UI.lua baut das feste Grundgeruest des Addons.
+
+Hier entsteht nur der gemeinsame Rahmen:
+- Hauptfenster
+- Header
+- Sidebar
+- Content-Flaeche
+- zentrales Link-Popup
+]]
+
+local function Clamp(value, minValue, maxValue)
+    if value < minValue then
+        return minValue
+    end
+
+    if value > maxValue then
+        return maxValue
+    end
+
+    return value
+end
+
+local L = BeavisQoL.L
+local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
+local name = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or L("UNKNOWN")
+
+BeavisQoL.Version = version
+BeavisQoL.Title = name
+
 local BeavisFrame = CreateFrame("Frame", "BeavisQoLMainFrame", UIParent, "BasicFrameTemplateWithInset")
-BeavisFrame:SetSize(UIParent:GetWidth() * 0.7, UIParent:GetHeight() * 0.7)
+BeavisFrame:SetPoint("CENTER")
 BeavisFrame:RegisterForDrag("LeftButton")
-BeavisFrame:SetScript("OnDragStart", BeavisFrame.StartMoving)
-BeavisFrame:SetScript("OnDragStop", BeavisFrame.StopMovingOrSizing)
+BeavisFrame:SetScript("OnDragStart", function(self)
+    if BeavisQoLDB.settings and BeavisQoLDB.settings.lockWindow then return end
+    self:StartMoving()
+end)
+BeavisFrame:SetScript("OnDragStop", function(self)
+    if BeavisQoLDB.settings and BeavisQoLDB.settings.lockWindow then return end
+    self:StopMovingOrSizing()
+end)
 BeavisFrame:SetMovable(true)
 BeavisFrame:EnableMouse(true)
-BeavisFrame:SetPoint("CENTER")
 BeavisFrame:SetToplevel(true)
 BeavisFrame:SetFrameStrata("HIGH")
 BeavisFrame:Hide()
 
--- Diese Referenz ist der gemeinsame Einstieg für alle anderen Module.
--- Seiten, Popups und Hilfsfunktionen können sich dadurch später einfach
--- an das bereits existierende Hauptfenster anhaengen.
+-- Berücksichtige Lock-Einstellung
+if BeavisQoLDB.settings and BeavisQoLDB.settings.lockWindow then
+    BeavisFrame:SetMovable(false)
+end
+
+if _G.BeavisQoLMainFrameTitleText then
+    _G.BeavisQoLMainFrameTitleText:SetText("")
+end
+
 BeavisQoL.Frame = BeavisFrame
 
 if UISpecialFrames then
     local alreadyRegistered = false
 
-    -- Nur Frames in UISpecialFrames reagieren auf ESC. Darum tragen wir uns hier einmal ein.
     for _, frameName in ipairs(UISpecialFrames) do
         if frameName == "BeavisQoLMainFrame" then
             alreadyRegistered = true
@@ -34,76 +73,122 @@ if UISpecialFrames then
     end
 end
 
--- Die Fenstergröße ziehen wir bei UI-Änderungen nach.
--- So bleibt das Verhältnis auf kleinen und großen Auflösungen halbwegs gleich.
 local function UpdateBeavisFrameSize()
-    local width = UIParent:GetWidth() * 0.7
-    local height = UIParent:GetHeight() * 0.7
+    local maxWidth = math.max(900, UIParent:GetWidth() - 48)
+    local maxHeight = math.max(620, UIParent:GetHeight() - 64)
+    local minWidth = math.min(1120, maxWidth)
+    local minHeight = math.min(720, maxHeight)
+    local width = Clamp(UIParent:GetWidth() * 0.76, minWidth, maxWidth)
+    local height = Clamp(UIParent:GetHeight() * 0.78, minHeight, maxHeight)
     BeavisFrame:SetSize(width, height)
 end
 
--- Einmal direkt ausführen, damit die Startgröße sofort stimmt.
 UpdateBeavisFrameSize()
 
--- Die paar Events reichen hier aus. Permanentes Polling wäre nur unnötig.
 local resizeWatcher = CreateFrame("Frame")
 resizeWatcher:RegisterEvent("UI_SCALE_CHANGED")
 resizeWatcher:RegisterEvent("DISPLAY_SIZE_CHANGED")
 resizeWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
-
--- Alle Größen-Events landen in derselben Funktion.
 resizeWatcher:SetScript("OnEvent", function()
     UpdateBeavisFrameSize()
 end)
 
--- Die Metadaten brauchen wir später an mehreren Stellen.
-local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "Unbekannt"
-local name = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or "Unbekannt"
-
-BeavisQoL.Version = version
-BeavisQoL.Title = name
-
--- Header, Sidebar und Seitenbereich hängen direkt am Hauptfenster.
--- Header
 local Header = CreateFrame("Frame", nil, BeavisFrame)
-Header:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 8, -28)
-Header:SetPoint("TOPRIGHT", BeavisFrame, "TOPRIGHT", -8, -28)
-Header:SetHeight(72)
+Header:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 8, -26)
+Header:SetPoint("TOPRIGHT", BeavisFrame, "TOPRIGHT", -8, -26)
+Header:SetHeight(88)
 
 BeavisQoL.Header = Header
 
--- Eine schlichte Linie trennt den Header vom Rest des Fensters.
+local HeaderBg = Header:CreateTexture(nil, "BACKGROUND")
+HeaderBg:SetAllPoints()
+HeaderBg:SetColorTexture(0.045, 0.045, 0.05, 0.94)
+
+local HeaderGlow = Header:CreateTexture(nil, "BORDER")
+HeaderGlow:SetPoint("TOPLEFT", Header, "TOPLEFT", 0, 0)
+HeaderGlow:SetPoint("TOPRIGHT", Header, "TOPRIGHT", 0, 0)
+HeaderGlow:SetHeight(34)
+HeaderGlow:SetColorTexture(1, 0.82, 0, 0.06)
+
 local HeaderBorder = Header:CreateTexture(nil, "ARTWORK")
 HeaderBorder:SetPoint("BOTTOMLEFT", Header, "BOTTOMLEFT", 0, 0)
 HeaderBorder:SetPoint("BOTTOMRIGHT", Header, "BOTTOMRIGHT", 0, 0)
 HeaderBorder:SetHeight(1)
 HeaderBorder:SetColorTexture(1, 0.82, 0, 0.9)
 
--- Logo und Titel sitzen links im Header.
 local Logo = Header:CreateTexture(nil, "ARTWORK")
 Logo:SetSize(64, 64)
-Logo:SetPoint("LEFT", Header, "LEFT", 12, 0)
+Logo:SetPoint("LEFT", Header, "LEFT", 14, 2)
 Logo:SetTexture("Interface\\AddOns\\BeavisQoL\\Media\\logo.tga")
 
 local Title = Header:CreateFontString(nil, "OVERLAY")
-Title:SetPoint("LEFT", Logo, "RIGHT", 12, 0)
-Title:SetFontObject(GameFontNormalHuge)
-Title:SetTextColor(1, 0.82, 0, 1)
+Title:SetPoint("TOPLEFT", Logo, "TOPRIGHT", 14, -6)
+Title:SetPoint("RIGHT", Header, "RIGHT", -190, 0)
+Title:SetJustifyH("LEFT")
 Title:SetFont("Fonts\\FRIZQT__.TTF", 28, "OUTLINE")
+Title:SetTextColor(1, 0.82, 0, 1)
 Title:SetText(name)
 
--- Sidebar
+local HeaderSubtitle = Header:CreateFontString(nil, "OVERLAY")
+HeaderSubtitle:SetPoint("TOPLEFT", Title, "BOTTOMLEFT", 0, -6)
+HeaderSubtitle:SetPoint("RIGHT", Header, "RIGHT", -190, 0)
+HeaderSubtitle:SetJustifyH("LEFT")
+HeaderSubtitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+HeaderSubtitle:SetTextColor(0.82, 0.82, 0.84, 1)
+HeaderSubtitle:SetText(L("HEADER_SUBTITLE"))
+
+local VersionContainer = CreateFrame("Frame", nil, Header)
+VersionContainer:SetPoint("TOPRIGHT", Header, "TOPRIGHT", -16, -8)
+VersionContainer:SetSize(180, 44)
+
+local VersionBadge = CreateFrame("Frame", nil, VersionContainer)
+VersionBadge:SetPoint("TOPRIGHT", VersionContainer, "TOPRIGHT", 0, 0)
+VersionBadge:SetSize(148, 24)
+
+local VersionBadgeBg = VersionBadge:CreateTexture(nil, "BACKGROUND")
+VersionBadgeBg:SetAllPoints()
+VersionBadgeBg:SetColorTexture(1, 0.82, 0, 0.08)
+
+local VersionBadgeAccent = VersionBadge:CreateTexture(nil, "ARTWORK")
+VersionBadgeAccent:SetPoint("TOPLEFT", VersionBadge, "TOPLEFT", 0, 0)
+VersionBadgeAccent:SetPoint("BOTTOMLEFT", VersionBadge, "BOTTOMLEFT", 0, 0)
+VersionBadgeAccent:SetWidth(2)
+VersionBadgeAccent:SetColorTexture(1, 0.82, 0, 0.8)
+
+local VersionBadgeText = VersionBadge:CreateFontString(nil, "OVERLAY")
+VersionBadgeText:SetPoint("LEFT", VersionBadge, "LEFT", 8, 0)
+VersionBadgeText:SetPoint("RIGHT", VersionBadge, "RIGHT", -8, 0)
+VersionBadgeText:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+VersionBadgeText:SetTextColor(1, 0.92, 0.45, 1)
+VersionBadgeText:SetJustifyH("CENTER")
+VersionBadgeText:SetText(L("VERSION") .. " " .. version)
+
+local ReloadButton = CreateFrame("Button", nil, VersionContainer, "UIPanelButtonTemplate")
+ReloadButton:SetSize(148, 18)
+ReloadButton:SetPoint("BOTTOMRIGHT", VersionContainer, "BOTTOMRIGHT", 0, 0)
+ReloadButton:SetText(L("RELOAD"))
+ReloadButton:SetNormalFontObject("GameFontNormalSmall")
+ReloadButton:SetHighlightFontObject("GameFontHighlightSmall")
+ReloadButton:SetScript("OnClick", function()
+    ReloadUI()
+end)
+
 local Sidebar = CreateFrame("Frame", nil, BeavisFrame)
-Sidebar:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 8, -110)
-Sidebar:SetPoint("BOTTOMLEFT", BeavisFrame, "BOTTOMLEFT", 8, 8)
-Sidebar:SetWidth(180)
+Sidebar:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 10, -124)
+Sidebar:SetPoint("BOTTOMLEFT", BeavisFrame, "BOTTOMLEFT", 10, 10)
+Sidebar:SetWidth(228)
 
 BeavisQoL.Sidebar = Sidebar
 
--- Die Sidebar bekommt nur einen leichten Hintergrund und eine rechte Trennlinie.
 local SidebarBg = Sidebar:CreateTexture(nil, "BACKGROUND")
 SidebarBg:SetAllPoints()
-SidebarBg:SetColorTexture(0.05, 0.05, 0.05, 0.85)
+SidebarBg:SetColorTexture(0.035, 0.035, 0.04, 0.92)
+
+local SidebarGlow = Sidebar:CreateTexture(nil, "BORDER")
+SidebarGlow:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", 0, 0)
+SidebarGlow:SetPoint("TOPRIGHT", Sidebar, "TOPRIGHT", 0, 0)
+SidebarGlow:SetHeight(38)
+SidebarGlow:SetColorTexture(1, 0.82, 0, 0.035)
 
 local SidebarRightBorder = Sidebar:CreateTexture(nil, "ARTWORK")
 SidebarRightBorder:SetPoint("TOPRIGHT", Sidebar, "TOPRIGHT", 0, 0)
@@ -111,18 +196,28 @@ SidebarRightBorder:SetPoint("BOTTOMRIGHT", Sidebar, "BOTTOMRIGHT", 0, 0)
 SidebarRightBorder:SetWidth(1)
 SidebarRightBorder:SetColorTexture(1, 0.82, 0, 0.9)
 
--- Im Content-Bereich liegen später alle Seiten deckungsgleich übereinander.
 local Content = CreateFrame("Frame", nil, BeavisFrame)
-Content:SetPoint("TOPLEFT", Sidebar, "TOPRIGHT", 8, 0)
-Content:SetPoint("BOTTOMRIGHT", BeavisFrame, "BOTTOMRIGHT", -8, 8)
+Content:SetPoint("TOPLEFT", Sidebar, "TOPRIGHT", 14, 0)
+Content:SetPoint("BOTTOMRIGHT", BeavisFrame, "BOTTOMRIGHT", -10, 10)
 
 BeavisQoL.Content = Content
 
 local ContentBg = Content:CreateTexture(nil, "BACKGROUND")
 ContentBg:SetAllPoints()
-ContentBg:SetColorTexture(0.08, 0.08, 0.08, 0.65)
+ContentBg:SetColorTexture(0.055, 0.055, 0.06, 0.78)
 
--- Das Copy-Popup hängt zentral am Hauptfenster, damit Home und Version dieselbe Lösung nutzen.
+local ContentGlow = Content:CreateTexture(nil, "BORDER")
+ContentGlow:SetPoint("TOPLEFT", Content, "TOPLEFT", 0, 0)
+ContentGlow:SetPoint("TOPRIGHT", Content, "TOPRIGHT", 0, 0)
+ContentGlow:SetHeight(44)
+ContentGlow:SetColorTexture(1, 1, 1, 0.025)
+
+local ContentTopBorder = Content:CreateTexture(nil, "ARTWORK")
+ContentTopBorder:SetPoint("TOPLEFT", Content, "TOPLEFT", 0, 0)
+ContentTopBorder:SetPoint("TOPRIGHT", Content, "TOPRIGHT", 0, 0)
+ContentTopBorder:SetHeight(1)
+ContentTopBorder:SetColorTexture(1, 0.82, 0, 0.35)
+
 local LinkPopup = CreateFrame("Frame", nil, BeavisFrame)
 LinkPopup:SetSize(520, 170)
 LinkPopup:SetPoint("CENTER", BeavisFrame, "CENTER", 0, 0)
@@ -133,6 +228,12 @@ LinkPopup:Hide()
 local LinkPopupBg = LinkPopup:CreateTexture(nil, "BACKGROUND")
 LinkPopupBg:SetAllPoints()
 LinkPopupBg:SetColorTexture(0.06, 0.06, 0.06, 0.96)
+
+local LinkPopupGlow = LinkPopup:CreateTexture(nil, "BORDER")
+LinkPopupGlow:SetPoint("TOPLEFT", LinkPopup, "TOPLEFT", 0, 0)
+LinkPopupGlow:SetPoint("TOPRIGHT", LinkPopup, "TOPRIGHT", 0, 0)
+LinkPopupGlow:SetHeight(26)
+LinkPopupGlow:SetColorTexture(1, 0.82, 0, 0.08)
 
 local LinkPopupBorderTop = LinkPopup:CreateTexture(nil, "ARTWORK")
 LinkPopupBorderTop:SetPoint("TOPLEFT", LinkPopup, "TOPLEFT", 0, 0)
@@ -150,7 +251,7 @@ local LinkPopupTitle = LinkPopup:CreateFontString(nil, "OVERLAY")
 LinkPopupTitle:SetPoint("TOPLEFT", LinkPopup, "TOPLEFT", 16, -14)
 LinkPopupTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 LinkPopupTitle:SetTextColor(1, 0.82, 0, 1)
-LinkPopupTitle:SetText("Link öffnen")
+LinkPopupTitle:SetText(L("LINK_OPEN"))
 
 local LinkPopupText = LinkPopup:CreateFontString(nil, "OVERLAY")
 LinkPopupText:SetPoint("TOPLEFT", LinkPopupTitle, "BOTTOMLEFT", 0, -10)
@@ -159,7 +260,7 @@ LinkPopupText:SetJustifyH("LEFT")
 LinkPopupText:SetJustifyV("TOP")
 LinkPopupText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 LinkPopupText:SetTextColor(1, 1, 1, 1)
-LinkPopupText:SetText("World of Warcraft erlaubt Addons nicht, Webseiten direkt zu öffnen. Du kannst die Adresse hier markieren und kopieren:")
+LinkPopupText:SetText(L("LINK_COPY_DESC"))
 
 local LinkPopupEditBox = CreateFrame("EditBox", nil, LinkPopup, "InputBoxTemplate")
 LinkPopupEditBox:SetSize(470, 30)
@@ -171,7 +272,7 @@ local LinkPopupHint = LinkPopup:CreateFontString(nil, "OVERLAY")
 LinkPopupHint:SetPoint("TOPLEFT", LinkPopupEditBox, "BOTTOMLEFT", 4, -10)
 LinkPopupHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 LinkPopupHint:SetTextColor(0.75, 0.75, 0.75, 1)
-LinkPopupHint:SetText("Tipp: Link markieren und mit Strg+C kopieren.")
+LinkPopupHint:SetText(L("LINK_COPY_HINT"))
 
 local function HideLinkPopup()
     LinkPopupEditBox:ClearFocus()
@@ -190,17 +291,25 @@ end)
 local LinkCloseButton = CreateFrame("Button", nil, LinkPopup, "UIPanelButtonTemplate")
 LinkCloseButton:SetSize(110, 26)
 LinkCloseButton:SetPoint("BOTTOMRIGHT", LinkPopup, "BOTTOMRIGHT", -16, 12)
-LinkCloseButton:SetText("Schließen")
+LinkCloseButton:SetText(L("CLOSE"))
 LinkCloseButton:SetScript("OnClick", HideLinkPopup)
 
--- Zentraler Helfer für alle Seiten, die dem Nutzer nur eine kopierbare URL
--- anzeigen sollen, statt ein eigenes Popup nachzubauen.
+BeavisQoL.UpdateUI = function()
+    HeaderSubtitle:SetText(L("HEADER_SUBTITLE"))
+    VersionBadgeText:SetText(L("VERSION") .. " " .. version)
+    ReloadButton:SetText(L("RELOAD"))
+    LinkPopupTitle:SetText(L("LINK_OPEN"))
+    LinkPopupText:SetText(L("LINK_COPY_DESC"))
+    LinkPopupHint:SetText(L("LINK_COPY_HINT"))
+    LinkCloseButton:SetText(L("CLOSE"))
+end
+
 function BeavisQoL.ShowLinkPopup(titleText, urlText)
     if not urlText or urlText == "" then
         return
     end
 
-    LinkPopupTitle:SetText(titleText or "Link öffnen")
+    LinkPopupTitle:SetText(titleText or L("LINK_OPEN"))
     LinkPopupEditBox:SetText(urlText)
     LinkPopup:Show()
     LinkPopupEditBox:SetFocus()

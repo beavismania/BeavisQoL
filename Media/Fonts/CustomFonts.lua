@@ -1,4 +1,8 @@
 local ADDON_NAME = ...
+
+-- Diese Datei ist nur eine kleine Font-Liste.
+-- Andere Module, vor allem Combat Text, lesen sie ein und bauen daraus die
+-- auswählbaren Schriftarten auf.
 local fontBasePath = "Interface\\AddOns\\" .. tostring(ADDON_NAME) .. "\\fonts\\"
 -- Der Pfad wird absichtlich ueber ADDON_NAME aufgebaut.
 -- Damit bleiben die Font-Eintraege korrekt, auch wenn der Addon-Ordner oder

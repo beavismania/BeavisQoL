@@ -1,5 +1,9 @@
 local ADDON_NAME = ...
 
+-- Bootstrap.lua greift bewusst sehr frueh in den Combat-Text-Font ein.
+-- Ziel ist, dass die gewaehlte Schrift moeglichst schon aktiv ist, bevor
+-- spaeter andere UI-Teile sie sichtbar benutzen.
+
 -- Der Welttext zieht sich den Basis-Font sehr früh.
 -- SavedVariables stehen beim bloßen Parsen der Lua-Datei aber noch nicht
 -- verlässlich zur Verfügung. Deshalb wartet der Bootstrap bewusst auf

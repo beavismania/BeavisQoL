@@ -2,7 +2,12 @@ local ADDON_NAME, BeavisQoL = ...
 
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
+local L = BeavisQoL.L
 local GetCoinText = (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString) or rawget(_G, "GetCoinTextureString")
+
+-- Diese Datei enthaelt nur die eigentliche Reparatur-Automatik.
+-- Der sichtbare Schalter dafuer sitzt auf der Komfort-Seite in `Pages/Misc.lua`.
+
 -- AutoRepair teilt sich wie die anderen Misc-Module dieselbe Unter-DB.
 -- Dadurch kann die Misc-Seite später alle Schalter an einer Stelle lesen.
 
@@ -88,13 +93,13 @@ function Misc.TryAutoRepair()
     -- Wenn gewünscht, bekommt die Gilde den ersten Versuch.
     if db.autoRepairGuild and CanGuildBankRepair and CanGuildBankRepair() then
         RepairAllItems(true)
-        print("Beavis QoL: Reparatur über die Gilde durchgeführt.")
+        print(L("AUTOREPAIR_GUILD_DONE"))
         return
     end
 
     if GetMoney() >= repairCost then
         RepairAllItems(false)
-        print("Beavis QoL: Reparatur für " .. GetCoinText(repairCost) .. " durchgeführt.")
+        print(L("AUTOREPAIR_DONE"):format(GetCoinText(repairCost)))
     end
 end
 

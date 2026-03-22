@@ -1,16 +1,46 @@
 local ADDON_NAME, BeavisQoL = ...
 
--- Tree.lua setzt auf die UI-Teile aus UI.lua auf:
--- Sidebar = linker Navigationsbereich
--- Pages   = Sammlung aller Seiten-Frames, die später ein-/ausgeblendet werden.
-local Sidebar = BeavisQoL.Sidebar
+--[[
+Tree.lua rendert die linke Navigation.
+Die Seite selbst zeigt keine Inhalte, sondern nur:
+- Hauptgruppen
+- Modulsektionen
+- Eintraege zum Oeffnen der Seiten
+]]
+
+local SidebarFrame = BeavisQoL.Sidebar
 local Pages = BeavisQoL.Pages
 
--- Die Gruppen starten eingeklappt, damit die Sidebar auch mit mehr Modulen ruhig bleibt.
-local GeneralExpanded = false
-local ModuleExpanded = false
+local L = BeavisQoL.L
+local SidebarCaption = SidebarFrame:CreateFontString(nil, "ARTWORK")
+SidebarCaption:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 14, -12)
+SidebarCaption:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+SidebarCaption:SetTextColor(1, 0.82, 0, 1)
+SidebarCaption:SetText(L("NAVIGATION"))
 
--- Die Seiten liegen einfach übereinander. Darum reicht es, immer nur eine einzublenden.
+local SidebarCaptionHint = SidebarFrame:CreateFontString(nil, "ARTWORK")
+SidebarCaptionHint:SetPoint("TOPLEFT", SidebarCaption, "BOTTOMLEFT", 0, -4)
+SidebarCaptionHint:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+SidebarCaptionHint:SetTextColor(0.74, 0.74, 0.76, 1)
+SidebarCaptionHint:SetText(L("NAVIGATION_HINT"))
+
+local SidebarScrollFrame = CreateFrame("ScrollFrame", nil, SidebarFrame, "UIPanelScrollFrameTemplate")
+SidebarScrollFrame:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 10, -46)
+SidebarScrollFrame:SetPoint("BOTTOMRIGHT", SidebarFrame, "BOTTOMRIGHT", -28, 10)
+SidebarScrollFrame:EnableMouseWheel(true)
+
+local Sidebar = CreateFrame("Frame", nil, SidebarScrollFrame)
+Sidebar:SetSize(1, 1)
+SidebarScrollFrame:SetScrollChild(Sidebar)
+
+local GeneralExpanded = true
+local ModuleExpanded = true
+
+local GeneralEntries = {}
+local ModuleSectionHeaders = {}
+local ModuleEntries = {}
+local AllEntries = {}
+
 local function ShowPage(pageToShow)
     if not pageToShow then
         return
@@ -23,240 +53,431 @@ local function ShowPage(pageToShow)
     pageToShow:Show()
 end
 
--- ========================================
--- Tree Gruppe: Allgemein
--- ========================================
+local function ApplyToggleVisual(button, hovered)
+    local backgroundAlpha = hovered and 0.08 or 0.04
+    local indicatorAlpha = hovered and 0.22 or 0.14
 
--- Die Buttons werden alle sofort erzeugt, aber ihre Positionen kommen erst
--- später in UpdateTreeLayout(). So kann dieselbe Layout-Funktion sowohl
--- eingeklappte als auch aufgeklappte Gruppen sauber behandeln.
-local TreeGeneralButton = CreateFrame("Button", nil, Sidebar)
-TreeGeneralButton:SetSize(160, 20)
+    button.Bg:SetColorTexture(1, 0.82, 0, backgroundAlpha)
+    button.IndicatorBg:SetColorTexture(1, 0.82, 0, indicatorAlpha)
+    button.Indicator:SetText(button.IsExpanded and "-" or "+")
+end
 
-local TreeGeneralIndicator = TreeGeneralButton:CreateFontString(nil, "OVERLAY")
-TreeGeneralIndicator:SetPoint("LEFT", TreeGeneralButton, "LEFT", 0, 0)
-TreeGeneralIndicator:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeGeneralIndicator:SetTextColor(1, 0.82, 0, 1)
-TreeGeneralIndicator:SetText("+")
+local function CreateToggleButton(labelTextKey)
+    local button = CreateFrame("Button", nil, Sidebar)
+    button:SetSize(192, 26)
+    button:SetHitRectInsets(-4, -4, -2, -2)
 
-local TreeGeneralText = TreeGeneralButton:CreateFontString(nil, "OVERLAY")
-TreeGeneralText:SetPoint("LEFT", TreeGeneralIndicator, "RIGHT", 6, 0)
-TreeGeneralText:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
-TreeGeneralText:SetTextColor(1, 0.82, 0, 1)
-TreeGeneralText:SetText("Allgemein")
+    local bg = button:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(1, 0.82, 0, 0.04)
+    button.Bg = bg
 
-local TreeHomeButton = CreateFrame("Button", nil, Sidebar)
-TreeHomeButton:SetSize(140, 20)
+    local indicatorBg = button:CreateTexture(nil, "ARTWORK")
+    indicatorBg:SetSize(18, 18)
+    indicatorBg:SetPoint("LEFT", button, "LEFT", 8, 0)
+    indicatorBg:SetColorTexture(1, 0.82, 0, 0.14)
+    button.IndicatorBg = indicatorBg
 
-local TreeHomeText = TreeHomeButton:CreateFontString(nil, "OVERLAY")
-TreeHomeText:SetAllPoints()
-TreeHomeText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeHomeText:SetJustifyH("LEFT")
-TreeHomeText:SetTextColor(1, 1, 1, 1)
-TreeHomeText:SetText("Home")
+    local indicator = button:CreateFontString(nil, "OVERLAY")
+    indicator:SetPoint("CENTER", indicatorBg, "CENTER", 0, 0)
+    indicator:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    indicator:SetTextColor(1, 0.92, 0.45, 1)
+    indicator:SetText("+")
 
-local TreeVersionButton = CreateFrame("Button", nil, Sidebar)
-TreeVersionButton:SetSize(140, 20)
+    local text = button:CreateFontString(nil, "OVERLAY")
+    text:SetPoint("LEFT", indicatorBg, "RIGHT", 10, 0)
+    text:SetPoint("RIGHT", button, "RIGHT", -8, 0)
+    text:SetJustifyH("LEFT")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+    text:SetTextColor(1, 0.82, 0, 1)
+    text:SetText(L(labelTextKey))
 
-local TreeVersionText = TreeVersionButton:CreateFontString(nil, "OVERLAY")
-TreeVersionText:SetAllPoints()
-TreeVersionText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeVersionText:SetJustifyH("LEFT")
-TreeVersionText:SetTextColor(1, 1, 1, 1)
-TreeVersionText:SetText("Version")
+    button.Indicator = indicator
+    button.Text = text
+    button.IsExpanded = false
 
-local TreeSettingsButton = CreateFrame("Button", nil, Sidebar)
-TreeSettingsButton:SetSize(140, 20)
+    button:SetScript("OnEnter", function(self)
+        ApplyToggleVisual(self, true)
+    end)
 
-local TreeSettingsText = TreeSettingsButton:CreateFontString(nil, "OVERLAY")
-TreeSettingsText:SetAllPoints()
-TreeSettingsText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeSettingsText:SetJustifyH("LEFT")
-TreeSettingsText:SetTextColor(1, 1, 1, 1)
-TreeSettingsText:SetText("Einstellungen")
+    button:SetScript("OnLeave", function(self)
+        ApplyToggleVisual(self, false)
+    end)
 
--- ========================================
--- Tree Gruppe: Module
--- ========================================
+    ApplyToggleVisual(button, false)
+    return button, indicator, text
+end
 
-local TreeModuleButton = CreateFrame("Button", nil, Sidebar)
-TreeModuleButton:SetSize(160, 20)
+local function ApplyEntryVisual(entry, hovered)
+    if entry.isActive then
+        entry.button.Bg:SetColorTexture(1, 0.82, 0, 0.11)
+        entry.button.Accent:SetAlpha(1)
+        entry.text:SetTextColor(1, 0.9, 0.35, 1)
+        return
+    end
 
-local TreeModuleIndicator = TreeModuleButton:CreateFontString(nil, "OVERLAY")
-TreeModuleIndicator:SetPoint("LEFT", TreeModuleButton, "LEFT", 0, 0)
-TreeModuleIndicator:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeModuleIndicator:SetTextColor(1, 0.82, 0, 1)
-TreeModuleIndicator:SetText("+")
+    if hovered then
+        entry.button.Bg:SetColorTexture(1, 0.82, 0, 0.055)
+        entry.button.Accent:SetAlpha(0.45)
+        entry.text:SetTextColor(1, 1, 1, 1)
+        return
+    end
 
-local TreeModuleText = TreeModuleButton:CreateFontString(nil, "OVERLAY")
-TreeModuleText:SetPoint("LEFT", TreeModuleIndicator, "RIGHT", 6, 0)
-TreeModuleText:SetFont("Fonts\\FRIZQT__.TTF", 16, "")
-TreeModuleText:SetTextColor(1, 0.82, 0, 1)
-TreeModuleText:SetText("Module")
+    entry.button.Bg:SetColorTexture(1, 0.82, 0, 0.015)
+    entry.button.Accent:SetAlpha(0)
+    entry.text:SetTextColor(0.92, 0.92, 0.95, 1)
+end
 
-local TreeLevelTimeButton = CreateFrame("Button", nil, Sidebar)
-TreeLevelTimeButton:SetSize(140, 20)
+local function AttachEntryVisual(entry)
+    entry.button:SetScript("OnEnter", function()
+        ApplyEntryVisual(entry, true)
+    end)
 
-local TreeLevelTimeText = TreeLevelTimeButton:CreateFontString(nil, "OVERLAY")
-TreeLevelTimeText:SetAllPoints()
-TreeLevelTimeText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeLevelTimeText:SetJustifyH("LEFT")
-TreeLevelTimeText:SetTextColor(1, 1, 1, 1)
-TreeLevelTimeText:SetText("Levelzeit")
+    entry.button:SetScript("OnLeave", function()
+        ApplyEntryVisual(entry, false)
+    end)
 
-local TreeMiscButton = CreateFrame("Button", nil, Sidebar)
-TreeMiscButton:SetSize(140, 20)
+    ApplyEntryVisual(entry, false)
+end
 
-local TreeMiscText = TreeMiscButton:CreateFontString(nil, "OVERLAY")
-TreeMiscText:SetAllPoints()
-TreeMiscText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeMiscText:SetJustifyH("LEFT")
-TreeMiscText:SetTextColor(1, 1, 1, 1)
-TreeMiscText:SetText("Misc")
+local function CreateEntryButton(labelTextKey)
+    local button = CreateFrame("Button", nil, Sidebar)
+    button:SetSize(192, 24)
+    button:SetHitRectInsets(-4, -4, -2, -2)
 
-local TreePetStuffButton = CreateFrame("Button", nil, Sidebar)
-TreePetStuffButton:SetSize(140, 20)
+    local bg = button:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(1, 0.82, 0, 0.015)
+    button.Bg = bg
 
-local TreePetStuffText = TreePetStuffButton:CreateFontString(nil, "OVERLAY")
-TreePetStuffText:SetAllPoints()
-TreePetStuffText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreePetStuffText:SetJustifyH("LEFT")
-TreePetStuffText:SetTextColor(1, 1, 1, 1)
-TreePetStuffText:SetText("Pet Stuff")
+    local accent = button:CreateTexture(nil, "ARTWORK")
+    accent:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+    accent:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
+    accent:SetWidth(2)
+    accent:SetColorTexture(1, 0.82, 0, 0.95)
+    accent:SetAlpha(0)
+    button.Accent = accent
 
-local TreeLFGButton = CreateFrame("Button", nil, Sidebar)
-TreeLFGButton:SetSize(140, 20)
+    local text = button:CreateFontString(nil, "OVERLAY")
+    text:SetPoint("LEFT", button, "LEFT", 12, 0)
+    text:SetPoint("RIGHT", button, "RIGHT", -8, 0)
+    text:SetJustifyH("LEFT")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+    text:SetTextColor(0.92, 0.92, 0.95, 1)
+    text:SetText(L(labelTextKey))
 
-local TreeLFGText = TreeLFGButton:CreateFontString(nil, "OVERLAY")
-TreeLFGText:SetAllPoints()
-TreeLFGText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeLFGText:SetJustifyH("LEFT")
-TreeLFGText:SetTextColor(1, 1, 1, 1)
-TreeLFGText:SetText("Gruppensuche")
+    return button, text
+end
 
-local TreeDamageTextButton = CreateFrame("Button", nil, Sidebar)
-TreeDamageTextButton:SetSize(140, 20)
+local function CreateSectionHeader(labelTextKey)
+    local frame = CreateFrame("Frame", nil, Sidebar)
+    frame:SetSize(192, 22)
 
-local TreeDamageTextText = TreeDamageTextButton:CreateFontString(nil, "OVERLAY")
-TreeDamageTextText:SetAllPoints()
-TreeDamageTextText:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TreeDamageTextText:SetJustifyH("LEFT")
-TreeDamageTextText:SetTextColor(1, 1, 1, 1)
-TreeDamageTextText:SetText("Combat Text")
+    local line = frame:CreateTexture(nil, "BACKGROUND")
+    line:SetPoint("LEFT", frame, "LEFT", 0, 0)
+    line:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
+    line:SetHeight(1)
+    line:SetColorTexture(1, 0.82, 0, 0.12)
 
--- ========================================
--- Aktiven Tree-Eintrag färben
--- ========================================
+    local accent = frame:CreateTexture(nil, "ARTWORK")
+    accent:SetPoint("LEFT", frame, "LEFT", 0, 0)
+    accent:SetSize(18, 2)
+    accent:SetColorTexture(1, 0.82, 0, 0.8)
 
--- Die aktive Farbe setzen wir zentral, damit die Buttons simpel bleiben.
+    local text = frame:CreateFontString(nil, "OVERLAY")
+    text:SetPoint("LEFT", frame, "LEFT", 0, 8)
+    text:SetPoint("RIGHT", frame, "RIGHT", 0, 8)
+    text:SetJustifyH("LEFT")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    text:SetTextColor(1, 0.82, 0, 0.85)
+    text:SetText(L(labelTextKey))
+
+    return frame, text
+end
+
+local TreeGeneralButton, TreeGeneralIndicator = CreateToggleButton("GENERAL")
+local TreeModuleButton, TreeModuleIndicator = CreateToggleButton("MODULES")
+
+local function RegisterGeneralEntry(pageKey, labelTextKey)
+    local button, text = CreateEntryButton(labelTextKey)
+    local entry = {
+        pageKey = pageKey,
+        button = button,
+        text = text,
+        miscSection = nil,
+        isActive = false,
+    }
+
+    GeneralEntries[#GeneralEntries + 1] = entry
+    AllEntries[#AllEntries + 1] = entry
+    AttachEntryVisual(entry)
+    return button, text
+end
+
+local function RegisterModuleSection(labelTextKey)
+    local frame, text = CreateSectionHeader(labelTextKey)
+    local section = {
+        frame = frame,
+        text = text,
+        entries = {},
+    }
+
+    ModuleSectionHeaders[#ModuleSectionHeaders + 1] = section
+    return section
+end
+
+local function RegisterModuleEntry(section, labelTextKey, pageKey, options)
+    local button, text = CreateEntryButton(labelTextKey)
+    local entry = {
+        pageKey = pageKey,
+        button = button,
+        text = text,
+        miscSection = options and options.miscSection or nil,
+        isActive = false,
+    }
+
+    section.entries[#section.entries + 1] = entry
+    ModuleEntries[#ModuleEntries + 1] = entry
+    AllEntries[#AllEntries + 1] = entry
+    AttachEntryVisual(entry)
+    return entry
+end
+
+local TreeHomeButton, TreeHomeText = RegisterGeneralEntry("Home", "HOME")
+local TreeVersionButton, TreeVersionText = RegisterGeneralEntry("Version", "VERSION")
+local TreeSettingsButton, TreeSettingsText = RegisterGeneralEntry("Settings", "SETTINGS")
+
+local ProgressSection = RegisterModuleSection("PROGRESS")
+local GoldSection = RegisterModuleSection("GOLD_TRADE")
+local ComfortSection = RegisterModuleSection("COMFORT")
+local InterfaceSection = RegisterModuleSection("INTERFACE_COMBAT")
+local GroupSection = RegisterModuleSection("GROUP_SEARCH")
+local CompanionSection = RegisterModuleSection("COMPANION")
+
+local LevelTimeEntry = RegisterModuleEntry(ProgressSection, "LEVEL_TIME", "LevelTime")
+local ChecklistEntry = RegisterModuleEntry(ProgressSection, "CHECKLIST", "Checklist")
+local WeeklyKeysEntry = RegisterModuleEntry(ProgressSection, "WEEKLY_KEYS", "WeeklyKeys")
+local ItemLevelGuideEntry = RegisterModuleEntry(ProgressSection, "ITEMLEVEL_GUIDE", "ItemLevelGuide")
+local QuestCheckEntry = RegisterModuleEntry(ProgressSection, "QUEST_CHECK", "QuestCheck")
+
+local LoggingEntry = RegisterModuleEntry(GoldSection, "LOGGING", "Logging")
+local AutoSellEntry = RegisterModuleEntry(GoldSection, "AUTOSELL_JUNK", "Misc", { miscSection = "AutoSell" })
+local AutoRepairEntry = RegisterModuleEntry(GoldSection, "AUTOREPAIR", "Misc", { miscSection = "AutoRepair" })
+
+local FastLootEntry = RegisterModuleEntry(ComfortSection, "FAST_LOOT", "Misc", { miscSection = "FastLoot" })
+local EasyDeleteEntry = RegisterModuleEntry(ComfortSection, "EASY_DELETE", "Misc", { miscSection = "EasyDelete" })
+local CameraDistanceEntry = RegisterModuleEntry(ComfortSection, "CAMERA_DISTANCE", "Misc", { miscSection = "CameraDistance" })
+
+local StatsEntry = RegisterModuleEntry(InterfaceSection, "STATS", "Stats")
+local CombatTextEntry = RegisterModuleEntry(InterfaceSection, "COMBAT_TEXT", "DamageText")
+local LFGEntry = RegisterModuleEntry(GroupSection, "LFG", "LFG")
+local PetStuffEntry = RegisterModuleEntry(CompanionSection, "PET_STUFF", "PetStuff")
+
 local function SetActiveTreeItem(activeText)
-    TreeHomeText:SetTextColor(1, 1, 1, 1)
-    TreeSettingsText:SetTextColor(1, 1, 1, 1)
-    TreeVersionText:SetTextColor(1, 1, 1, 1)
-    TreeLevelTimeText:SetTextColor(1, 1, 1, 1)
-    TreeMiscText:SetTextColor(1, 1, 1, 1)
-    TreePetStuffText:SetTextColor(1, 1, 1, 1)
-    TreeLFGText:SetTextColor(1, 1, 1, 1)
-    TreeDamageTextText:SetTextColor(1, 1, 1, 1)
-
-    if activeText then
-        activeText:SetTextColor(1, 0.82, 0, 1)
+    for _, entry in ipairs(AllEntries) do
+        entry.isActive = activeText ~= nil and entry.text == activeText
+        ApplyEntryVisual(entry, false)
     end
 end
 
--- ========================================
--- Tree Layout dynamisch aufbauen
--- ========================================
+local function UpdateTreeScrollLayout(contentBottomY)
+    Sidebar:SetWidth(math.max(1, SidebarScrollFrame:GetWidth()))
+    Sidebar:SetHeight(math.max(SidebarScrollFrame:GetHeight(), -contentBottomY + 28))
 
--- Das Layout wird nach jedem Auf- oder Zuklappen neu aufgebaut.
--- Bei der kleinen Zahl an Einträgen ist das robuster als feste Y-Offsets.
+    local maxScroll = math.max(0, Sidebar:GetHeight() - SidebarScrollFrame:GetHeight())
+    if SidebarScrollFrame:GetVerticalScroll() > maxScroll then
+        SidebarScrollFrame:SetVerticalScroll(maxScroll)
+    end
+end
+
+local function HideModuleSection(section)
+    section.frame:Hide()
+    section.frame:ClearAllPoints()
+
+    for _, entry in ipairs(section.entries) do
+        entry.button:Hide()
+        entry.button:ClearAllPoints()
+    end
+end
+
 local function UpdateTreeLayout()
-    -- Wir starten jeden Neuaufbau mit einem neutralen Zustand:
-    -- Positionen löschen, Unterpunkte verstecken und danach von oben nach unten
-    -- frisch setzen. Das ist robuster als viele voneinander abhaengige Offsets.
     TreeGeneralButton:ClearAllPoints()
-    TreeHomeButton:ClearAllPoints()
-    TreeVersionButton:ClearAllPoints()
-    TreeSettingsButton:ClearAllPoints()
     TreeModuleButton:ClearAllPoints()
-    TreeLevelTimeButton:ClearAllPoints()
-    TreeMiscButton:ClearAllPoints()
-    TreePetStuffButton:ClearAllPoints()
-    TreeLFGButton:ClearAllPoints()
-    TreeDamageTextButton:ClearAllPoints()
 
-    TreeHomeButton:Hide()
-    TreeVersionButton:Hide()
-    TreeSettingsButton:Hide()
-    TreeLevelTimeButton:Hide()
-    TreeMiscButton:Hide()
-    TreePetStuffButton:Hide()
-    TreeLFGButton:Hide()
-    TreeDamageTextButton:Hide()
+    for _, entry in ipairs(GeneralEntries) do
+        entry.button:Hide()
+        entry.button:ClearAllPoints()
+    end
 
-    local groupX = 12
-    local childX = 28
-    local currentY = -20
+    for _, section in ipairs(ModuleSectionHeaders) do
+        HideModuleSection(section)
+    end
 
-    -- Erst "Allgemein", danach hängt die Modulgruppe direkt darunter.
+    TreeGeneralButton.IsExpanded = GeneralExpanded
+    TreeModuleButton.IsExpanded = ModuleExpanded
+    ApplyToggleVisual(TreeGeneralButton, false)
+    ApplyToggleVisual(TreeModuleButton, false)
+
+    local groupX = 6
+    local childX = 16
+    local sectionX = 16
+    local sectionChildX = 24
+    local currentY = -4
+
     TreeGeneralButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
 
     if GeneralExpanded then
         TreeGeneralIndicator:SetText("-")
+        currentY = currentY - 34
 
-        currentY = currentY - 28
-        TreeHomeButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreeHomeButton:Show()
+        for _, entry in ipairs(GeneralEntries) do
+            entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+            entry.button:Show()
+            currentY = currentY - 30
+        end
 
-        currentY = currentY - 26
-        TreeVersionButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreeVersionButton:Show()
-
-        currentY = currentY - 26
-        TreeSettingsButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreeSettingsButton:Show()
-
-        currentY = currentY - 32
+        currentY = currentY - 4
     else
         TreeGeneralIndicator:SetText("+")
-        currentY = currentY - 38
+        currentY = currentY - 40
     end
 
     TreeModuleButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
 
-    if ModuleExpanded then
-        TreeModuleIndicator:SetText("-")
-
-        currentY = currentY - 28
-        TreeLevelTimeButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreeLevelTimeButton:Show()
-
-        currentY = currentY - 26
-        TreeMiscButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreeMiscButton:Show()
-
-        currentY = currentY - 26
-        TreePetStuffButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreePetStuffButton:Show()
-
-        currentY = currentY - 26
-        TreeLFGButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreeLFGButton:Show()
-
-        currentY = currentY - 26
-        TreeDamageTextButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-        TreeDamageTextButton:Show()
-    else
+    if not ModuleExpanded then
         TreeModuleIndicator:SetText("+")
+        UpdateTreeScrollLayout(currentY - 12)
+        return
+    end
+
+    TreeModuleIndicator:SetText("-")
+    currentY = currentY - 34
+
+    for _, section in ipairs(ModuleSectionHeaders) do
+        section.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
+        section.frame:Show()
+        currentY = currentY - 28
+
+        for _, entry in ipairs(section.entries) do
+            entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionChildX, currentY)
+            entry.button:Show()
+            currentY = currentY - 28
+        end
+
+        currentY = currentY - 10
+    end
+
+    UpdateTreeScrollLayout(currentY)
+end
+
+SidebarScrollFrame:SetScript("OnSizeChanged", function()
+    UpdateTreeLayout()
+end)
+
+SidebarScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 44
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, Sidebar:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
+BeavisQoL.UpdateTree = function()
+    SidebarCaption:SetText(L("NAVIGATION"))
+    SidebarCaptionHint:SetText(L("NAVIGATION_HINT"))
+
+    TreeGeneralButton.Text:SetText(L("GENERAL"))
+    TreeModuleButton.Text:SetText(L("MODULES"))
+
+    TreeHomeText:SetText(L("HOME"))
+    TreeVersionText:SetText(L("VERSION"))
+    TreeSettingsText:SetText(L("SETTINGS"))
+
+    ProgressSection.text:SetText(L("PROGRESS"))
+    GoldSection.text:SetText(L("GOLD_TRADE"))
+    ComfortSection.text:SetText(L("COMFORT"))
+    InterfaceSection.text:SetText(L("INTERFACE_COMBAT"))
+    GroupSection.text:SetText(L("GROUP_SEARCH"))
+    CompanionSection.text:SetText(L("COMPANION"))
+
+    LevelTimeEntry.text:SetText(L("LEVEL_TIME"))
+    ChecklistEntry.text:SetText(L("CHECKLIST"))
+    WeeklyKeysEntry.text:SetText(L("WEEKLY_KEYS"))
+    ItemLevelGuideEntry.text:SetText(L("ITEMLEVEL_GUIDE"))
+    QuestCheckEntry.text:SetText(L("QUEST_CHECK"))
+    LoggingEntry.text:SetText(L("LOGGING"))
+    AutoSellEntry.text:SetText(L("AUTOSELL_JUNK"))
+    AutoRepairEntry.text:SetText(L("AUTOREPAIR"))
+    FastLootEntry.text:SetText(L("FAST_LOOT"))
+    EasyDeleteEntry.text:SetText(L("EASY_DELETE"))
+    CameraDistanceEntry.text:SetText(L("CAMERA_DISTANCE"))
+    StatsEntry.text:SetText(L("STATS"))
+    CombatTextEntry.text:SetText(L("COMBAT_TEXT"))
+    LFGEntry.text:SetText(L("LFG"))
+    PetStuffEntry.text:SetText(L("PET_STUFF"))
+
+    UpdateTreeLayout()
+end
+
+function BeavisQoL.OpenPage(pageKey, activeTextOverride)
+    if not BeavisQoL.Frame or not Pages then
+        return
+    end
+
+    local pageMap = {
+        Home = { page = Pages.Home, text = TreeHomeText, group = "general" },
+        Version = { page = Pages.Version, text = TreeVersionText, group = "general" },
+        Settings = { page = Pages.Settings, text = TreeSettingsText, group = "general" },
+        LevelTime = { page = Pages.LevelTime, text = LevelTimeEntry.text, group = "module" },
+        Checklist = { page = Pages.Checklist, text = ChecklistEntry.text, group = "module" },
+        WeeklyKeys = { page = Pages.WeeklyKeys, text = WeeklyKeysEntry.text, group = "module" },
+        ItemLevelGuide = { page = Pages.ItemLevelGuide, text = ItemLevelGuideEntry.text, group = "module" },
+        Logging = { page = Pages.Logging, text = LoggingEntry.text, group = "module" },
+        QuestCheck = { page = Pages.QuestCheck, text = QuestCheckEntry.text, group = "module" },
+        Misc = { page = Pages.Misc, text = nil, group = "module" },
+        Stats = { page = Pages.Stats, text = StatsEntry.text, group = "module" },
+        PetStuff = { page = Pages.PetStuff, text = PetStuffEntry.text, group = "module" },
+        LFG = { page = Pages.LFG, text = LFGEntry.text, group = "module" },
+        DamageText = { page = Pages.DamageText, text = CombatTextEntry.text, group = "module" },
+    }
+
+    local target = pageMap[pageKey]
+    if not target or not target.page then
+        return
+    end
+
+    if target.group == "general" then
+        GeneralExpanded = true
+    elseif target.group == "module" then
+        ModuleExpanded = true
+    end
+
+    UpdateTreeLayout()
+
+    if not BeavisQoL.Frame:IsShown() then
+        BeavisQoL.Frame:Show()
+    end
+
+    ShowPage(target.page)
+    SetActiveTreeItem(activeTextOverride or target.text)
+end
+
+function BeavisQoL.OpenMiscSection(sectionKey, activeTextOverride)
+    BeavisQoL.OpenPage("Misc", activeTextOverride)
+
+    local miscPage = Pages and Pages.Misc
+    if miscPage and miscPage.OpenSection then
+        miscPage:OpenSection(sectionKey)
     end
 end
 
--- ========================================
--- Klicklogik
--- ========================================
-
--- Die Buttons klappen Gruppen auf oder wechseln die Seite.
--- Alles, was den eigentlichen Inhalt betrifft, bleibt in den Seiten-Dateien.
 TreeGeneralButton:SetScript("OnClick", function()
     GeneralExpanded = not GeneralExpanded
     UpdateTreeLayout()
@@ -268,50 +489,28 @@ TreeModuleButton:SetScript("OnClick", function()
 end)
 
 TreeHomeButton:SetScript("OnClick", function()
-    ShowPage(Pages.Home)
-    SetActiveTreeItem(TreeHomeText)
+    BeavisQoL.OpenPage("Home")
 end)
 
 TreeVersionButton:SetScript("OnClick", function()
-    ShowPage(Pages.Version)
-    SetActiveTreeItem(TreeVersionText)
+    BeavisQoL.OpenPage("Version")
 end)
 
 TreeSettingsButton:SetScript("OnClick", function()
-    ShowPage(Pages.Settings)
-    SetActiveTreeItem(TreeSettingsText)
+    BeavisQoL.OpenPage("Settings")
 end)
 
-TreeLevelTimeButton:SetScript("OnClick", function()
-    ShowPage(Pages.LevelTime)
-    SetActiveTreeItem(TreeLevelTimeText)
-end)
+for _, entry in ipairs(ModuleEntries) do
+    entry.button:SetScript("OnClick", function()
+        if entry.miscSection then
+            BeavisQoL.OpenMiscSection(entry.miscSection, entry.text)
+            return
+        end
 
-TreeMiscButton:SetScript("OnClick", function()
-    ShowPage(Pages.Misc)
-    SetActiveTreeItem(TreeMiscText)
-end)
+        BeavisQoL.OpenPage(entry.pageKey, entry.text)
+    end)
+end
 
-TreePetStuffButton:SetScript("OnClick", function()
-    ShowPage(Pages.PetStuff)
-    SetActiveTreeItem(TreePetStuffText)
-end)
-
-TreeLFGButton:SetScript("OnClick", function()
-    ShowPage(Pages.LFG)
-    SetActiveTreeItem(TreeLFGText)
-end)
-
-TreeDamageTextButton:SetScript("OnClick", function()
-    ShowPage(Pages.DamageText)
-    SetActiveTreeItem(TreeDamageTextText)
-end)
-
--- ========================================
--- Startzustand
--- ========================================
-
--- Home ist die neutralste Startseite und bleibt deshalb der Standard.
 UpdateTreeLayout()
 ShowPage(Pages.Home)
 SetActiveTreeItem(TreeHomeText)
