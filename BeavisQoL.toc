@@ -1,23 +1,24 @@
 ## Title: Beavis Quality of Life
 ## Notes: Beavis QoL
 ## Author: Beavis
-## Version: 0.0.3 Alpha
+## Version: 0.0.16 Alpha
 ## Interface: 120001 
 ##X-GameVersion: 120001
 ## X-GameVersionLabel: Patch 12.0.1
 ## SavedVariables: BeavisQoLDB
 ## SavedVariablesPerCharacter: BeavisQoLCharDB
-## X-ReleaseDate: 2026-03-20
+## X-ReleaseDate: 2026-03-22
 
 # =========================
 # Changelog
 # =========================
-# 2026-03-22 - 0.0.3 Alpha
+# 2026-03-22 - 0.0.16 Alpha
 # - Checkliste mit Daily, Weekly und "Im Blick halten"
 # - Itemlevel-Guide fuer Midnight Saison 1
 # - Logging-Modul mit Verkaufs-, Reparatur- und Gold-Logs
 # - Stats-Overlay und Weekly-Keys-Overlay
 # - Quest Check Modul
+# - Laufzeit-Lokalisierung fuer Deutsch und Englisch
 # - Hauptfenster optisch ueberarbeitet
 # - Minimap-Rechtsklickmenue mit Schnellzugriffen und Overlay-Toggles
 # - Tree in neue Hauptkategorien gegliedert und mit Scrollbar erweitert
