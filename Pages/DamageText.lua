@@ -1,8 +1,13 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
+local L = BeavisQoL.L
 BeavisQoL.DamageText = BeavisQoL.DamageText or {}
 local DamageText = BeavisQoL.DamageText
+
+-- DamageText.lua ist die Bedienoberflaeche des Combat-Text-Moduls.
+-- Die eigentliche Font- und CVar-Logik liegt in den Unterdateien unter
+-- `Pages/DamageText/`.
 
 -- Die Seite kann mit Hinweisen und Reglern schnell länger werden.
 -- Darum hängt sie wie Misc an einem eigenen ScrollFrame.
@@ -98,7 +103,7 @@ local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText("Combat Text")
+IntroTitle:SetText(L("COMBAT_TEXT"))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -107,7 +112,7 @@ IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
-IntroText:SetText("Hier kannst du die Blizzard-Schadenszahlen optisch anpassen. Schrift und Bewegungsverhalten werden direkt über die vorhandenen Combat-Text-Systeme umgestellt.")
+IntroText:SetText(L("DAMAGE_TEXT_DESC"))
 
 local ConflictWarning = IntroPanel:CreateFontString(nil, "OVERLAY")
 ConflictWarning:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -8)
@@ -116,7 +121,7 @@ ConflictWarning:SetJustifyH("LEFT")
 ConflictWarning:SetJustifyV("TOP")
 ConflictWarning:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
 ConflictWarning:SetTextColor(1, 0.22, 0.22, 1)
-ConflictWarning:SetText("Konflikt: NiceDamage ist geladen und kann deinen Combat Text überschreiben. Bitte NiceDamage für diesen Charakter deaktivieren, wenn du Beavis QoL nutzen willst.")
+ConflictWarning:SetText(L("DAMAGE_TEXT_CONFLICT"))
 ConflictWarning:Hide()
 
 -- ========================================
@@ -142,7 +147,7 @@ local EnableTitle = EnablePanel:CreateFontString(nil, "OVERLAY")
 EnableTitle:SetPoint("TOPLEFT", EnablePanel, "TOPLEFT", 18, -14)
 EnableTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 EnableTitle:SetTextColor(1, 0.82, 0, 1)
-EnableTitle:SetText("Nice Damage Style")
+EnableTitle:SetText(L("DAMAGE_TEXT_ENABLE_TITLE"))
 
 local EnableCheckbox = CreateFrame("CheckButton", nil, EnablePanel, "UICheckButtonTemplate")
 EnableCheckbox:SetPoint("TOPLEFT", EnableTitle, "BOTTOMLEFT", -4, -12)
@@ -151,7 +156,7 @@ local EnableLabel = EnablePanel:CreateFontString(nil, "OVERLAY")
 EnableLabel:SetPoint("LEFT", EnableCheckbox, "RIGHT", 6, 0)
 EnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 EnableLabel:SetTextColor(1, 1, 1, 1)
-EnableLabel:SetText("Aktiv")
+EnableLabel:SetText(L("ACTIVE"))
 
 local EnableHint = EnablePanel:CreateFontString(nil, "OVERLAY")
 EnableHint:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", 34, -2)
@@ -160,7 +165,7 @@ EnableHint:SetJustifyH("LEFT")
 EnableHint:SetJustifyV("TOP")
 EnableHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 EnableHint:SetTextColor(0.80, 0.80, 0.80, 1)
-EnableHint:SetText("Ersetzt die Blizzard-Kampftext-Schrift und passt die Bewegung der Schadenszahlen über Scale, Gravity und Ramp Duration an.")
+EnableHint:SetText(L("DAMAGE_TEXT_ENABLE_HINT"))
 
 -- ========================================
 -- Bereich: Darstellung
@@ -185,7 +190,7 @@ local AppearanceTitle = AppearancePanel:CreateFontString(nil, "OVERLAY")
 AppearanceTitle:SetPoint("TOPLEFT", AppearancePanel, "TOPLEFT", 18, -14)
 AppearanceTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 AppearanceTitle:SetTextColor(1, 0.82, 0, 1)
-AppearanceTitle:SetText("Darstellung")
+AppearanceTitle:SetText(L("DISPLAY"))
 
 local AppearanceHint = AppearancePanel:CreateFontString(nil, "OVERLAY")
 AppearanceHint:SetPoint("TOPLEFT", AppearanceTitle, "BOTTOMLEFT", 0, -8)
@@ -194,28 +199,34 @@ AppearanceHint:SetJustifyH("LEFT")
 AppearanceHint:SetJustifyV("TOP")
 AppearanceHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 AppearanceHint:SetTextColor(0.80, 0.80, 0.80, 1)
-AppearanceHint:SetText("Die mitgelieferten Fonts aus dem Font-Ordner des Addons stehen dir direkt in der Auswahl zur Verfügung, inklusive Pepsi Modern. Scale, Gravity und Ramp Duration wirken direkt.")
+AppearanceHint:SetText(L("DAMAGE_TEXT_APPEARANCE_HINT"))
 
-local RestartWarning = AppearancePanel:CreateFontString(nil, "OVERLAY")
-RestartWarning:SetPoint("TOPLEFT", AppearanceHint, "BOTTOMLEFT", 0, -10)
-RestartWarning:SetPoint("RIGHT", AppearancePanel, "RIGHT", -18, 0)
-RestartWarning:SetJustifyH("LEFT")
-RestartWarning:SetJustifyV("TOP")
-RestartWarning:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-RestartWarning:SetTextColor(1, 0.22, 0.22, 1)
-RestartWarning:SetText("Wichtig: Nach einem Font-Wechsel muss das Spiel komplett beendet und neu gestartet werden, damit die Änderung sicher übernommen wird.")
+local RestartWarningTitle = AppearancePanel:CreateFontString(nil, "OVERLAY")
+RestartWarningTitle:SetPoint("TOPLEFT", AppearanceHint, "BOTTOMLEFT", 0, -10)
+RestartWarningTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+RestartWarningTitle:SetTextColor(1, 0.22, 0.22, 1)
+RestartWarningTitle:SetText(L("IMPORTANT"))
 
 local RestartWarningUnderline = AppearancePanel:CreateTexture(nil, "ARTWORK")
-RestartWarningUnderline:SetPoint("TOPLEFT", RestartWarning, "BOTTOMLEFT", 0, -3)
-RestartWarningUnderline:SetPoint("TOPRIGHT", RestartWarning, "BOTTOMRIGHT", 0, -3)
+RestartWarningUnderline:SetPoint("TOPLEFT", RestartWarningTitle, "BOTTOMLEFT", 0, -3)
+RestartWarningUnderline:SetPoint("TOPRIGHT", RestartWarningTitle, "BOTTOMRIGHT", 0, -3)
 RestartWarningUnderline:SetHeight(1)
 RestartWarningUnderline:SetColorTexture(1, 0.22, 0.22, 0.95)
 
+local RestartWarningText = AppearancePanel:CreateFontString(nil, "OVERLAY")
+RestartWarningText:SetPoint("TOPLEFT", RestartWarningUnderline, "BOTTOMLEFT", 0, -8)
+RestartWarningText:SetPoint("RIGHT", AppearancePanel, "RIGHT", -18, 0)
+RestartWarningText:SetJustifyH("LEFT")
+RestartWarningText:SetJustifyV("TOP")
+RestartWarningText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+RestartWarningText:SetTextColor(1, 0.22, 0.22, 1)
+RestartWarningText:SetText(L("DAMAGE_TEXT_RESTART_HINT"))
+
 local FontDropdownLabel = AppearancePanel:CreateFontString(nil, "OVERLAY")
-FontDropdownLabel:SetPoint("TOPLEFT", RestartWarning, "BOTTOMLEFT", 0, -22)
+FontDropdownLabel:SetPoint("TOPLEFT", RestartWarningText, "BOTTOMLEFT", 0, -18)
 FontDropdownLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 FontDropdownLabel:SetTextColor(1, 0.82, 0, 1)
-FontDropdownLabel:SetText("Schriftart")
+FontDropdownLabel:SetText(L("FONT"))
 
 local FontPickerButton = CreateFrame("Button", nil, AppearancePanel, BackdropTemplateMixin and "BackdropTemplate")
 FontPickerButton:SetPoint("TOPLEFT", FontDropdownLabel, "BOTTOMLEFT", 0, -8)
@@ -556,6 +567,18 @@ function PageDamageText:RefreshState()
 
     -- Erst alle Werte aus dem Modul lesen, dann gesammelt ins UI schreiben.
     -- So wirkt der Refresh wie ein konsistenter Snapshot.
+
+    IntroTitle:SetText(L("COMBAT_TEXT"))
+    IntroText:SetText(L("DAMAGE_TEXT_DESC"))
+    ConflictWarning:SetText(L("DAMAGE_TEXT_CONFLICT"))
+    EnableTitle:SetText(L("DAMAGE_TEXT_ENABLE_TITLE"))
+    EnableLabel:SetText(L("ACTIVE"))
+    EnableHint:SetText(L("DAMAGE_TEXT_ENABLE_HINT"))
+    AppearanceTitle:SetText(L("DISPLAY"))
+    AppearanceHint:SetText(L("DAMAGE_TEXT_APPEARANCE_HINT"))
+    RestartWarningTitle:SetText(L("IMPORTANT"))
+    RestartWarningText:SetText(L("DAMAGE_TEXT_RESTART_HINT"))
+    FontDropdownLabel:SetText(L("FONT"))
 
     isRefreshing = true
     EnableCheckbox:SetChecked(enabled)

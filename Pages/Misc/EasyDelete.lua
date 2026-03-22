@@ -3,6 +3,10 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 
+-- EasyDelete arbeitet nicht ueber sichtbare Popup-Frames, sondern direkt an
+-- den Blizzard-Dialogdefinitionen. Genau deshalb sitzt die Logik komplett in
+-- dieser kleinen Spezialdatei.
+
 -- Hier merken wir uns die Blizzard-Originale, damit sich der Eingriff jederzeit sauber rückgängig machen lässt.
 local OriginalDeleteDialogs = {}
 -- Statt einzelne Popup-Frames zu hooken, arbeiten wir hier eine Ebene tiefer:

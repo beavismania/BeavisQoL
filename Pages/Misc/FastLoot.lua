@@ -2,6 +2,10 @@ local ADDON_NAME, BeavisQoL = ...
 
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
+
+-- FastLoot ist ein sehr kleines, rein event-getriebenes Modul.
+-- Es entscheidet nur: sofort looten und das Fenster bei Bedarf ausblenden.
+
 -- FastLoot lebt komplett event-getrieben:
 -- LOOT_READY = Beute einsammeln
 -- LOOT_OPENED = Fenster bei Bedarf direkt wieder ausblenden.

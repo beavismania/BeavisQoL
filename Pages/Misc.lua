@@ -1,8 +1,14 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
+local L = BeavisQoL.L
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
+
+-- Misc.lua ist die Sammelseite fuer mehrere kleine Komfortmodule.
+-- Die eigentliche Fachlogik lebt in den Unterdateien unter `Pages/Misc/`,
+-- diese Datei baut hauptsaechlich die sichtbare Seite und ihre Schalter.
+
 -- Diese Datei ist bewusst nur die UI-Hülle der Misc-Seite.
 -- Die eigentliche Logik der einzelnen Features lebt in den Dateien unter
 -- Pages/Misc/*.lua, damit Anzeige und Verhalten sauber getrennt bleiben.
@@ -45,7 +51,7 @@ local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText("Misc")
+IntroTitle:SetText(L("MISC_TITLE"))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -54,7 +60,7 @@ IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
-IntroText:SetText("Hier findest du kleinere Quality-of-Life-Funktionen, die unabhängig vom Rest des Addons genutzt werden können.")
+IntroText:SetText(L("MISC_DESC"))
 
 -- ========================================
 -- Bereich: Auto Sell Junk
@@ -79,7 +85,7 @@ local AutoSellTitle = AutoSellPanel:CreateFontString(nil, "OVERLAY")
 AutoSellTitle:SetPoint("TOPLEFT", AutoSellPanel, "TOPLEFT", 18, -14)
 AutoSellTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 AutoSellTitle:SetTextColor(1, 0.82, 0, 1)
-AutoSellTitle:SetText("Auto Sell Junk")
+AutoSellTitle:SetText(L("AUTOSELL_JUNK"))
 
 local AutoSellCheckbox = CreateFrame("CheckButton", nil, AutoSellPanel, "UICheckButtonTemplate")
 AutoSellCheckbox:SetPoint("TOPLEFT", AutoSellTitle, "BOTTOMLEFT", -4, -12)
@@ -88,7 +94,7 @@ local AutoSellLabel = AutoSellPanel:CreateFontString(nil, "OVERLAY")
 AutoSellLabel:SetPoint("LEFT", AutoSellCheckbox, "RIGHT", 6, 0)
 AutoSellLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 AutoSellLabel:SetTextColor(1, 1, 1, 1)
-AutoSellLabel:SetText("Aktiv")
+AutoSellLabel:SetText(L("ACTIVE"))
 
 local AutoSellHint = AutoSellPanel:CreateFontString(nil, "OVERLAY")
 AutoSellHint:SetPoint("TOPLEFT", AutoSellCheckbox, "BOTTOMLEFT", 34, -2)
@@ -97,7 +103,7 @@ AutoSellHint:SetJustifyH("LEFT")
 AutoSellHint:SetJustifyV("TOP")
 AutoSellHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 AutoSellHint:SetTextColor(0.80, 0.80, 0.80, 1)
-AutoSellHint:SetText("Verkauft beim Öffnen eines Händlers automatisch alle grauen Gegenstände mit Händlerwert.")
+AutoSellHint:SetText(L("AUTOSELL_HINT"))
 
 -- ========================================
 -- Bereich: Auto Repair
@@ -122,7 +128,7 @@ local AutoRepairTitle = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairTitle:SetPoint("TOPLEFT", AutoRepairPanel, "TOPLEFT", 18, -14)
 AutoRepairTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 AutoRepairTitle:SetTextColor(1, 0.82, 0, 1)
-AutoRepairTitle:SetText("Auto Repair")
+AutoRepairTitle:SetText(L("AUTOREPAIR"))
 
 local AutoRepairCheckbox = CreateFrame("CheckButton", nil, AutoRepairPanel, "UICheckButtonTemplate")
 AutoRepairCheckbox:SetPoint("TOPLEFT", AutoRepairTitle, "BOTTOMLEFT", -4, -12)
@@ -131,7 +137,7 @@ local AutoRepairLabel = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairLabel:SetPoint("LEFT", AutoRepairCheckbox, "RIGHT", 6, 0)
 AutoRepairLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 AutoRepairLabel:SetTextColor(1, 1, 1, 1)
-AutoRepairLabel:SetText("Aktiv")
+AutoRepairLabel:SetText(L("ACTIVE"))
 
 local AutoRepairHint = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairHint:SetPoint("TOPLEFT", AutoRepairCheckbox, "BOTTOMLEFT", 34, -2)
@@ -140,7 +146,7 @@ AutoRepairHint:SetJustifyH("LEFT")
 AutoRepairHint:SetJustifyV("TOP")
 AutoRepairHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 AutoRepairHint:SetTextColor(0.80, 0.80, 0.80, 1)
-AutoRepairHint:SetText("Repariert beim Öffnen eines Händlers automatisch beschädigte Gegenstände.")
+AutoRepairHint:SetText(L("AUTOREPAIR_HINT"))
 
 local AutoRepairGuildCheckbox = CreateFrame("CheckButton", nil, AutoRepairPanel, "UICheckButtonTemplate")
 AutoRepairGuildCheckbox:SetPoint("TOPLEFT", AutoRepairHint, "BOTTOMLEFT", -14, -18)
@@ -150,7 +156,7 @@ local AutoRepairGuildLabel = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairGuildLabel:SetPoint("LEFT", AutoRepairGuildCheckbox, "RIGHT", 4, 0)
 AutoRepairGuildLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 AutoRepairGuildLabel:SetTextColor(1, 1, 1, 1)
-AutoRepairGuildLabel:SetText("Per Gilde vorrangig")
+AutoRepairGuildLabel:SetText(L("AUTOREPAIR_GUILD"))
 
 local AutoRepairGuildHint = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairGuildHint:SetPoint("TOPLEFT", AutoRepairGuildCheckbox, "BOTTOMLEFT", 30, -4)
@@ -159,7 +165,7 @@ AutoRepairGuildHint:SetJustifyH("LEFT")
 AutoRepairGuildHint:SetJustifyV("TOP")
 AutoRepairGuildHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 AutoRepairGuildHint:SetTextColor(0.80, 0.80, 0.80, 1)
-AutoRepairGuildHint:SetText("Wenn möglich, wird zuerst Gildengold für die Reparatur verwendet.")
+AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
 
 -- ========================================
 -- Bereich: Easy Delete
@@ -184,7 +190,7 @@ local EasyDeleteTitle = EasyDeletePanel:CreateFontString(nil, "OVERLAY")
 EasyDeleteTitle:SetPoint("TOPLEFT", EasyDeletePanel, "TOPLEFT", 18, -14)
 EasyDeleteTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 EasyDeleteTitle:SetTextColor(1, 0.82, 0, 1)
-EasyDeleteTitle:SetText("Easy Delete")
+EasyDeleteTitle:SetText(L("EASY_DELETE"))
 
 local EasyDeleteCheckbox = CreateFrame("CheckButton", nil, EasyDeletePanel, "UICheckButtonTemplate")
 EasyDeleteCheckbox:SetPoint("TOPLEFT", EasyDeleteTitle, "BOTTOMLEFT", -4, -12)
@@ -193,7 +199,7 @@ local EasyDeleteLabel = EasyDeletePanel:CreateFontString(nil, "OVERLAY")
 EasyDeleteLabel:SetPoint("LEFT", EasyDeleteCheckbox, "RIGHT", 6, 0)
 EasyDeleteLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 EasyDeleteLabel:SetTextColor(1, 1, 1, 1)
-EasyDeleteLabel:SetText("Aktiv")
+EasyDeleteLabel:SetText(L("ACTIVE"))
 
 local EasyDeleteHint = EasyDeletePanel:CreateFontString(nil, "OVERLAY")
 EasyDeleteHint:SetPoint("TOPLEFT", EasyDeleteCheckbox, "BOTTOMLEFT", 34, -2)
@@ -202,7 +208,7 @@ EasyDeleteHint:SetJustifyH("LEFT")
 EasyDeleteHint:SetJustifyV("TOP")
 EasyDeleteHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 EasyDeleteHint:SetTextColor(0.80, 0.80, 0.80, 1)
-EasyDeleteHint:SetText("Entfernt bei Items mit LÖSCHEN-Abfrage die Texteingabe und ersetzt sie durch eine einfache Bestätigung.")
+EasyDeleteHint:SetText(L("EASY_DELETE_HINT"))
 
 -- ========================================
 -- Bereich: Fast Loot
@@ -227,7 +233,7 @@ local FastLootTitle = FastLootPanel:CreateFontString(nil, "OVERLAY")
 FastLootTitle:SetPoint("TOPLEFT", FastLootPanel, "TOPLEFT", 18, -14)
 FastLootTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 FastLootTitle:SetTextColor(1, 0.82, 0, 1)
-FastLootTitle:SetText("Fast Loot")
+FastLootTitle:SetText(L("FAST_LOOT"))
 
 local FastLootCheckbox = CreateFrame("CheckButton", nil, FastLootPanel, "UICheckButtonTemplate")
 FastLootCheckbox:SetPoint("TOPLEFT", FastLootTitle, "BOTTOMLEFT", -4, -12)
@@ -236,7 +242,7 @@ local FastLootLabel = FastLootPanel:CreateFontString(nil, "OVERLAY")
 FastLootLabel:SetPoint("LEFT", FastLootCheckbox, "RIGHT", 6, 0)
 FastLootLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 FastLootLabel:SetTextColor(1, 1, 1, 1)
-FastLootLabel:SetText("Aktiv")
+FastLootLabel:SetText(L("ACTIVE"))
 
 local FastLootHint = FastLootPanel:CreateFontString(nil, "OVERLAY")
 FastLootHint:SetPoint("TOPLEFT", FastLootCheckbox, "BOTTOMLEFT", 34, -2)
@@ -245,7 +251,79 @@ FastLootHint:SetJustifyH("LEFT")
 FastLootHint:SetJustifyV("TOP")
 FastLootHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 FastLootHint:SetTextColor(0.80, 0.80, 0.80, 1)
-FastLootHint:SetText("Lootet Beute direkt beim Öffnen und blendet das Lootfenster dabei aus.")
+FastLootHint:SetText(L("FAST_LOOT_HINT"))
+
+-- ========================================
+-- Bereich: Camera Distance
+-- ========================================
+
+-- Die Kamera-Distanz ist kein klassischer Ein/Aus-Schalter wie viele andere
+-- Misc-Funktionen. Darum bekommt dieses Feature bewusst eine kleine Aktionskarte
+-- mit Statusanzeige und zwei klaren Ziel-Buttons.
+local CameraDistancePanel = CreateFrame("Frame", nil, PageMiscContent)
+CameraDistancePanel:SetPoint("TOPLEFT", FastLootPanel, "BOTTOMLEFT", 0, -18)
+CameraDistancePanel:SetPoint("TOPRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, -18)
+CameraDistancePanel:SetHeight(145)
+
+local CameraDistanceBg = CameraDistancePanel:CreateTexture(nil, "BACKGROUND")
+CameraDistanceBg:SetAllPoints()
+CameraDistanceBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local CameraDistanceBorder = CameraDistancePanel:CreateTexture(nil, "ARTWORK")
+CameraDistanceBorder:SetPoint("BOTTOMLEFT", CameraDistancePanel, "BOTTOMLEFT", 0, 0)
+CameraDistanceBorder:SetPoint("BOTTOMRIGHT", CameraDistancePanel, "BOTTOMRIGHT", 0, 0)
+CameraDistanceBorder:SetHeight(1)
+CameraDistanceBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local CameraDistanceTitle = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
+CameraDistanceTitle:SetPoint("TOPLEFT", CameraDistancePanel, "TOPLEFT", 18, -14)
+CameraDistanceTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+CameraDistanceTitle:SetTextColor(1, 0.82, 0, 1)
+CameraDistanceTitle:SetText(L("CAMERA_DISTANCE"))
+
+local CameraDistanceHint = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
+CameraDistanceHint:SetPoint("TOPLEFT", CameraDistanceTitle, "BOTTOMLEFT", 0, -10)
+CameraDistanceHint:SetPoint("RIGHT", CameraDistancePanel, "RIGHT", -18, 0)
+CameraDistanceHint:SetJustifyH("LEFT")
+CameraDistanceHint:SetJustifyV("TOP")
+CameraDistanceHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+CameraDistanceHint:SetTextColor(0.80, 0.80, 0.80, 1)
+CameraDistanceHint:SetText(L("CAMERA_DISTANCE_HINT"))
+
+-- Links steht die feste Beschriftung, rechts daneben der tatsächlich gelesene Status.
+-- So sieht man sofort, ob gerade Standard, Max Distance oder ein eigener Wert aktiv ist.
+local CameraDistanceStatusLabel = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
+CameraDistanceStatusLabel:SetPoint("TOPLEFT", CameraDistanceHint, "BOTTOMLEFT", 0, -16)
+CameraDistanceStatusLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CameraDistanceStatusLabel:SetTextColor(1, 1, 1, 1)
+CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
+
+local CameraDistanceStatusValue = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
+CameraDistanceStatusValue:SetPoint("LEFT", CameraDistanceStatusLabel, "RIGHT", 8, 0)
+CameraDistanceStatusValue:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+CameraDistanceStatusValue:SetTextColor(1, 0.82, 0, 1)
+CameraDistanceStatusValue:SetText(L("UNKNOWN"))
+
+-- Die Buttons setzen keine lokalen UI-Zustände, sondern geben die Aktion direkt
+-- an das Kamera-Modul weiter. Die Anzeige wird danach immer aus dem echten
+-- CVar-Zustand neu aufgebaut.
+local CameraDistanceMaxButton = CreateFrame("Button", nil, CameraDistancePanel, "UIPanelButtonTemplate")
+CameraDistanceMaxButton:SetSize(130, 24)
+CameraDistanceMaxButton:SetPoint("TOPLEFT", CameraDistanceStatusLabel, "BOTTOMLEFT", 0, -18)
+CameraDistanceMaxButton:SetText(L("CAMERA_DISTANCE_MAX"))
+
+local CameraDistanceStandardButton = CreateFrame("Button", nil, CameraDistancePanel, "UIPanelButtonTemplate")
+CameraDistanceStandardButton:SetSize(110, 24)
+CameraDistanceStandardButton:SetPoint("LEFT", CameraDistanceMaxButton, "RIGHT", 10, 0)
+CameraDistanceStandardButton:SetText(L("STANDARD"))
+
+local SectionPanels = {
+    AutoSell = AutoSellPanel,
+    AutoRepair = AutoRepairPanel,
+    EasyDelete = EasyDeletePanel,
+    FastLoot = FastLootPanel,
+    CameraDistance = CameraDistancePanel,
+}
 
 -- ========================================
 -- UI-Status
@@ -258,6 +336,10 @@ function PageMisc:RefreshState()
     local autoRepairGuildEnabled = false
     local easyDeleteEnabled = false
     local fastLootEnabled = false
+    -- Für die Kamera brauchen wir nicht nur "an/aus", sondern sowohl den
+    -- groben Modus als auch den fertigen Text für die Anzeige.
+    local cameraDistanceMode = "unknown"
+    local cameraDistanceStatusText = L("UNKNOWN")
 
     if Misc.IsAutoSellJunkEnabled then
         autoSellEnabled = Misc.IsAutoSellJunkEnabled()
@@ -278,15 +360,52 @@ function PageMisc:RefreshState()
     if Misc.IsFastLootEnabled then
         fastLootEnabled = Misc.IsFastLootEnabled()
     end
+
+    if Misc.GetCurrentCameraDistanceMode then
+        cameraDistanceMode = Misc.GetCurrentCameraDistanceMode()
+    end
+
+    if Misc.GetCameraDistanceStatusText then
+        cameraDistanceStatusText = Misc.GetCameraDistanceStatusText()
+    end
     -- Die Seite fragt die Modul-Funktionen bewusst nur optional ab.
     -- So bleibt die UI robust, selbst wenn ein Teilmodul später einmal
     -- umgebaut oder vorübergehend nicht geladen sein sollte.
+
+    IntroTitle:SetText(L("MISC_TITLE"))
+    IntroText:SetText(L("MISC_DESC"))
+    AutoSellTitle:SetText(L("AUTOSELL_JUNK"))
+    AutoSellLabel:SetText(L("ACTIVE"))
+    AutoSellHint:SetText(L("AUTOSELL_HINT"))
+    AutoRepairTitle:SetText(L("AUTOREPAIR"))
+    AutoRepairLabel:SetText(L("ACTIVE"))
+    AutoRepairHint:SetText(L("AUTOREPAIR_HINT"))
+    AutoRepairGuildLabel:SetText(L("AUTOREPAIR_GUILD"))
+    AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
+    EasyDeleteTitle:SetText(L("EASY_DELETE"))
+    EasyDeleteLabel:SetText(L("ACTIVE"))
+    EasyDeleteHint:SetText(L("EASY_DELETE_HINT"))
+    FastLootTitle:SetText(L("FAST_LOOT"))
+    FastLootLabel:SetText(L("ACTIVE"))
+    FastLootHint:SetText(L("FAST_LOOT_HINT"))
+    CameraDistanceTitle:SetText(L("CAMERA_DISTANCE"))
+    CameraDistanceHint:SetText(L("CAMERA_DISTANCE_HINT"))
+    CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
+    CameraDistanceMaxButton:SetText(L("CAMERA_DISTANCE_MAX"))
+    CameraDistanceStandardButton:SetText(L("STANDARD"))
 
     AutoSellCheckbox:SetChecked(autoSellEnabled)
     AutoRepairCheckbox:SetChecked(autoRepairEnabled)
     AutoRepairGuildCheckbox:SetChecked(autoRepairGuildEnabled)
     EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
     FastLootCheckbox:SetChecked(fastLootEnabled)
+    -- Die Kamera-Karte zeigt bewusst den echten Status aus dem Modul an,
+    -- nicht bloß den letzten Button-Klick.
+    CameraDistanceStatusValue:SetText(cameraDistanceStatusText)
+    -- Der bereits aktive Preset-Button wird deaktiviert.
+    -- Das macht die Karte lesbarer und verhindert unnötige Wiederhol-Klicks.
+    CameraDistanceMaxButton:SetEnabled(cameraDistanceMode ~= "max")
+    CameraDistanceStandardButton:SetEnabled(cameraDistanceMode ~= "standard")
 
     -- Die Gilden-Option ergibt nur Sinn, wenn Auto Repair aktiv ist.
     AutoRepairGuildCheckbox:SetEnabled(autoRepairEnabled)
@@ -313,10 +432,42 @@ function PageMisc:UpdateScrollLayout()
         + 18 + AutoRepairPanel:GetHeight()
         + 18 + EasyDeletePanel:GetHeight()
         + 18 + FastLootPanel:GetHeight()
+        -- Die neue Kamera-Karte gehört fest in die Gesamthöhe,
+        -- damit der Scrollbereich unten nicht zu früh endet.
+        + 18 + CameraDistancePanel:GetHeight()
         + 20
 
     PageMiscContent:SetWidth(contentWidth)
     PageMiscContent:SetHeight(contentHeight)
+end
+
+function PageMisc:OpenSection(sectionKey)
+    local targetPanel = SectionPanels[sectionKey]
+    if not targetPanel then
+        return
+    end
+
+    self:RefreshState()
+    self:UpdateScrollLayout()
+
+    local function ScrollToSection()
+        local contentTop = PageMiscContent:GetTop()
+        local panelTop = targetPanel:GetTop()
+
+        if not contentTop or not panelTop then
+            return
+        end
+
+        local maxScroll = math.max(0, PageMiscContent:GetHeight() - PageMiscScrollFrame:GetHeight())
+        local targetScroll = math.max(0, math.min(maxScroll, math.floor((contentTop - panelTop) + 8)))
+        PageMiscScrollFrame:SetVerticalScroll(targetScroll)
+    end
+
+    ScrollToSection()
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, ScrollToSection)
+    end
 end
 
 PageMiscScrollFrame:SetScript("OnSizeChanged", function()
@@ -379,6 +530,24 @@ end)
 FastLootCheckbox:SetScript("OnClick", function(self)
     if Misc.SetFastLootEnabled then
         Misc.SetFastLootEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+-- Die Kamera-Buttons arbeiten absichtlich genauso schlicht wie die Checkboxen:
+-- Aktion ans Modul weitergeben, danach die Seite sofort neu zeichnen.
+CameraDistanceMaxButton:SetScript("OnClick", function()
+    if Misc.SetCameraDistanceMode then
+        Misc.SetCameraDistanceMode("max")
+    end
+
+    PageMisc:RefreshState()
+end)
+
+CameraDistanceStandardButton:SetScript("OnClick", function()
+    if Misc.SetCameraDistanceMode then
+        Misc.SetCameraDistanceMode("standard")
     end
 
     PageMisc:RefreshState()

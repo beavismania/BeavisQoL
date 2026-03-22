@@ -1,116 +1,153 @@
 # Beavis Quality of Life
 
-Ein World of Warcraft Addon für Retail, das kleine und praktische Quality-of-Life-Funktionen an einem Ort sammelt.
+Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in einem gemeinsamen Hauptfenster sammelt.
 
 ## Download
 
-Die fertigen Addon-ZIP-Dateien findest du hier:
+Die fertigen Release-ZIPs liegen hier:
 
 https://github.com/beavismania/BeavisQoL/releases
 
-## Über das Projekt
+## Projektziel
 
-Ich bin **Beavis** und streame auf Twitch unter **Beavismania**.
-Dieses Addon ist mein erstes eigenes WoW-Addon und gleichzeitig ein kleines Lernprojekt, mit dem ich Schritt für Schritt **Lua** und die Entwicklung von WoW-Addons besser verstehen möchte.
+`BeavisQoL` ist gleichzeitig Addon, Lernprojekt und Baukasten.
+Der Code wird bewusst modular gehalten, damit neue Funktionen ohne kompletten Umbau dazukommen koennen.
 
-Das Ziel ist nicht, alles auf einmal zu bauen, sondern nach und nach sinnvolle Funktionen zu ergänzen, sauberer zu strukturieren und dabei immer besser zu werden.
-`Beavis Quality of Life` ist deshalb ganz bewusst noch im Aufbau und wird mit der Zeit weiter wachsen.
+Das Projekt soll:
 
-## Aktueller Stand
+- nuetzliche Alltagsfunktionen fuer WoW Retail sammeln
+- moeglichst sauber in getrennte Module aufteilen
+- beim Lernen von Lua und WoW-Addon-APIs helfen
+- langfristig gut wartbar bleiben
 
-- Status: `0.0.2 Alpha`
-- Spielversion: `WoW Retail / Patch 12.0.1`
-- Fokus: kleine Komfortfunktionen, modular aufgebaut
+## Aktueller Schwerpunkt
 
-## Was das Addon aktuell kann
+- ein gemeinsames Hauptfenster mit Tree-Navigation
+- mehrere sichtbare Overlay-Module fuer den Spielalltag
+- charakterbezogene Logs, Checklisten und Referenzseiten
+- code-nahe Dokumentation fuer Anfaenger
 
-- Eigenes Hauptfenster mit Sidebar, Startseite und Versionsbereich
-- Öffnen über `/beavis`
-- Minimap-Button zum schnellen Öffnen
-- **Levelzeit:** Erfasst die gespielte Zeit pro Level und speichert sie charakterbezogen
-- **Misc:** `Auto Sell Junk`, `Auto Repair`, `Easy Delete` und `Fast Loot`
-- **Pet Stuff:** `Auto Respawn Pet` beschwört dein zuletzt aktives Begleiter-Pet erneut
-- **LFG:** Zeigt Länderflaggen in der Premade-Gruppensuche auf Basis des Realms an
-- **Combat Text:** Passt Blizzard-Kampftext optisch an, inklusive Schriftart und Bewegungsverhalten
+## Module im Addon
+
+### Fortschritt
+
+- `Levelzeit`
+  - misst die gespielte Zeit pro Level
+- `Checkliste`
+  - Daily-, Weekly- und "Im Blick halten"-Aufgaben
+  - kleines Tracker-Fenster ausserhalb des Hauptfensters
+- `Weekly Keys`
+  - zeigt die hoechsten 8 Weekly-Dungeons und den Vault-Loot
+- `Itemlevel Guide`
+  - saisonale Referenz fuer Upgradepfade, Crafting, Dungeon-, Raid- und Tiefen-Itemlevel
+- `Quest Check`
+  - prueft Queststatus per Quest-ID, WoWHead-Link oder exaktem Namen
+
+### Gold & Handel
+
+- `Logging`
+  - Verkaufslog
+  - Reparaturlog mit Tagessummen
+  - Gold-Einnahmen nach Kategorie
+  - Gold-Ausgaben nach Kategorie
+- `Auto Sell Junk`
+  - verkauft graue Items beim Haendler automatisch
+- `Auto Repair`
+  - repariert automatisch, optional bevorzugt ueber Gildengold
+
+### Komfort
+
+- `Fast Loot`
+- `Easy Delete`
+- `Kameraweite`
+
+### Interface & Kampf
+
+- `Combat Text`
+  - eigene Combat-Text-Anpassungen fuer Schrift und Bewegung
+- `Stats`
+  - kompaktes Overlay fuer Sekundaerwerte
+
+### Gruppe & Suche
+
+- `Gruppensuche`
+  - Laenderflaggen in der Premade-Suche
+
+### Begleiter
+
+- `Pet Stuff`
+  - Auto Respawn Pet fuer Begleiter-Pets ausserhalb des Kampfes
+
+## Bedienung
+
+- Slash-Command: `/beavis`
+- Minimap-Button:
+  - Linksklick: Hauptfenster zeigen / verstecken
+  - Rechtsklick: Schnellmenue
+  - Shift-Klick: `ReloadUI()`
 
 ## Installation
 
-### Manuell über GitHub
+1. Release-ZIP herunterladen oder Repository klonen.
+2. Den Ordner `BeavisQoL` nach `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
+3. Darauf achten, dass der finale Ordner wirklich `BeavisQoL` heisst.
+4. Spiel starten oder `/reload` nutzen.
 
-Wichtig:
-Wenn du das Addon als ZIP laden willst, nutze nach Möglichkeit die Datei aus den GitHub Releases:
-
-https://github.com/beavismania/BeavisQoL/releases
-
-Der normale GitHub-Quellcode-Download über `Code` -> `Download ZIP` erzeugt immer einen Ordnernamen wie `BeavisQoL-main`.
-Das ist ein GitHub-Standard und nicht die eigentliche Addon-Ordnerstruktur.
-
-Die Release-ZIP dieses Projekts entpackt dagegen direkt in einen Ordner `BeavisQoL`.
-
-1. Release-ZIP herunterladen oder das Repository klonen.
-2. Den Addon-Ordner nach `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
-3. Darauf achten, dass der Ordner am Ende **`BeavisQoL`** heißt.
-4. World of Warcraft starten oder die UI neu laden.
-
-Beispielpfad unter Windows:
+Beispielpfad:
 
 ```text
 World of Warcraft\_retail_\Interface\AddOns\BeavisQoL
 ```
 
-## Nutzung
+## Fuer Einsteiger im Code
 
-- Slash-Command: `/beavis`
-- Alternativ über den Minimap-Button
+Der Addon-Code ist absichtlich so aufgebaut, dass man ihn besser lesen kann:
 
-Im Addon-Fenster findest du die einzelnen Bereiche direkt über die Sidebar.
+- `Core.lua`
+  - Basis-Startpunkt und Slash-Command
+- `UI.lua`
+  - Hauptfenster, Header, Sidebar, Content-Bereich, gemeinsames Link-Popup
+- `Tree.lua`
+  - Navigation und Seitenwechsel
+- `Pages/`
+  - jede groessere Funktion hat eine eigene Seite oder Unterlogik
 
-## Warum dieses Projekt existiert
+Die Addon-eigenen Dateien sind inzwischen bewusst menschlich kommentiert.
+Fokus der Kommentare:
 
-Dieses Projekt ist für mich eine Mischung aus:
+- Was speichert die Funktion?
+- Warum ist ein bestimmter Guard noetig?
+- Welche Events steuern den Ablauf?
+- Was ist UI und was ist eigentliche Logik?
 
-- Lua lernen
-- WoW-UI und Addon-Architektur verstehen
-- eigene Ideen direkt im Spiel umsetzen
-- etwas bauen, das mit jeder Version ein bisschen besser wird
+Nicht kommentiert werden bewusst die eingebundenen Drittanbieter-Bibliotheken unter `Libs/`.
 
-Ich möchte dabei nicht nur ein funktionierendes Addon bauen, sondern auch selbst besser im Umgang mit Lua, WoW-APIs und sauberer Struktur werden.
+## Entwicklungshinweis
 
-## Was noch kommen soll
+Wenn du das Addon als Lernprojekt lesen willst, starte am besten in dieser Reihenfolge:
 
-Das hier ist erst der Anfang. Geplant sind unter anderem:
-
-- weitere kleine QoL-Module
-- bessere Einstellungen und mehr Feinschliff im UI
-- mehr Komfortfunktionen für den Spielalltag
-- weitere Ausbau- und Lernschritte rund um Lua und WoW-Addon-Entwicklung
-
-Kurz gesagt:
-**Das Addon ist noch klein, aber es wird mehr werden.**
+1. `Core.lua`
+2. `UI.lua`
+3. `Tree.lua`
+4. eine einzelne Seite unter `Pages/`
+5. danach die zugehoerigen Unterdateien, z. B. `Pages/Misc/*.lua`
 
 ## Feedback und Kontakt
 
-Wenn du Feedback, Ideen oder Support dalassen möchtest:
-
-- Twitch: [https://www.twitch.tv/beavismania](https://www.twitch.tv/beavismania)
-- Website / Community: [https://www.beavismania.de](https://www.beavismania.de)
+- Twitch: https://www.twitch.tv/beavismania
+- Website / Community: https://www.beavismania.de
 
 ## Lizenz
 
-Dieses Projekt ist proprietär und bleibt urheberrechtlich geschützt.
+Dieses Projekt ist proprietaer und urheberrechtlich geschuetzt.
 
 Erlaubt ist die private, nicht-kommerzielle Nutzung offizieller Versionen von `BeavisQoL` in World of Warcraft.
 
 Ohne vorherige schriftliche Genehmigung sind insbesondere nicht erlaubt:
 
 - Weiterverbreitung des Projekts oder wesentlicher Teile davon
-- Veränderung und Veröffentlichung abgeleiteter Versionen
+- Veraenderung und Veroeffentlichung abgeleiteter Versionen
 - Wiederverwendung von Code, Assets oder anderen Projektbestandteilen in anderen Addons oder Projekten
 - kommerzielle Nutzung
 
-Die vollständigen Bedingungen stehen in der Datei `LICENSE`.
-
-## Hinweis
-
-Dieses Projekt befindet sich noch in einer frühen Phase.
-Es ist ein persönliches Lern- und Entwicklungsprojekt und kann sich daher regelmäßig verändern, erweitern oder umgebaut werden.
+Die vollstaendigen Bedingungen stehen in `LICENSE`.

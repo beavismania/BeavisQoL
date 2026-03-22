@@ -3,6 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.PetStuff = BeavisQoL.PetStuff or {}
 local PetStuff = BeavisQoL.PetStuff
 
+-- Diese Datei enthaelt die komplette Begleiter-Logik fuer Auto Respawn Pet.
+-- Die sichtbare Checkbox dafuer sitzt getrennt auf der Pet-Stuff-Seite.
+
 -- Dieses Modul merkt sich den zuletzt aktiven Begleiter und versucht später,
 -- ihn nach Login, Ladebildschirm oder Mount-Dismiss wieder zu beschwören.
 -- Die Variablen unten leben bewusst nur während der aktuellen Session.

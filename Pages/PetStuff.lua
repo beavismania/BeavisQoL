@@ -1,8 +1,14 @@
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
+local L = BeavisQoL.L
 BeavisQoL.PetStuff = BeavisQoL.PetStuff or {}
 local PetStuff = BeavisQoL.PetStuff
+
+-- PetStuff.lua ist die sichtbare Modulseite.
+-- Die eigentliche Pet-Logik sitzt bewusst getrennt in
+-- `Pages/PetStuff/AutoRespawnPet.lua`.
+
 -- Die Datei ist nur der UI-Mantel für das Pet-Modul.
 -- Die eigentliche Event- und Wiederbeschwörungslogik sitzt in
 -- Pages/PetStuff/AutoRespawnPet.lua.
@@ -35,7 +41,7 @@ local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText("Pet Stuff")
+IntroTitle:SetText(L("PET_STUFF_TITLE"))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -44,7 +50,7 @@ IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
-IntroText:SetText("Hier findest du kleine Komfortfunktionen rund um Begleiter und Pets.")
+IntroText:SetText(L("PET_STUFF_DESC"))
 
 -- ========================================
 -- Bereich: Auto Respawn Pet
@@ -53,7 +59,7 @@ IntroText:SetText("Hier findest du kleine Komfortfunktionen rund um Begleiter un
 local AutoRespawnPetPanel = CreateFrame("Frame", nil, PagePetStuff)
 AutoRespawnPetPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 AutoRespawnPetPanel:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
-AutoRespawnPetPanel:SetHeight(115)
+AutoRespawnPetPanel:SetHeight(128)
 
 local AutoRespawnPetBg = AutoRespawnPetPanel:CreateTexture(nil, "BACKGROUND")
 AutoRespawnPetBg:SetAllPoints()
@@ -69,7 +75,7 @@ local AutoRespawnPetTitle = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
 AutoRespawnPetTitle:SetPoint("TOPLEFT", AutoRespawnPetPanel, "TOPLEFT", 18, -14)
 AutoRespawnPetTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 AutoRespawnPetTitle:SetTextColor(1, 0.82, 0, 1)
-AutoRespawnPetTitle:SetText("Auto Respawn Pet")
+AutoRespawnPetTitle:SetText(L("AUTO_RESPAWN_PET_TITLE"))
 
 local AutoRespawnPetCheckbox = CreateFrame("CheckButton", nil, AutoRespawnPetPanel, "UICheckButtonTemplate")
 AutoRespawnPetCheckbox:SetPoint("TOPLEFT", AutoRespawnPetTitle, "BOTTOMLEFT", -4, -12)
@@ -78,7 +84,7 @@ local AutoRespawnPetLabel = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
 AutoRespawnPetLabel:SetPoint("LEFT", AutoRespawnPetCheckbox, "RIGHT", 6, 0)
 AutoRespawnPetLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 AutoRespawnPetLabel:SetTextColor(1, 1, 1, 1)
-AutoRespawnPetLabel:SetText("Aktiv")
+AutoRespawnPetLabel:SetText(L("ACTIVE"))
 
 local AutoRespawnPetHint = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
 AutoRespawnPetHint:SetPoint("TOPLEFT", AutoRespawnPetCheckbox, "BOTTOMLEFT", 34, -2)
@@ -87,7 +93,7 @@ AutoRespawnPetHint:SetJustifyH("LEFT")
 AutoRespawnPetHint:SetJustifyV("TOP")
 AutoRespawnPetHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 AutoRespawnPetHint:SetTextColor(0.80, 0.80, 0.80, 1)
-AutoRespawnPetHint:SetText("Beschwört dein zuletzt aktives Begleiter-Pet nach dem Auf- und Abmounten automatisch erneut.")
+AutoRespawnPetHint:SetText(L("AUTO_RESPAWN_PET_HINT"))
 
 -- ========================================
 -- UI-Status
@@ -98,6 +104,12 @@ function PagePetStuff:RefreshState()
     local autoRespawnPetEnabled = false
     -- Der Schalter liest nur den aktuellen Modulzustand aus und spiegelt ihn
     -- in die Checkbox. Die Seite selbst führt keine Pet-Logik aus.
+
+    IntroTitle:SetText(L("PET_STUFF_TITLE"))
+    IntroText:SetText(L("PET_STUFF_DESC"))
+    AutoRespawnPetTitle:SetText(L("AUTO_RESPAWN_PET_TITLE"))
+    AutoRespawnPetLabel:SetText(L("ACTIVE"))
+    AutoRespawnPetHint:SetText(L("AUTO_RESPAWN_PET_HINT"))
 
     if PetStuff.IsAutoRespawnPetEnabled then
         autoRespawnPetEnabled = PetStuff.IsAutoRespawnPetEnabled()
