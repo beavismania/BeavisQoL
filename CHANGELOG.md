@@ -1,6 +1,6 @@
 # Changelog
 
-## In Arbeit - 2026-03-22
+## 0.0.16 Alpha - 2026-03-22
 
 ### Neu
 
@@ -10,6 +10,7 @@
 - `Quest Check` als eigenes Modul eingebaut
 - `Stats` als eigenes Overlay-Modul eingebaut
 - `Weekly Keys` als eigenes Overlay-Modul eingebaut
+- Laufzeit-Lokalisierung fuer `deDE` und `enUS` eingebaut
 
 ### Itemlevel Guide
 
@@ -59,6 +60,12 @@
 - nicht erkannte Non-Key-Runs werden jetzt differenzierter als `Heroisch <Dungeon>` oder `Mythisch <Dungeon>` erfasst, sobald Blizzard die Daten liefert
 - Overlay-Layering so angepasst, dass Blizzard- und Battle.net-Overlays nicht unnoetig vom Weekly-Keys-Fenster ueberdeckt werden
 
+### Lokalisierung
+
+- Sprache im Addon zwischen Deutsch und Englisch umschaltbar
+- statische UI-Texte werden nach Sprachwechsel zentral neu aufgebaut
+- neue Module und Tabelleninhalte fuer Itemlevel Guide, Logging, Checkliste, Weekly Keys, Stats, LFG, Pet Stuff und Combat Text lokalisiert
+
 ### Navigation und UI
 
 - Tree neu in Hauptkategorien gegliedert:
@@ -79,6 +86,7 @@
 - `Combat Text` Text und Warnbereich sprachlich ueberarbeitet
 - Hinweis bei `Auto Respawn Pet`, dass das Rufen nur ausserhalb des Kampfes funktioniert
 - mehrere UI-Abstaende, Tracker-Details und Textausrichtungen nachgezogen
+- Versionsstand auf `0.0.16 Alpha` angehoben
 
 ### Codepflege
 

@@ -2,6 +2,16 @@
 
 Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in einem gemeinsamen Hauptfenster sammelt.
 
+## Aktueller Stand
+
+- Version: `0.0.16 Alpha`
+- Release-Datum: `2026-03-22`
+- Schwerpunkt dieser Version:
+  - neue Fortschritts- und Logging-Module
+  - zwei frei verschiebbare Overlay-Module
+  - ueberarbeitetes Hauptfenster mit neuer Tree-Struktur
+  - deutsche und englische Laufzeit-Lokalisierung
+
 ## Download
 
 Die fertigen Release-ZIPs liegen hier:
@@ -48,8 +58,10 @@ Das Projekt soll:
 - `Logging`
   - Verkaufslog
   - Reparaturlog mit Tagessummen
+  - aufklappbare Verkaufs- und Reparaturdetails
   - Gold-Einnahmen nach Kategorie
   - Gold-Ausgaben nach Kategorie
+  - manuelles Loeschen nach Zeitraum
 - `Auto Sell Junk`
   - verkauft graue Items beim Haendler automatisch
 - `Auto Repair`
@@ -58,8 +70,11 @@ Das Projekt soll:
 ### Komfort
 
 - `Fast Loot`
+  - lootet direkt beim Oeffnen des Lootfensters
 - `Easy Delete`
+  - ersetzt die DELETE-Texteingabe bei passenden Items durch eine einfache Bestaetigung
 - `Kameraweite`
+  - schaltet zwischen Standard und Max Distance um und setzt den Wert nach Login erneut
 
 ### Interface & Kampf
 
@@ -67,16 +82,42 @@ Das Projekt soll:
   - eigene Combat-Text-Anpassungen fuer Schrift und Bewegung
 - `Stats`
   - kompaktes Overlay fuer Sekundaerwerte
+  - frei verschiebbar, skalierbar und in der Transparenz anpassbar
 
 ### Gruppe & Suche
 
 - `Gruppensuche`
   - Laenderflaggen in der Premade-Suche
+- `Weekly Keys`
+  - Overlay fuer die 8 hoechsten Wochenlaeufe
+  - zeigt Weekly-Vault-Loot direkt in derselben Anzeige
+  - erfasst neben M+ auch erkannte heroische und mythische Non-Key-Runs
 
 ### Begleiter
 
 - `Pet Stuff`
   - Auto Respawn Pet fuer Begleiter-Pets ausserhalb des Kampfes
+
+## Modulerweiterungen in 0.0.16 Alpha
+
+- `Checkliste`
+  - eigene Fortschrittsseite mit Daily-, Weekly- und Watch-Kategorien
+  - manuelle Aufgaben pro Charakter
+  - separates Tracker-Fenster mit Schnellaktionen
+- `Itemlevel Guide`
+  - neue Saison-Referenzseite fuer Upgradepfade, Crafting, Dungeon, Raid und Tiefen
+- `Quest Check`
+  - Questpruefung per ID, WoWHead-Link oder exaktem Namen
+- `Logging`
+  - vollwertige Verkaufs-, Reparatur-, Einnahmen- und Ausgabenprotokolle
+- `Stats` und `Weekly Keys`
+  - als eigenstaendige Overlay-Module mit Position, Scale und Transparenz
+- `UI und Navigation`
+  - breitere Sidebar
+  - neue Hauptkategorien im Tree
+  - Schnellmenue am Minimap-Button
+- `Lokalisierung`
+  - Deutsch und Englisch direkt im Addon umschaltbar
 
 ## Bedienung
 
@@ -85,6 +126,7 @@ Das Projekt soll:
   - Linksklick: Hauptfenster zeigen / verstecken
   - Rechtsklick: Schnellmenue
   - Shift-Klick: `ReloadUI()`
+  - Schnellmenue: direkter Zugriff auf Checkliste-, Weekly-Keys- und Stats-Overlay
 
 ## Installation
 
