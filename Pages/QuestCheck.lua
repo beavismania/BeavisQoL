@@ -8,11 +8,11 @@ QuestCheck.lua ist absichtlich etwas "logischer" als viele andere Seiten:
 
 1. Eingabe lesen und in ID / Name / URL zerlegen
 2. lokal bekannte Questtitel cachen
-3. Ergebnis in einen einheitlichen Datensatz uebersetzen
+3. Ergebnis in einen einheitlichen Datensatz übersetzen
 4. diesen Datensatz in UI und Chat ausgeben
 
 Dadurch ist die Seite nicht nur Suchfeld + Text, sondern ein kleiner lokaler
-Quest-Pruefer mit eigenem Namens-Cache.
+Quest-Prüfer mit eigenem Namens-Cache.
 ]]
 
 local GetQuestTitleForID = C_QuestLog and C_QuestLog.GetTitleForQuestID
@@ -105,8 +105,8 @@ end
 
 local function RememberQuestTitle(questID, questTitle)
     -- Wir speichern denselben Titel bewusst doppelt:
-    -- 1. ID -> Titel fuer direkte Zugriffe
-    -- 2. normalisierter Name -> Liste von IDs fuer Namenssuchen
+    -- 1. ID -> Titel für direkte Zugriffe
+    -- 2. normalisierter Name -> Liste von IDs für Namenssuchen
     if not questID or questID <= 0 or not questTitle or questTitle == "" then
         return
     end
@@ -147,8 +147,8 @@ local function CacheQuestLogQuestNames()
 end
 
 local function PrimeCompletedQuestNameCache()
-    -- Dieser Schritt kann einmalig etwas "groesser" sein, lohnt sich aber:
-    -- Danach koennen wir viele Namenssuchen sofort lokal aufloesen.
+    -- Dieser Schritt kann einmalig etwas "größer" sein, lohnt sich aber:
+    -- Danach können wir viele Namenssuchen sofort lokal auflösen.
     if QuestCheck.completedQuestCachePrimed or not GetAllCompletedQuestIDs then
         return
     end
@@ -267,7 +267,7 @@ local function SetSearchProgress(progressText, red, green, blue)
 end
 
 local function BuildQuestResult(questID)
-    -- Diese Funktion baut den einheitlichen "Wahrheitsblock" fuer genau eine Quest.
+    -- Diese Funktion baut den einheitlichen "Wahrheitsblock" für genau eine Quest.
     -- Danach arbeiten UI und Ausgabe nur noch mit diesem Ergebnisobjekt.
     local questTitle = QuestCheck.questTitleByID[questID] or GetQuestTitleByID(questID)
 
@@ -444,7 +444,7 @@ local function ResolveQuestByName(searchText, skipPrint)
 end
 
 local function UpdateScanProgressText()
-    -- Die Fortschrittsanzeige ist nur fuer Namensscans relevant.
+    -- Die Fortschrittsanzeige ist nur für Namensscans relevant.
     if not QuestCheck.pendingNameSearch or not QuestCheck.scanMaxQuestID or QuestCheck.scanMaxQuestID <= 0 then
         SetSearchProgress("")
         return
@@ -469,9 +469,9 @@ end
 local QuestNameScanWorker = CreateFrame("Frame")
 QuestNameScanWorker:Hide()
 QuestNameScanWorker:SetScript("OnUpdate", function(self)
-    -- Der Scan laeuft bewusst in kleinen Paketen pro Frame.
+    -- Der Scan läuft bewusst in kleinen Paketen pro Frame.
     -- So friert die UI nicht ein, wenn zum ersten Mal viele Quest-IDs
-    -- geprueft werden muessen.
+    -- geprüft werden müssen.
     EnsureScanRange()
 
     if not QuestCheck.pendingNameSearch then
@@ -550,7 +550,7 @@ local function ParseQuestInput(rawInput)
 end
 
 local function RunQuestSearch()
-    -- Haupt-Einstieg fuer Suchbutton und Enter-Taste.
+    -- Haupt-Einstieg für Suchbutton und Enter-Taste.
     local searchMode, searchValue = ParseQuestInput(SearchEditBox:GetText())
 
     if not searchMode then

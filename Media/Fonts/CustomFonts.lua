@@ -4,9 +4,9 @@ local ADDON_NAME = ...
 -- Andere Module, vor allem Combat Text, lesen sie ein und bauen daraus die
 -- auswählbaren Schriftarten auf.
 local fontBasePath = "Interface\\AddOns\\" .. tostring(ADDON_NAME) .. "\\fonts\\"
--- Der Pfad wird absichtlich ueber ADDON_NAME aufgebaut.
--- Damit bleiben die Font-Eintraege korrekt, auch wenn der Addon-Ordner oder
--- die TOC-Datei spaeter noch einmal umbenannt werden.
+-- Der Pfad wird absichtlich über ADDON_NAME aufgebaut.
+-- Damit bleiben die Font-Einträge korrekt, auch wenn der Addon-Ordner oder
+-- die TOC-Datei später noch einmal umbenannt werden.
 
 -- Für Combat Text funktionieren klassische Addon-Fontpfade in WoW am zuverlässigsten.
 -- Darum zeigen alle Einträge auf den separaten fonts-Ordner im Addon.

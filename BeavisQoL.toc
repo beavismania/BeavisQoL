@@ -1,40 +1,13 @@
 ## Title: Beavis Quality of Life
 ## Notes: Beavis QoL
 ## Author: Beavis
-## Version: 0.0.16 Alpha
+## Version: 0.22.0
 ## Interface: 120001 
 ##X-GameVersion: 120001
 ## X-GameVersionLabel: Patch 12.0.1
 ## SavedVariables: BeavisQoLDB
 ## SavedVariablesPerCharacter: BeavisQoLCharDB
-## X-ReleaseDate: 2026-03-22
-
-# =========================
-# Changelog
-# =========================
-# 2026-03-22 - 0.0.16 Alpha
-# - Checkliste mit Daily, Weekly und "Im Blick halten"
-# - Itemlevel-Guide fuer Midnight Saison 1
-# - Logging-Modul mit Verkaufs-, Reparatur- und Gold-Logs
-# - Stats-Overlay und Weekly-Keys-Overlay
-# - Quest Check Modul
-# - Laufzeit-Lokalisierung fuer Deutsch und Englisch
-# - Hauptfenster optisch ueberarbeitet
-# - Minimap-Rechtsklickmenue mit Schnellzugriffen und Overlay-Toggles
-# - Tree in neue Hauptkategorien gegliedert und mit Scrollbar erweitert
-#
-# 2026-03-20 - 0.0.2 Alpha
-# - Erste spielbare Alpha-Version
-# - Hauptfenster mit Sidebar, Home- und Versionsseite
-# - Versionsseite erkennt höhere BeavisQoL-Versionen bei anderen Spielern
-# - Levelzeit-Tracker mit gespeicherten Charakterdaten
-# - Misc-Module: Auto Sell Junk, Auto Repair, Easy Delete, Fast Loot
-# - Misc: Kamera-Distanz per Button zwischen Standard und Max Distance umschaltbar
-# - Pet Stuff: Auto Respawn Pet
-# - LFG: Länderflaggen in der Premade-Gruppensuche
-# - Combat Text mit Font-Auswahl und Stil-Reglern
-# - Minimap-Button und Slash-Command /beavis
-
+## X-ReleaseDate: 2026-03-23
 
 Localization\Localization.lua
 Localization\deDE.lua
@@ -55,10 +28,14 @@ Pages\Misc\AutoRepair.lua
 Pages\Misc\EasyDelete.lua
 Pages\Misc\FastLoot.lua
 Pages\Misc\CameraDistance.lua
+Pages\Misc\TooltipItemLevel.lua
 Pages\PetStuff\AutoRespawnPet.lua
 Pages\LFG\Flags.lua
 Pages\Stats.lua
+Pages\MarkerBar.lua
+Pages\Fishing.lua
 Pages\WeeklyKeys.lua
+Pages\StreamerPlanner.lua
 Pages\Home.lua
 Pages\Version.lua
 Pages\Settings.lua
@@ -66,6 +43,7 @@ Pages\LevelTime.lua
 Pages\Checklist.lua
 Pages\ItemLevelGuide.lua
 Pages\QuestCheck.lua
+Pages\QuestAbandon.lua
 Pages\Misc.lua
 Pages\PetStuff.lua
 Pages\LFG.lua

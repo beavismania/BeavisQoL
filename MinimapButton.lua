@@ -15,8 +15,8 @@ local LDB = LibStub("LibDataBroker-1.1", true)
 local LDBIcon = LibStub("LibDBIcon-1.0", true)
 local L = BeavisQoL.L
 local MenuUtil = _G.MenuUtil
-local EasyMenu = _G.EasyMenu
-local CloseDropDownMenus = _G.CloseDropDownMenus
+local EasyMenu = rawget(_G, "EasyMenu")
+local CloseDropDownMenus = rawget(_G, "CloseDropDownMenus")
 local MinimapContextMenu
 
 -- Ohne beide Libraries gibt es hier nichts zu tun.
@@ -50,8 +50,8 @@ end
 
 local function OpenAddonPage(pageKey)
     -- Bevorzugt den zentralen Tree-Helfer.
-    -- Der Fallback darunter ist nur dafuer da, dass der Minimap-Button nicht
-    -- ploetzlich nutzlos wird, falls der Tree einmal noch nicht bereit ist.
+    -- Der Fallback darunter ist nur dafür da, dass der Minimap-Button nicht
+    -- plötzlich nutzlos wird, falls der Tree einmal noch nicht bereit ist.
     if BeavisQoL.OpenPage then
         BeavisQoL.OpenPage(pageKey)
         return
@@ -120,21 +120,87 @@ local function ToggleWeeklyKeysOverlay()
     weeklyKeysModule.SetOverlayEnabled(not weeklyKeysModule.IsOverlayEnabled())
 end
 
+local function IsMarkerBarOverlayEnabled()
+    local markerBarModule = BeavisQoL.MarkerBarModule
+    return markerBarModule and markerBarModule.IsOverlayEnabled and markerBarModule.IsOverlayEnabled() == true
+end
+
+local function IsStreamerPlannerOverlayEnabled()
+    local streamerPlannerModule = BeavisQoL.StreamerPlannerModule
+    return streamerPlannerModule and streamerPlannerModule.IsOverlayEnabled and streamerPlannerModule.IsOverlayEnabled() == true
+end
+
+local function IsEasyLFGOverlayEnabled()
+    local lfgModule = BeavisQoL.LFG
+    return lfgModule and lfgModule.IsEasyLFGEnabled and lfgModule.IsEasyLFGEnabled() == true
+end
+
+local function ToggleMarkerBarOverlay()
+    local markerBarModule = BeavisQoL.MarkerBarModule
+    if not markerBarModule or not markerBarModule.IsOverlayEnabled or not markerBarModule.SetOverlayEnabled then
+        return
+    end
+
+    markerBarModule.SetOverlayEnabled(not markerBarModule.IsOverlayEnabled())
+
+    if BeavisQoL.Pages and BeavisQoL.Pages.MarkerBar and BeavisQoL.Pages.MarkerBar.RefreshState then
+        BeavisQoL.Pages.MarkerBar:RefreshState()
+    end
+end
+
+local function ToggleStreamerPlannerOverlay()
+    local streamerPlannerModule = BeavisQoL.StreamerPlannerModule
+    if not streamerPlannerModule or not streamerPlannerModule.IsOverlayEnabled or not streamerPlannerModule.SetOverlayEnabled then
+        return
+    end
+
+    streamerPlannerModule.SetOverlayEnabled(not streamerPlannerModule.IsOverlayEnabled())
+
+    if BeavisQoL.Pages and BeavisQoL.Pages.StreamerPlanner and BeavisQoL.Pages.StreamerPlanner.RefreshState then
+        BeavisQoL.Pages.StreamerPlanner:RefreshState()
+    end
+end
+
+local function ToggleEasyLFGOverlay()
+    local lfgModule = BeavisQoL.LFG
+    if not lfgModule or not lfgModule.IsEasyLFGEnabled or not lfgModule.SetEasyLFGEnabled then
+        return
+    end
+
+    lfgModule.SetEasyLFGEnabled(not lfgModule.IsEasyLFGEnabled())
+
+    if BeavisQoL.Pages and BeavisQoL.Pages.LFG and BeavisQoL.Pages.LFG.RefreshState then
+        BeavisQoL.Pages.LFG:RefreshState()
+    end
+end
+
+local function GetQuickHideOverlaysEnabled()
+    return BeavisQoL.GetQuickHideOverlaysEnabled and BeavisQoL.GetQuickHideOverlaysEnabled() == true
+end
+
+local function ToggleQuickHideOverlays()
+    if not BeavisQoL.SetQuickHideOverlaysEnabled then
+        return
+    end
+
+    BeavisQoL.SetQuickHideOverlaysEnabled(not GetQuickHideOverlaysEnabled())
+end
+
 local function EnsureContextMenuSupport()
-    -- Das alte Dropdown-Menue ist in manchen Clients nicht sofort geladen.
+    -- Das alte Dropdown-Menü ist in manchen Clients nicht sofort geladen.
     -- Diese Funktion zieht Blizzard_UIDropDownMenu nur bei Bedarf nach.
-    if not EasyMenu or not CloseDropDownMenus or not _G.UIDropDownMenuTemplate then
+    if not EasyMenu or not CloseDropDownMenus or not rawget(_G, "UIDropDownMenuTemplate") then
         if C_AddOns and C_AddOns.LoadAddOn then
             C_AddOns.LoadAddOn("Blizzard_UIDropDownMenu")
         elseif UIParentLoadAddOn then
             UIParentLoadAddOn("Blizzard_UIDropDownMenu")
         end
 
-        EasyMenu = _G.EasyMenu
-        CloseDropDownMenus = _G.CloseDropDownMenus
+        EasyMenu = rawget(_G, "EasyMenu")
+        CloseDropDownMenus = rawget(_G, "CloseDropDownMenus")
     end
 
-    if not EasyMenu or not CloseDropDownMenus or not _G.UIDropDownMenuTemplate then
+    if not EasyMenu or not CloseDropDownMenus or not rawget(_G, "UIDropDownMenuTemplate") then
         return false
     end
 
@@ -146,13 +212,16 @@ local function EnsureContextMenuSupport()
 end
 
 local function ShowMinimapContextMenu(anchorFrame)
-    -- Zuerst versuchen wir das moderne Blizzard-Menuesystem zu nutzen.
-    -- Falls das im Client nicht vorhanden ist, faellt der Code darunter sauber
-    -- auf das aeltere EasyMenu zurueck.
+    -- Zuerst versuchen wir das moderne Blizzard-Menüsystem zu nutzen.
+    -- Falls das im Client nicht vorhanden ist, fällt der Code darunter sauber
+    -- auf das ältere EasyMenu zurück.
     MenuUtil = _G.MenuUtil
     local hasChecklistToggle = BeavisQoL.Checklist and BeavisQoL.Checklist.IsTrackerEnabled and BeavisQoL.Checklist.SetTrackerEnabled
     local hasStatsToggle = BeavisQoL.StatsModule and BeavisQoL.StatsModule.IsOverlayEnabled and BeavisQoL.StatsModule.SetOverlayEnabled
     local hasWeeklyKeysToggle = BeavisQoL.WeeklyKeysModule and BeavisQoL.WeeklyKeysModule.IsOverlayEnabled and BeavisQoL.WeeklyKeysModule.SetOverlayEnabled
+    local hasMarkerBarToggle = BeavisQoL.MarkerBarModule and BeavisQoL.MarkerBarModule.IsOverlayEnabled and BeavisQoL.MarkerBarModule.SetOverlayEnabled
+    local hasStreamerPlannerToggle = BeavisQoL.StreamerPlannerModule and BeavisQoL.StreamerPlannerModule.IsOverlayEnabled and BeavisQoL.StreamerPlannerModule.SetOverlayEnabled
+    local hasEasyLFGToggle = BeavisQoL.LFG and BeavisQoL.LFG.IsEasyLFGEnabled and BeavisQoL.LFG.SetEasyLFGEnabled
 
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchorFrame or UIParent, function(_, rootDescription)
@@ -163,6 +232,9 @@ local function ShowMinimapContextMenu(anchorFrame)
             end)
             rootDescription:CreateButton(L("QUEST_CHECK"), function()
                 OpenAddonPage("QuestCheck")
+            end)
+            rootDescription:CreateButton(L("QUEST_ABANDON"), function()
+                OpenAddonPage("QuestAbandon")
             end)
             rootDescription:CreateButton(L("LOGGING"), function()
                 OpenAddonPage("Logging")
@@ -203,6 +275,52 @@ local function ShowMinimapContextMenu(anchorFrame)
                     end
                 )
             end
+
+            if hasMarkerBarToggle then
+                rootDescription:CreateCheckbox(
+                    L("MINIMAP_MARKER_BAR_SHOW"),
+                    function()
+                        return IsMarkerBarOverlayEnabled()
+                    end,
+                    function()
+                        ToggleMarkerBarOverlay()
+                    end
+                )
+            end
+
+            if hasStreamerPlannerToggle then
+                rootDescription:CreateCheckbox(
+                    L("MINIMAP_STREAMER_PLANNER_SHOW"),
+                    function()
+                        return IsStreamerPlannerOverlayEnabled()
+                    end,
+                    function()
+                        ToggleStreamerPlannerOverlay()
+                    end
+                )
+            end
+
+            if hasEasyLFGToggle then
+                rootDescription:CreateCheckbox(
+                    L("MINIMAP_EASY_LFG_SHOW"),
+                    function()
+                        return IsEasyLFGOverlayEnabled()
+                    end,
+                    function()
+                        ToggleEasyLFGOverlay()
+                    end
+                )
+            end
+
+            rootDescription:CreateCheckbox(
+                L("QUICK_HIDE_OVERLAYS"),
+                function()
+                    return GetQuickHideOverlaysEnabled()
+                end,
+                function()
+                    ToggleQuickHideOverlays()
+                end
+            )
         end)
         return
     end
@@ -229,6 +347,13 @@ local function ShowMinimapContextMenu(anchorFrame)
             notCheckable = true,
             func = function()
                 OpenAddonPage("QuestCheck")
+            end,
+        },
+        {
+            text = L("QUEST_ABANDON"),
+            notCheckable = true,
+            func = function()
+                OpenAddonPage("QuestAbandon")
             end,
         },
         {
@@ -263,6 +388,42 @@ local function ShowMinimapContextMenu(anchorFrame)
             disabled = not hasStatsToggle,
             func = function()
                 ToggleStatsOverlay()
+            end,
+        },
+        {
+            text = L("MINIMAP_MARKER_BAR_SHOW"),
+            checked = IsMarkerBarOverlayEnabled(),
+            isNotRadio = true,
+            disabled = not hasMarkerBarToggle,
+            func = function()
+                ToggleMarkerBarOverlay()
+            end,
+        },
+        {
+            text = L("MINIMAP_STREAMER_PLANNER_SHOW"),
+            checked = IsStreamerPlannerOverlayEnabled(),
+            isNotRadio = true,
+            disabled = not hasStreamerPlannerToggle,
+            func = function()
+                ToggleStreamerPlannerOverlay()
+            end,
+        },
+        {
+            text = L("MINIMAP_EASY_LFG_SHOW"),
+            checked = IsEasyLFGOverlayEnabled(),
+            isNotRadio = true,
+            disabled = not hasEasyLFGToggle,
+            func = function()
+                ToggleEasyLFGOverlay()
+            end,
+        },
+        {
+            text = L("QUICK_HIDE_OVERLAYS"),
+            checked = GetQuickHideOverlaysEnabled(),
+            isNotRadio = true,
+            notCheckable = false,
+            func = function()
+                ToggleQuickHideOverlays()
             end,
         },
     }

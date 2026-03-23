@@ -7,11 +7,11 @@ BeavisQoL.Logging = BeavisQoL.Logging or {}
 local Logging = BeavisQoL.Logging
 
 --[[
-Logging.lua ist ein Sammelmodul fuer mehrere Gold- und Handelsprotokolle.
+Logging.lua ist ein Sammelmodul für mehrere Gold- und Handelsprotokolle.
 
 Die Datei besteht grob aus drei Schichten:
-1. Datenspeicherung und Aufraeumen
-2. Laufzeit-Erkennung von Geld- und Item-Aenderungen
+1. Datenspeicherung und Aufräumen
+2. Laufzeit-Erkennung von Geld- und Item-Änderungen
 3. Darstellung im Logging-Modul des Hauptfensters
 
 Beim Lesen am besten in genau dieser Reihenfolge vorgehen.
@@ -58,16 +58,18 @@ local pendingAuctionPost = {
 local pendingVendorSale = {
     entries = {},
 }
+local merchantBagSnapshot = nil
 local recentAuctionMailLoot = {
     index = 0,
     expiresAt = 0,
 }
 local expandedSalesEntries = {}
 local expandedRepairDays = {}
+local QueuePendingVendorSaleItem
 
 local function GetTimestamp()
     -- Bevorzugt Serverzeit, damit die Logzeiten nicht von der lokalen
-    -- Rechneruhr des Spielers abhaengen.
+    -- Rechneruhr des Spielers abhängen.
     if GetServerTime then
         return GetServerTime()
     end
@@ -204,7 +206,7 @@ local function NormalizeAndPruneDB(db)
 end
 
 function Logging.ClearLogsOlderThanDays(days)
-    -- Manueller Aufraeumbefehl fuer das Popup auf der Logging-Seite.
+    -- Manueller Aufräumbefehl für das Popup auf der Logging-Seite.
     local db = Logging.GetDB()
 
     if days == "all" or days == 0 then
@@ -240,8 +242,8 @@ function Logging.ClearLogsOlderThanDays(days)
 end
 
 function Logging.GetDB()
-    -- Zentraler Einstieg fuer die Logging-SavedVariables.
-    -- Diese Funktion sorgt dafuer, dass alle benoetigten Tabellen existieren,
+    -- Zentraler Einstieg für die Logging-SavedVariables.
+    -- Diese Funktion sorgt dafür, dass alle benötigten Tabellen existieren,
     -- bevor andere Funktionen auf sie zugreifen.
     BeavisQoLCharDB = BeavisQoLCharDB or {}
     BeavisQoLCharDB.logging = BeavisQoLCharDB.logging or {}
@@ -359,7 +361,7 @@ local function BuildItemText(itemReference, quantity, fallbackName)
 end
 
 local function NormalizeItemTexts(items)
-    -- Die UI soll spaeter immer mit derselben Item-Struktur arbeiten koennen.
+    -- Die UI soll später immer mit derselben Item-Struktur arbeiten können.
     -- Deshalb normalisieren wir freie Texte und Tabellen direkt beim Speichern.
     if type(items) ~= "table" then
         return nil
@@ -577,8 +579,8 @@ local function AppendRepairLog(amount, source, timestamp)
 end
 
 local function DetermineMoneyCategory(direction)
-    -- Wir leiten Kategorien ueber den zuletzt beobachteten Kontext ab:
-    -- Haendler offen, Post offen, Quest eben abgegeben usw.
+    -- Wir leiten Kategorien über den zuletzt beobachteten Kontext ab:
+    -- Händler offen, Post offen, Quest eben abgegeben usw.
     local now = GetNow()
 
     if direction == "income" then
@@ -650,6 +652,82 @@ local function RefreshRepairCostSnapshot()
     end
 end
 
+local function CaptureMerchantBagSnapshot()
+    local snapshot = {}
+
+    if not C_Container
+        or type(C_Container.GetContainerNumSlots) ~= "function"
+        or type(C_Container.GetContainerItemInfo) ~= "function"
+    then
+        return snapshot
+    end
+
+    for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
+        local numSlots = C_Container.GetContainerNumSlots(bag) or 0
+
+        for slot = 1, numSlots do
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+
+            if itemInfo and itemInfo.hyperlink then
+                local itemName, _, _, _, _, _, _, _, _, _, sellPrice = GetItemDetails(itemInfo.hyperlink)
+
+                if type(sellPrice) == "number" and sellPrice > 0 then
+                    local quantity = math.max(1, tonumber(itemInfo.stackCount) or 1)
+                    local itemKey = string.format("%s|%d", itemInfo.hyperlink, sellPrice)
+                    local existing = snapshot[itemKey]
+
+                    if existing then
+                        existing.quantity = existing.quantity + quantity
+                    else
+                        snapshot[itemKey] = {
+                            itemReference = itemInfo.hyperlink,
+                            fallbackName = itemName,
+                            quantity = quantity,
+                            unitAmount = sellPrice,
+                        }
+                    end
+                end
+            end
+        end
+    end
+
+    return snapshot
+end
+
+local function RefreshMerchantBagSnapshot()
+    merchantBagSnapshot = CaptureMerchantBagSnapshot()
+end
+
+local function QueuePendingVendorSalesFromBagDiff(previousSnapshot, currentSnapshot)
+    if type(previousSnapshot) ~= "table" then
+        return
+    end
+
+    for itemKey, previousEntry in pairs(previousSnapshot) do
+        local currentEntry = type(currentSnapshot) == "table" and currentSnapshot[itemKey] or nil
+        local removedQuantity = (previousEntry.quantity or 0) - ((currentEntry and currentEntry.quantity) or 0)
+
+        if removedQuantity > 0 then
+            QueuePendingVendorSaleItem(
+                previousEntry.itemReference,
+                removedQuantity,
+                previousEntry.unitAmount,
+                previousEntry.fallbackName
+            )
+        end
+    end
+end
+
+local function UpdatePendingVendorSalesFromBags()
+    local currentSnapshot = CaptureMerchantBagSnapshot()
+
+    if not Logging.suspendMerchantCapture then
+        QueuePendingVendorSalesFromBagDiff(merchantBagSnapshot, currentSnapshot)
+    end
+
+    merchantBagSnapshot = currentSnapshot
+end
+
 local function ClearPendingVendorSales()
     wipe(pendingVendorSale.entries)
 end
@@ -713,7 +791,7 @@ local function MergePendingVendorItems(targetItems, sourceItems)
     end
 end
 
-local function QueuePendingVendorSaleItem(itemReference, quantity, unitAmount, fallbackName)
+QueuePendingVendorSaleItem = function(itemReference, quantity, unitAmount, fallbackName)
     local cleanUnitAmount = math.max(0, math.floor((tonumber(unitAmount) or 0) + 0.5))
     if cleanUnitAmount <= 0 then
         return
@@ -784,7 +862,7 @@ local function ConsumePendingVendorSale(amount)
 end
 
 function Logging.RecordVendorSale(amount, itemCount, source, items)
-    -- Oeffentliche Schnittstelle fuer itemisierte Haendlerverkaeufe,
+    -- Öffentliche Schnittstelle für itemisierte Händlerverkäufe,
     -- z. B. aus Auto Sell Junk oder unseren Vendor-Hooks.
     if amount <= 0 then
         return
@@ -880,6 +958,7 @@ MoneyWatcher:RegisterEvent("LOOT_CLOSED")
 MoneyWatcher:RegisterEvent("MERCHANT_SHOW")
 MoneyWatcher:RegisterEvent("MERCHANT_CLOSED")
 MoneyWatcher:RegisterEvent("MERCHANT_UPDATE")
+MoneyWatcher:RegisterEvent("BAG_UPDATE_DELAYED")
 MoneyWatcher:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 MoneyWatcher:RegisterEvent("MAIL_SHOW")
 MoneyWatcher:RegisterEvent("MAIL_CLOSED")
@@ -929,13 +1008,23 @@ MoneyWatcher:SetScript("OnEvent", function(_, event, ...)
     if event == "MERCHANT_SHOW" then
         isMerchantOpen = true
         RefreshRepairCostSnapshot()
+        RefreshMerchantBagSnapshot()
         return
     end
 
     if event == "MERCHANT_CLOSED" then
         isMerchantOpen = false
         lastRepairAllCostSeen = 0
+        merchantBagSnapshot = nil
         ClearPendingVendorSales()
+        return
+    end
+
+    if event == "BAG_UPDATE_DELAYED" then
+        if isMerchantOpen then
+            UpdatePendingVendorSalesFromBags()
+        end
+
         return
     end
 
@@ -1118,7 +1207,26 @@ local function HookAuctionHouseActions()
                 return
             end
 
-            local deposit = C_AuctionHouse.CalculateCommodityDeposit(itemLocation, duration, quantity) or 0
+            local itemID
+
+            if C_Item and C_Item.GetItemID then
+                itemID = C_Item.GetItemID(itemLocation)
+            end
+
+            if not itemID and type(itemLocation) == "table" then
+                itemID = tonumber(itemLocation.itemID)
+            end
+
+            if not itemID and type(itemLocation) == "number" then
+                itemID = itemLocation
+            end
+
+            itemID = tonumber(itemID)
+            if not itemID or itemID <= 0 then
+                return
+            end
+
+            local deposit = C_AuctionHouse.CalculateCommodityDeposit(itemID, duration, quantity) or 0
             local itemLink = C_Item and C_Item.GetItemLink and C_Item.GetItemLink(itemLocation)
             local items = { BuildItemText(itemLink, quantity) }
             SetPendingAuctionPost(deposit, "Einstellgebühr", items)
@@ -1141,7 +1249,7 @@ local function HookAuctionHouseActions()
                 return
             end
 
-            local quantity = info.quantity or 1
+            local quantity = rawget(info, "quantity") or 1
             local items = { BuildItemText(info.itemLink or (info.itemKey and info.itemKey.itemID), quantity) }
             RecordAuctionHouseExpense(bidPlaced, "Kauf", items)
         end)
@@ -1196,25 +1304,8 @@ local function HookAuctionHouseActions()
 end
 
 local function HookVendorSaleActions()
-    if not C_Container or type(C_Container.UseContainerItem) ~= "function" then
-        return
-    end
-
-    local originalUseContainerItem = C_Container.UseContainerItem
-    C_Container.UseContainerItem = function(bag, slot, ...)
-        if isMerchantOpen and not Logging.suspendMerchantCapture and C_Container.GetContainerItemInfo then
-            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
-
-            if itemInfo and itemInfo.hyperlink then
-                local itemName, _, _, _, _, _, _, _, _, _, sellPrice = GetItemDetails(itemInfo.hyperlink)
-                if type(sellPrice) == "number" and sellPrice > 0 then
-                    QueuePendingVendorSaleItem(itemInfo.hyperlink, itemInfo.stackCount or 1, sellPrice, itemName)
-                end
-            end
-        end
-
-        return originalUseContainerItem(bag, slot, ...)
-    end
+    -- Vendor-Verkäufe werden sicher über Bag-Diffs erkannt, damit keine
+    -- geschützten Container-Funktionen ersetzt werden müssen.
 end
 
 InstallInboxMoneyHooks()
@@ -1377,7 +1468,7 @@ end
 
 local function LayoutLogRow(panel, index, currentY, leftText, rightText, options)
     -- Eine Zeile kann optional aufklappbar sein.
-    -- Genau das nutzen wir fuer Verkaufseintraege und Reparaturtage.
+    -- Genau das nutzen wir für Verkaufseinträge und Reparaturtage.
     local panelWidth = math.max(280, panel:GetWidth())
     local row = GetOrCreateLogRow(panel, index)
     local settings = options or {}

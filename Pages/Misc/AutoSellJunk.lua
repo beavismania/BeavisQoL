@@ -4,12 +4,12 @@ BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 local L = BeavisQoL.L
 
--- Diese Datei enthaelt nur die eigentliche Verkaufs-Automatik.
--- Anzeige und Schalter dafuer liegen auf der Komfort-Seite.
+-- Diese Datei enthält nur die eigentliche Verkaufs-Automatik.
+-- Anzeige und Schalter dafür liegen auf der Komfort-Seite.
 
 -- Die kleinen API-Fallbacks halten das Modul robuster gegen Blizzard-Umstellungen:
 -- Je nach Client-Version liegen dieselben Infos teils unter C_* APIs,
--- teils noch unter den aelteren globalen Funktionen.
+-- teils noch unter den älteren globalen Funktionen.
 local GetItemDetails = (C_Item and C_Item.GetItemInfo) or rawget(_G, "GetItemInfo")
 local GetCoinText = (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString) or rawget(_G, "GetCoinTextureString")
 

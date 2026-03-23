@@ -7,10 +7,10 @@ local L = BeavisQoL.L
 Diese Seite hat zwei Rollen:
 1. feste Informationen zur lokal installierten Version anzeigen
 2. per Addon-Chat mit anderen Spielern abgleichen, ob irgendwo schon eine
-   hoehere BeavisQoL-Version gesehen wurde
+    höhere BeavisQoL-Version gesehen wurde
 
 Wichtig dabei: Es gibt keine direkte GitHub-Abfrage aus WoW heraus.
-Der Versionsvergleich funktioniert rein ueber Spieler, die dieselbe
+Der Versionsvergleich funktioniert rein über Spieler, die dieselbe
 Versionsnachricht im Spiel austauschen.
 ]]
 
@@ -219,9 +219,9 @@ local UpdateStatusText
 local UpdateStatusSubText
 
 function PageVersion:RefreshVersionStatus()
-    -- Diese Methode schreibt den kompletten UI-Zustand fuer den Versionsblock
+    -- Diese Methode schreibt den kompletten UI-Zustand für den Versionsblock
     -- jedes Mal neu. So bleibt die Seite stabil, egal ob wir gerade frisch
-    -- geladen haben oder spaeter eine neuere Version entdeckt wurde.
+    -- geladen haben oder später eine neuere Version entdeckt wurde.
     if VersionCheck.hasNewerVersion then
         UpdateStatusValue:SetText(L("VERSION_CHECK_AVAILABLE"):format(tostring(VersionCheck.newerVersion or L("UNKNOWN"))))
         UpdateStatusValue:SetTextColor(1, 0.82, 0, 1)
@@ -243,7 +243,7 @@ end
 
 local function RememberNewerVersion(remoteVersionText, remoteReleaseDateText, senderName, channelName)
     -- Wir merken uns nur echte Verbesserungen:
-    -- erst gegen unsere lokale Version pruefen, dann gegen den bereits
+    -- erst gegen unsere lokale Version prüfen, dann gegen den bereits
     -- gemerkten besten Fund.
     if not IsRemoteVersionNewer(remoteVersionText, remoteReleaseDateText) then
         return
