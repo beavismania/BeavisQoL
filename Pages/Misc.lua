@@ -5,9 +5,9 @@ local L = BeavisQoL.L
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 
--- Misc.lua ist die Sammelseite fuer mehrere kleine Komfortmodule.
+-- Misc.lua ist die Sammelseite für mehrere kleine Komfortmodule.
 -- Die eigentliche Fachlogik lebt in den Unterdateien unter `Pages/Misc/`,
--- diese Datei baut hauptsaechlich die sichtbare Seite und ihre Schalter.
+-- diese Datei baut hauptsächlich die sichtbare Seite und ihre Schalter.
 
 -- Diese Datei ist bewusst nur die UI-Hülle der Misc-Seite.
 -- Die eigentliche Logik der einzelnen Features lebt in den Dateien unter
@@ -254,6 +254,54 @@ FastLootHint:SetTextColor(0.80, 0.80, 0.80, 1)
 FastLootHint:SetText(L("FAST_LOOT_HINT"))
 
 -- ========================================
+-- Bereich: Tooltip Itemlevel
+-- ========================================
+
+-- Diese Karte schaltet das neue Tooltip-Modul ein oder aus.
+-- Der eigentliche Inspect- und Tooltip-Code lebt in Pages/Misc/TooltipItemLevel.lua,
+-- die UI hier ist nur die sichtbare Bedienoberfläche dafür.
+local TooltipItemLevelPanel = CreateFrame("Frame", nil, PageMiscContent)
+TooltipItemLevelPanel:SetPoint("TOPLEFT", FastLootPanel, "BOTTOMLEFT", 0, -18)
+TooltipItemLevelPanel:SetPoint("TOPRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, -18)
+TooltipItemLevelPanel:SetHeight(115)
+
+local TooltipItemLevelBg = TooltipItemLevelPanel:CreateTexture(nil, "BACKGROUND")
+TooltipItemLevelBg:SetAllPoints()
+TooltipItemLevelBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local TooltipItemLevelBorder = TooltipItemLevelPanel:CreateTexture(nil, "ARTWORK")
+TooltipItemLevelBorder:SetPoint("BOTTOMLEFT", TooltipItemLevelPanel, "BOTTOMLEFT", 0, 0)
+TooltipItemLevelBorder:SetPoint("BOTTOMRIGHT", TooltipItemLevelPanel, "BOTTOMRIGHT", 0, 0)
+TooltipItemLevelBorder:SetHeight(1)
+TooltipItemLevelBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local TooltipItemLevelTitle = TooltipItemLevelPanel:CreateFontString(nil, "OVERLAY")
+TooltipItemLevelTitle:SetPoint("TOPLEFT", TooltipItemLevelPanel, "TOPLEFT", 18, -14)
+TooltipItemLevelTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+TooltipItemLevelTitle:SetTextColor(1, 0.82, 0, 1)
+TooltipItemLevelTitle:SetText(L("TOOLTIP_ITEMLEVEL"))
+
+-- Eine einfache Checkbox reicht hier aus, weil das Modul nur einen klaren
+-- Ein/Aus-Zustand kennt.
+local TooltipItemLevelCheckbox = CreateFrame("CheckButton", nil, TooltipItemLevelPanel, "UICheckButtonTemplate")
+TooltipItemLevelCheckbox:SetPoint("TOPLEFT", TooltipItemLevelTitle, "BOTTOMLEFT", -4, -12)
+
+local TooltipItemLevelLabel = TooltipItemLevelPanel:CreateFontString(nil, "OVERLAY")
+TooltipItemLevelLabel:SetPoint("LEFT", TooltipItemLevelCheckbox, "RIGHT", 6, 0)
+TooltipItemLevelLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+TooltipItemLevelLabel:SetTextColor(1, 1, 1, 1)
+TooltipItemLevelLabel:SetText(L("ACTIVE"))
+
+local TooltipItemLevelHint = TooltipItemLevelPanel:CreateFontString(nil, "OVERLAY")
+TooltipItemLevelHint:SetPoint("TOPLEFT", TooltipItemLevelCheckbox, "BOTTOMLEFT", 34, -2)
+TooltipItemLevelHint:SetPoint("RIGHT", TooltipItemLevelPanel, "RIGHT", -18, 0)
+TooltipItemLevelHint:SetJustifyH("LEFT")
+TooltipItemLevelHint:SetJustifyV("TOP")
+TooltipItemLevelHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+TooltipItemLevelHint:SetTextColor(0.80, 0.80, 0.80, 1)
+TooltipItemLevelHint:SetText(L("TOOLTIP_ITEMLEVEL_HINT"))
+
+-- ========================================
 -- Bereich: Camera Distance
 -- ========================================
 
@@ -261,8 +309,8 @@ FastLootHint:SetText(L("FAST_LOOT_HINT"))
 -- Misc-Funktionen. Darum bekommt dieses Feature bewusst eine kleine Aktionskarte
 -- mit Statusanzeige und zwei klaren Ziel-Buttons.
 local CameraDistancePanel = CreateFrame("Frame", nil, PageMiscContent)
-CameraDistancePanel:SetPoint("TOPLEFT", FastLootPanel, "BOTTOMLEFT", 0, -18)
-CameraDistancePanel:SetPoint("TOPRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, -18)
+CameraDistancePanel:SetPoint("TOPLEFT", TooltipItemLevelPanel, "BOTTOMLEFT", 0, -18)
+CameraDistancePanel:SetPoint("TOPRIGHT", TooltipItemLevelPanel, "BOTTOMRIGHT", 0, -18)
 CameraDistancePanel:SetHeight(145)
 
 local CameraDistanceBg = CameraDistancePanel:CreateTexture(nil, "BACKGROUND")
@@ -322,6 +370,9 @@ local SectionPanels = {
     AutoRepair = AutoRepairPanel,
     EasyDelete = EasyDeletePanel,
     FastLoot = FastLootPanel,
+    -- Der Schlüsselname muss zum Tree-Eintrag passen, damit die Sidebar diese
+    -- Karte gezielt ansteuern und sichtbar machen kann.
+    TooltipItemLevel = TooltipItemLevelPanel,
     CameraDistance = CameraDistancePanel,
 }
 
@@ -336,6 +387,7 @@ function PageMisc:RefreshState()
     local autoRepairGuildEnabled = false
     local easyDeleteEnabled = false
     local fastLootEnabled = false
+    local tooltipItemLevelEnabled = false
     -- Für die Kamera brauchen wir nicht nur "an/aus", sondern sowohl den
     -- groben Modus als auch den fertigen Text für die Anzeige.
     local cameraDistanceMode = "unknown"
@@ -359,6 +411,12 @@ function PageMisc:RefreshState()
 
     if Misc.IsFastLootEnabled then
         fastLootEnabled = Misc.IsFastLootEnabled()
+    end
+
+    -- Der Tooltip-Schalter wird direkt aus dem Modul gelesen, damit UI und
+    -- SavedVariables immer denselben Wahrheitswert anzeigen.
+    if Misc.IsTooltipItemLevelEnabled then
+        tooltipItemLevelEnabled = Misc.IsTooltipItemLevelEnabled()
     end
 
     if Misc.GetCurrentCameraDistanceMode then
@@ -388,6 +446,9 @@ function PageMisc:RefreshState()
     FastLootTitle:SetText(L("FAST_LOOT"))
     FastLootLabel:SetText(L("ACTIVE"))
     FastLootHint:SetText(L("FAST_LOOT_HINT"))
+    TooltipItemLevelTitle:SetText(L("TOOLTIP_ITEMLEVEL"))
+    TooltipItemLevelLabel:SetText(L("ACTIVE"))
+    TooltipItemLevelHint:SetText(L("TOOLTIP_ITEMLEVEL_HINT"))
     CameraDistanceTitle:SetText(L("CAMERA_DISTANCE"))
     CameraDistanceHint:SetText(L("CAMERA_DISTANCE_HINT"))
     CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
@@ -399,6 +460,7 @@ function PageMisc:RefreshState()
     AutoRepairGuildCheckbox:SetChecked(autoRepairGuildEnabled)
     EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
     FastLootCheckbox:SetChecked(fastLootEnabled)
+    TooltipItemLevelCheckbox:SetChecked(tooltipItemLevelEnabled)
     -- Die Kamera-Karte zeigt bewusst den echten Status aus dem Modul an,
     -- nicht bloß den letzten Button-Klick.
     CameraDistanceStatusValue:SetText(cameraDistanceStatusText)
@@ -432,6 +494,7 @@ function PageMisc:UpdateScrollLayout()
         + 18 + AutoRepairPanel:GetHeight()
         + 18 + EasyDeletePanel:GetHeight()
         + 18 + FastLootPanel:GetHeight()
+        + 18 + TooltipItemLevelPanel:GetHeight()
         -- Die neue Kamera-Karte gehört fest in die Gesamthöhe,
         -- damit der Scrollbereich unten nicht zu früh endet.
         + 18 + CameraDistancePanel:GetHeight()
@@ -530,6 +593,16 @@ end)
 FastLootCheckbox:SetScript("OnClick", function(self)
     if Misc.SetFastLootEnabled then
         Misc.SetFastLootEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+TooltipItemLevelCheckbox:SetScript("OnClick", function(self)
+    -- Die UI speichert den Zustand nicht selbst, sondern reicht ihn direkt
+    -- an das Modul weiter. Danach wird die komplette Seite neu synchronisiert.
+    if Misc.SetTooltipItemLevelEnabled then
+        Misc.SetTooltipItemLevelEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

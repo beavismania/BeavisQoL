@@ -1,14 +1,14 @@
 {
     "Lua.runtime.version": "Lua 5.1",
     "Lua.runtime.builtin": {
-        "basic": "enable",
+        "basic": "disable",
         "debug": "disable",
         "io": "disable",
-        "math": "enable",
+        "math": "disable",
         "os": "disable",
         "package": "disable",
-        "string": "enable",
-        "table": "enable",
+        "string": "disable",
+        "table": "disable",
         "utf8": "disable"
     },
     "Lua.workspace.library": [
@@ -52,7 +52,30 @@
         "ChatEdit_InsertLink",
         "OKAY",
         "ChatFrameUtil",
-        "NOT_BOUND"
+        "NOT_BOUND",
+        "LE_PARTY_CATEGORY_INSTANCE",
+        "CombatLog_OnEvent",
+        "WeeklyRewards_ShowUI",
+        "WeeklyRewardsFrame",
+        "CR_VERSATILITY_DAMAGE_DONE",
+        "CloseDropDownMenus",
+        "DifficultyUtil",
+        "UIDropDownMenu_SetSelectedValue",
+        "TooltipDataProcessor",
+        "StaticPopup_Show",
+        "YES",
+        "SOUND",
+        "RAID_CLASS_COLORS",
+        "LOCALIZED_CLASS_NAMES_MALE",
+        "LOCALIZED_CLASS_NAMES_FEMALE",
+        "CLASS_ICON_TCOORDS",
+        "UNKNOWN",
+        "TANK",
+        "HEALER",
+        "DAMAGER",
+        "INLINE_TANK_ICON",
+        "INLINE_HEALER_ICON",
+        "INLINE_DAMAGER_ICON"
     ],
     "Lua.diagnostics.disable": [
         "assign-type-mismatch"

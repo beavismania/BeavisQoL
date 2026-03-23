@@ -90,13 +90,42 @@ local function CreateCheckbox(parent, label, checked, onClick)
     return check
 end
 
+local function CreateSectionHeader(parent, titleText, descriptionText)
+    local title = parent:CreateFontString(nil, "OVERLAY")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+    title:SetTextColor(1, 0.82, 0, 1)
+    title:SetJustifyH("LEFT")
+    title:SetText(titleText)
+
+    local description = parent:CreateFontString(nil, "OVERLAY")
+    description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
+    description:SetPoint("RIGHT", parent, "RIGHT", -22, 0)
+    description:SetJustifyH("LEFT")
+    description:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    description:SetTextColor(0.76, 0.76, 0.79, 1)
+    description:SetText(descriptionText)
+
+    local divider = parent:CreateTexture(nil, "ARTWORK")
+    divider:SetPoint("TOPLEFT", description, "BOTTOMLEFT", 0, -8)
+    divider:SetPoint("RIGHT", parent, "RIGHT", -22, 0)
+    divider:SetHeight(1)
+    divider:SetColorTexture(1, 0.82, 0, 0.18)
+
+    return {
+        Title = title,
+        Description = description,
+        Divider = divider,
+    }
+end
+
 local PageSettings = CreateFrame("Frame", nil, Content)
 PageSettings:SetAllPoints()
 
 local SettingsPanel = CreateFrame("Frame", nil, PageSettings)
 SettingsPanel:SetPoint("TOPLEFT", PageSettings, "TOPLEFT", 22, -22)
 SettingsPanel:SetPoint("TOPRIGHT", PageSettings, "TOPRIGHT", -22, -22)
-SettingsPanel:SetHeight(400)
+SettingsPanel:SetPoint("BOTTOMLEFT", PageSettings, "BOTTOMLEFT", 22, 22)
+SettingsPanel:SetPoint("BOTTOMRIGHT", PageSettings, "BOTTOMRIGHT", -22, 22)
 
 local SettingsSurface = CreatePanelSurface(SettingsPanel)
 ApplyPanelSurface(SettingsSurface, "hero", false)
@@ -129,6 +158,16 @@ LanguageLabel:SetText(L("LANGUAGE") .. ":")
 local LanguageDropdown = CreateFrame("Frame", nil, LanguageRow, "UIDropDownMenuTemplate")
 LanguageDropdown:SetPoint("LEFT", LanguageLabel, "RIGHT", 12, -2)
 
+local QuickHideOverlaysCheckbox
+local QuickHideChecklistOverlayCheckbox
+local QuickHideWeeklyOverlayCheckbox
+local QuickHideStatsOverlayCheckbox
+local QuickHideOverlaysInCombatCheckbox
+local GeneralSection
+local MinimapSection
+local QuickHideSection
+local ResetSection
+
 local localeLabels = {
     deDE = "Deutsch",
     enUS = "English",
@@ -145,15 +184,28 @@ local function RefreshLanguageDropdown()
     UIDropDownMenu_SetSelectedValue(LanguageDropdown, currentLocale)
 end
 
+local function GetSettingsDB()
+    if BeavisQoL.GetGlobalSettings then
+        return BeavisQoL.GetGlobalSettings()
+    end
+
+    BeavisQoLDB = BeavisQoLDB or {}
+    BeavisQoLDB.settings = BeavisQoLDB.settings or {}
+    return BeavisQoLDB.settings
+end
+
+GeneralSection = CreateSectionHeader(SettingsPanel, L("SETTINGS_SECTION_GENERAL"), L("SETTINGS_SECTION_GENERAL_DESC"))
+GeneralSection.Title:SetPoint("TOPLEFT", LanguageRow, "BOTTOMLEFT", 0, -8)
+
 -- Checkbox für Fenster fixieren
-local LockCheckbox = CreateCheckbox(SettingsPanel, L("LOCK_WINDOW"), (BeavisQoLDB.settings and BeavisQoLDB.settings.lockWindow) or false, function(self)
-    if not BeavisQoLDB.settings then BeavisQoLDB.settings = {} end
-    BeavisQoLDB.settings.lockWindow = self:GetChecked()
+local LockCheckbox = CreateCheckbox(SettingsPanel, L("LOCK_WINDOW"), GetSettingsDB().lockWindow or false, function(self)
+    local settings = GetSettingsDB()
+    settings.lockWindow = self:GetChecked()
     if BeavisQoL.Frame then
-        BeavisQoL.Frame:SetMovable(not BeavisQoLDB.settings.lockWindow)
+        BeavisQoL.Frame:SetMovable(not settings.lockWindow)
     end
 end)
-LockCheckbox:SetPoint("TOPLEFT", LanguageRow, "BOTTOMLEFT", 0, -8)
+LockCheckbox:SetPoint("TOPLEFT", GeneralSection.Divider, "BOTTOMLEFT", 0, -10)
 
 local function SetLanguage(lang)
     BeavisQoL.SetLocale(lang)
@@ -173,22 +225,81 @@ UIDropDownMenu_Initialize(LanguageDropdown, function(self, level)
 end)
 RefreshLanguageDropdown()
 
+MinimapSection = CreateSectionHeader(SettingsPanel, L("SETTINGS_SECTION_MINIMAP"), L("SETTINGS_SECTION_MINIMAP_DESC"))
+MinimapSection.Title:SetPoint("TOPLEFT", LockCheckbox, "BOTTOMLEFT", 0, -22)
+
 -- Checkbox für Minimap Button ein/ausblenden
-local MinimapCheckbox = CreateCheckbox(SettingsPanel, L("MINIMAP_BUTTON_HIDE"), (BeavisQoLDB.settings and BeavisQoLDB.settings.hideMinimap) or false, function(self)
-    if not BeavisQoLDB.settings then BeavisQoLDB.settings = {} end
-    BeavisQoLDB.settings.hideMinimap = self:GetChecked()
+local MinimapCheckbox = CreateCheckbox(SettingsPanel, L("MINIMAP_BUTTON_HIDE"), GetSettingsDB().hideMinimap or false, function(self)
+    local settings = GetSettingsDB()
+    settings.hideMinimap = self:GetChecked()
     BeavisQoLDB.minimap = BeavisQoLDB.minimap or {}
-    BeavisQoLDB.minimap.hide = BeavisQoLDB.settings.hideMinimap
+    BeavisQoLDB.minimap.hide = settings.hideMinimap
     if BeavisQoL.MinimapIcon then
         BeavisQoL.MinimapIcon:Refresh(ADDON_NAME, BeavisQoLDB.minimap)
     end
 end)
-MinimapCheckbox:SetPoint("TOPLEFT", LockCheckbox, "BOTTOMLEFT", 0, -20)
+MinimapCheckbox:SetPoint("TOPLEFT", MinimapSection.Divider, "BOTTOMLEFT", 0, -10)
+
+QuickHideSection = CreateSectionHeader(SettingsPanel, L("SETTINGS_SECTION_QUICK_HIDE"), L("SETTINGS_SECTION_QUICK_HIDE_DESC"))
+QuickHideSection.Title:SetPoint("TOPLEFT", MinimapCheckbox, "BOTTOMLEFT", 0, -22)
+
+QuickHideOverlaysCheckbox = CreateCheckbox(SettingsPanel, L("QUICK_HIDE_OVERLAYS"), BeavisQoL.GetQuickHideOverlaysEnabled and BeavisQoL.GetQuickHideOverlaysEnabled() or false, function(self)
+    if BeavisQoL.SetQuickHideOverlaysEnabled then
+        BeavisQoL.SetQuickHideOverlaysEnabled(self:GetChecked())
+        return
+    end
+
+    GetSettingsDB().quickHideOverlays = self:GetChecked()
+end)
+QuickHideOverlaysCheckbox:SetPoint("TOPLEFT", QuickHideSection.Divider, "BOTTOMLEFT", 0, -10)
+
+QuickHideChecklistOverlayCheckbox = CreateCheckbox(SettingsPanel, L("QUICK_HIDE_CHECKLIST_OVERLAY"), BeavisQoL.GetQuickHideOverlayEnabled and BeavisQoL.GetQuickHideOverlayEnabled("checklist") or false, function(self)
+    if BeavisQoL.SetQuickHideOverlayEnabled then
+        BeavisQoL.SetQuickHideOverlayEnabled("checklist", self:GetChecked())
+        return
+    end
+
+    GetSettingsDB().quickHideChecklistOverlay = self:GetChecked()
+end)
+QuickHideChecklistOverlayCheckbox:SetPoint("TOPLEFT", QuickHideOverlaysCheckbox, "BOTTOMLEFT", 24, -8)
+
+QuickHideWeeklyOverlayCheckbox = CreateCheckbox(SettingsPanel, L("QUICK_HIDE_WEEKLY_OVERLAY"), BeavisQoL.GetQuickHideOverlayEnabled and BeavisQoL.GetQuickHideOverlayEnabled("weekly") or false, function(self)
+    if BeavisQoL.SetQuickHideOverlayEnabled then
+        BeavisQoL.SetQuickHideOverlayEnabled("weekly", self:GetChecked())
+        return
+    end
+
+    GetSettingsDB().quickHideWeeklyOverlay = self:GetChecked()
+end)
+QuickHideWeeklyOverlayCheckbox:SetPoint("TOPLEFT", QuickHideChecklistOverlayCheckbox, "BOTTOMLEFT", 0, -8)
+
+QuickHideStatsOverlayCheckbox = CreateCheckbox(SettingsPanel, L("QUICK_HIDE_STATS_OVERLAY"), BeavisQoL.GetQuickHideOverlayEnabled and BeavisQoL.GetQuickHideOverlayEnabled("stats") or false, function(self)
+    if BeavisQoL.SetQuickHideOverlayEnabled then
+        BeavisQoL.SetQuickHideOverlayEnabled("stats", self:GetChecked())
+        return
+    end
+
+    GetSettingsDB().quickHideStatsOverlay = self:GetChecked()
+end)
+QuickHideStatsOverlayCheckbox:SetPoint("TOPLEFT", QuickHideWeeklyOverlayCheckbox, "BOTTOMLEFT", 0, -8)
+
+QuickHideOverlaysInCombatCheckbox = CreateCheckbox(SettingsPanel, L("QUICK_HIDE_OVERLAYS_IN_COMBAT"), BeavisQoL.GetQuickHideOverlaysInCombat and BeavisQoL.GetQuickHideOverlaysInCombat() or false, function(self)
+    if BeavisQoL.SetQuickHideOverlaysInCombat then
+        BeavisQoL.SetQuickHideOverlaysInCombat(self:GetChecked())
+        return
+    end
+
+    GetSettingsDB().quickHideOverlaysInCombat = self:GetChecked()
+end)
+QuickHideOverlaysInCombatCheckbox:SetPoint("TOPLEFT", QuickHideStatsOverlayCheckbox, "BOTTOMLEFT", 24, -8)
+
+ResetSection = CreateSectionHeader(SettingsPanel, L("SETTINGS_SECTION_RESET"), L("SETTINGS_SECTION_RESET_DESC"))
+ResetSection.Title:SetPoint("TOPLEFT", QuickHideOverlaysInCombatCheckbox, "BOTTOMLEFT", -24, -24)
 
 -- Button für Position zurücksetzen
 local ResetButton = CreateFrame("Button", nil, SettingsPanel, "UIPanelButtonTemplate")
 ResetButton:SetSize(150, 30)
-ResetButton:SetPoint("TOPLEFT", MinimapCheckbox, "BOTTOMLEFT", 0, -20)
+ResetButton:SetPoint("TOPLEFT", ResetSection.Divider, "BOTTOMLEFT", 0, -10)
 ResetButton:SetText(L("RESET_POSITION"))
 ResetButton:SetScript("OnClick", function()
     if BeavisQoL.Frame then
@@ -198,17 +309,55 @@ ResetButton:SetScript("OnClick", function()
 end)
 
 BeavisQoL.UpdateSettings = function()
+    local settings = GetSettingsDB()
+
     if LockCheckbox then
-        LockCheckbox:SetChecked((BeavisQoLDB.settings and BeavisQoLDB.settings.lockWindow) or false)
+        LockCheckbox:SetChecked(settings.lockWindow or false)
         LockCheckbox.Label:SetText(L("LOCK_WINDOW"))
     end
     if MinimapCheckbox then
-        MinimapCheckbox:SetChecked((BeavisQoLDB.settings and BeavisQoLDB.settings.hideMinimap) or false)
+        MinimapCheckbox:SetChecked(settings.hideMinimap or false)
         MinimapCheckbox.Label:SetText(L("MINIMAP_BUTTON_HIDE"))
+    end
+    if QuickHideOverlaysCheckbox then
+        QuickHideOverlaysCheckbox:SetChecked(BeavisQoL.GetQuickHideOverlaysEnabled and BeavisQoL.GetQuickHideOverlaysEnabled() or settings.quickHideOverlays or false)
+        QuickHideOverlaysCheckbox.Label:SetText(L("QUICK_HIDE_OVERLAYS"))
+    end
+    if QuickHideChecklistOverlayCheckbox then
+        QuickHideChecklistOverlayCheckbox:SetChecked(BeavisQoL.GetQuickHideOverlayEnabled and BeavisQoL.GetQuickHideOverlayEnabled("checklist") or settings.quickHideChecklistOverlay or false)
+        QuickHideChecklistOverlayCheckbox.Label:SetText(L("QUICK_HIDE_CHECKLIST_OVERLAY"))
+    end
+    if QuickHideWeeklyOverlayCheckbox then
+        QuickHideWeeklyOverlayCheckbox:SetChecked(BeavisQoL.GetQuickHideOverlayEnabled and BeavisQoL.GetQuickHideOverlayEnabled("weekly") or settings.quickHideWeeklyOverlay or false)
+        QuickHideWeeklyOverlayCheckbox.Label:SetText(L("QUICK_HIDE_WEEKLY_OVERLAY"))
+    end
+    if QuickHideStatsOverlayCheckbox then
+        QuickHideStatsOverlayCheckbox:SetChecked(BeavisQoL.GetQuickHideOverlayEnabled and BeavisQoL.GetQuickHideOverlayEnabled("stats") or settings.quickHideStatsOverlay or false)
+        QuickHideStatsOverlayCheckbox.Label:SetText(L("QUICK_HIDE_STATS_OVERLAY"))
+    end
+    if QuickHideOverlaysInCombatCheckbox then
+        QuickHideOverlaysInCombatCheckbox:SetChecked(BeavisQoL.GetQuickHideOverlaysInCombat and BeavisQoL.GetQuickHideOverlaysInCombat() or settings.quickHideOverlaysInCombat or false)
+        QuickHideOverlaysInCombatCheckbox.Label:SetText(L("QUICK_HIDE_OVERLAYS_IN_COMBAT"))
     end
     SettingsTitle:SetText(L("GLOBAL_SETTINGS"))
     SettingsSubtitle:SetText(L("GLOBAL_SETTINGS_DESC"))
     LanguageLabel:SetText(L("LANGUAGE") .. ":")
+    if GeneralSection then
+        GeneralSection.Title:SetText(L("SETTINGS_SECTION_GENERAL"))
+        GeneralSection.Description:SetText(L("SETTINGS_SECTION_GENERAL_DESC"))
+    end
+    if MinimapSection then
+        MinimapSection.Title:SetText(L("SETTINGS_SECTION_MINIMAP"))
+        MinimapSection.Description:SetText(L("SETTINGS_SECTION_MINIMAP_DESC"))
+    end
+    if QuickHideSection then
+        QuickHideSection.Title:SetText(L("SETTINGS_SECTION_QUICK_HIDE"))
+        QuickHideSection.Description:SetText(L("SETTINGS_SECTION_QUICK_HIDE_DESC"))
+    end
+    if ResetSection then
+        ResetSection.Title:SetText(L("SETTINGS_SECTION_RESET"))
+        ResetSection.Description:SetText(L("SETTINGS_SECTION_RESET_DESC"))
+    end
     ResetButton:SetText(L("RESET_POSITION"))
     RefreshLanguageDropdown()
 end

@@ -72,7 +72,7 @@ local STAT_DEFINITIONS = {
 
 local function Clamp(value, minValue, maxValue)
     -- Kleine Standard-Helferfunktion:
-    -- verhindert, dass Slider oder DB-Werte ausserhalb des erlaubten Bereichs landen.
+    -- verhindert, dass Slider oder DB-Werte außerhalb des erlaubten Bereichs landen.
     if value < minValue then
         return minValue
     end
@@ -260,7 +260,7 @@ end
 
 local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mode)
     -- WoW-Slider mit `OptionsSliderTemplate` brauchen einen echten Frame-Namen,
-    -- weil Blizzard die eingebauten Textregionen ueber Globals zusammensetzt.
+    -- weil Blizzard die eingebauten Textregionen über Globals zusammensetzt.
     sliderCounter = sliderCounter + 1
 
     local sliderName = "BeavisQoLStatsSlider" .. sliderCounter
@@ -385,7 +385,7 @@ end
 local function LayoutStatRows(parent, rows, fontSize, scale)
     -- Diese Funktion berechnet nur die Geometrie.
     -- Sie schreibt bewusst noch keine Werte, sondern positioniert erst einmal
-    -- alle Zeilen passend zur gewaehlten Schriftgroesse und Skalierung.
+    -- alle Zeilen passend zur gewählten Schriftgröße und Skalierung.
     local metrics = GetLayoutMetrics(fontSize, scale)
     local currentY = -metrics.topPadding
 
@@ -466,8 +466,13 @@ local function RefreshPreviewCard()
     RefreshStatRows(PreviewRows)
 end
 
+local function ShouldHideStatsOverlay()
+    return BeavisQoL.ShouldHideOverlay
+        and BeavisQoL.ShouldHideOverlay("stats")
+end
+
 function StatsModule.RefreshOverlayWindow()
-    -- Zentraler Refresh fuer alles, was das sichtbare Overlay betrifft:
+    -- Zentraler Refresh für alles, was das sichtbare Overlay betrifft:
     -- Layout, Farben, Mausverhalten und Show/Hide.
     if not OverlayFrame then
         return
@@ -491,7 +496,7 @@ function StatsModule.RefreshOverlayWindow()
 
     RefreshStatRows(OverlayRows)
 
-    if settings.overlayEnabled then
+    if settings.overlayEnabled and not ShouldHideStatsOverlay() then
         OverlayFrame:Show()
     else
         OverlayFrame:Hide()
@@ -792,8 +797,13 @@ end)
 local StatsEvents = CreateFrame("Frame")
 StatsEvents:RegisterEvent("PLAYER_ENTERING_WORLD")
 StatsEvents:RegisterEvent("PLAYER_LOGIN")
+StatsEvents:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+StatsEvents:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+StatsEvents:RegisterEvent("UPDATE_INSTANCE_INFO")
+StatsEvents:RegisterEvent("PLAYER_REGEN_DISABLED")
+StatsEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
 StatsEvents:SetScript("OnEvent", function()
-    -- Beim Login oder Weltwechsel koennen sich Stats, Buffs und Positionen aendern.
+    -- Beim Login oder Weltwechsel können sich Stats, Buffs und Positionen ändern.
     RefreshAllDisplays()
 end)
 

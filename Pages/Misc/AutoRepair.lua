@@ -5,8 +5,8 @@ local Misc = BeavisQoL.Misc
 local L = BeavisQoL.L
 local GetCoinText = (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString) or rawget(_G, "GetCoinTextureString")
 
--- Diese Datei enthaelt nur die eigentliche Reparatur-Automatik.
--- Der sichtbare Schalter dafuer sitzt auf der Komfort-Seite in `Pages/Misc.lua`.
+-- Diese Datei enthält nur die eigentliche Reparatur-Automatik.
+-- Der sichtbare Schalter dafür sitzt auf der Komfort-Seite in `Pages/Misc.lua`.
 
 -- AutoRepair teilt sich wie die anderen Misc-Module dieselbe Unter-DB.
 -- Dadurch kann die Misc-Seite später alle Schalter an einer Stelle lesen.

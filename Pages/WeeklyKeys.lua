@@ -10,7 +10,7 @@ local WeeklyKeysModule = BeavisQoL.WeeklyKeysModule
 WeeklyKeys.lua sammelt zwei Datenquellen und macht daraus eine einzige Anzeige:
 
 1. Mythic-Plus-Laufhistorie
-2. Weekly-Vault-Aktivitaeten fuer die Belohnungsstufen 1 / 4 / 8
+2. Weekly-Vault-Aktivitäten für die Belohnungsstufen 1 / 4 / 8
 
 Das Ergebnis landet sowohl in einer Vorschau auf der Modulseite als auch in
 einem frei verschiebbaren Overlay.
@@ -368,7 +368,7 @@ end
 
 local function RequestVaultData()
     -- Die Requests stossen nur an, dass Blizzard seine internen Daten auffrischt.
-    -- Die eigentliche Anzeige lesen wir danach ueber die normalen APIs.
+    -- Die eigentliche Anzeige lesen wir danach über die normalen APIs.
     if C_MythicPlus and C_MythicPlus.RequestMapInfo then
         C_MythicPlus.RequestMapInfo()
     end
@@ -385,8 +385,8 @@ local function RequestSavedInstanceData()
 end
 
 local function GetDungeonSlotData()
-    -- Hier entsteht die Lookup-Tabelle fuer die Vault-Slots.
-    -- Beispiel: `slots[4]` steht fuer den 4er-Slot der Weekly Vault.
+    -- Hier entsteht die Lookup-Tabelle für die Vault-Slots.
+    -- Beispiel: `slots[4]` steht für den 4er-Slot der Weekly Vault.
     local slots = {}
 
     if not C_WeeklyRewards or not C_WeeklyRewards.GetActivities then
@@ -600,6 +600,11 @@ local function GetWeeklyKeysSettings()
     return db
 end
 
+local function ShouldHideOverlayInCombat()
+    return BeavisQoL.ShouldHideOverlay
+        and BeavisQoL.ShouldHideOverlay("weekly")
+end
+
 function WeeklyKeysModule.IsOverlayEnabled()
     return GetWeeklyKeysSettings().overlayEnabled == true
 end
@@ -684,7 +689,7 @@ end
 
 local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mode)
     -- Gleiche Idee wie in Stats.lua:
-    -- Blizzard-Slider brauchen einen festen Namen fuer ihre eingebauten Labels.
+    -- Blizzard-Slider brauchen einen festen Namen für ihre eingebauten Labels.
     sliderCounter = sliderCounter + 1
 
     local sliderName = "BeavisQoLWeeklyKeysSlider" .. sliderCounter
@@ -832,7 +837,7 @@ local function GetTrackedDungeonCount(slotLookup, runHistoryCount)
 end
 
 local function BuildDisplayRows()
-    -- Diese Funktion ist die eigentliche Uebersetzung von API-Daten in UI-Zeilen.
+    -- Diese Funktion ist die eigentliche Übersetzung von API-Daten in UI-Zeilen.
     -- Sie entscheidet:
     -- - welche Runs sichtbar sind
     -- - wann Platzhalter gezeigt werden
@@ -1100,7 +1105,7 @@ local function RefreshPreview()
 end
 
 function WeeklyKeysModule.RefreshOverlayWindow()
-    -- Zentraler Overlay-Refresh fuer Weekly Keys.
+    -- Zentraler Overlay-Refresh für Weekly Keys.
     if not OverlayFrame then
         return
     end
@@ -1122,7 +1127,7 @@ function WeeklyKeysModule.RefreshOverlayWindow()
 
     OverlayFrame:EnableMouse(true)
 
-    if settings.overlayEnabled then
+    if settings.overlayEnabled and not ShouldHideOverlayInCombat() then
         OverlayFrame:Show()
     else
         OverlayFrame:Hide()
@@ -1156,7 +1161,7 @@ RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
 end)
 
 local function RefreshAllDisplays()
-    -- Ein Aufruf fuer Vorschau, Overlay und Datenanfrage.
+    -- Ein Aufruf für Vorschau, Overlay und Datenanfrage.
     RequestVaultData()
     RefreshPreview()
     WeeklyKeysModule.RefreshOverlayWindow()
@@ -1342,10 +1347,10 @@ ResetHint:SetText(L("WEEKLY_KEYS_RESET_HINT"))
 OverlayFrame = CreateFrame("Frame", "BeavisQoLWeeklyKeysOverlayFrame", UIParent)
 OverlayFrame:SetClampedToScreen(true)
 OverlayFrame:SetMovable(true)
-OverlayFrame:SetToplevel(true)
--- Weekly Keys soll sichtbar bleiben, aber keine Blizzard-/Battle.net-Overlays
--- nach hinten draengen.
-OverlayFrame:SetFrameStrata("MEDIUM")
+OverlayFrame:SetToplevel(false)
+-- Weekly Keys soll im normalen Spielbild sichtbar bleiben, aber Blizzard-
+-- und Battle.net-Overlays nicht ueberdecken.
+OverlayFrame:SetFrameStrata("LOW")
 OverlayFrame:SetFrameLevel(1)
 if OverlayFrame.SetClipsChildren then
     OverlayFrame:SetClipsChildren(true)
@@ -1481,6 +1486,8 @@ WeeklyKeysEvents:RegisterEvent("CHALLENGE_MODE_RESET")
 WeeklyKeysEvents:RegisterEvent("SCENARIO_COMPLETED")
 WeeklyKeysEvents:RegisterEvent("LFG_COMPLETION_REWARD")
 WeeklyKeysEvents:RegisterEvent("UPDATE_INSTANCE_INFO")
+WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_DISABLED")
+WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
 WeeklyKeysEvents:SetScript("OnEvent", function(_, eventName)
     -- Alle relevanten Weekly-Vault- und Mythic+-Aenderungen laufen hier zusammen.
     if eventName == "PLAYER_ENTERING_WORLD"

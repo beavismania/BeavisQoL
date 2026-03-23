@@ -12,9 +12,9 @@ Checklist.lua ist gleichzeitig Datenmodell, Tracker und Modulseite.
 Die Datei vereint:
 1. feste Aufgaben des Addons
 2. manuelle Aufgaben pro Charakter
-3. Reset-Logik fuer Daily und Weekly
-4. das kleine Tracker-Fenster ausserhalb des Hauptfensters
-5. die grosse Checklisten-Seite im Addon
+3. Reset-Logik für Daily und Weekly
+4. das kleine Tracker-Fenster außerhalb des Hauptfensters
+5. die große Checklisten-Seite im Addon
 
 Wenn du die Datei lesen willst, geh am besten so vor:
 Konstanten -> SavedVariables -> Aufgabenlogik -> Tracker -> Hauptseiten-UI -> Events.
@@ -98,6 +98,7 @@ local isRefreshing = false
 local sliderCounter = 0
 local selectedManualCadence = "daily"
 local selectedTrackerPopupCadence = "daily"
+local trackerVisibilityCheckElapsed = 0
 
 local function TrimText(text)
     if type(text) ~= "string" then
@@ -113,7 +114,7 @@ local function TrimText(text)
 end
 
 local function Clamp(value, minValue, maxValue)
-    -- Schuetzt Fenstergroessen, Slider und gespeicherte Werte vor Ausreissern.
+    -- Schützt Fenstergrößen, Slider und gespeicherte Werte vor Ausreißern.
     if value < minValue then
         return minValue
     end
@@ -239,8 +240,8 @@ local function GetBuiltInTodoByID(todoID)
 end
 
 local function GetChecklistSettings()
-    -- Accountweite Einstellungen fuer das Tracker-Fenster:
-    -- Sichtbarkeit, Optik, Position, Groesse und Verhalten.
+    -- Accountweite Einstellungen für das Tracker-Fenster:
+    -- Sichtbarkeit, Optik, Position, Größe und Verhalten.
     BeavisQoLDB = BeavisQoLDB or {}
     BeavisQoLDB.checklist = BeavisQoLDB.checklist or {}
 
@@ -309,8 +310,13 @@ local function GetChecklistSettings()
     return db
 end
 
+local function ShouldHideTrackerInCombat()
+    return BeavisQoL.ShouldHideOverlay
+        and BeavisQoL.ShouldHideOverlay("checklist")
+end
+
 local function GetChecklistCharacterData()
-    -- Charakterdaten fuer die eigentliche Checkliste:
+    -- Charakterdaten für die eigentliche Checkliste:
     -- Haken, manuelle Aufgaben, deaktivierte Standardaufgaben und Reset-Zeiten.
     BeavisQoLCharDB = BeavisQoLCharDB or {}
     BeavisQoLCharDB.checklist = BeavisQoLCharDB.checklist or {}
@@ -337,8 +343,8 @@ local function GetChecklistCharacterData()
         db.nextWeeklyResetAt = 0
     end
 
-    -- Vorhandene manuelle Eintraege werden bewusst bereinigt, damit alte oder
-    -- kaputte SavedVariables spaeter keine Layout- oder nil-Probleme erzeugen.
+    -- Vorhandene manuelle Einträge werden bewusst bereinigt, damit alte oder
+    -- kaputte SavedVariables später keine Layout- oder nil-Probleme erzeugen.
     local sanitizedManualItems = {}
     local usedIDs = {}
     local nextManualID = 1
@@ -514,9 +520,9 @@ local function GetNextResetTimestamp(cadence)
 end
 
 local function ProcessChecklistResets()
-    -- Prueft, ob einer der gespeicherten Reset-Zeitpunkte erreicht wurde,
-    -- fuehrt die noetigen Resets aus und berechnet danach direkt die
-    -- naechsten bekannten Reset-Zeitpunkte neu.
+    -- Prüft, ob einer der gespeicherten Reset-Zeitpunkte erreicht wurde,
+    -- führt die nötigen Resets aus und berechnet danach direkt die
+    -- nächsten bekannten Reset-Zeitpunkte neu.
     local db = GetChecklistCharacterData()
     local currentServerTime = GetCurrentServerTimestamp()
     local didResetAnything = false
@@ -650,7 +656,7 @@ local function CreateBuiltInTodoRow(parent)
 end
 
 local function CreatePageTodoRow(parent, includeDeleteButton)
-    -- Vereinfachte Aufgabenzeile fuer die Hauptseite.
+    -- Vereinfachte Aufgabenzeile für die Hauptseite.
     local row = CreateFrame("Frame", nil, parent)
     row:SetHeight(24)
 
@@ -677,7 +683,7 @@ local function CreatePageTodoRow(parent, includeDeleteButton)
 end
 
 local function CreateTrackerTodoRow(parent)
-    -- Kompakte Overlay-Zeile fuer das kleine Tracker-Fenster.
+    -- Kompakte Overlay-Zeile für das kleine Tracker-Fenster.
     local row = CreateFrame("Frame", nil, parent)
     row:SetHeight(20)
 
@@ -712,7 +718,7 @@ local function CreateTrackerTodoRow(parent)
 end
 
 local function SaveTrackerGeometry()
-    -- Speichert Position und aktuelle Groesse des Trackers.
+    -- Speichert Position und aktuelle Größe des Trackers.
     if not TrackerFrame then
         return
     end
@@ -769,7 +775,7 @@ local function ApplyTrackerStyle()
 end
 
 function Checklist.RefreshTrackerWindow()
-    -- Einziger gueltiger Renderpfad fuer das Tracker-Fenster.
+    -- Einziger gültiger Renderpfad für das Tracker-Fenster.
     if not TrackerFrame then
         return
     end
@@ -786,7 +792,7 @@ function Checklist.RefreshTrackerWindow()
         UpdateTrackerLockState()
     end
 
-    if not settings.trackerEnabled then
+    if not settings.trackerEnabled or ShouldHideTrackerInCombat() then
         TrackerFrame:Hide()
         return
     end
@@ -966,11 +972,16 @@ function Checklist.RefreshTrackerWindow()
 end
 
 function Checklist.RefreshAllViews()
-    -- Gemeinsamer Refresh fuer Hauptseite und Tracker.
+    -- Gemeinsamer Refresh für Hauptseite und Tracker.
     if PageChecklist and PageChecklist.RefreshState then
         PageChecklist:RefreshState()
     end
 
+    Checklist.RefreshTrackerWindow()
+end
+
+local function RefreshChecklistTrackerForContextChange()
+    -- Kampf-, Zonen- und Instanzwechsel brauchen nur den Tracker-Refresh.
     Checklist.RefreshTrackerWindow()
 end
 
@@ -1373,7 +1384,7 @@ end)
 
 local function OpenWeeklyVault()
     -- Funktioniert als Toggle:
-    -- offenes Vault-Fenster schliessen, sonst oeffnen.
+    -- offenes Vault-Fenster schließen, sonst öffnen.
     if WeeklyRewardsFrame and WeeklyRewardsFrame:IsShown() then
         if HideUIPanel then
             HideUIPanel(WeeklyRewardsFrame)
@@ -2348,7 +2359,7 @@ local function LayoutChecklistPanel(panel, rowTable, emptyText, cadence)
 end
 
 function PageChecklist:RefreshState()
-    -- Zentraler Seiten-Refresh fuer Zahlen, Zeilen, Slider und Tracker-Optionen.
+    -- Zentraler Seiten-Refresh für Zahlen, Zeilen, Slider und Tracker-Optionen.
     ProcessChecklistResets()
 
     local completedCount, totalCount = GetChecklistCounts()
@@ -2504,12 +2515,29 @@ BeavisQoL.Pages.Checklist = PageChecklist
 
 local ChecklistWatcher = CreateFrame("Frame")
 ChecklistWatcher:RegisterEvent("PLAYER_LOGIN")
-ChecklistWatcher:SetScript("OnEvent", function()
+ChecklistWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+ChecklistWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+ChecklistWatcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+ChecklistWatcher:RegisterEvent("UPDATE_INSTANCE_INFO")
+ChecklistWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+ChecklistWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+ChecklistWatcher:SetScript("OnEvent", function(_, eventName)
     GetChecklistSettings()
     GetChecklistCharacterData()
-    ProcessChecklistResets()
-    ApplyTrackerGeometry()
-    Checklist.RefreshAllViews()
+
+    local didProcessResets = ProcessChecklistResets()
+
+    if eventName == "PLAYER_LOGIN" then
+        ApplyTrackerGeometry()
+        Checklist.RefreshAllViews()
+        return
+    end
+
+    RefreshChecklistTrackerForContextChange()
+
+    if didProcessResets and PageChecklist and PageChecklist:IsShown() then
+        PageChecklist:RefreshState()
+    end
 end)
 
 local resetTickerElapsed = 0
@@ -2525,5 +2553,27 @@ ChecklistResetTicker:SetScript("OnUpdate", function(_, elapsed)
 
     if ProcessChecklistResets() then
         Checklist.RefreshAllViews()
+    end
+end)
+
+local ChecklistTrackerVisibilityWatcher = CreateFrame("Frame")
+ChecklistTrackerVisibilityWatcher:SetScript("OnUpdate", function(_, elapsed)
+    trackerVisibilityCheckElapsed = trackerVisibilityCheckElapsed + elapsed
+
+    if trackerVisibilityCheckElapsed < 0.20 then
+        return
+    end
+
+    trackerVisibilityCheckElapsed = 0
+
+    if not TrackerFrame then
+        return
+    end
+
+    local settings = GetChecklistSettings()
+    local shouldShowTracker = settings.trackerEnabled and not ShouldHideTrackerInCombat()
+
+    if TrackerFrame:IsShown() ~= shouldShowTracker then
+        Checklist.RefreshTrackerWindow()
     end
 end)

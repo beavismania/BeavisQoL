@@ -4,13 +4,18 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.0.16 Alpha`
-- Release-Datum: `2026-03-22`
+- Version: `0.22.0`
+- Release-Datum: `2026-03-23`
 - Schwerpunkt dieser Version:
-  - neue Fortschritts- und Logging-Module
-  - zwei frei verschiebbare Overlay-Module
-  - ueberarbeitetes Hauptfenster mit neuer Tree-Struktur
-  - deutsche und englische Laufzeit-Lokalisierung
+  - `Easy LFG` als kompaktes Overlay für eigene Gruppenanzeigen mit Invite-, Ablehnen-, Flaggen- und Rollen-/Spec-Anzeige
+  - aufklappbare Gruppenbewerbungen im `Easy LFG`, damit Mehrspieler-Anmeldungen übersichtlich bleiben
+  - automatische Anzeige des `Easy LFG` bei aktiver eigener Listung und automatisches Ausblenden danach
+  - `Gruppenplaner`-Overlay mit sauberem Header, Timerblock, `Alle leeren`, `Menü` und `X`
+  - `Gruppenplaner`-Sloteditor mit Klassen- und Spezialisierungswahl pro Platz
+  - Zielvorschläge für `Gruppenplaner` inklusive Raid-, Tiefen- und `M+0` bis `M+20`-Auswahl
+  - `Angelhilfe` als Ein-Tasten-Komfortmodul für entspannteres Angeln
+  - Minimap-Schnellmenü weiter ausgebaut, unter anderem für `Easy LFG` und `Gruppenplaner`
+  - Markerleiste, Schnell-Ausblenden und Quest-Abbruch aus den letzten Releases weiterhin enthalten
 
 ## Download
 
@@ -21,21 +26,45 @@ https://github.com/beavismania/BeavisQoL/releases
 ## Projektziel
 
 `BeavisQoL` ist gleichzeitig Addon, Lernprojekt und Baukasten.
-Der Code wird bewusst modular gehalten, damit neue Funktionen ohne kompletten Umbau dazukommen koennen.
+Der Code wird bewusst modular gehalten, damit neue Funktionen ohne kompletten Umbau dazukommen können.
 
 Das Projekt soll:
 
-- nuetzliche Alltagsfunktionen fuer WoW Retail sammeln
-- moeglichst sauber in getrennte Module aufteilen
+- nützliche Alltagsfunktionen für WoW Retail sammeln
+- möglichst sauber in getrennte Module aufteilen
 - beim Lernen von Lua und WoW-Addon-APIs helfen
 - langfristig gut wartbar bleiben
+
+## Versionierung
+
+`BeavisQoL` nutzt ab sofort ein festes `major.minor.patch`-Schema:
+
+- `1.0.0`
+  - Hauptversion für größere Releases, Richtungswechsel oder bewusst große Paketzustände
+- `0.1.0`
+  - Featureversion für neue Funktionen oder neue Module
+- `0.0.1`
+  - Hotfixversion für kleine Fehlerbehebungen ohne neues Modul
+
+Regel für künftige Releases:
+
+- sobald ein neues Modul hinzugefügt wird, muss mindestens die `minor`-Version erhöht werden
+- reine Bugfixes ohne neues Modul erhöhen nur die `patch`-Version
+- größere Meilensteine oder bewusst große Umbauten erhöhen die `major`-Version
+
+Beispiel:
+
+- `0.22.0` -> aktueller Stand
+- neues Modul -> `0.23.0`
+- danach Hotfix -> `0.22.1`
+- grosser Hauptrelease -> `1.0.0`
 
 ## Aktueller Schwerpunkt
 
 - ein gemeinsames Hauptfenster mit Tree-Navigation
-- mehrere sichtbare Overlay-Module fuer den Spielalltag
+- mehrere sichtbare Overlay-Module für den Spielalltag
 - charakterbezogene Logs, Checklisten und Referenzseiten
-- code-nahe Dokumentation fuer Anfaenger
+- code-nahe Dokumentation für Anfänger
 
 ## Module im Addon
 
@@ -45,13 +74,18 @@ Das Projekt soll:
   - misst die gespielte Zeit pro Level
 - `Checkliste`
   - Daily-, Weekly- und "Im Blick halten"-Aufgaben
-  - kleines Tracker-Fenster ausserhalb des Hauptfensters
+  - kleines Tracker-Fenster außerhalb des Hauptfensters
+  - kann in instanzierten Bereichen automatisch ausgeblendet werden, optional nur im Kampf
 - `Weekly Keys`
-  - zeigt die hoechsten 8 Weekly-Dungeons und den Vault-Loot
+  - zeigt die höchsten 8 Weekly-Dungeons und den Vault-Loot
+  - kann in instanzierten Bereichen automatisch ausgeblendet werden, optional nur im Kampf
 - `Itemlevel Guide`
-  - saisonale Referenz fuer Upgradepfade, Crafting, Dungeon-, Raid- und Tiefen-Itemlevel
+  - saisonale Referenz für Upgradepfade, Crafting, Dungeon-, Raid- und Tiefen-Itemlevel
 - `Quest Check`
-  - prueft Queststatus per Quest-ID, WoWHead-Link oder exaktem Namen
+  - prüft Queststatus per Quest-ID, WoWHead-Link oder exaktem Namen
+- `Quest Abandon`
+  - zeigt sichtbare aktive Quests in einer Auswahl-Liste
+  - erlaubt gezieltes Markieren, Sammel-Abbrechen und Schnellaktionen für alle markieren oder leeren
 
 ### Gold & Handel
 
@@ -61,61 +95,103 @@ Das Projekt soll:
   - aufklappbare Verkaufs- und Reparaturdetails
   - Gold-Einnahmen nach Kategorie
   - Gold-Ausgaben nach Kategorie
-  - manuelles Loeschen nach Zeitraum
+  - manuelles Löschen nach Zeitraum
 - `Auto Sell Junk`
-  - verkauft graue Items beim Haendler automatisch
+  - verkauft graue Items beim Händler automatisch
 - `Auto Repair`
-  - repariert automatisch, optional bevorzugt ueber Gildengold
+  - repariert automatisch, optional bevorzugt über Gildengold
 
 ### Komfort
 
 - `Fast Loot`
-  - lootet direkt beim Oeffnen des Lootfensters
+  - lootet direkt beim Öffnen des Lootfensters
 - `Easy Delete`
-  - ersetzt die DELETE-Texteingabe bei passenden Items durch eine einfache Bestaetigung
+  - ersetzt die DELETE-Texteingabe bei passenden Items durch eine einfache Bestätigung
+- `Tooltip-Itemlevel`
+  - zeigt das ausgerüstete Itemlevel anderer Spieler direkt im Mouseover-Tooltip
+  - arbeitet über Blizzard-Inspect und daher nur in Reichweite des Zielspielers
 - `Kameraweite`
   - schaltet zwischen Standard und Max Distance um und setzt den Wert nach Login erneut
+- `Angelhilfe`
+  - Ein-Tasten-Helfer für das Auswerfen und Einsammeln des Bobbers
+  - legt die gewählte Taste während aktivem Bobber vorübergehend auf Blizzard-Interaktion um
+  - kann die Effektlautstärke beim Angeln temporär anheben
 
 ### Interface & Kampf
 
 - `Combat Text`
-  - eigene Combat-Text-Anpassungen fuer Schrift und Bewegung
+  - eigene Combat-Text-Anpassungen für Schrift und Bewegung
+- `Markerleiste`
+  - transparente Leiste mit Raidmarkern für Zielmarker und Bodenmarker
+  - frei verschiebbar, skalierbar und fixierbar
+  - Bodenmarker funktionieren nur in Gruppen, im Raid zusätzlich nur mit Leiter- oder Assistentenrechten
 - `Stats`
-  - kompaktes Overlay fuer Sekundaerwerte
+  - kompaktes Overlay für Sekundärwerte
   - frei verschiebbar, skalierbar und in der Transparenz anpassbar
+  - kann in instanzierten Bereichen automatisch ausgeblendet werden, optional nur im Kampf
 
 ### Gruppe & Suche
 
 - `Gruppensuche`
-  - Laenderflaggen in der Premade-Suche
+  - Länderflaggen in der Premade-Suche
+  - `Easy LFG` als kompaktes Bewerber-Overlay für eigene aktive Listungen
+  - direktes Einladen oder Ablehnen aus dem Overlay heraus
+  - Rollen- und Spec-Symbole, Länderflaggen sowie aufklappbare Gruppenbewerbungen
 - `Weekly Keys`
-  - Overlay fuer die 8 hoechsten Wochenlaeufe
+  - Overlay für die 8 höchsten Wochenläufe
   - zeigt Weekly-Vault-Loot direkt in derselben Anzeige
   - erfasst neben M+ auch erkannte heroische und mythische Non-Key-Runs
+
+### Streamer Tools
+
+- `Gruppenplaner`
+  - transparentes Overlay für feste Dungeon- und Raid-Slots
+  - Timerblock, Zielanzeige und Schnellaktion `Alle leeren` direkt im Overlay
+  - Sloteditor mit Klassen- und Spezialisierungsauswahl
+  - Zielvorschläge für Dungeons, Raids, Tiefen und Keystufen bis `M+20`
 
 ### Begleiter
 
 - `Pet Stuff`
-  - Auto Respawn Pet fuer Begleiter-Pets ausserhalb des Kampfes
+  - Auto Respawn Pet für Begleiter-Pets außerhalb des Kampfes
 
-## Modulerweiterungen in 0.0.16 Alpha
+## Modulerweiterungen bis 0.22.0
 
 - `Checkliste`
   - eigene Fortschrittsseite mit Daily-, Weekly- und Watch-Kategorien
   - manuelle Aufgaben pro Charakter
   - separates Tracker-Fenster mit Schnellaktionen
 - `Itemlevel Guide`
-  - neue Saison-Referenzseite fuer Upgradepfade, Crafting, Dungeon, Raid und Tiefen
+  - neue Saison-Referenzseite für Upgradepfade, Crafting, Dungeon, Raid und Tiefen
 - `Quest Check`
-  - Questpruefung per ID, WoWHead-Link oder exaktem Namen
+  - Questprüfung per ID, WoWHead-Link oder exaktem Namen
+- `Quest Abandon`
+  - Quest-Abbruch als eigenes Modul mit Auswahl-Liste für sichtbare aktive Quests
 - `Logging`
   - vollwertige Verkaufs-, Reparatur-, Einnahmen- und Ausgabenprotokolle
+- `Tooltip-Itemlevel`
+  - neues Komfort-Modul für das direkte Anzeigen fremder Itemlevel im Tooltip
 - `Stats` und `Weekly Keys`
-  - als eigenstaendige Overlay-Module mit Position, Scale und Transparenz
+  - als eigenständige Overlay-Module mit Position, Scale und Transparenz
+- `Markerleiste`
+  - neues Modul für Zielmarker und Bodenmarker mit transparenter Symbolleiste
+  - eigene Overlay-Steuerung für Anzeigen, Fixieren, Skalierung und Positions-Reset
+- `Easy LFG`
+  - kompaktes Bewerber-Overlay für eigene Gruppenlistungen
+  - direkte Invite- und Ablehnen-Aktionen, Rollen-/Spec-Symbole und Länderflaggen
+  - gruppierte, aufklappbare Mehrspieler-Bewerbungen statt einer flachen Liste
+- `Gruppenplaner`
+  - transparenter Gruppenplaner mit eigenem Timerblock und erweiterten Overlay-Steuerungen
+  - Sloteditor mit Klassen- und Spec-Auswahl sowie Zielvorschlägen für verschiedene Inhalte
+- `Angelhilfe`
+  - neues Komfort-Modul für einen vereinfachten Ein-Tasten-Ablauf beim Angeln
 - `UI und Navigation`
   - breitere Sidebar
   - neue Hauptkategorien im Tree
-  - Schnellmenue am Minimap-Button
+  - Schnellmenü am Minimap-Button
+- `Overlay-Steuerung`
+  - Schnell-Ausblenden für instanzierte Bereiche mit Detailauswahl für Checkliste, Weekly Keys und Stats
+  - optionale Einschränkung auf Kampf innerhalb instanzierter Bereiche
 - `Lokalisierung`
   - Deutsch und Englisch direkt im Addon umschaltbar
 
@@ -124,9 +200,10 @@ Das Projekt soll:
 - Slash-Command: `/beavis`
 - Minimap-Button:
   - Linksklick: Hauptfenster zeigen / verstecken
-  - Rechtsklick: Schnellmenue
+  - Rechtsklick: Schnellmenü
   - Shift-Klick: `ReloadUI()`
-  - Schnellmenue: direkter Zugriff auf Checkliste-, Weekly-Keys- und Stats-Overlay
+  - Schnellmenü: direkter Zugriff auf Checkliste-, Weekly-Keys-, Stats-, `Easy LFG`- und `Gruppenplaner`-Overlay
+  - Schnellmenü: Master-Schalter `Overlays schnell ausblenden`
 
 ## Installation
 
@@ -141,7 +218,7 @@ Beispielpfad:
 World of Warcraft\_retail_\Interface\AddOns\BeavisQoL
 ```
 
-## Fuer Einsteiger im Code
+## Für Einsteiger im Code
 
 Der Addon-Code ist absichtlich so aufgebaut, dass man ihn besser lesen kann:
 
@@ -152,13 +229,13 @@ Der Addon-Code ist absichtlich so aufgebaut, dass man ihn besser lesen kann:
 - `Tree.lua`
   - Navigation und Seitenwechsel
 - `Pages/`
-  - jede groessere Funktion hat eine eigene Seite oder Unterlogik
+  - jede größere Funktion hat eine eigene Seite oder Unterlogik
 
 Die Addon-eigenen Dateien sind inzwischen bewusst menschlich kommentiert.
 Fokus der Kommentare:
 
 - Was speichert die Funktion?
-- Warum ist ein bestimmter Guard noetig?
+- Warum ist ein bestimmter Guard nötig?
 - Welche Events steuern den Ablauf?
 - Was ist UI und was ist eigentliche Logik?
 
@@ -172,7 +249,7 @@ Wenn du das Addon als Lernprojekt lesen willst, starte am besten in dieser Reihe
 2. `UI.lua`
 3. `Tree.lua`
 4. eine einzelne Seite unter `Pages/`
-5. danach die zugehoerigen Unterdateien, z. B. `Pages/Misc/*.lua`
+5. danach die zugehörigen Unterdateien, z. B. `Pages/Misc/*.lua`
 
 ## Feedback und Kontakt
 
@@ -181,15 +258,15 @@ Wenn du das Addon als Lernprojekt lesen willst, starte am besten in dieser Reihe
 
 ## Lizenz
 
-Dieses Projekt ist proprietaer und urheberrechtlich geschuetzt.
+Dieses Projekt ist proprietär und urheberrechtlich geschützt.
 
 Erlaubt ist die private, nicht-kommerzielle Nutzung offizieller Versionen von `BeavisQoL` in World of Warcraft.
 
 Ohne vorherige schriftliche Genehmigung sind insbesondere nicht erlaubt:
 
 - Weiterverbreitung des Projekts oder wesentlicher Teile davon
-- Veraenderung und Veroeffentlichung abgeleiteter Versionen
+- Veränderung und Veröffentlichung abgeleiteter Versionen
 - Wiederverwendung von Code, Assets oder anderen Projektbestandteilen in anderen Addons oder Projekten
 - kommerzielle Nutzung
 
-Die vollstaendigen Bedingungen stehen in `LICENSE`.
+Die vollständigen Bedingungen stehen in `LICENSE`.
