@@ -52,6 +52,8 @@ BeavisQoL.Localization.enUS = {
 	STATS = "Stats",
 	MARKER_BAR = "Marker Bar",
 	COMBAT_TEXT = "Combat Text",
+	MOUSE_HELPER = "Mouse Helper",
+	BOSS_GUIDES = "Boss Guides",
 	LFG = "Group Finder",
 	STREAMER_PLANNER = "Group Planner",
 	PET_STUFF = "Pet Stuff",
@@ -160,6 +162,135 @@ BeavisQoL.Localization.enUS = {
 	FISHING_HELPER_SOUND_ENABLE = "Temporarily raise fishing SFX",
 	FISHING_HELPER_SOUND_MIN = "Fishing SFX volume",
 	FISHING_HELPER_SOUND_HINT = "While fishing is active, the addon raises your sound effects to the Blizzard maximum and restores the previous value afterwards. The client does not allow anything above the standard maximum here.",
+	MOUSE_HELPER_DESC = "Keeps mouse quality-of-life options on one page: visible cursor marker, movement trail and Blizzard cursor enlargement.",
+	MOUSE_HELPER_SETTINGS = "General",
+	MOUSE_HELPER_ENABLE = "Enable Mouse Helper",
+	MOUSE_HELPER_CURSOR_SIZE = "Blizzard cursor size",
+	MOUSE_HELPER_CURSOR_SIZE_DEFAULT = "Default",
+	MOUSE_HELPER_CURSOR_SIZE_32 = "32x32",
+	MOUSE_HELPER_CURSOR_SIZE_48 = "48x48",
+	MOUSE_HELPER_CURSOR_SIZE_64 = "64x64",
+	MOUSE_HELPER_CURSOR_SIZE_96 = "96x96",
+	MOUSE_HELPER_CURSOR_SIZE_128 = "128x128",
+	MOUSE_HELPER_BLIZZARD_CURSOR = "Use Blizzard large cursor",
+	MOUSE_HELPER_BLIZZARD_CURSOR_HINT = "Toggles Blizzard's built-in large cursor setting directly from this module.",
+	MOUSE_HELPER_BLIZZARD_CURSOR_UNSUPPORTED = "No supported Blizzard cursor-size CVar was detected on this client.",
+	MOUSE_HELPER_CIRCLE_TITLE = "Cursor Circle",
+	MOUSE_HELPER_CIRCLE_ENABLE = "Show circle",
+	MOUSE_HELPER_CIRCLE_COMBAT_ONLY = "Show circle only in combat",
+	MOUSE_HELPER_CIRCLE_SIZE = "Size",
+	MOUSE_HELPER_CIRCLE_THICKNESS = "Border thickness",
+	MOUSE_HELPER_CIRCLE_SHAPE = "Shape",
+	MOUSE_HELPER_SHAPE_RING = "Ring",
+	MOUSE_HELPER_SHAPE_SQUARE = "Square",
+	MOUSE_HELPER_SHAPE_DIAMOND = "Diamond",
+	MOUSE_HELPER_COLOR_PICK = "Pick color",
+	MOUSE_HELPER_CIRCLE_HINT = "The circle follows your cursor in real time and stays centered around it.",
+	MOUSE_HELPER_TRAIL_TITLE = "Mouse Trail",
+	MOUSE_HELPER_TRAIL_ENABLE = "Show trail",
+	MOUSE_HELPER_TRAIL_LENGTH = "Length",
+	MOUSE_HELPER_TRAIL_SIZE = "Dot size",
+	MOUSE_HELPER_TRAIL_STYLE = "Trail style",
+	MOUSE_HELPER_TRAIL_STYLE_LIGHTNING = "Lightning",
+	MOUSE_HELPER_TRAIL_STYLE_HOLY = "Holy Light",
+	MOUSE_HELPER_TRAIL_STYLE_ARC = "Arc Ribbons",
+	MOUSE_HELPER_TRAIL_STYLE_CLEAN = "Clean",
+	MOUSE_HELPER_TRAIL_HINT = "Leaves short fading points behind your cursor while moving.",
+	BOSS_GUIDES_DESC = "Shows a Boss Guides button at the top-left in supported dungeons/raids. It opens a window with boss tabs and stored tactics.",
+	BOSS_GUIDES_SETTINGS = "Settings",
+	BOSS_GUIDES_SHOW_OVERLAY = "Show overlay button",
+	BOSS_GUIDES_OVERLAY_MODE = "Display mode",
+	BOSS_GUIDES_MODE_ALWAYS = "Always show",
+	BOSS_GUIDES_MODE_INSTANCE = "Only in dungeon/raid",
+	BOSS_GUIDES_LOCK_OVERLAY = "Lock overlay position",
+	BOSS_GUIDES_SCALE = "Scale",
+	BOSS_GUIDES_FONT_SIZE = "Font Size",
+	BOSS_GUIDES_RESET_POSITION = "Reset positions",
+	BOSS_GUIDES_BUTTON = "Boss Guides",
+	BOSS_GUIDES_BOSSES = "Bosses",
+	BOSS_GUIDES_INSTANCE = "Instance",
+	BOSS_GUIDES_NO_GUIDE = "No guide is currently available for this instance.",
+	BOSS_GUIDES_CURRENT_INSTANCE = "Current instance",
+	BOSS_GUIDES_NONE = "None",
+	BOSS_GUIDES_CAT_RAID = "Raid",
+	BOSS_GUIDES_CAT_DUNGEON = "Dungeon",
+	BOSS_GUIDES_SELECT_INSTANCE = "Select instance...",
+	BOSS_GUIDES_NO_INSTANCES = "No entries yet",
+	BOSS_GUIDES_SECTION_GENERAL = "General",
+	BOSS_GUIDES_LABEL_MYTHIC = "Mythic",
+	BOSS_GUIDES_LEGEND_TANK = "Tank",
+	BOSS_GUIDES_LEGEND_DD = "DPS",
+	BOSS_GUIDES_LEGEND_HEAL = "Heal",
+	BOSS_GUIDES_LEGEND_HC = "HC",
+	BOSS_GUIDES_LEGEND_M = "M",
+	BOSS_GUIDES_INSTANCE_VOIDSPIRE_TITLE = "Voidspire",
+	BOSS_GUIDES_INSTANCE_VOIDSPIRE_TOKENS = { "voidspire", "void spire" },
+	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_NAME = "Imperator Averzian",
+	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_BODY = [=[
+General: Control the 3x3 grid. Three connected lost tiles are wipe-threatening.
+{TANK} Keep the boss off claimed tiles. Swap cleanly on Blackening Wounds. Take add waves from the Weakened target.
+{DD} Place Umbral Collapse on key tiles or priority adds. Interrupt Voidshaper and Pitch Bulwark. Dodge Oblivion's Wrath, Void Fall and Shadow Phalanx.
+{HEAL} Soak Umbral Collapse with the full group. Cover Dark Uproar and Void Infusion with CDs. Stabilize Dark Barrage targets fast.
+{HC} Voidshapers turn into Endwalkers, so stop casts immediately. Prevent Voidmaws from healing on tiles at 35% and finish them.
+{M} Prioritize Black Miasma curses. Remove Cosmic Shell before Umbral Collapse. Handle Void Marked with clean dispel positions.
+]=],
+	BOSS_GUIDES_BOSS_VORASIUS_NAME = "Vorasius",
+	BOSS_GUIDES_BOSS_VORASIUS_BODY = [=[
+General: Manage the arena actively. Break walls on purpose and never sweep breath through the raid.
+{TANK} Stay in melee or Overpowering Pulse happens. Soak Shadowclaw Slash safely. Swap after Smashed or 2 heavy hits.
+{DD} Kill Blistercreeps at the chosen wall. Move out 8 yards after Blisterburst. Dodge Void Breath and aftershocks.
+{HEAL} Blisterburst and Primordial Roar are the main spikes. Plan for Creep Spit slows and knockbacks. Stagger CDs over the fight.
+{HC} Walls need more explosions. Call add kills early and save space.
+{M} Blisterburst leaves Dark Goo. Plan kill zones strictly and do not block the same path twice.
+]=],
+	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_NAME = "Fallen King Salhadaar",
+	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_BODY = [=[
+General: Orbs must never reach the boss. Every pass-through increases raid damage sharply.
+{TANK} Move the boss out of orb lines and Torturous Extract. Place Shattering Twilight at the edge. Swap on Destabilizing Strikes.
+{DD} Destroy Concentrated Void before it reaches the boss. Kick Fractured Images immediately. Use Entropic Unraveling as a burn window.
+{HEAL} Cover Void Infusion, Twisting Obscurity and Entropic Unraveling with CDs. Keep Despotic Command targets out of the raid. Dispel Oppressive Darkness deliberately.
+{HC} Stagger orb kills because Dark Radiation hits everyone. Spread marked Despotic Command players strictly.
+{M} Enduring Void returns and must be planned for. Remove Nexus Shield on Images with a kick rotation. The fight is won on orb timing.
+]=],
+	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_NAME = "Vaelgor & Ezzorak",
+	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_BODY = [=[
+General: Keep the dragons apart and their health even. Otherwise Twilight Bond escalates.
+{TANK} Maintain at least 15 yards of distance. Swap after Vaelwing and Rakfang. Turn Nullbeam, Gloom and Dread Breath away from the raid.
+{DD} Control Gloom with fixed soakers. Break Nullzone only on purpose. Kick and kill Voidorbs immediately. Carry Shadowmark apart.
+{HEAL} Plan Nullsnap, implosion and Midnight Flames as fixed CD windows. Track Gloomtouched and Nullbeam stacks actively.
+{HC} Gloomtouched applies Diminish. Rotate soakers and avoid double contacts.
+{M} Catch Nullscatter on the first snap. Prioritize Cosmosis reflections. Prepare for long Midnight Flames as the HPS check.
+]=],
+	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_NAME = "Lightblinded Vanguard",
+	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_BODY = [=[
+General: Keep health even and do not kill one boss early. Otherwise Retribution empowers the rest.
+{TANK} Pull aura bosses away from the others. Pick up Lightblood and Bellamy cleanly after Judgment. Plan Exorcism chains and tank hits defensively.
+{DD} Handle Execution Sentence only with the assigned soak group. Break Sacred Shield fast. Interrupt Blinding Light first and dodge charge and hammer.
+{HEAL} Plan Light Infused and Searing Radiance early instead of reacting late. Call Tyr's Wrath targets to Senn. Cover Divine Toll plus Execution Sentence as a kill combo.
+{HC} Consecration zones remain on the floor. Rotate bosses cleanly to the edge.
+{M} Zealous Spirit empowers core abilities. Divine Consecration makes ground space deadly. Rotate defensive CDs per aura.
+]=],
+	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_NAME = "Crown of the Cosmos",
+	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_BODY = [=[
+General: This is a phase fight. Silver arrows cleanse void effects and solve many mechanics.
+{TANK} Keep P1 Sentinels in melee so Echoing Darkness does not stack. Split Alleria and the Simulacrum in P2 to limit Empowering Darkness. Taunt Rift Slash regularly.
+{DD} Aim Silverstrike through debuffs and adds. Control Sentinels and Droplets in P1. Break Cosmic Barrier instantly in P2 and kill Voidspawn before Coalesced Form. Dodge intermissions cleanly.
+{HEAL} Dispel Null Corona in a controlled way. Biggest checks are Echoing Darkness, barrier aura, Voidstalker Sting and Devouring Cosmos. Save CDs for P3.
+{HC} Void Expulsion hits extra targets. Use fixed Barrage calls in both intermissions.
+{M} Use Silver Residue on Sentinels actively. Grasp of Emptiness and Barrage stacks punish mistakes hard. Clean arrow lines are mandatory.
+]=],
+	BOSS_GUIDES_INSTANCE_DREAMRIFT_TITLE = "Dreamrift",
+	BOSS_GUIDES_INSTANCE_DREAMRIFT_TOKENS = { "dreamrift", "dream rift" },
+	BOSS_GUIDES_BOSS_CHIMAERUS_NAME = "Chimaerus, the Undreamt God",
+	BOSS_GUIDES_BOSS_CHIMAERUS_BODY = [=[
+General: Realm management is everything. Free the adds first, then kill them fast and never let the boss consume them.
+{TANK} Keep Rending Slash away from the raid. Rotate Upheaval with fixed groups. Pick up Colossal Horrors immediately and tank them defensively.
+{DD} Break Alnshroud first in the rift. Prioritize Manifestations in reality. Kick Fearsome Cry and Essence Bolt. Fully dodge the flight phase and clear adds before Ravenous Dive.
+{HEAL} Plan Rift Sickness as an absorb mechanic in advance. Cover Caustic Phlegm and Cannibalized Essence with CDs. Fixed soak groups keep damage predictable.
+{HC} Dispel Consuming Miasma deliberately to clear Alndust Essence. Keep space clean for the whole fight.
+{M} Rift Madness needs fixed realm-swap partners. Handle Dissonance with strict spacing. Prioritize the extra flight-phase adds immediately.
+]=],
+	BOSS_GUIDES_SPELL_NAMES = {},
 	STREAMER_PLANNER_TITLE = "Group Planner",
 	STREAMER_PLANNER_DESC = "A small transparent overlay for stream situations where you can sort signups directly into fixed dungeon or raid slots.",
 	STREAMER_PLANNER_USAGE_HINT = "Click a slot in the preview or overlay, enter the name and confirm with Enter. Right-click a slot to clear it immediately.",
