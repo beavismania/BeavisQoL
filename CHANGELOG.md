@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.23.0 - 2026-03-24
+
+### Neu
+
+- neues Modul `Boss Guides` ergänzt
+- neues Modul `Maus-Helfer` ergänzt
+- `Boss Guides` blendet einen frei positionierbaren Overlay-Button für unterstützte Dungeons und Raids ein
+- `Boss Guides` öffnet ein Guide-Fenster mit Instanz-Auswahl, Boss-Tabs und hinterlegten Taktiken
+- `Maus-Helfer` bündelt Cursor-Kreis, Maus-Trail und Blizzard-Mausvergrößerung in einer eigenen Seite
+
+### Verbessert
+
+- gebündelte Schriftarten für die UI überarbeitet und um neue Fonts ergänzt
+- Lokalisierungen für `Boss Guides` und `Maus-Helfer` in `deDE` und `enUS` ergänzt
+- Tree, Core und Font-Registrierung um die neuen Module erweitert
+
 ## 0.22.0 - 2026-03-23
 
 ### Neu
@@ -9,6 +25,7 @@
 - Rollen- und Spezialisierungsanzeige für Bewerber im Overlay ergänzt
 - Mehrspieler-Bewerbungen werden als aufklappbare Gruppen über den Gruppenleiter dargestellt
 - Minimap-Schnellmenü um `Easy LFG` und den `Gruppenplaner` erweitert
+- `Angelhilfe` als Ein-Tasten-Komfortmodul für entspannteres Angeln ergänzt
 - `Gruppenplaner` um Zielvorschläge für Dungeon-, Raid- und Tiefenziele inklusive `M+0` bis `M+20` erweitert
 - `Gruppenplaner`-Sloteditor um Klassen- und Spezialisierungswahl ergänzt
 

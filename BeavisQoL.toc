@@ -1,13 +1,13 @@
 ## Title: Beavis Quality of Life
 ## Notes: Beavis QoL
 ## Author: Beavis
-## Version: 0.22.0
+## Version: 0.23.0
 ## Interface: 120001 
 ##X-GameVersion: 120001
 ## X-GameVersionLabel: Patch 12.0.1
 ## SavedVariables: BeavisQoLDB
 ## SavedVariablesPerCharacter: BeavisQoLCharDB
-## X-ReleaseDate: 2026-03-23
+## X-ReleaseDate: 2026-03-24
 
 Localization\Localization.lua
 Localization\deDE.lua
