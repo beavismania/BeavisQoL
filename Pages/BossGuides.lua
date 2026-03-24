@@ -22,7 +22,7 @@ local MAX_SCALE = 1.40
 
 local DEFAULT_WINDOW_WIDTH  = 450
 local DEFAULT_WINDOW_HEIGHT = 500
-local MIN_WINDOW_WIDTH      = 300
+local MIN_WINDOW_WIDTH      = 450
 local MIN_WINDOW_HEIGHT     = 180
 
 local DEFAULT_FONT_SIZE = 10
@@ -79,9 +79,11 @@ local GUIDE_DATA = {
 local OverlayButton
 local GuideWindow
 local BossMenuPanel
+local LegendBar
 local ContentScrollFrame
 local ContentScrollChild
 local ContentText
+local ContentScrollbar
 local CategoryDropdown
 local InstanceDropdown
 local TabButtons = {}
@@ -89,6 +91,9 @@ local isRefreshingPage = false
 local activeGuideKey = nil
 local activeBossIndex = 1
 local selectedCategory = "raid"
+local isUpdatingContentScrollbar = false
+local CONTENT_SCROLLBAR_WIDTH = 10
+local CONTENT_SCROLLBAR_GAP = 6
 
 local PageBossGuides
 local ShowOverlayCheckbox
@@ -162,16 +167,21 @@ local KNOWN_SPELL_NAMES = {
     "Shadow Phalanx",
     "Dark Barrage",
     "Void Infusion",
+    "Dark Uproar",
     "Black Miasma",
+    "Blackening Wounds",
     "Cosmic Shell",
     "Void Marked",
     "Pitch Bulwark",
     "Void Fall",
+    "Rising Darkness",
+    "Dark Resilience",
     "Overpowering Pulse",
     "Blisterburst",
     "Void Breath",
     "Primordial Roar",
     "Creep Spit",
+    "Shadowclaw Slash",
     "Dark Goo",
     "Smashed",
     "Torturous Extract",
@@ -186,6 +196,8 @@ local KNOWN_SPELL_NAMES = {
     "Dark Radiation",
     "Enduring Void",
     "Nexus Shield",
+    "Umbral Collapse",
+    "March of the Endless",
     "Twilight Bond",
     "Vaelwing",
     "Rakfang",
@@ -254,18 +266,46 @@ local function EscapeLuaPattern(text)
     return (text:gsub("([%%%^%$%(%)%.%[%]%*%+%-%?])", "%%%1"))
 end
 
-local function GetSortedSpellNames()
-    local sortedNames = {}
+local function GetSpellSearchEntries()
+    local entries = {}
+    local seenAliases = {}
+    local centralMap = GetCentralSpellNameMap()
 
-    for index, spellName in ipairs(KNOWN_SPELL_NAMES) do
-        sortedNames[index] = spellName
+    local function AddAlias(aliasText, englishSpellName)
+        if type(aliasText) ~= "string" or aliasText == "" then
+            return
+        end
+
+        local normalizedAlias = string.lower(aliasText)
+        if seenAliases[normalizedAlias] then
+            return
+        end
+
+        seenAliases[normalizedAlias] = true
+        entries[#entries + 1] = {
+            alias = aliasText,
+            englishName = englishSpellName,
+        }
     end
 
-    table.sort(sortedNames, function(a, b) return #a > #b end)
-    return sortedNames
+    for _, englishSpellName in ipairs(KNOWN_SPELL_NAMES) do
+        AddAlias(englishSpellName, englishSpellName)
+
+        local mapEntry = centralMap[englishSpellName]
+        if type(mapEntry) == "table" then
+            AddAlias(mapEntry.localizedName or mapEntry.name, englishSpellName)
+        elseif type(mapEntry) == "string" then
+            AddAlias(mapEntry, englishSpellName)
+        end
+    end
+
+    table.sort(entries, function(a, b)
+        return #a.alias > #b.alias
+    end)
+
+    return entries
 end
 
-local SORTED_SPELL_NAMES = GetSortedSpellNames()
 local SPELL_RENDER_CACHE = {}
 
 local function ParseSpellIDFromLink(link)
@@ -338,26 +378,49 @@ local function GetSpellRenderInfo(englishSpellName)
     return renderInfo
 end
 
+local function AddPlainTextSegments(segments, text)
+    if type(text) ~= "string" or text == "" then
+        return
+    end
+
+    local tokenCount = 0
+    for token in text:gmatch("%s*%S+") do
+        tokenCount = tokenCount + 1
+        table.insert(segments, {
+            kind = "text",
+            text = ResolveIcons(token, 14),
+        })
+    end
+
+    if tokenCount == 0 then
+        table.insert(segments, {
+            kind = "text",
+            text = ResolveIcons(text, 14),
+        })
+    end
+end
+
 local function SplitGuideLineSegments(line)
     local segments = {}
     local cursor = 1
+    local spellSearchEntries = GetSpellSearchEntries()
 
     while cursor <= #line do
         local bestStart, bestEnd, bestSpell
 
-        for _, englishSpellName in ipairs(SORTED_SPELL_NAMES) do
-            local startPos, endPos = line:find(EscapeLuaPattern(englishSpellName), cursor)
+        for _, spellEntry in ipairs(spellSearchEntries) do
+            local startPos, endPos = line:find(EscapeLuaPattern(spellEntry.alias), cursor)
             if startPos and (not bestStart or startPos < bestStart) then
                 bestStart = startPos
                 bestEnd = endPos
-                bestSpell = englishSpellName
+                bestSpell = spellEntry.englishName
             end
         end
 
         if not bestStart then
             local tailText = line:sub(cursor)
             if tailText ~= "" then
-                table.insert(segments, { kind = "text", text = ResolveIcons(tailText, 14) })
+                AddPlainTextSegments(segments, tailText)
             end
             break
         end
@@ -365,7 +428,7 @@ local function SplitGuideLineSegments(line)
         if bestStart > cursor then
             local plainText = line:sub(cursor, bestStart - 1)
             if plainText ~= "" then
-                table.insert(segments, { kind = "text", text = ResolveIcons(plainText, 14) })
+                AddPlainTextSegments(segments, plainText)
             end
         end
 
@@ -374,7 +437,7 @@ local function SplitGuideLineSegments(line)
     end
 
     if #segments == 0 then
-        table.insert(segments, { kind = "text", text = ResolveIcons(line, 14) })
+        AddPlainTextSegments(segments, line)
     end
 
     return segments
@@ -527,9 +590,20 @@ local function RenderGuideBody(body)
                 widget = AcquireGuideTextSegment(textIndex)
                 widget:SetFont(FONT_PATH, db.fontSize, "OUTLINE")
                 widget:SetTextColor(0.93, 0.90, 0.83, 1)
-                widget:SetText(segment.text)
-                segmentWidth = widget:GetStringWidth()
-                segmentHeight = math.max(widget:GetStringHeight(), db.fontSize + 4)
+                local textValue = segment.text
+                if x == baseX then
+                    textValue = textValue:gsub("^%s+", "")
+                end
+
+                if textValue == "" then
+                    segmentWidth = 0
+                    segmentHeight = currentLineHeight
+                    widget:Hide()
+                else
+                    widget:SetText(textValue)
+                    segmentWidth = widget:GetStringWidth()
+                    segmentHeight = math.max(widget:GetStringHeight(), db.fontSize + 4)
+                end
             end
 
             if x > baseX and (x + segmentWidth) > availableWidth then
@@ -540,9 +614,11 @@ local function RenderGuideBody(body)
                 currentLineHeight = math.max(currentLineHeight, segmentHeight)
             end
 
-            widget:ClearAllPoints()
-            widget:SetPoint("TOPLEFT", ContentScrollChild, "TOPLEFT", x, y)
-            widget:Show()
+            if segmentWidth > 0 then
+                widget:ClearAllPoints()
+                widget:SetPoint("TOPLEFT", ContentScrollChild, "TOPLEFT", x, y)
+                widget:Show()
+            end
 
             x = x + segmentWidth
         end
@@ -741,6 +817,8 @@ local function ApplyGuideWindowGeometry()
     end
 
     local db = GetBossGuidesSettings()
+    db.windowWidth = math.max(db.windowWidth or DEFAULT_WINDOW_WIDTH, MIN_WINDOW_WIDTH)
+    db.windowHeight = math.max(db.windowHeight or DEFAULT_WINDOW_HEIGHT, MIN_WINDOW_HEIGHT)
     GuideWindow:SetSize(db.windowWidth, db.windowHeight)
     GuideWindow:ClearAllPoints()
     GuideWindow:SetPoint(db.windowPoint, UIParent, db.windowRelativePoint, db.windowOffsetX, db.windowOffsetY)
@@ -877,6 +955,47 @@ local function AddSeparators(body)
     return body
 end
 
+local function GetContentScrollMax()
+    if not ContentScrollFrame or not ContentScrollChild then
+        return 0
+    end
+
+    return math.max(0, ContentScrollChild:GetHeight() - ContentScrollFrame:GetHeight())
+end
+
+local function SyncContentScrollbar()
+    if not ContentScrollFrame or not ContentScrollbar then
+        return
+    end
+
+    local maxValue = GetContentScrollMax()
+    local currentValue = math.min(ContentScrollFrame:GetVerticalScroll() or 0, maxValue)
+
+    if maxValue <= 0 then
+        ContentScrollFrame:SetVerticalScroll(0)
+        ContentScrollbar:Hide()
+        return
+    end
+
+    ContentScrollbar:Show()
+    ContentScrollbar:SetMinMaxValues(0, maxValue)
+    ContentScrollbar:SetValueStep(math.max(math.floor(maxValue / 20), 1))
+
+    isUpdatingContentScrollbar = true
+    ContentScrollbar:SetValue(currentValue)
+    isUpdatingContentScrollbar = false
+end
+
+local function SetContentScrollOffset(value)
+    if not ContentScrollFrame then
+        return
+    end
+
+    local clampedValue = Clamp(tonumber(value) or 0, 0, GetContentScrollMax())
+    ContentScrollFrame:SetVerticalScroll(clampedValue)
+    SyncContentScrollbar()
+end
+
 local function UpdateGuideText()
     if not GuideWindow or not ContentText then
         return
@@ -903,7 +1022,7 @@ local function UpdateGuideText()
     ContentText:SetHeight(expectedHeight)
     local minHeight = math.max(ContentScrollFrame:GetHeight(), 220)
     ContentScrollChild:SetHeight(math.max(expectedHeight, minHeight))
-    ContentScrollFrame:SetVerticalScroll(0)
+    SetContentScrollOffset(0)
 end
 
 local function RebuildBossMenu()
@@ -1416,18 +1535,43 @@ local function CreateOverlayFrames()
     menuSep:SetHeight(1)
     menuSep:SetColorTexture(0.26, 0.75, 0.63, 0.30)
 
-    -- Content-Bereich unterhalb der Tab-Leiste
+    -- Legende unten (kein eigener Hintergrund)
+    LegendBar = CreateFrame("Frame", nil, GuideWindow)
+    LegendBar:SetPoint("BOTTOMLEFT",  GuideWindow, "BOTTOMLEFT",  0, 2)
+    LegendBar:SetPoint("BOTTOMRIGHT", GuideWindow, "BOTTOMRIGHT", 0, 2)
+    LegendBar:SetHeight(18)
+
+    local legendItems = {
+        { role = "TANK", label = L("BOSS_GUIDES_LEGEND_TANK") },
+        { role = "DD",   label = L("BOSS_GUIDES_LEGEND_DD") },
+        { role = "HEAL", label = L("BOSS_GUIDES_LEGEND_HEAL") },
+        { role = "HC",   label = L("BOSS_GUIDES_LEGEND_HC") },
+        { role = "M",    label = L("BOSS_GUIDES_LEGEND_M") },
+    }
+
+    local xOff = 8
+    for _, item in ipairs(legendItems) do
+        local legendEntry = LegendBar:CreateFontString(nil, "OVERLAY")
+        legendEntry:SetPoint("LEFT", LegendBar, "LEFT", xOff, 0)
+        legendEntry:SetFont(FONT_PATH, math.max(DEFAULT_FONT_SIZE - 1, MIN_FONT_SIZE), "")
+        legendEntry:SetTextColor(0.55, 0.55, 0.55, 1)
+        legendEntry:SetText(GetRoleIcon(item.role, 11) .. " " .. item.label)
+        xOff = xOff + legendEntry:GetStringWidth() + 14
+        table.insert(LegendFontStrings, legendEntry)
+    end
+
+    -- Content-Bereich unterhalb der Tab-Leiste und oberhalb der Legende
     ContentScrollFrame = CreateFrame("ScrollFrame", nil, GuideWindow)
     ContentScrollFrame:SetPoint("TOPLEFT",     BossMenuPanel, "BOTTOMLEFT",  8, -4)
-    ContentScrollFrame:SetPoint("BOTTOMRIGHT", GuideWindow,   "BOTTOMRIGHT", -8, 4)
+    ContentScrollFrame:SetPoint("BOTTOMRIGHT", LegendBar,     "TOPRIGHT",   -(8 + CONTENT_SCROLLBAR_WIDTH + CONTENT_SCROLLBAR_GAP), 4)
     ContentScrollFrame:EnableMouseWheel(true)
     ContentScrollFrame:SetScript("OnMouseWheel", function(self, delta)
         local step    = 38
         local cur     = self:GetVerticalScroll()
-        local maxVal  = math.max(0, ContentScrollChild:GetHeight() - self:GetHeight())
+        local maxVal  = GetContentScrollMax()
         local nextVal = cur - (delta * step)
         if nextVal < 0 then nextVal = 0 elseif nextVal > maxVal then nextVal = maxVal end
-        self:SetVerticalScroll(nextVal)
+        SetContentScrollOffset(nextVal)
     end)
 
     ContentScrollChild = CreateFrame("Frame", nil, ContentScrollFrame)
@@ -1442,6 +1586,36 @@ local function CreateOverlayFrames()
                 UpdateGuideText()
             end
         end
+        SyncContentScrollbar()
+    end)
+
+    ContentScrollbar = CreateFrame("Slider", nil, GuideWindow)
+    ContentScrollbar:SetOrientation("VERTICAL")
+    ContentScrollbar:SetPoint("TOPLEFT", ContentScrollFrame, "TOPRIGHT", CONTENT_SCROLLBAR_GAP, 0)
+    ContentScrollbar:SetPoint("BOTTOMLEFT", ContentScrollFrame, "BOTTOMRIGHT", CONTENT_SCROLLBAR_GAP, 0)
+    ContentScrollbar:SetWidth(CONTENT_SCROLLBAR_WIDTH)
+    ContentScrollbar:SetObeyStepOnDrag(true)
+    ContentScrollbar:Hide()
+
+    local scrollbarTrack = ContentScrollbar:CreateTexture(nil, "BACKGROUND")
+    scrollbarTrack:SetAllPoints()
+    scrollbarTrack:SetColorTexture(0.04, 0.04, 0.07, 0.75)
+
+    local scrollbarBorder = ContentScrollbar:CreateTexture(nil, "ARTWORK")
+    scrollbarBorder:SetAllPoints()
+    scrollbarBorder:SetColorTexture(0.26, 0.75, 0.63, 0.20)
+
+    local scrollbarThumb = ContentScrollbar:CreateTexture(nil, "OVERLAY")
+    scrollbarThumb:SetColorTexture(0.26, 0.75, 0.63, 0.90)
+    scrollbarThumb:SetSize(CONTENT_SCROLLBAR_WIDTH, 36)
+    ContentScrollbar:SetThumbTexture(scrollbarThumb)
+
+    ContentScrollbar:SetScript("OnValueChanged", function(_, value)
+        if isUpdatingContentScrollbar or not ContentScrollFrame then
+            return
+        end
+
+        ContentScrollFrame:SetVerticalScroll(value)
     end)
 
     ContentText = CreateFrame("Frame", nil, ContentScrollChild)
@@ -1458,31 +1632,6 @@ local function CreateOverlayFrames()
             GuideWindow:Show()
         end
     end)
-
-    -- Legende unten (kein eigener Hintergrund)
-    local legendBar = CreateFrame("Frame", nil, GuideWindow)
-    legendBar:SetPoint("BOTTOMLEFT",  GuideWindow, "BOTTOMLEFT",  0, 2)
-    legendBar:SetPoint("BOTTOMRIGHT", GuideWindow, "BOTTOMRIGHT", 0, 2)
-    legendBar:SetHeight(18)
-
-    local legendItems = {
-        { role = "TANK", label = L("BOSS_GUIDES_LEGEND_TANK") },
-        { role = "DD",   label = L("BOSS_GUIDES_LEGEND_DD") },
-        { role = "HEAL", label = L("BOSS_GUIDES_LEGEND_HEAL") },
-        { role = "HC",   label = L("BOSS_GUIDES_LEGEND_HC") },
-        { role = "M",    label = L("BOSS_GUIDES_LEGEND_M") },
-    }
-
-    local xOff = 8
-    for _, item in ipairs(legendItems) do
-        local legendEntry = legendBar:CreateFontString(nil, "OVERLAY")
-        legendEntry:SetPoint("LEFT", legendBar, "LEFT", xOff, 0)
-        legendEntry:SetFont(FONT_PATH, math.max(DEFAULT_FONT_SIZE - 1, MIN_FONT_SIZE), "")
-        legendEntry:SetTextColor(0.55, 0.55, 0.55, 1)
-        legendEntry:SetText(GetRoleIcon(item.role, 11) .. " " .. item.label)
-        xOff = xOff + legendEntry:GetStringWidth() + 14
-        table.insert(LegendFontStrings, legendEntry)
-    end
 
     -- Resize-Griff unten rechts
     local resizeGrip = CreateFrame("Button", nil, GuideWindow)
@@ -1512,6 +1661,7 @@ local function CreateOverlayFrames()
     ApplyOverlayScale()
     ApplyOverlayLockState()
     UpdateGuideUi()
+    SyncContentScrollbar()
 end
 
 local function CreateSlider(parent)
@@ -1544,10 +1694,13 @@ local function CreateSettingsPage()
     PageBossGuides:SetAllPoints()
     PageBossGuides:Hide()
 
+    local INTRO_PANEL_MIN_HEIGHT = 108
+    local SETTINGS_PANEL_MIN_HEIGHT = 296
+
     local introPanel = CreateFrame("Frame", nil, PageBossGuides)
     introPanel:SetPoint("TOPLEFT", PageBossGuides, "TOPLEFT", 20, -20)
     introPanel:SetPoint("TOPRIGHT", PageBossGuides, "TOPRIGHT", -20, -20)
-    introPanel:SetHeight(108)
+    introPanel:SetHeight(INTRO_PANEL_MIN_HEIGHT)
 
     local introBg = introPanel:CreateTexture(nil, "BACKGROUND")
     introBg:SetAllPoints()
@@ -1577,7 +1730,7 @@ local function CreateSettingsPage()
     local settingsPanel = CreateFrame("Frame", nil, PageBossGuides)
     settingsPanel:SetPoint("TOPLEFT", introPanel, "BOTTOMLEFT", 0, -18)
     settingsPanel:SetPoint("TOPRIGHT", introPanel, "BOTTOMRIGHT", 0, -18)
-    settingsPanel:SetHeight(296)
+    settingsPanel:SetHeight(SETTINGS_PANEL_MIN_HEIGHT)
 
     local settingsBg = settingsPanel:CreateTexture(nil, "BACKGROUND")
     settingsBg:SetAllPoints()
@@ -1704,6 +1857,22 @@ local function CreateSettingsPage()
         end
     end)
 
+    local function RefreshSettingsLayout()
+        local introTop = introPanel:GetTop()
+        local introTextBottom = introText:GetBottom()
+        if introTop and introTextBottom then
+            local introHeight = math.ceil(introTop - introTextBottom + 18)
+            introPanel:SetHeight(math.max(INTRO_PANEL_MIN_HEIGHT, introHeight))
+        end
+
+        local settingsTop = settingsPanel:GetTop()
+        local currentInstanceBottom = CurrentInstanceText:GetBottom()
+        if settingsTop and currentInstanceBottom then
+            local settingsHeight = math.ceil(settingsTop - currentInstanceBottom + 22)
+            settingsPanel:SetHeight(math.max(SETTINGS_PANEL_MIN_HEIGHT, settingsHeight))
+        end
+    end
+
     function PageBossGuides:RefreshState()
         local db = GetBossGuidesSettings()
         isRefreshingPage = true
@@ -1719,6 +1888,7 @@ local function CreateSettingsPage()
 
         isRefreshingPage = false
         RefreshOverlayVisibility()
+        RefreshSettingsLayout()
     end
 
     PageBossGuides:SetScript("OnShow", function()

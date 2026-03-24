@@ -4,9 +4,12 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.22.0`
-- Release-Datum: `2026-03-23`
+- Version: `0.23.0`
+- Release-Datum: `2026-03-24`
 - Schwerpunkt dieser Version:
+  - `Boss Guides` als neues Modul mit Overlay-Button, Instanz-Auswahl und Boss-Tabs für hinterlegte Taktiken
+  - `Maus-Helfer` als neue Komfortseite für Cursor-Kreis, Maus-Trail und Blizzard-Mausvergrößerung
+  - überarbeitete gebündelte Schriftarten für UI und Modulseiten
   - `Easy LFG` als kompaktes Overlay für eigene Gruppenanzeigen mit Invite-, Ablehnen-, Flaggen- und Rollen-/Spec-Anzeige
   - aufklappbare Gruppenbewerbungen im `Easy LFG`, damit Mehrspieler-Anmeldungen übersichtlich bleiben
   - automatische Anzeige des `Easy LFG` bei aktiver eigener Listung und automatisches Ausblenden danach
@@ -54,10 +57,10 @@ Regel für künftige Releases:
 
 Beispiel:
 
-- `0.22.0` -> aktueller Stand
-- neues Modul -> `0.23.0`
-- danach Hotfix -> `0.22.1`
-- grosser Hauptrelease -> `1.0.0`
+- `0.23.0` -> aktueller Stand
+- neues Modul -> `0.24.0`
+- danach Hotfix -> `0.23.1`
+- großer Hauptrelease -> `1.0.0`
 
 ## Aktueller Schwerpunkt
 
@@ -125,6 +128,12 @@ Beispiel:
   - transparente Leiste mit Raidmarkern für Zielmarker und Bodenmarker
   - frei verschiebbar, skalierbar und fixierbar
   - Bodenmarker funktionieren nur in Gruppen, im Raid zusätzlich nur mit Leiter- oder Assistentenrechten
+- `Maus-Helfer`
+  - eigene Komfortseite für Blizzard-Mausgröße, Cursor-Kreis und Maus-Trail
+  - Kreis und Trail lassen sich in Stil, Größe, Farbe und Sichtbarkeit anpassen
+- `Boss Guides`
+  - zeigt in unterstützten Instanzen einen Overlay-Button für Boss-Taktiken an
+  - Guide-Fenster mit Instanz-Auswahl, Boss-Tabs, Rollenlegende und skalierbarer Darstellung
 - `Stats`
   - kompaktes Overlay für Sekundärwerte
   - frei verschiebbar, skalierbar und in der Transparenz anpassbar
@@ -155,7 +164,7 @@ Beispiel:
 - `Pet Stuff`
   - Auto Respawn Pet für Begleiter-Pets außerhalb des Kampfes
 
-## Modulerweiterungen bis 0.22.0
+## Modulerweiterungen bis 0.23.0
 
 - `Checkliste`
   - eigene Fortschrittsseite mit Daily-, Weekly- und Watch-Kategorien
@@ -176,6 +185,12 @@ Beispiel:
 - `Markerleiste`
   - neues Modul für Zielmarker und Bodenmarker mit transparenter Symbolleiste
   - eigene Overlay-Steuerung für Anzeigen, Fixieren, Skalierung und Positions-Reset
+- `Maus-Helfer`
+  - neue Komfortseite für vergrößerten Blizzard-Cursor, Cursor-Kreis und Maus-Trail
+  - Kreis- und Trail-Stile lassen sich direkt im Addon konfigurieren
+- `Boss Guides`
+  - neues Modul für Boss-Taktiken mit Overlay-Button und Guide-Fenster pro unterstützter Instanz
+  - Instanz-Auswahl, Boss-Tabs und Rollenlegende direkt im Fenster enthalten
 - `Easy LFG`
   - kompaktes Bewerber-Overlay für eigene Gruppenlistungen
   - direkte Invite- und Ablehnen-Aktionen, Rollen-/Spec-Symbole und Länderflaggen

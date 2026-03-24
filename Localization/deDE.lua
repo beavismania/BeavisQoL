@@ -227,84 +227,90 @@ BeavisQoL.Localization.deDE = {
 	BOSS_GUIDES_INSTANCE_VOIDSPIRE_TOKENS = { "leerenspitze", "leeren", "voidspire", "void spire" },
 	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_NAME = "Imperator Averzian",
 	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_BODY = [=[
-Allgemein: 3x3-Feld kontrollieren. Drei verbundene verlorene Felder sind wipe-gefährlich.
-{TANK} Boss aus beanspruchten Feldern halten. Bei Schwärzenden Wunden sauber tauschen. Add-Wellen vom Weakened-Ziel übernehmen.
-{DD} Umbralkollaps immer auf Schlüssel-Feld oder Prior-Adds legen. Voidshaper und Pitch Bulwark unterbrechen. Oblivion's Wrath, Void Fall und Shadow Phalanx konsequent dodgen.
-{HEAL} Umbralkollaps nur mit voller Gruppe soaken. Dunkler Aufruhr und Void Infusion mit CDs abdecken. Dark Barrage-Ziele schnell stabilisieren.
-{HC} Voidshaper werden zu Endwalkern, also Casts sofort stoppen. Voidmaws bei 35% am Feld-Heal hindern und finishen.
-{M} Black Miasma-Flüche priorisieren. Cosmic Shell vor Umbralkollaps entfernen. Void Marked mit sauberen Dispel-Positionen spielen.
+Allgemein: Tic Tac Toe spielen. Schattenphalanx überrennt zwischendurch einzelne Linien - Ausweichen!. Drei verlorene Felder in einer Reihe lösen Marsch der Unendlichen aus und wipen das Feld.
+{TANK} Boss nie auf beanspruchte Felder vom Leerenportal stellen. Bei ca 10 Stapeln Schwärzende Wunden tauschen. Add-Wellen übernimmt der freie Tank.
+{DD} Umbralkollaps mit der ganzen Gruppe beim Tank soaken. Adds haben Priorität.
+{HEAL} Umbralkollaps und Dunkle Verwerfung gegenheilen.
+{HC} Leerenformer sofort fokussen. Bollwerk errichten kicken. Aufziehende Dunkelheit nie durchlassen, sonst steht ein zusätzlicher Obskurionendwandler. Leerenschlund bei 35% hard focussen: Dunkle Resilienz ist nicht kickbar - also stunnen und töten - bevor er das Feld erreicht und sich heilt.
+{M} Schwarzes Miasma priorisiert dispellen. Kosmischer Panzer vor Umbralkollaps entfernen. Leerenmarkiert sauber rausziehen.
 ]=],
 	BOSS_GUIDES_BOSS_VORASIUS_NAME = "Vorasius",
 	BOSS_GUIDES_BOSS_VORASIUS_BODY = [=[
-Allgemein: Arena aktiv managen. Wände gezielt sprengen, Atem nie durch den Raid ziehen.
-{TANK} Immer in Nahkampfreichweite bleiben, sonst Overpowering Pulse. Schattenklauenhieb sicher soaken. Nach Smashed bzw. 2 Treffern tauschen.
-{DD} Blistercreeps an gewünschter Wand töten. Nach Blisterburst sofort aus 8m raus. Void Breath und Nachbeben komplett dodgen.
-{HEAL} Blisterburst und Primordial Roar sind Hauptspitzen. Creep Spit-Slows und Knockbacks mitplanen. CDs über den Kampf staffeln.
+Allgemein: Leerenatem spawnt links oder rechts und zieht von dort über die Plattform. Der ganze Raid muss ausweichen.
+{TANK} Immer in Nahkampfreichweite bleiben, sonst Überwältigender Puls den Raid trifft. Tanks soaken Schattenklauenhieb 2x alleine im Wechsel. Zwei Flächen soaken - tauschen - wiederholen.
+{DD} Blasenkriecher verfolgen Spieler. Spieler teilen sie auf beide Wände auf. Das Platzen zerstört die Wände. Danach Leerenatem ausweichen.
+{HEAL} CDs für Pustelbersten und Urzeitliches Brüllen einplanen.
 {HC} Wände brauchen mehr Explosionen. Add-Kills vorher ansagen und Platz sparen.
-{M} Blisterburst hinterlässt Dark Goo. Kill-Zonen strikt planen und keine Wege doppelt mit Goo blocken.
+{M} Pustelbersten hinterlässt Dunklen Schleim. Kill-Zonen strikt planen und Wege nicht doppelt blocken.
 ]=],
 	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_NAME = "Gefallener König Salhadaar",
 	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_BODY = [=[
-Allgemein: Kugeln dürfen den Boss nie erreichen. Jeder Durchlauf erhöht den Raidschaden stark.
-{TANK} Boss aus Orb-Linien und Torturous Extract ziehen. Shattering Twilight zum Rand stellen. Bei Destabilizing Strikes tauschen.
-{DD} Concentrated Void vor Bosskontakt zerstören. Fractured Images sofort kicken. Entropic Unraveling als Burn-Fenster nutzen.
-{HEAL} Void Infusion, Twisting Obscurity und Entropic Unraveling mit CDs decken. Despotic Command-Spieler aus dem Raid halten. Oppressive Darkness gezielt dispellen.
-{HC} Orb-Kills staffeln, da Dark Radiation auf allen landet. Markierte Spieler mit Despotic Command strikt verteilen.
-{M} Enduring Void kommt zurück und muss mitgeplant werden. Nexus Shield auf Images per Kick-Rotation entfernen. Kampf wird über Orb-Timing gewonnen.
+Allgemein: Kugeln dürfen den Boss nicht erreichen. Jede Kugel erhöht den Raidschaden stark.
+{TANK} Boss von Kugeln & Quälender Extrakt wegziehen. Bei Destabilisierende Schläge tauschen.
+{DD} Kugel vor Bosskontakt zerstören. Abbilder sofort kicken. Entropische Entfesselung ist euer Burn-Fenster (25% mehr DMG am Boss). Mit Zertrümmerndes Zwielicht an den Rand stellen und Fläche ablegen.
+{HEAL} Leereninfusion, Windende Obskurität und Entropische Entfesselung mit CDs decken. Erdrückende Dunkelheit gezielt dispellen. Mit Zertrümmerndes Zwielicht an den Rand stellen und Fläche ablegen.
+{HC} Kugeln platzen und wirken Dunkle Strahlung mit Raidweiten Schaden. Zertrümmerndes Zwielicht springt bei Einschlag auf freundliche Ziele über.
+{M} Kügeln hinterlassen Beständige Leere. Nexusschild auf Abbildern per Kick-Rotation runterspielen.
 ]=],
 	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_NAME = "Vaelgor & Ezzorak",
 	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_BODY = [=[
-Allgemein: Drachen trennen und HP angleichen. Sonst eskaliert Twilight Bond.
-{TANK} Mindestens 15m Abstand halten. Nach Vaelwing und Rakfang tauschen. Frontalen von Nullbeam, Gloom und Dread Breath weg vom Raid drehen.
-{DD} Gloom kontrolliert mit festen Soakern verkleinern. Nullzone nur geplant brechen. Voidorbs sofort kicken und töten. Shadowmark auseinander tragen.
-{HEAL} Nullsnap, Implosion und Midnight Flames als feste CD-Fenster planen. Gloomtouched und Nullbeam-Stacks aktiv überwachen.
-{HC} Gloomtouched gibt Diminish. Soaker rotieren und keine Doppelkontakte.
-{M} Nullscatter beim ersten Snap abfangen. Cosmosis-Reflexionen priorisieren. Lange Midnight Flames als HPS-Check vorbereiten.
+Allgemein: Zwei Bosse. HP angleichen und 15 Meter Abstand halten, sonst Zwielichtband. Nie hinter den Drachen stehen. Ablauf immer gleich: Leerenheulen -> Nullstrahl/Nullzone -> Düsterkeit. Markierter Spieler zieht Entsetzlicher Atem raus und wird danach sofort dispellt. Leerenkugeln zusammenziehen, stoppen und töten. Zwischenphase: in die Strahlende Barriere, Kreise raus, Add sofort töten.
+{TANK} Drachen an den Spawnpunkten getrennt halten. Nullstrahl frontal weg vom Raid. Nach jeder Düsterkeit oder spätestens nach Vaelflügel/Rakzahn tauschen. Bosse nicht unnötig durch den Raum ziehen.
+{DD} Bei Leerenheulen eng stacken, damit die Leerenkugeln zusammen spawnen. Nullzone sofort lösen; der Tank löst zuletzt. Düsterkeit mit fester Soak-Gruppe auf Marker spielen. Rest weicht Atem, Kugeln und Pfützen aus.
+{HEAL} CDs für Nullzonen-Explosion, Düsterkeit und Mitternachtsflammen einteilen. Fear von Entsetzlicher Atem sofort dispellen. Kreisziele in der Zwischenphase stabil halten.
+{HC} Nach kompletter Nullzone nimmt der Raid extra Schaden. Düsterkeit-Soaker bekommen eine Soak-Vulnerabilität und können nicht direkt wieder soaken.
+{M} Beim ersten gelösten Nullzone-Band spawnen Bodenkreise. Langsame Klassen können kurz in Nullstrahl gehen, um leichter rauszukommen. Düsterkeit cleaved um Soaker herum und verteilt Düsternisberührt -> Geschwächt. Kosmose-Klone kopieren Bossmechaniken. Ungebundener Schatten in der Zwischenphase sofort fokussieren.
 ]=],
+
 	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_NAME = "Lichtblinde Vorhut",
 	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_BODY = [=[
-Allgemein: HP angleichen und keinen Boss früh töten. Sonst triggert Retribution auf den Rest.
-{TANK} Aura-Bosse von den anderen wegziehen. Nach Judgment auf Lightblood und Bellamy sauber spotten. Exorcism- und Tankhit-Ketten defensiv planen.
-{DD} Execution Sentence nur mit zugewiesener Soak-Gruppe spielen. Sacred Shield schnell brechen. Blinding Light priorisiert unterbrechen und Charge/Hammer dodgen.
-{HEAL} Light Infused und Searing Radiance früh einplanen, nicht reagieren. Tyr's Wrath-Targets zu Senn ansagen. Divine Toll plus Execution Sentence als Kill-Kombi absichern.
-{HC} Consecration-Flächen bleiben liegen. Bosse sauber an den Rand rotieren.
-{M} Zealous Spirit verstärkt Kernfähigkeiten. Divine Consecration macht Flächen tödlich. Def-CDs pro Aura fest rotieren.
+Allgemein: Drei Bosse. HP angleichen und keinen zu früh töten, sonst Vergeltung. Bellamy und Senn sind auf Pull kurz immun; Startziel ist Venel. Der Boss mit der nächsten Aura muss an den Rand. Reihenfolge der Auren: Bellamy -> Venel -> Senn. Nach jeder Aura bleibt Weihe liegen und das Feld wird kleiner.
+{TANK} Venel: Richturteil -> Finales Urteil sofort tauschen. Bellamy: Richturteil -> Schild der Rechtschaffenen sofort tauschen. Senns Exorzismus defensiv nehmen. Immer den Boss mit kommender Aura an den Rand setzen.
+{DD} In Aura der Hingabe und Aura des Friedens keine falschen Ziele cleaven. Todesurteil mit festen Soak-Gruppen spielen; Kreise nie stacken. Danach Göttliche Hämmer und Elekkansturm dodgen. Heiliges Schild sofort brechen, dann Blendendes Licht kicken. Schild des Rächers spreaden und Göttliches Läuten ausweichen.
+{HEAL} Lichtinfundiert tickt permanent und wird mit jeder Aura schlimmer. CDs für Göttliches Läuten, Heiliges Läuten, Sengende Strahlkraft und Todesurteil einteilen. Tyrs Zorn auf die 3 Nächsten rotieren lassen und früh gegenheilen.
+{HC} Weihe bleibt dauerhaft liegen. Bosse sauber am Rand rotieren, sonst geht euch der Platz aus.
+{M} Eifergeist verstärkt immer einen Boss. Bellamy: Tyrs Zorn mit Göttlichem Läuten und Schild des Rächers auf alle Spieler. Venel: Heiliges Läuten mit Todesurteil und Lichttornados bei Göttlicher Sturm. Senn: Todesurteil mit Tyrs Zorn und Sengende Strahlkraft rampt hoch. Mythische Weihe pacified und erhöht erlittenen Schaden.
 ]=],
+
 	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_NAME = "Krone des Kosmos",
 	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_BODY = [=[
-Allgemein: Phasenkampf. Silberpfeile reinigen Void-Effekte und entscheiden viele Mechaniken.
-{TANK} P1 Sentinels im Nahkampf halten, damit Echoing Darkness nicht stapelt. P2 Alleria und Simulacrum trennen, um Empowering Darkness zu begrenzen. Rift Slash regelmäßig spotten.
-{DD} Silverstrike gezielt durch Debuffs und Adds ziehen. P1 Sentinels plus Droplets kontrolliert spielen. P2 Cosmic Barrier sofort brechen und Voidspawn vor Coalesced Form töten. Intermissions sauber dodgen.
-{HEAL} Null Corona kontrolliert dispellen. Größte Checks: Echoing Darkness, Barrier-Aura, Voidstalker Sting, Devouring Cosmos. CDs für P3 aufsparen.
-{HC} Void Expulsion trifft zusätzliche Ziele. Barrage-Calls in beiden Intermissions fest spielen.
-{M} Silver Residue auf Sentinels aktiv nutzen. Grasp of Emptiness und Barrage-Stacks bestrafen Fehler hart. Saubere Arrow-Linien sind Pflicht.
+Allgemein: 3 Phasen, 2 Zwischenphasen. Pfeile sind die Kernmechanik: Sie reinigen Leereffekte, resetten Sternenemission und machen Adds/Wächter überhaupt erst killbar. P1: Wächter früh mit Silberschlag-Pfeilen treffen, damit Verderbende Essenz stapelt; denselben Wächter nicht unnötig nochmal treffen, sonst reset. Leerenausstoß außen legen. Griff der Leere weg vom Raid ziehen. Nullkorona meist nur heilen. Zwischenphasen: in der eigenen Scheibe bleiben, früh von Pfeilen treffen lassen, Debuff abfallen lassen, dann erst wieder treffen lassen; Singularitätsausbruch dodgen. In ZP2 wegen Orbiting Matter sauber durchrotieren. P2: Alleria und Riss-Simulakrum teilen HP. Simulakrum von Boss und Adds fern halten, sonst Verstärkende Dunkelheit stapelt. Kosmische Barriere sofort brechen. Jägerhauptmannszeichen muss Leerenbrut treffen, sonst stirbt sie nicht. Leerenfeuerstoß kicken. P3: Stacken, Aspekt des Endes in der Reihenfolge Fernkampf -> Nahkampf -> Tank brechen. Griff der Leere gemeinsam legen. Bei Verschlingender Kosmos mit Feder in die nächste Scheibe wechseln.
+{TANK} P1: Ein Tank hält Morium am Portal und sammelt Leerenkugeln; der andere hält das Hauptziel. Dunkle Hand defensiv. P2: Alleria und Riss-Simulakrum trennen. Risshieb bei 2-3 Stapeln tauschen. Scheibenwechsel nur geplant, weil Flüchtige Risse stapeln. P3: Tank-Fessel zuletzt brechen.
+{DD} P1: Feste Pfeilplanung auf Demair -> Vorelus -> Morium. Tropfen/Leerenkugeln in den Stack ziehen und cleaven. P2: Kosmische Barriere sofort brechen. Leerenbrut mit Markierung freischalten, kicken und vor 100 Energie töten. Leerenpirscherstachel per Pfeil mit reinigen, wenn eure Gruppe es so spielt. P3: Alles in den Boss drücken, Fesseln sauber nacheinander brechen und Feder nicht verpassen.
+{HEAL} Größte Checks sind Widerhallende Dunkelheit, Nullkorona, Sternenemission, Kosmische Barriere, Leerenpirscherstachel, Schwerkraftkollaps und Verschlingender Kosmos. Nullkorona nur dispellen, wenn das Ziel sonst stirbt.
+{HC} Leerenausstoß kommt öfter. Silberschlag-Sperrfeuer bestraft den nächsten Pfeil kurz danach hart. Griff der Leere trifft zwei Spieler gleichzeitig.
+{M} Silberrückstand auf Wächterzielen aktiv nutzen. Pfeil-Linien, Griff der Leere und Plattformwechsel müssen perfekt sitzen. Fehler bei Sperrfeuer oder Scheibenwechsel kippen den Pull sofort.
 ]=],
-	BOSS_GUIDES_INSTANCE_DREAMRIFT_TITLE = "Traumriss",
-	BOSS_GUIDES_INSTANCE_DREAMRIFT_TOKENS = { "traumriss", "dreamrift", "dream rift" },
+
 	BOSS_GUIDES_BOSS_CHIMAERUS_NAME = "Chimaerus, der Ungeträumte Gott",
 	BOSS_GUIDES_BOSS_CHIMAERUS_BODY = [=[
-Allgemein: Realm-Management ist alles. Adds erst freispielen, dann schnell töten, nie vom Boss fressen lassen.
-{TANK} Reißendes Schlitzen weg vom Raid. Upheaval mit festen Gruppen rotieren. Colossal Horrors sofort übernehmen und defensiv tanken.
-{DD} Im Rift erst Alnshroud brechen. Manifestationen in Realität priorisieren. Fearsome Cry und Essence Bolt kicken. Flugphase komplett dodgen und Adds vor Ravenous Dive räumen.
-{HEAL} Rift Sickness als Absorb-Mechanik vorausplanen. Caustic Phlegm und Cannibalized Essence mit CDs decken. Feste Soak-Gruppen halten den Schaden planbar.
-{HC} Consuming Miasma gezielt dispellen, um Alndust Essence zu löschen. Platz dauerhaft sauber halten.
-{M} Rift Madness braucht feste Realm-Tauschpartner. Dissonance mit strikter Verteilung spielen. Zusätzliche Flugphasen-Adds sofort priorisieren.
+Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer seitlich mit der zugewiesenen Gruppe soaken, damit sie Alnsicht bekommt; Gruppen wegen Rissanfälligkeit abwechseln. Rissgruppe folgt ihrem Tank auf die Manifestationen, normale Gruppe spielt Boss und wechselt auf Adds, sobald sie freigeschaltet sind. Kleine Adds am großen Add stacken. Furchterregenden Schrei und Essenzblitz sofort kicken. Spieler mit Verzehrendes Miasma gehen auf eine Pfütze und lassen dort dispellen. Nie im Raid dispellen. Ziel von Reißendes Schlitzen tritt raus. Adds nie vom Boss fressen lassen. Bei 100 Energie kommt Verzehren, Knockback und Zwischenphase. In der Zwischenphase Verderbte Verwüstung dodgen, Pfützen löschen und alle Adds vor Gefräßiger Sturzflug töten.
+{TANK} Kolossale Schrecken sofort übernehmen und defensiv tanken. Die Aufruhr-Soakgruppe immer sauber mitnehmen und im Riss führen.
+{DD} Im Riss erst Alnschleier brechen, dann große und kleine Adds cleaven. In der Realität den Boss drücken und sofort auf freigeschaltete Adds wechseln. Keine Manifestation durchlassen. Flugphase komplett dodgen.
+{HEAL} Risskrankheit ist ein großer Absorb-Check. CDs für Ätzenden Schleim, Kannibalisierte Essenz, Verzehren und Gefräßiger Sturzflug einteilen. Miasma-Dispels ansagen und nicht doppeln.
+{HC} Verzehrendes Miasma löscht Pfützen beim Dispellen. Platz dauerhaft sauber halten.
+{M} Dissonanz: beide Realm-Gruppen dürfen nicht ineinander stehen. Risswahnsinn hat feste Tauschpartner; ein Spieler aus der Realität stellt sich auf das Ziel im Riss und tauscht die Reiche. Eine Marke ist immer auf einem Heiler. Vor der Zwischenphase kommt noch ein Alnstaub-Aufruhr. In der Flugphase spawnen Adds auch im Riss.
 ]=],
 	BOSS_GUIDES_SPELL_NAMES = {
 		["Oblivion's Wrath"] = "Zorn der Auslöschung",
-		["Shadow Phalanx"] = "Schattenphalanx",
+		["Shadow Phalanx"] = { spellID = 1284786, localizedName = "Schattenphalanx" },
 		["Dark Barrage"] = "Dunkelsalve",
 		["Void Infusion"] = "Leereninfusion",
-		["Black Miasma"] = "Schwarzes Miasma",
-		["Cosmic Shell"] = "Kosmische Hülle",
-		["Void Marked"] = "Leerenmal",
+		["Dark Uproar"] = { spellID = 1249251, localizedName = "Dunkle Verwerfung" },
+		["Black Miasma"] = { spellID = 1275059, localizedName = "Schwarzes Miasma" },
+		["Blackening Wounds"] = { spellID = 1265540, localizedName = "Schwärzende Wunden" },
+		["Cosmic Shell"] = { spellID = 1280035, localizedName = "Kosmischer Panzer" },
+		["Void Marked"] = { spellID = 1280015, localizedName = "Leerenmarkiert" },
 		["Pitch Bulwark"] = { spellID = 1255702, localizedName = "Bollwerk errichten" },
 		["Void Fall"] = "Leerensturz",
+		["Rising Darkness"] = { spellID = 1255749, localizedName = "Aufziehende Dunkelheit" },
+		["Dark Resilience"] = { spellID = 1264164, localizedName = "Dunkle Resilienz" },
 		["Overpowering Pulse"] = { spellID = 1244419, localizedName = "Überwältigender Puls" },
 		["Blisterburst"] = { spellID = 1259186, localizedName = "Pustelbersten" },
 		["Void Breath"] = { spellID = 1256855, localizedName = "Leerenatem" },
 		["Primordial Roar"] = { spellID = 1260046, localizedName = "Urzeitliches Brüllen" },
 		["Creep Spit"] = { spellID = 1273159, localizedName = "Kriecherspritzer" },
+		["Shadowclaw Slash"] = { spellID = 1244012, localizedName = "Schattenklauenhieb" },
 		["Dark Goo"] = "Dunkler Schleim",
 		["Smashed"] = "Zerschmettert",
 		["Torturous Extract"] = "Quälender Extrakt",
