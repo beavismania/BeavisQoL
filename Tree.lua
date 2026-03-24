@@ -507,6 +507,25 @@ local CombatTextEntry = RegisterModuleEntry(InterfaceSection, "COMBAT_TEXT", "Da
     searchTextKeys = { "DAMAGE_TEXT_DESC", "DAMAGE_TEXT_ENABLE_HINT", "DAMAGE_TEXT_APPEARANCE_HINT" },
     searchAliases = "damage combat text font numbers scrolling",
 })
+local MouseHelperEntry = RegisterModuleEntry(InterfaceSection, "MOUSE_HELPER", "MouseHelper", {
+    searchTextKeys = {
+        "MOUSE_HELPER_DESC",
+        "MOUSE_HELPER_CIRCLE_HINT",
+        "MOUSE_HELPER_TRAIL_HINT",
+        "MOUSE_HELPER_BLIZZARD_CURSOR_HINT",
+    },
+    searchAliases = "mouse cursor circle trail pointer highlight blizzard large",
+})
+local BossGuidesEntry = RegisterModuleEntry(InterfaceSection, "BOSS_GUIDES", "BossGuides", {
+    searchTextKeys = {
+        "BOSS_GUIDES_DESC",
+        "BOSS_GUIDES_SHOW_OVERLAY",
+        "BOSS_GUIDES_LOCK_OVERLAY",
+        "BOSS_GUIDES_SCALE",
+        "BOSS_GUIDES_FONT_SIZE",
+    },
+    searchAliases = "boss guide raid dungeon tactics tabs overlay button",
+})
 local LFGEntry = RegisterModuleEntry(GroupSection, "LFG", "LFG", {
     searchTextKeys = { "LFG_DESC", "FLAGS_HINT", "EASY_LFG_HINT", "EASY_LFG_SHOW_OVERLAY_HINT" },
     searchAliases = "group finder premade flags realms applicants invite easy lfg overlay queue",
@@ -759,6 +778,8 @@ BeavisQoL.UpdateTree = function()
     StatsEntry.text:SetText(L("STATS"))
     MarkerBarEntry.text:SetText(L("MARKER_BAR"))
     CombatTextEntry.text:SetText(L("COMBAT_TEXT"))
+    MouseHelperEntry.text:SetText(L("MOUSE_HELPER"))
+    BossGuidesEntry.text:SetText(L("BOSS_GUIDES"))
     LFGEntry.text:SetText(L("LFG"))
     StreamerPlannerEntry.text:SetText(L("STREAMER_PLANNER"))
     PetStuffEntry.text:SetText(L("PET_STUFF"))
@@ -792,6 +813,8 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         LFG = { page = Pages.LFG, text = LFGEntry.text, group = "module" },
         StreamerPlanner = { page = Pages.StreamerPlanner, text = StreamerPlannerEntry.text, group = "module" },
         DamageText = { page = Pages.DamageText, text = CombatTextEntry.text, group = "module" },
+        MouseHelper = { page = Pages.MouseHelper, text = MouseHelperEntry.text, group = "module" },
+        BossGuides = { page = Pages.BossGuides, text = BossGuidesEntry.text, group = "module" },
     }
 
     local target = pageMap[pageKey]

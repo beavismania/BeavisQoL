@@ -52,6 +52,8 @@ BeavisQoL.Localization.deDE = {
 	STATS = "Stats",
 	MARKER_BAR = "Markerleiste",
 	COMBAT_TEXT = "Combat Text",
+	MOUSE_HELPER = "Maus-Helfer",
+	BOSS_GUIDES = "Boss Guides",
 	LFG = "Gruppensuche",
 	STREAMER_PLANNER = "Gruppenplaner",
 	PET_STUFF = "Pet Stuff",
@@ -160,6 +162,220 @@ BeavisQoL.Localization.deDE = {
 	FISHING_HELPER_SOUND_ENABLE = "Angel-SFX vorübergehend anheben",
 	FISHING_HELPER_SOUND_MIN = "Effektlautstärke beim Angeln",
 	FISHING_HELPER_SOUND_HINT = "Hebt während des Angelns die Effektlautstärke auf das Blizzard-Maximum an und stellt deinen alten Wert danach wieder her. Mehr als den Standardwert erlaubt der Client hier nicht.",
+	MOUSE_HELPER_DESC = "Bündelt Maus-Qualitätseinstellungen in einer Seite: sichtbarer Marker um den Cursor, ein bewegter Trail und die Blizzard-Mausvergrößerung.",
+	MOUSE_HELPER_SETTINGS = "Allgemein",
+	MOUSE_HELPER_ENABLE = "Maus-Helfer aktivieren",
+	MOUSE_HELPER_CURSOR_SIZE = "Blizzard-Mausgröße",
+	MOUSE_HELPER_CURSOR_SIZE_DEFAULT = "Standard",
+	MOUSE_HELPER_CURSOR_SIZE_32 = "32x32",
+	MOUSE_HELPER_CURSOR_SIZE_48 = "48x48",
+	MOUSE_HELPER_CURSOR_SIZE_64 = "64x64",
+	MOUSE_HELPER_CURSOR_SIZE_96 = "96x96",
+	MOUSE_HELPER_CURSOR_SIZE_128 = "128x128",
+	MOUSE_HELPER_BLIZZARD_CURSOR = "Blizzard-Maus vergrößern",
+	MOUSE_HELPER_BLIZZARD_CURSOR_HINT = "Schaltet die eingebaute Blizzard-Funktion für einen größeren Mauszeiger direkt hier mit.",
+	MOUSE_HELPER_BLIZZARD_CURSOR_UNSUPPORTED = "Auf diesem Client konnte keine unterstützte Blizzard-CVar für Mausgrößen erkannt werden.",
+	MOUSE_HELPER_CIRCLE_TITLE = "Cursor-Kreis",
+	MOUSE_HELPER_CIRCLE_ENABLE = "Kreis anzeigen",
+	MOUSE_HELPER_CIRCLE_COMBAT_ONLY = "Kreis nur im Kampf anzeigen",
+	MOUSE_HELPER_CIRCLE_SIZE = "Größe",
+	MOUSE_HELPER_CIRCLE_THICKNESS = "Rahmenstärke",
+	MOUSE_HELPER_CIRCLE_SHAPE = "Form",
+	MOUSE_HELPER_SHAPE_RING = "Ring",
+	MOUSE_HELPER_SHAPE_SQUARE = "Quadrat",
+	MOUSE_HELPER_SHAPE_DIAMOND = "Raute",
+	MOUSE_HELPER_COLOR_PICK = "Farbe wählen",
+	MOUSE_HELPER_CIRCLE_HINT = "Der Kreis folgt deiner Maus in Echtzeit und bleibt mittig um den Cursor.",
+	MOUSE_HELPER_TRAIL_TITLE = "Maus-Trail",
+	MOUSE_HELPER_TRAIL_ENABLE = "Trail anzeigen",
+	MOUSE_HELPER_TRAIL_LENGTH = "Länge",
+	MOUSE_HELPER_TRAIL_SIZE = "Punktgröße",
+	MOUSE_HELPER_TRAIL_STYLE = "Trail-Stil",
+	MOUSE_HELPER_TRAIL_STYLE_LIGHTNING = "Blitz",
+	MOUSE_HELPER_TRAIL_STYLE_HOLY = "Heiliges Licht",
+	MOUSE_HELPER_TRAIL_STYLE_ARC = "Bögen (Ice)",
+	MOUSE_HELPER_TRAIL_STYLE_CLEAN = "Sauber",
+	MOUSE_HELPER_TRAIL_HINT = "Der Trail hinterlässt beim Bewegen kurze Punkte, die nach hinten sanft ausblenden.",
+	BOSS_GUIDES_DESC = "Zeigt in unterstützten Dungeons/Raids oben links einen Boss-Guides-Button. Darüber öffnest du ein Fenster mit Boss-Tabs und den hinterlegten Taktiken.",
+	BOSS_GUIDES_SETTINGS = "Einstellungen",
+	BOSS_GUIDES_SHOW_OVERLAY = "Overlay-Button anzeigen",
+	BOSS_GUIDES_OVERLAY_MODE = "Anzeigemodus",
+	BOSS_GUIDES_MODE_ALWAYS = "Immer anzeigen",
+	BOSS_GUIDES_MODE_INSTANCE = "Nur in Dungeon/Raid",
+	BOSS_GUIDES_LOCK_OVERLAY = "Overlay-Position fixieren",
+	BOSS_GUIDES_SCALE = "Skalierung",
+	BOSS_GUIDES_FONT_SIZE = "Schriftgröße",
+	BOSS_GUIDES_RESET_POSITION = "Positionen zurücksetzen",
+	BOSS_GUIDES_BUTTON = "Boss Guides",
+	BOSS_GUIDES_BOSSES = "Bosse",
+	BOSS_GUIDES_INSTANCE = "Instanz",
+	BOSS_GUIDES_NO_GUIDE = "Für diese Instanz ist aktuell kein Guide hinterlegt.",
+	BOSS_GUIDES_CURRENT_INSTANCE = "Aktuelle Instanz",
+	BOSS_GUIDES_NONE = "Keine",
+	BOSS_GUIDES_CAT_RAID = "Raid",
+	BOSS_GUIDES_CAT_DUNGEON = "Dungeon",
+	BOSS_GUIDES_SELECT_INSTANCE = "Instanz wählen...",
+	BOSS_GUIDES_NO_INSTANCES = "Noch keine Einträge",
+	BOSS_GUIDES_SECTION_GENERAL = "Allgemein",
+	BOSS_GUIDES_LABEL_MYTHIC = "Mythisch",
+	BOSS_GUIDES_LEGEND_TANK = "Tank",
+	BOSS_GUIDES_LEGEND_DD = "DD",
+	BOSS_GUIDES_LEGEND_HEAL = "Heal",
+	BOSS_GUIDES_LEGEND_HC = "HC",
+	BOSS_GUIDES_LEGEND_M = "M",
+	BOSS_GUIDES_INSTANCE_VOIDSPIRE_TITLE = "Leerenspitze",
+	BOSS_GUIDES_INSTANCE_VOIDSPIRE_TOKENS = { "leerenspitze", "leeren", "voidspire", "void spire" },
+	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_NAME = "Imperator Averzian",
+	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_BODY = [=[
+Allgemein: 3x3-Feld kontrollieren. Drei verbundene verlorene Felder sind wipe-gefährlich.
+{TANK} Boss aus beanspruchten Feldern halten. Bei Schwärzenden Wunden sauber tauschen. Add-Wellen vom Weakened-Ziel übernehmen.
+{DD} Umbralkollaps immer auf Schlüssel-Feld oder Prior-Adds legen. Voidshaper und Pitch Bulwark unterbrechen. Oblivion's Wrath, Void Fall und Shadow Phalanx konsequent dodgen.
+{HEAL} Umbralkollaps nur mit voller Gruppe soaken. Dunkler Aufruhr und Void Infusion mit CDs abdecken. Dark Barrage-Ziele schnell stabilisieren.
+{HC} Voidshaper werden zu Endwalkern, also Casts sofort stoppen. Voidmaws bei 35% am Feld-Heal hindern und finishen.
+{M} Black Miasma-Flüche priorisieren. Cosmic Shell vor Umbralkollaps entfernen. Void Marked mit sauberen Dispel-Positionen spielen.
+]=],
+	BOSS_GUIDES_BOSS_VORASIUS_NAME = "Vorasius",
+	BOSS_GUIDES_BOSS_VORASIUS_BODY = [=[
+Allgemein: Arena aktiv managen. Wände gezielt sprengen, Atem nie durch den Raid ziehen.
+{TANK} Immer in Nahkampfreichweite bleiben, sonst Overpowering Pulse. Schattenklauenhieb sicher soaken. Nach Smashed bzw. 2 Treffern tauschen.
+{DD} Blistercreeps an gewünschter Wand töten. Nach Blisterburst sofort aus 8m raus. Void Breath und Nachbeben komplett dodgen.
+{HEAL} Blisterburst und Primordial Roar sind Hauptspitzen. Creep Spit-Slows und Knockbacks mitplanen. CDs über den Kampf staffeln.
+{HC} Wände brauchen mehr Explosionen. Add-Kills vorher ansagen und Platz sparen.
+{M} Blisterburst hinterlässt Dark Goo. Kill-Zonen strikt planen und keine Wege doppelt mit Goo blocken.
+]=],
+	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_NAME = "Gefallener König Salhadaar",
+	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_BODY = [=[
+Allgemein: Kugeln dürfen den Boss nie erreichen. Jeder Durchlauf erhöht den Raidschaden stark.
+{TANK} Boss aus Orb-Linien und Torturous Extract ziehen. Shattering Twilight zum Rand stellen. Bei Destabilizing Strikes tauschen.
+{DD} Concentrated Void vor Bosskontakt zerstören. Fractured Images sofort kicken. Entropic Unraveling als Burn-Fenster nutzen.
+{HEAL} Void Infusion, Twisting Obscurity und Entropic Unraveling mit CDs decken. Despotic Command-Spieler aus dem Raid halten. Oppressive Darkness gezielt dispellen.
+{HC} Orb-Kills staffeln, da Dark Radiation auf allen landet. Markierte Spieler mit Despotic Command strikt verteilen.
+{M} Enduring Void kommt zurück und muss mitgeplant werden. Nexus Shield auf Images per Kick-Rotation entfernen. Kampf wird über Orb-Timing gewonnen.
+]=],
+	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_NAME = "Vaelgor & Ezzorak",
+	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_BODY = [=[
+Allgemein: Drachen trennen und HP angleichen. Sonst eskaliert Twilight Bond.
+{TANK} Mindestens 15m Abstand halten. Nach Vaelwing und Rakfang tauschen. Frontalen von Nullbeam, Gloom und Dread Breath weg vom Raid drehen.
+{DD} Gloom kontrolliert mit festen Soakern verkleinern. Nullzone nur geplant brechen. Voidorbs sofort kicken und töten. Shadowmark auseinander tragen.
+{HEAL} Nullsnap, Implosion und Midnight Flames als feste CD-Fenster planen. Gloomtouched und Nullbeam-Stacks aktiv überwachen.
+{HC} Gloomtouched gibt Diminish. Soaker rotieren und keine Doppelkontakte.
+{M} Nullscatter beim ersten Snap abfangen. Cosmosis-Reflexionen priorisieren. Lange Midnight Flames als HPS-Check vorbereiten.
+]=],
+	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_NAME = "Lichtblinde Vorhut",
+	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_BODY = [=[
+Allgemein: HP angleichen und keinen Boss früh töten. Sonst triggert Retribution auf den Rest.
+{TANK} Aura-Bosse von den anderen wegziehen. Nach Judgment auf Lightblood und Bellamy sauber spotten. Exorcism- und Tankhit-Ketten defensiv planen.
+{DD} Execution Sentence nur mit zugewiesener Soak-Gruppe spielen. Sacred Shield schnell brechen. Blinding Light priorisiert unterbrechen und Charge/Hammer dodgen.
+{HEAL} Light Infused und Searing Radiance früh einplanen, nicht reagieren. Tyr's Wrath-Targets zu Senn ansagen. Divine Toll plus Execution Sentence als Kill-Kombi absichern.
+{HC} Consecration-Flächen bleiben liegen. Bosse sauber an den Rand rotieren.
+{M} Zealous Spirit verstärkt Kernfähigkeiten. Divine Consecration macht Flächen tödlich. Def-CDs pro Aura fest rotieren.
+]=],
+	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_NAME = "Krone des Kosmos",
+	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_BODY = [=[
+Allgemein: Phasenkampf. Silberpfeile reinigen Void-Effekte und entscheiden viele Mechaniken.
+{TANK} P1 Sentinels im Nahkampf halten, damit Echoing Darkness nicht stapelt. P2 Alleria und Simulacrum trennen, um Empowering Darkness zu begrenzen. Rift Slash regelmäßig spotten.
+{DD} Silverstrike gezielt durch Debuffs und Adds ziehen. P1 Sentinels plus Droplets kontrolliert spielen. P2 Cosmic Barrier sofort brechen und Voidspawn vor Coalesced Form töten. Intermissions sauber dodgen.
+{HEAL} Null Corona kontrolliert dispellen. Größte Checks: Echoing Darkness, Barrier-Aura, Voidstalker Sting, Devouring Cosmos. CDs für P3 aufsparen.
+{HC} Void Expulsion trifft zusätzliche Ziele. Barrage-Calls in beiden Intermissions fest spielen.
+{M} Silver Residue auf Sentinels aktiv nutzen. Grasp of Emptiness und Barrage-Stacks bestrafen Fehler hart. Saubere Arrow-Linien sind Pflicht.
+]=],
+	BOSS_GUIDES_INSTANCE_DREAMRIFT_TITLE = "Traumriss",
+	BOSS_GUIDES_INSTANCE_DREAMRIFT_TOKENS = { "traumriss", "dreamrift", "dream rift" },
+	BOSS_GUIDES_BOSS_CHIMAERUS_NAME = "Chimaerus, der Ungeträumte Gott",
+	BOSS_GUIDES_BOSS_CHIMAERUS_BODY = [=[
+Allgemein: Realm-Management ist alles. Adds erst freispielen, dann schnell töten, nie vom Boss fressen lassen.
+{TANK} Reißendes Schlitzen weg vom Raid. Upheaval mit festen Gruppen rotieren. Colossal Horrors sofort übernehmen und defensiv tanken.
+{DD} Im Rift erst Alnshroud brechen. Manifestationen in Realität priorisieren. Fearsome Cry und Essence Bolt kicken. Flugphase komplett dodgen und Adds vor Ravenous Dive räumen.
+{HEAL} Rift Sickness als Absorb-Mechanik vorausplanen. Caustic Phlegm und Cannibalized Essence mit CDs decken. Feste Soak-Gruppen halten den Schaden planbar.
+{HC} Consuming Miasma gezielt dispellen, um Alndust Essence zu löschen. Platz dauerhaft sauber halten.
+{M} Rift Madness braucht feste Realm-Tauschpartner. Dissonance mit strikter Verteilung spielen. Zusätzliche Flugphasen-Adds sofort priorisieren.
+]=],
+	BOSS_GUIDES_SPELL_NAMES = {
+		["Oblivion's Wrath"] = "Zorn der Auslöschung",
+		["Shadow Phalanx"] = "Schattenphalanx",
+		["Dark Barrage"] = "Dunkelsalve",
+		["Void Infusion"] = "Leereninfusion",
+		["Black Miasma"] = "Schwarzes Miasma",
+		["Cosmic Shell"] = "Kosmische Hülle",
+		["Void Marked"] = "Leerenmal",
+		["Pitch Bulwark"] = { spellID = 1255702, localizedName = "Bollwerk errichten" },
+		["Void Fall"] = "Leerensturz",
+		["Overpowering Pulse"] = { spellID = 1244419, localizedName = "Überwältigender Puls" },
+		["Blisterburst"] = { spellID = 1259186, localizedName = "Pustelbersten" },
+		["Void Breath"] = { spellID = 1256855, localizedName = "Leerenatem" },
+		["Primordial Roar"] = { spellID = 1260046, localizedName = "Urzeitliches Brüllen" },
+		["Creep Spit"] = { spellID = 1273159, localizedName = "Kriecherspritzer" },
+		["Dark Goo"] = "Dunkler Schleim",
+		["Smashed"] = "Zerschmettert",
+		["Torturous Extract"] = "Quälender Extrakt",
+		["Shattering Twilight"] = "Zerschmetterndes Zwielicht",
+		["Destabilizing Strikes"] = "Destabilisierende Schläge",
+		["Concentrated Void"] = "Konzentrierte Leere",
+		["Fractured Images"] = "Zersplitterte Abbilder",
+		["Entropic Unraveling"] = "Entropische Entfesselung",
+		["Twisting Obscurity"] = "Windende Obskurität",
+		["Despotic Command"] = "Despotischer Befehl",
+		["Oppressive Darkness"] = "Erdrückende Dunkelheit",
+		["Dark Radiation"] = "Dunkle Strahlung",
+		["Enduring Void"] = "Anhaltende Leere",
+		["Nexus Shield"] = "Nexusschild",
+		["Twilight Bond"] = "Zwielichtband",
+		["Vaelwing"] = "Vaelflügel",
+		["Rakfang"] = "Rakzahn",
+		["Nullbeam"] = "Nullstrahl",
+		["Gloom"] = "Düsterkeit",
+		["Dread Breath"] = "Schreckensatem",
+		["Nullzone"] = "Nullzone",
+		["Shadowmark"] = "Schattenmal",
+		["Nullsnap"] = "Nullbruch",
+		["Midnight Flames"] = "Mitternachtsflammen",
+		["Gloomtouched"] = "Von Düsterkeit berührt",
+		["Diminish"] = "Schwächung",
+		["Nullscatter"] = "Nullstreuung",
+		["Cosmosis"] = "Kosmosis",
+		["Retribution"] = "Vergeltung",
+		["Judgment"] = "Richturteil",
+		["Exorcism"] = "Exorzismus",
+		["Execution Sentence"] = "Todesurteil",
+		["Sacred Shield"] = "Heiliges Schild",
+		["Blinding Light"] = "Blendendes Licht",
+		["Divine Hammer"] = "Göttlicher Hammer",
+		["Light Infused"] = "Lichtinfundiert",
+		["Searing Radiance"] = "Sengende Strahlkraft",
+		["Tyr's Wrath"] = "Tyrs Zorn",
+		["Divine Toll"] = "Göttliches Läuten",
+		["Consecration"] = "Weihe",
+		["Zealous Spirit"] = "Eifergeist",
+		["Divine Consecration"] = "Göttliche Weihe",
+		["Echoing Darkness"] = "Widerhallende Dunkelheit",
+		["Empowering Darkness"] = "Verstärkende Dunkelheit",
+		["Rift Slash"] = "Risshieb",
+		["Silverstrike"] = "Silberschlag",
+		["Cosmic Barrier"] = "Kosmische Barriere",
+		["Coalesced Form"] = "Koaleszierte Form",
+		["Null Corona"] = "Nullkorona",
+		["Voidstalker Sting"] = "Leerenpirscherstachel",
+		["Devouring Cosmos"] = "Verschlingender Kosmos",
+		["Void Expulsion"] = "Leerenausstoß",
+		["Barrage"] = "Sperrfeuer",
+		["Silver Residue"] = "Silberrückstand",
+		["Grasp of Emptiness"] = "Griff der Leere",
+		["Upheaval"] = "Aufruhr",
+		["Colossal Horrors"] = "Kolossale Schrecken",
+		["Alnshroud"] = "Alnschleier",
+		["Fearsome Cry"] = "Furchterregender Schrei",
+		["Essence Bolt"] = "Essenzblitz",
+		["Ravenous Dive"] = "Gefräßiger Sturzflug",
+		["Rift Sickness"] = "Risskrankheit",
+		["Caustic Phlegm"] = "Ätzender Schleim",
+		["Cannibalized Essence"] = "Kannibalisierte Essenz",
+		["Consuming Miasma"] = "Verzehrendes Miasma",
+		["Alndust Essence"] = "Alnstaubessenz",
+		["Rift Madness"] = "Risswahnsinn",
+		["Dissonance"] = "Dissonanz",
+		["Umbral Collapse"] = { spellID = 1249262, localizedName = "Umbralkollaps" },
+		["March of the Endless"] = { spellID = 1251583, localizedName = "Marsch der Unendlichen" },
+	},
 	STREAMER_PLANNER_TITLE = "Gruppenplaner",
 	STREAMER_PLANNER_DESC = "Ein kleines transparentes Overlay für Stream-Situationen, in dem du Zusagen schnell auf feste Dungeon- oder Raid-Slots verteilen kannst.",
 	STREAMER_PLANNER_USAGE_HINT = "Klick in Vorschau oder Overlay auf einen Slot, trage den Namen ein und bestätige mit Enter. Rechtsklick auf einen Slot leert ihn direkt wieder.",

@@ -251,6 +251,7 @@ function BeavisQoL.RefreshLocale()
         BeavisQoL.Pages.WeeklyKeys,
         BeavisQoL.Pages.Logging,
         BeavisQoL.Pages.Checklist,
+        BeavisQoL.Pages.MouseHelper,
     }
 
     for _, page in ipairs(refreshablePages) do

@@ -48,5 +48,7 @@ Pages\Misc.lua
 Pages\PetStuff.lua
 Pages\LFG.lua
 Pages\DamageText.lua
+Pages\MouseHelper.lua
+Pages\BossGuides.lua
 Tree.lua
 MinimapButton.lua

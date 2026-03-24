@@ -75,7 +75,9 @@
         "DAMAGER",
         "INLINE_TANK_ICON",
         "INLINE_HEALER_ICON",
-        "INLINE_DAMAGER_ICON"
+        "INLINE_DAMAGER_ICON",
+        "ToggleDropDownMenu",
+        "SetItemRef"
     ],
     "Lua.diagnostics.disable": [
         "assign-type-mismatch"
