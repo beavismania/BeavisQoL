@@ -4,14 +4,11 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.24.0`
+- Version: `0.24.1`
 - Release-Datum: `2026-03-26`
 - Schwerpunkt dieser Version:
-  - `Jagd-Fortschritt` als neues Komfort-Modul für Midnight-Jagden direkt am Blizzard-Symbol
-  - Stufenanzeige für Jagden mit `Phase 1/4` bis `Boss bereit`
-  - `Weekly Keys` zählt für die Weekly-Gear-Anzeige nur noch abgeschlossene Runs
-  - `Weekly Keys` dupliziert Keys nicht mehr als normalen mythischen Dungeon
-  - UI-Korrekturen für `Gruppensuche`, `Gruppenplaner`, `Angelhilfe` und `Maus-Helfer`
+  - `Jagd-Fortschritt` zeigt `Phase 1/4` nicht mehr ohne aktive Jagd an
+  - die Widget-Erkennung akzeptiert nur noch echte Blizzard-Prey-Hunt-Widgets
 
 ## Download
 
@@ -50,9 +47,9 @@ Regel für künftige Releases:
 
 Beispiel:
 
-- `0.24.0` -> aktueller Stand
+- `0.24.1` -> aktueller Stand
 - neues Modul -> `0.25.0`
-- danach Hotfix -> `0.24.1`
+- weiterer Hotfix -> `0.24.2`
 - großer Hauptrelease -> `1.0.0`
 
 ## Aktueller Schwerpunkt
@@ -162,7 +159,7 @@ Beispiel:
 - `Pet Stuff`
   - Auto Respawn Pet für Begleiter-Pets außerhalb des Kampfes
 
-## Modulerweiterungen bis 0.24.0
+## Modulerweiterungen bis 0.24.1
 
 - `Checkliste`
   - eigene Fortschrittsseite mit Daily-, Weekly- und Watch-Kategorien
@@ -201,6 +198,7 @@ Beispiel:
 - `Jagd-Fortschritt`
   - neues Komfort-Modul für Midnight-Jagden mit direkter Anzeige am Blizzard-Symbol
   - stellt den Hunt-Fortschritt als `Phase 1/4` bis `Boss bereit` dar
+  - zeigt `Phase 1/4` nicht mehr fälschlich ohne aktive Jagd an
 - `Weekly Keys`
   - zählt für die Weekly-Gear-Anzeige nur noch abgeschlossene M+-Runs
   - verhindert doppelte Einträge, wenn ein Key zuvor als normaler mythischer Dungeon erkannt wurde

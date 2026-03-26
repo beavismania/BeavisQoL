@@ -93,6 +93,25 @@ local function HidePreyHuntOverlay()
     PreyHuntOverlay:Hide()
 end
 
+local function ClearPreyHuntCache()
+    cachedWidgetSetID = nil
+    livePreyWidgetID = nil
+    livePreyWidgetSetID = nil
+end
+
+local function SafeIsFrameShown(frame)
+    if not frame or not frame.IsShown then
+        return false
+    end
+
+    local ok, isShown = pcall(frame.IsShown, frame)
+    if not ok then
+        return false
+    end
+
+    return isShown == true
+end
+
 local function SyncOverlayFrameOrder(anchorFrame)
     if not anchorFrame then
         if PreyHuntOverlay:GetParent() ~= UIParent then
@@ -253,7 +272,7 @@ local function GetFirstVisibleChild(frame)
 
     local children = { frame:GetChildren() }
     for _, child in ipairs(children) do
-        if child and child.IsShown and child:IsShown() then
+        if SafeIsFrameShown(child) then
             return child
         end
     end
@@ -338,7 +357,9 @@ local function GetPreyWidgetDataForSet(widgetSetID)
         end
     end
 
-    if not preyInfo and not progressInfo then
+    if not preyInfo then
+        -- Ohne echtes Prey-Hunt-Widget wuerden normale Statusleisten
+        -- faelschlich als "Phase 1/4" interpretiert werden.
         return nil
     end
 
@@ -413,7 +434,7 @@ local function ResolvePreyOverlayAnchor(widgetData)
             return visibleChild
         end
 
-        if fallbackFrame.IsShown and fallbackFrame:IsShown() then
+        if SafeIsFrameShown(fallbackFrame) then
             return fallbackFrame
         end
     end
@@ -425,7 +446,7 @@ local function ResolvePreyOverlayAnchor(widgetData)
             return visibleChild
         end
 
-        if fallbackFrame.IsShown and fallbackFrame:IsShown() then
+        if SafeIsFrameShown(fallbackFrame) then
             return fallbackFrame
         end
     end
@@ -439,11 +460,18 @@ local function UpdatePreyHuntOverlay()
         return
     end
 
+    local inInstance = IsInInstance and select(1, IsInInstance())
+    if inInstance then
+        HidePreyHuntOverlay()
+        ClearPreyHuntCache()
+        return
+    end
+
     local activeQuestID = GetActivePreyQuest and GetActivePreyQuest()
     local widgetData = FindActivePreyWidgetData()
     if not activeQuestID and not widgetData then
         HidePreyHuntOverlay()
-        cachedWidgetSetID = nil
+        ClearPreyHuntCache()
         return
     end
 
@@ -460,11 +488,11 @@ local function UpdatePreyHuntOverlay()
         return
     end
 
-    if anchorFrame.IsShown and not anchorFrame:IsShown() then
+    if anchorFrame and anchorFrame.IsShown and not SafeIsFrameShown(anchorFrame) then
         local fallbackFrame = (widgetData and GetWidgetContainerBySetID(widgetData.widgetSetID))
             or _G.UIWidgetBelowMinimapContainerFrame
             or _G.UIWidgetTopCenterContainerFrame
-        if not fallbackFrame or (fallbackFrame.IsShown and not fallbackFrame:IsShown()) then
+        if not fallbackFrame or not SafeIsFrameShown(fallbackFrame) then
             HidePreyHuntOverlay()
             return
         end
@@ -496,8 +524,7 @@ PreyHuntWatcher:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_LEAVING_WORLD" then
         HidePreyHuntOverlay()
         self.needsRefresh = false
-        livePreyWidgetID = nil
-        livePreyWidgetSetID = nil
+        ClearPreyHuntCache()
         return
     end
 
@@ -554,7 +581,7 @@ local function UpdateWatcherState()
     end
 
     watcherActive = false
-    cachedWidgetSetID = nil
+    ClearPreyHuntCache()
     PreyHuntWatcher.elapsed = 0
     PreyHuntWatcher.needsRefresh = false
     PreyHuntWatcher:UnregisterAllEvents()
@@ -568,9 +595,7 @@ local function ReinitializeEnabledWatcher()
     end
 
     watcherActive = false
-    cachedWidgetSetID = nil
-    livePreyWidgetID = nil
-    livePreyWidgetSetID = nil
+    ClearPreyHuntCache()
     PreyHuntWatcher.elapsed = 0
     PreyHuntWatcher.needsRefresh = true
     PreyHuntWatcher:UnregisterAllEvents()
