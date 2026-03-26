@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.24.1 - 2026-03-26
+
+### Behoben
+
+- `Jagd-Fortschritt` zeigt `Phase 1/4` nicht mehr ohne aktive Jagd an
+- `Jagd-Fortschritt` akzeptiert nur noch echte Blizzard-Prey-Hunt-Widgets und ignoriert fremde Statusleisten
+
 ## 0.24.0 - 2026-03-26
 
 ### Neu
