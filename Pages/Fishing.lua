@@ -10,7 +10,7 @@ local FISHING_SPELL_ID = 131474
 local WAITING_TIMEOUT = 32
 local STANDARD_SFX = 1.00
 local DEFAULT_MIN_SFX = STANDARD_SFX
-local MIN_SFX = STANDARD_SFX
+local MIN_SFX = 0.00
 local MAX_SFX = STANDARD_SFX
 local INTERACTION_COMMAND = "INTERACTTARGET"
 local SOFT_INTERACT_CVAR = "SoftTargetInteract"
@@ -526,8 +526,10 @@ end
 local function CreateSlider(parent)
     local slider = CreateFrame("Slider", ADDON_NAME .. "FishingSoundSlider", parent, "OptionsSliderTemplate")
     slider:SetMinMaxValues(MIN_SFX, MAX_SFX)
-    slider:SetValueStep(1)
-    slider:SetObeyStepOnDrag(true)
+    slider:SetValueStep(0.01)
+    if slider.SetObeyStepOnDrag then
+        slider:SetObeyStepOnDrag(true)
+    end
     slider:SetWidth(260)
     slider:EnableMouse(MIN_SFX < MAX_SFX)
 
@@ -815,7 +817,7 @@ function PageFishing:RefreshState()
 
     SoundCheckbox:SetChecked(settings.soundBoostEnabled == true)
     SoundCheckbox:SetEnabled(settings.enabled == true)
-    SoundSlider:SetEnabled(false)
+    SoundSlider:SetEnabled(settings.enabled == true and settings.soundBoostEnabled == true)
     SoundSlider:SetValue(settings.soundMinVolume)
     RefreshSoundSliderText()
 

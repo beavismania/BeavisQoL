@@ -24,6 +24,16 @@ local function FormatSliderValue(value, mode)
     return tostring(math.floor((value or 0) + 0.5))
 end
 
+local function RefreshSliderCaption(slider)
+    if not slider or not slider.Text then
+        return
+    end
+
+    local labelText = slider.LabelText or ""
+    local mode = slider.ValueMode
+    slider.Text:SetText(string.format("%s: %s", labelText, FormatSliderValue(slider:GetValue(), mode)))
+end
+
 local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mode)
     sliderCounter = sliderCounter + 1
 
@@ -40,6 +50,8 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mo
     slider.Text = _G[sliderName .. "Text"]
     slider.Low = _G[sliderName .. "Low"]
     slider.High = _G[sliderName .. "High"]
+    slider.LabelText = labelText
+    slider.ValueMode = mode
 
     slider.Text:SetText(labelText)
     slider.Text:SetTextColor(1, 0.82, 0, 1)
@@ -50,9 +62,10 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mo
     slider.ValueText:SetPoint("BOTTOM", slider, "TOP", 0, 8)
     slider.ValueText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     slider.ValueText:SetTextColor(1, 1, 1, 1)
+    slider.ValueText:Hide()
 
     slider:SetScript("OnValueChanged", function(self, value)
-        self.ValueText:SetText(FormatSliderValue(value, mode))
+        RefreshSliderCaption(self)
 
         if isRefreshing or not self.ApplyValue then
             return
@@ -61,6 +74,7 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mo
         self:ApplyValue(value)
     end)
 
+    RefreshSliderCaption(slider)
     return slider
 end
 
@@ -241,6 +255,22 @@ EasyLFGResetHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 EasyLFGResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
 EasyLFGResetHint:SetText(L("EASY_LFG_RESET_HINT"))
 
+function PageLFG:UpdateLayout()
+    if not self:IsShown() then
+        return
+    end
+
+    local panelTop = EasyLFGPanel:GetTop()
+    local buttonBottom = EasyLFGResetButton:GetBottom()
+    local hintBottom = EasyLFGResetHint:GetBottom()
+    if not panelTop or not buttonBottom or not hintBottom then
+        return
+    end
+
+    local desiredHeight = math.ceil((panelTop - math.min(buttonBottom, hintBottom)) + 20)
+    EasyLFGPanel:SetHeight(math.max(300, desiredHeight))
+end
+
 -- Die Checkbox liest ihren Zustand direkt aus dem Modul, damit die Seite kaum eigene Logik braucht.
 function PageLFG:RefreshState()
     local flagsEnabled = false
@@ -260,9 +290,9 @@ function PageLFG:RefreshState()
     EasyLFGShowOverlayCheckbox.Hint:SetText(L("EASY_LFG_SHOW_OVERLAY_HINT"))
     EasyLFGOverlayLockCheckbox.Label:SetText(L("EASY_LFG_LOCK_OVERLAY"))
     EasyLFGOverlayLockCheckbox.Hint:SetText(L("EASY_LFG_LOCK_OVERLAY_HINT"))
-    EasyLFGScaleSlider.Text:SetText(L("EASY_LFG_SCALE"))
+    EasyLFGScaleSlider.LabelText = L("EASY_LFG_SCALE")
     EasyLFGScaleHint:SetText(L("EASY_LFG_SCALE_HINT"))
-    EasyLFGAlphaSlider.Text:SetText(L("EASY_LFG_BACKGROUND_ALPHA"))
+    EasyLFGAlphaSlider.LabelText = L("EASY_LFG_BACKGROUND_ALPHA")
     EasyLFGAlphaHint:SetText(L("EASY_LFG_BACKGROUND_ALPHA_HINT"))
     EasyLFGResetButton:SetText(L("RESET_POSITION"))
     EasyLFGResetHint:SetText(L("EASY_LFG_RESET_HINT"))
@@ -294,6 +324,10 @@ function PageLFG:RefreshState()
     EasyLFGScaleSlider:SetValue(easyLFGScale)
     EasyLFGAlphaSlider:SetValue(easyLFGAlpha)
     isRefreshing = false
+
+    RefreshSliderCaption(EasyLFGScaleSlider)
+    RefreshSliderCaption(EasyLFGAlphaSlider)
+    self:UpdateLayout()
 end
 
 FlagsCheckbox:SetScript("OnClick", function(self)
@@ -340,6 +374,7 @@ end)
 
 PageLFG:SetScript("OnShow", function()
     PageLFG:RefreshState()
+    PageLFG:UpdateLayout()
 end)
 
 PageLFG:RefreshState()

@@ -4,21 +4,14 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.23.0`
-- Release-Datum: `2026-03-24`
+- Version: `0.24.0`
+- Release-Datum: `2026-03-26`
 - Schwerpunkt dieser Version:
-  - `Boss Guides` als neues Modul mit Overlay-Button, Instanz-Auswahl und Boss-Tabs für hinterlegte Taktiken
-  - `Maus-Helfer` als neue Komfortseite für Cursor-Kreis, Maus-Trail und Blizzard-Mausvergrößerung
-  - überarbeitete gebündelte Schriftarten für UI und Modulseiten
-  - `Easy LFG` als kompaktes Overlay für eigene Gruppenanzeigen mit Invite-, Ablehnen-, Flaggen- und Rollen-/Spec-Anzeige
-  - aufklappbare Gruppenbewerbungen im `Easy LFG`, damit Mehrspieler-Anmeldungen übersichtlich bleiben
-  - automatische Anzeige des `Easy LFG` bei aktiver eigener Listung und automatisches Ausblenden danach
-  - `Gruppenplaner`-Overlay mit sauberem Header, Timerblock, `Alle leeren`, `Menü` und `X`
-  - `Gruppenplaner`-Sloteditor mit Klassen- und Spezialisierungswahl pro Platz
-  - Zielvorschläge für `Gruppenplaner` inklusive Raid-, Tiefen- und `M+0` bis `M+20`-Auswahl
-  - `Angelhilfe` als Ein-Tasten-Komfortmodul für entspannteres Angeln
-  - Minimap-Schnellmenü weiter ausgebaut, unter anderem für `Easy LFG` und `Gruppenplaner`
-  - Markerleiste, Schnell-Ausblenden und Quest-Abbruch aus den letzten Releases weiterhin enthalten
+  - `Jagd-Fortschritt` als neues Komfort-Modul für Midnight-Jagden direkt am Blizzard-Symbol
+  - Stufenanzeige für Jagden mit `Phase 1/4` bis `Boss bereit`
+  - `Weekly Keys` zählt für die Weekly-Gear-Anzeige nur noch abgeschlossene Runs
+  - `Weekly Keys` dupliziert Keys nicht mehr als normalen mythischen Dungeon
+  - UI-Korrekturen für `Gruppensuche`, `Gruppenplaner`, `Angelhilfe` und `Maus-Helfer`
 
 ## Download
 
@@ -29,18 +22,18 @@ https://github.com/beavismania/BeavisQoL/releases
 ## Projektziel
 
 `BeavisQoL` ist gleichzeitig Addon, Lernprojekt und Baukasten.
-Der Code wird bewusst modular gehalten, damit neue Funktionen ohne kompletten Umbau dazukommen können.
+Der Code bleibt bewusst modular, damit neue Funktionen ohne kompletten Umbau dazukommen können.
 
 Das Projekt soll:
 
 - nützliche Alltagsfunktionen für WoW Retail sammeln
-- möglichst sauber in getrennte Module aufteilen
+- Funktionen klar in getrennte Module aufteilen
 - beim Lernen von Lua und WoW-Addon-APIs helfen
 - langfristig gut wartbar bleiben
 
 ## Versionierung
 
-`BeavisQoL` nutzt ab sofort ein festes `major.minor.patch`-Schema:
+`BeavisQoL` nutzt ein festes `major.minor.patch`-Schema:
 
 - `1.0.0`
   - Hauptversion für größere Releases, Richtungswechsel oder bewusst große Paketzustände
@@ -57,9 +50,9 @@ Regel für künftige Releases:
 
 Beispiel:
 
-- `0.23.0` -> aktueller Stand
-- neues Modul -> `0.24.0`
-- danach Hotfix -> `0.23.1`
+- `0.24.0` -> aktueller Stand
+- neues Modul -> `0.25.0`
+- danach Hotfix -> `0.24.1`
 - großer Hauptrelease -> `1.0.0`
 
 ## Aktueller Schwerpunkt
@@ -82,6 +75,8 @@ Beispiel:
 - `Weekly Keys`
   - zeigt die höchsten 8 Weekly-Dungeons und den Vault-Loot
   - kann in instanzierten Bereichen automatisch ausgeblendet werden, optional nur im Kampf
+  - zählt für die Weekly-Gear-Anzeige nur abgeschlossene M+-Runs
+  - verhindert doppelte Einträge zwischen Key und mythischem Non-Key-Run
 - `Itemlevel Guide`
   - saisonale Referenz für Upgradepfade, Crafting, Dungeon-, Raid- und Tiefen-Itemlevel
 - `Quest Check`
@@ -119,6 +114,9 @@ Beispiel:
   - Ein-Tasten-Helfer für das Auswerfen und Einsammeln des Bobbers
   - legt die gewählte Taste während aktivem Bobber vorübergehend auf Blizzard-Interaktion um
   - kann die Effektlautstärke beim Angeln temporär anheben
+- `Jagd-Fortschritt`
+  - blendet bei aktiven Midnight-Jagden eine Stufenanzeige direkt am Blizzard-Symbol ein
+  - zeigt `Phase 1/4` bis `Phase 3/4` und in der letzten Stufe `Boss bereit`
 
 ### Interface & Kampf
 
@@ -149,7 +147,7 @@ Beispiel:
 - `Weekly Keys`
   - Overlay für die 8 höchsten Wochenläufe
   - zeigt Weekly-Vault-Loot direkt in derselben Anzeige
-  - erfasst neben M+ auch erkannte heroische und mythische Non-Key-Runs
+  - erfasst ergänzend erkannte heroische und mythische Non-Key-Runs, sofern Blizzard-Daten dafür vorliegen
 
 ### Streamer Tools
 
@@ -164,7 +162,7 @@ Beispiel:
 - `Pet Stuff`
   - Auto Respawn Pet für Begleiter-Pets außerhalb des Kampfes
 
-## Modulerweiterungen bis 0.23.0
+## Modulerweiterungen bis 0.24.0
 
 - `Checkliste`
   - eigene Fortschrittsseite mit Daily-, Weekly- und Watch-Kategorien
@@ -179,17 +177,17 @@ Beispiel:
 - `Logging`
   - vollwertige Verkaufs-, Reparatur-, Einnahmen- und Ausgabenprotokolle
 - `Tooltip-Itemlevel`
-  - neues Komfort-Modul für das direkte Anzeigen fremder Itemlevel im Tooltip
+  - Komfort-Modul für das direkte Anzeigen fremder Itemlevel im Tooltip
 - `Stats` und `Weekly Keys`
-  - als eigenständige Overlay-Module mit Position, Scale und Transparenz
+  - eigenständige Overlay-Module mit Position, Skalierung und Transparenz
 - `Markerleiste`
-  - neues Modul für Zielmarker und Bodenmarker mit transparenter Symbolleiste
+  - Modul für Zielmarker und Bodenmarker mit transparenter Symbolleiste
   - eigene Overlay-Steuerung für Anzeigen, Fixieren, Skalierung und Positions-Reset
 - `Maus-Helfer`
-  - neue Komfortseite für vergrößerten Blizzard-Cursor, Cursor-Kreis und Maus-Trail
+  - Komfortseite für vergrößerten Blizzard-Cursor, Cursor-Kreis und Maus-Trail
   - Kreis- und Trail-Stile lassen sich direkt im Addon konfigurieren
 - `Boss Guides`
-  - neues Modul für Boss-Taktiken mit Overlay-Button und Guide-Fenster pro unterstützter Instanz
+  - Modul für Boss-Taktiken mit Overlay-Button und Guide-Fenster pro unterstützter Instanz
   - Instanz-Auswahl, Boss-Tabs und Rollenlegende direkt im Fenster enthalten
 - `Easy LFG`
   - kompaktes Bewerber-Overlay für eigene Gruppenlistungen
@@ -199,7 +197,15 @@ Beispiel:
   - transparenter Gruppenplaner mit eigenem Timerblock und erweiterten Overlay-Steuerungen
   - Sloteditor mit Klassen- und Spec-Auswahl sowie Zielvorschlägen für verschiedene Inhalte
 - `Angelhilfe`
-  - neues Komfort-Modul für einen vereinfachten Ein-Tasten-Ablauf beim Angeln
+  - Komfort-Modul für einen vereinfachten Ein-Tasten-Ablauf beim Angeln
+- `Jagd-Fortschritt`
+  - neues Komfort-Modul für Midnight-Jagden mit direkter Anzeige am Blizzard-Symbol
+  - stellt den Hunt-Fortschritt als `Phase 1/4` bis `Boss bereit` dar
+- `Weekly Keys`
+  - zählt für die Weekly-Gear-Anzeige nur noch abgeschlossene M+-Runs
+  - verhindert doppelte Einträge, wenn ein Key zuvor als normaler mythischer Dungeon erkannt wurde
+- `UI und Komfortseiten`
+  - optische Korrekturen für `Gruppensuche`, `Gruppenplaner`, `Angelhilfe` und `Maus-Helfer`
 - `UI und Navigation`
   - breitere Sidebar
   - neue Hauptkategorien im Tree
@@ -224,7 +230,7 @@ Beispiel:
 
 1. Release-ZIP herunterladen oder Repository klonen.
 2. Den Ordner `BeavisQoL` nach `World of Warcraft/_retail_/Interface/AddOns/` kopieren.
-3. Darauf achten, dass der finale Ordner wirklich `BeavisQoL` heisst.
+3. Darauf achten, dass der finale Ordner wirklich `BeavisQoL` heißt.
 4. Spiel starten oder `/reload` nutzen.
 
 Beispielpfad:
@@ -235,7 +241,7 @@ World of Warcraft\_retail_\Interface\AddOns\BeavisQoL
 
 ## Für Einsteiger im Code
 
-Der Addon-Code ist absichtlich so aufgebaut, dass man ihn besser lesen kann:
+Der Addon-Code ist bewusst so aufgebaut, dass man ihn gut lesen kann:
 
 - `Core.lua`
   - Basis-Startpunkt und Slash-Command
@@ -264,7 +270,7 @@ Wenn du das Addon als Lernprojekt lesen willst, starte am besten in dieser Reihe
 2. `UI.lua`
 3. `Tree.lua`
 4. eine einzelne Seite unter `Pages/`
-5. danach die zugehörigen Unterdateien, z. B. `Pages/Misc/*.lua`
+5. danach die zugehörigen Unterdateien, zum Beispiel `Pages/Misc/*.lua`
 
 ## Feedback und Kontakt
 

@@ -365,6 +365,49 @@ CameraDistanceStandardButton:SetSize(110, 24)
 CameraDistanceStandardButton:SetPoint("LEFT", CameraDistanceMaxButton, "RIGHT", 10, 0)
 CameraDistanceStandardButton:SetText(L("STANDARD"))
 
+-- ========================================
+-- Bereich: Prey Hunt Progress
+-- ========================================
+
+local PreyHuntProgressPanel = CreateFrame("Frame", nil, PageMiscContent)
+PreyHuntProgressPanel:SetPoint("TOPLEFT", CameraDistancePanel, "BOTTOMLEFT", 0, -18)
+PreyHuntProgressPanel:SetPoint("TOPRIGHT", CameraDistancePanel, "BOTTOMRIGHT", 0, -18)
+PreyHuntProgressPanel:SetHeight(115)
+
+local PreyHuntProgressBg = PreyHuntProgressPanel:CreateTexture(nil, "BACKGROUND")
+PreyHuntProgressBg:SetAllPoints()
+PreyHuntProgressBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local PreyHuntProgressBorder = PreyHuntProgressPanel:CreateTexture(nil, "ARTWORK")
+PreyHuntProgressBorder:SetPoint("BOTTOMLEFT", PreyHuntProgressPanel, "BOTTOMLEFT", 0, 0)
+PreyHuntProgressBorder:SetPoint("BOTTOMRIGHT", PreyHuntProgressPanel, "BOTTOMRIGHT", 0, 0)
+PreyHuntProgressBorder:SetHeight(1)
+PreyHuntProgressBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local PreyHuntProgressTitle = PreyHuntProgressPanel:CreateFontString(nil, "OVERLAY")
+PreyHuntProgressTitle:SetPoint("TOPLEFT", PreyHuntProgressPanel, "TOPLEFT", 18, -14)
+PreyHuntProgressTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+PreyHuntProgressTitle:SetTextColor(1, 0.82, 0, 1)
+PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
+
+local PreyHuntProgressCheckbox = CreateFrame("CheckButton", nil, PreyHuntProgressPanel, "UICheckButtonTemplate")
+PreyHuntProgressCheckbox:SetPoint("TOPLEFT", PreyHuntProgressTitle, "BOTTOMLEFT", -4, -12)
+
+local PreyHuntProgressLabel = PreyHuntProgressPanel:CreateFontString(nil, "OVERLAY")
+PreyHuntProgressLabel:SetPoint("LEFT", PreyHuntProgressCheckbox, "RIGHT", 6, 0)
+PreyHuntProgressLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+PreyHuntProgressLabel:SetTextColor(1, 1, 1, 1)
+PreyHuntProgressLabel:SetText(L("ACTIVE"))
+
+local PreyHuntProgressHint = PreyHuntProgressPanel:CreateFontString(nil, "OVERLAY")
+PreyHuntProgressHint:SetPoint("TOPLEFT", PreyHuntProgressCheckbox, "BOTTOMLEFT", 34, -2)
+PreyHuntProgressHint:SetPoint("RIGHT", PreyHuntProgressPanel, "RIGHT", -18, 0)
+PreyHuntProgressHint:SetJustifyH("LEFT")
+PreyHuntProgressHint:SetJustifyV("TOP")
+PreyHuntProgressHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+PreyHuntProgressHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
+
 local SectionPanels = {
     AutoSell = AutoSellPanel,
     AutoRepair = AutoRepairPanel,
@@ -374,6 +417,7 @@ local SectionPanels = {
     -- Karte gezielt ansteuern und sichtbar machen kann.
     TooltipItemLevel = TooltipItemLevelPanel,
     CameraDistance = CameraDistancePanel,
+    PreyHuntProgress = PreyHuntProgressPanel,
 }
 
 -- ========================================
@@ -388,6 +432,7 @@ function PageMisc:RefreshState()
     local easyDeleteEnabled = false
     local fastLootEnabled = false
     local tooltipItemLevelEnabled = false
+    local preyHuntProgressEnabled = false
     -- Für die Kamera brauchen wir nicht nur "an/aus", sondern sowohl den
     -- groben Modus als auch den fertigen Text für die Anzeige.
     local cameraDistanceMode = "unknown"
@@ -417,6 +462,10 @@ function PageMisc:RefreshState()
     -- SavedVariables immer denselben Wahrheitswert anzeigen.
     if Misc.IsTooltipItemLevelEnabled then
         tooltipItemLevelEnabled = Misc.IsTooltipItemLevelEnabled()
+    end
+
+    if Misc.IsPreyHuntProgressEnabled then
+        preyHuntProgressEnabled = Misc.IsPreyHuntProgressEnabled()
     end
 
     if Misc.GetCurrentCameraDistanceMode then
@@ -454,6 +503,9 @@ function PageMisc:RefreshState()
     CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
     CameraDistanceMaxButton:SetText(L("CAMERA_DISTANCE_MAX"))
     CameraDistanceStandardButton:SetText(L("STANDARD"))
+    PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
+    PreyHuntProgressLabel:SetText(L("ACTIVE"))
+    PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
 
     AutoSellCheckbox:SetChecked(autoSellEnabled)
     AutoRepairCheckbox:SetChecked(autoRepairEnabled)
@@ -461,6 +513,7 @@ function PageMisc:RefreshState()
     EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
     FastLootCheckbox:SetChecked(fastLootEnabled)
     TooltipItemLevelCheckbox:SetChecked(tooltipItemLevelEnabled)
+    PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
     -- Die Kamera-Karte zeigt bewusst den echten Status aus dem Modul an,
     -- nicht bloß den letzten Button-Klick.
     CameraDistanceStatusValue:SetText(cameraDistanceStatusText)
@@ -498,6 +551,7 @@ function PageMisc:UpdateScrollLayout()
         -- Die neue Kamera-Karte gehört fest in die Gesamthöhe,
         -- damit der Scrollbereich unten nicht zu früh endet.
         + 18 + CameraDistancePanel:GetHeight()
+        + 18 + PreyHuntProgressPanel:GetHeight()
         + 20
 
     PageMiscContent:SetWidth(contentWidth)
@@ -603,6 +657,14 @@ TooltipItemLevelCheckbox:SetScript("OnClick", function(self)
     -- an das Modul weiter. Danach wird die komplette Seite neu synchronisiert.
     if Misc.SetTooltipItemLevelEnabled then
         Misc.SetTooltipItemLevelEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+PreyHuntProgressCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetPreyHuntProgressEnabled then
+        Misc.SetPreyHuntProgressEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

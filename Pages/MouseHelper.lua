@@ -1056,7 +1056,7 @@ TrailStyleDropdown:SetPoint("TOPLEFT", TrailStyleLabel, "BOTTOMLEFT", -18, -2)
 UIDropDownMenu_SetWidth(TrailStyleDropdown, 170)
 
 local TrailColorButton = CreateColorButton(TrailPanel)
-TrailColorButton:SetPoint("TOPLEFT", TrailStyleDropdown, "BOTTOMLEFT", -10, -8)
+TrailColorButton:SetPoint("TOPLEFT", TrailStyleDropdown, "BOTTOMLEFT", 18, -8)
 
 local function SetButtonSwatchColor(button, color)
     button.Swatch:SetVertexColor(color.r, color.g, color.b, color.a)

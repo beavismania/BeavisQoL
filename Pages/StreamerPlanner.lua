@@ -181,6 +181,8 @@ local RAID_GROUP_ROW_SPACING = 16
 local RAID_GROUP_TITLE_GAP = 6
 
 local PageStreamerPlanner
+local PageScrollFrame
+local PageContentFrame
 local OverlayFrame
 local OverlayTitle
 local OverlayDestinationButton
@@ -1933,9 +1935,18 @@ PageStreamerPlanner = CreateFrame("Frame", nil, Content)
 PageStreamerPlanner:SetAllPoints()
 PageStreamerPlanner:Hide()
 
-local IntroPanel = CreateFrame("Frame", nil, PageStreamerPlanner)
-IntroPanel:SetPoint("TOPLEFT", PageStreamerPlanner, "TOPLEFT", 20, -20)
-IntroPanel:SetPoint("TOPRIGHT", PageStreamerPlanner, "TOPRIGHT", -20, -20)
+PageScrollFrame = CreateFrame("ScrollFrame", nil, PageStreamerPlanner, "UIPanelScrollFrameTemplate")
+PageScrollFrame:SetPoint("TOPLEFT", PageStreamerPlanner, "TOPLEFT", 0, 0)
+PageScrollFrame:SetPoint("BOTTOMRIGHT", PageStreamerPlanner, "BOTTOMRIGHT", -28, 0)
+PageScrollFrame:EnableMouseWheel(true)
+
+PageContentFrame = CreateFrame("Frame", nil, PageScrollFrame)
+PageContentFrame:SetSize(1, 1)
+PageScrollFrame:SetScrollChild(PageContentFrame)
+
+local IntroPanel = CreateFrame("Frame", nil, PageContentFrame)
+IntroPanel:SetPoint("TOPLEFT", PageContentFrame, "TOPLEFT", 20, -20)
+IntroPanel:SetPoint("TOPRIGHT", PageContentFrame, "TOPRIGHT", -20, -20)
 IntroPanel:SetHeight(132)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
@@ -1969,7 +1980,7 @@ UsageHint:SetJustifyV("TOP")
 UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 UsageHint:SetTextColor(0.84, 0.84, 0.86, 1)
 
-local PreviewPanel = CreateFrame("Frame", nil, PageStreamerPlanner)
+local PreviewPanel = CreateFrame("Frame", nil, PageContentFrame)
 PreviewPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 PreviewPanel:SetSize(430, 424)
 
@@ -2006,9 +2017,10 @@ PreviewRaidContainer:SetPoint("TOPLEFT", PreviewHint, "BOTTOMLEFT", 0, -18)
 PreviewRaidContainer:SetSize(372, 338)
 CreateRaidLayout(PreviewRaidContainer, PreviewRaidButtons, 178, 24)
 
-local SettingsPanel = CreateFrame("Frame", nil, PageStreamerPlanner)
+local SettingsPanel = CreateFrame("Frame", nil, PageContentFrame)
 SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "TOPRIGHT", 18, 0)
-SettingsPanel:SetPoint("BOTTOMRIGHT", PageStreamerPlanner, "BOTTOMRIGHT", -20, 0)
+SettingsPanel:SetPoint("TOPRIGHT", PageContentFrame, "TOPRIGHT", -20, 0)
+SettingsPanel:SetHeight(PreviewPanel:GetHeight())
 
 local SettingsPanelBg = SettingsPanel:CreateTexture(nil, "BACKGROUND")
 SettingsPanelBg:SetAllPoints()
@@ -2141,7 +2153,7 @@ end)
 SettingsPanel.ResetPositionButton:SetPoint("TOPLEFT", SettingsPanel.TimerDurationHint, "BOTTOMLEFT", 0, -18)
 
 SettingsPanel.ResetPositionHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
-SettingsPanel.ResetPositionHint:SetPoint("TOPLEFT", SettingsPanel.ResetPositionButton, "BOTTOMLEFT", 2, -8)
+SettingsPanel.ResetPositionHint:SetPoint("TOPLEFT", SettingsPanel.ResetPositionButton, "BOTTOMLEFT", 0, -8)
 SettingsPanel.ResetPositionHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ResetPositionHint:SetJustifyH("LEFT")
 SettingsPanel.ResetPositionHint:SetJustifyV("TOP")
@@ -2151,10 +2163,10 @@ SettingsPanel.ResetPositionHint:SetTextColor(0.74, 0.74, 0.74, 1)
 SettingsPanel.ClearLayoutButton = CreateActionButton(SettingsPanel, 158, "", function()
     StreamerPlannerModule.ClearCurrentLayout()
 end)
-SettingsPanel.ClearLayoutButton:SetPoint("TOPLEFT", SettingsPanel.ResetPositionHint, "BOTTOMLEFT", -2, -18)
+SettingsPanel.ClearLayoutButton:SetPoint("TOPLEFT", SettingsPanel.ResetPositionHint, "BOTTOMLEFT", 0, -18)
 
 SettingsPanel.ClearLayoutHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
-SettingsPanel.ClearLayoutHint:SetPoint("TOPLEFT", SettingsPanel.ClearLayoutButton, "BOTTOMLEFT", 2, -8)
+SettingsPanel.ClearLayoutHint:SetPoint("TOPLEFT", SettingsPanel.ClearLayoutButton, "BOTTOMLEFT", 0, -8)
 SettingsPanel.ClearLayoutHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ClearLayoutHint:SetJustifyH("LEFT")
 SettingsPanel.ClearLayoutHint:SetJustifyV("TOP")
@@ -2164,10 +2176,10 @@ SettingsPanel.ClearLayoutHint:SetTextColor(0.74, 0.74, 0.74, 1)
 SettingsPanel.ClearAllButton = CreateActionButton(SettingsPanel, 158, "", function()
     StreamerPlannerModule.ClearAllLayouts()
 end)
-SettingsPanel.ClearAllButton:SetPoint("TOPLEFT", SettingsPanel.ClearLayoutHint, "BOTTOMLEFT", -2, -18)
+SettingsPanel.ClearAllButton:SetPoint("TOPLEFT", SettingsPanel.ClearLayoutHint, "BOTTOMLEFT", 0, -18)
 
 SettingsPanel.ClearAllHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
-SettingsPanel.ClearAllHint:SetPoint("TOPLEFT", SettingsPanel.ClearAllButton, "BOTTOMLEFT", 2, -8)
+SettingsPanel.ClearAllHint:SetPoint("TOPLEFT", SettingsPanel.ClearAllButton, "BOTTOMLEFT", 0, -8)
 SettingsPanel.ClearAllHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ClearAllHint:SetJustifyH("LEFT")
 SettingsPanel.ClearAllHint:SetJustifyV("TOP")
@@ -2743,10 +2755,59 @@ function PageStreamerPlanner:RefreshState()
     RefreshLayoutVisibility()
     RefreshTimerDisplay()
     StreamerPlannerModule.RefreshOverlayWindow()
+    self:UpdateScrollLayout()
 end
+
+function PageStreamerPlanner:UpdateScrollLayout()
+    local contentWidth = math.max(1, PageScrollFrame:GetWidth())
+    local settingsHeight = PreviewPanel:GetHeight()
+
+    PageContentFrame:SetWidth(contentWidth)
+
+    if SettingsPanel
+        and SettingsPanel.EditHint
+        and SettingsPanel:GetTop()
+        and SettingsPanel.EditHint:GetBottom()
+    then
+        settingsHeight = math.max(
+            settingsHeight,
+            math.ceil((SettingsPanel:GetTop() - SettingsPanel.EditHint:GetBottom()) + 24)
+        )
+    end
+
+    SettingsPanel:SetHeight(settingsHeight)
+
+    local contentHeight = 20
+        + IntroPanel:GetHeight()
+        + 18 + math.max(PreviewPanel:GetHeight(), settingsHeight)
+        + 20
+
+    PageContentFrame:SetHeight(contentHeight)
+end
+
+PageScrollFrame:SetScript("OnSizeChanged", function()
+    PageStreamerPlanner:UpdateScrollLayout()
+end)
+
+PageScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageContentFrame:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
 
 PageStreamerPlanner:SetScript("OnShow", function()
     PageStreamerPlanner:RefreshState()
+    PageStreamerPlanner:UpdateScrollLayout()
+    PageScrollFrame:SetVerticalScroll(0)
 end)
 
 BeavisQoL.UpdateStreamerPlanner = function()
@@ -2758,5 +2819,6 @@ BeavisQoL.UpdateStreamerPlanner = function()
 end
 
 PageStreamerPlanner:RefreshState()
+PageStreamerPlanner:UpdateScrollLayout()
 
 BeavisQoL.Pages.StreamerPlanner = PageStreamerPlanner
