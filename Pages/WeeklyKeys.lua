@@ -69,6 +69,7 @@ local trackedDungeonContext = {
     completionLogged = false,
     isActive = false,
 }
+local recentChallengeModeActivityAt = 0
 
 local PreviewCard
 local PreviewBackground
@@ -125,6 +126,52 @@ local function GetCurrentWeekKey()
     return tonumber(date("%Y%W", now)) or now
 end
 
+local function IsKeystoneDifficulty(difficultyID, difficultyName)
+    if (tonumber(difficultyID) or 0) == 8 then
+        return true
+    end
+
+    local normalizedDifficultyName = string.lower(tostring(difficultyName or ""))
+    if normalizedDifficultyName ~= "" then
+        if string.find(normalizedDifficultyName, "keystone", 1, true)
+            or string.find(normalizedDifficultyName, "schluessel", 1, true)
+            or string.find(normalizedDifficultyName, "challenge", 1, true)
+        then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function IsCurrentChallengeModeDungeon()
+    if not GetInstanceInfo then
+        return false
+    end
+
+    local _, instanceType, difficultyID, difficultyName = GetInstanceInfo()
+    if instanceType ~= "party" then
+        return false
+    end
+
+    if IsKeystoneDifficulty(difficultyID, difficultyName) then
+        return true
+    end
+
+    return C_ChallengeMode
+        and C_ChallengeMode.IsChallengeModeActive
+        and C_ChallengeMode.IsChallengeModeActive() == true
+end
+
+local function MarkChallengeModeActivityIfNeeded()
+    if IsCurrentChallengeModeDungeon() then
+        recentChallengeModeActivityAt = GetTimestamp()
+        return true
+    end
+
+    return false
+end
+
 local function GetWeeklyKeysCharacterData()
     BeavisQoLCharDB = BeavisQoLCharDB or {}
     BeavisQoLCharDB.weeklyKeys = BeavisQoLCharDB.weeklyKeys or {}
@@ -166,7 +213,7 @@ local function GetNonKeystoneDifficultyCategory(difficultyID, difficultyName)
     local heroicDifficultyID = DifficultyUtil and DifficultyUtil.ID and DifficultyUtil.ID.DungeonHeroic or 2
     local mythicDifficultyID = DifficultyUtil and DifficultyUtil.ID and DifficultyUtil.ID.DungeonMythic or 23
 
-    if numericDifficultyID == 8 then
+    if IsKeystoneDifficulty(difficultyID, difficultyName) then
         return nil
     end
 
@@ -180,13 +227,6 @@ local function GetNonKeystoneDifficultyCategory(difficultyID, difficultyName)
 
     local normalizedDifficultyName = string.lower(tostring(difficultyName or ""))
     if normalizedDifficultyName ~= "" then
-        if string.find(normalizedDifficultyName, "keystone", 1, true)
-            or string.find(normalizedDifficultyName, "schluessel", 1, true)
-            or string.find(normalizedDifficultyName, "challenge", 1, true)
-        then
-            return nil
-        end
-
         if string.find(normalizedDifficultyName, "hero", 1, true) or string.find(normalizedDifficultyName, "hc", 1, true) then
             return "heroic", L("WEEKLY_KEYS_HEROIC")
         end
@@ -244,6 +284,15 @@ local function UpdateTrackedDungeonContext()
         if trackedDungeonContext.key then
             trackedDungeonContext.lastSeenAt = now
             trackedDungeonContext.isActive = false
+
+            -- Sobald ein Key in diesem Instanzkontext erkannt wurde, darf ein
+            -- vorher gesehener Mythic-0-Kontext nicht mehr als Non-Key-Ende
+            -- wiederverwendet werden.
+            if MarkChallengeModeActivityIfNeeded()
+                or (recentChallengeModeActivityAt > 0 and (now - recentChallengeModeActivityAt) <= TRACKED_DUNGEON_CONTEXT_TTL)
+            then
+                trackedDungeonContext.completionLogged = true
+            end
         end
 
         return nil
@@ -285,6 +334,17 @@ local function GetRecentTrackedDungeonContext()
 end
 
 local function TrackCurrentDungeonCompletion()
+    local now = GetTimestamp()
+    if MarkChallengeModeActivityIfNeeded()
+        or (recentChallengeModeActivityAt > 0 and (now - recentChallengeModeActivityAt) <= TRACKED_DUNGEON_CONTEXT_TTL)
+    then
+        if trackedDungeonContext.key then
+            trackedDungeonContext.completionLogged = true
+        end
+
+        return false
+    end
+
     local context = GetRecentTrackedDungeonContext()
     if not context or context.completionLogged then
         return false
@@ -311,7 +371,7 @@ local function TrackCurrentDungeonCompletion()
         difficultyID = context.difficultyID,
         difficultyCategory = context.difficultyCategory,
         difficultyLabel = context.difficultyLabel,
-        timestamp = GetTimestamp(),
+        timestamp = now,
         dedupeKey = dedupeKey,
     }
 
@@ -463,15 +523,20 @@ local function GetWeeklyDungeonRunCounts(runHistoryCount)
     local heroicRuns = 0
     local mythicRuns = 0
     local mythicPlusRuns = tonumber(runHistoryCount) or 0
+    local hasNonKeystoneRunCounts = false
 
     if C_WeeklyRewards and C_WeeklyRewards.GetNumCompletedDungeonRuns then
         local heroicCount, mythicCount, mythicPlusCount = C_WeeklyRewards.GetNumCompletedDungeonRuns()
+        if heroicCount ~= nil or mythicCount ~= nil then
+            hasNonKeystoneRunCounts = true
+        end
+
         heroicRuns = math.max(0, tonumber(heroicCount) or 0)
         mythicRuns = math.max(0, tonumber(mythicCount) or 0)
         mythicPlusRuns = math.max(mythicPlusRuns, tonumber(mythicPlusCount) or 0)
     end
 
-    return heroicRuns, mythicRuns, mythicPlusRuns
+    return heroicRuns, mythicRuns, mythicPlusRuns, hasNonKeystoneRunCounts
 end
 
 local function GetSavedInstanceDungeonRuns()
@@ -844,7 +909,7 @@ local function BuildDisplayRows()
     -- - welcher Loot an Slot 1 / 4 / 8 steht
     local slotLookup = GetDungeonSlotData()
     local runHistory = GetWeeklyRunHistory()
-    local heroicRunCount, mythicRunCount, mythicPlusRunCount = GetWeeklyDungeonRunCounts(#runHistory)
+    local heroicRunCount, mythicRunCount, mythicPlusRunCount, hasNonKeystoneRunCounts = GetWeeklyDungeonRunCounts(#runHistory)
     local trackedNonKeystoneRuns = GetTrackedNonKeystoneDungeonRuns()
     local completedEntries = {}
     local trackedHeroicRuns = 0
@@ -868,12 +933,12 @@ local function BuildDisplayRows()
         local shouldAddEntry = false
 
         if entry.difficultyCategory == "mythic" then
-            if mythicRunCount <= 0 or trackedMythicRuns < mythicRunCount then
+            if not hasNonKeystoneRunCounts or trackedMythicRuns < mythicRunCount then
                 trackedMythicRuns = trackedMythicRuns + 1
                 shouldAddEntry = true
             end
         elseif entry.difficultyCategory == "heroic" then
-            if heroicRunCount <= 0 or trackedHeroicRuns < heroicRunCount then
+            if not hasNonKeystoneRunCounts or trackedHeroicRuns < heroicRunCount then
                 trackedHeroicRuns = trackedHeroicRuns + 1
                 shouldAddEntry = true
             end
@@ -890,24 +955,26 @@ local function BuildDisplayRows()
         end
     end
 
-    for index = trackedMythicRuns + 1, mythicRunCount do
-        completedEntries[#completedEntries + 1] = {
-            priority = 200000,
-            timestamp = 0,
-            status = "v",
-            statusColor = { 0.28, 0.92, 0.38 },
-            runText = GetNonKeystoneRunText("mythic"),
-        }
-    end
+    if hasNonKeystoneRunCounts then
+        for index = trackedMythicRuns + 1, mythicRunCount do
+            completedEntries[#completedEntries + 1] = {
+                priority = 200000,
+                timestamp = 0,
+                status = "v",
+                statusColor = { 0.28, 0.92, 0.38 },
+                runText = GetNonKeystoneRunText("mythic"),
+            }
+        end
 
-    for index = trackedHeroicRuns + 1, heroicRunCount do
-        completedEntries[#completedEntries + 1] = {
-            priority = 100000,
-            timestamp = 0,
-            status = "v",
-            statusColor = { 0.28, 0.92, 0.38 },
-            runText = GetNonKeystoneRunText("heroic"),
-        }
+        for index = trackedHeroicRuns + 1, heroicRunCount do
+            completedEntries[#completedEntries + 1] = {
+                priority = 100000,
+                timestamp = 0,
+                status = "v",
+                statusColor = { 0.28, 0.92, 0.38 },
+                runText = GetNonKeystoneRunText("heroic"),
+            }
+        end
     end
 
     table.sort(completedEntries, function(a, b)
@@ -926,8 +993,8 @@ local function BuildDisplayRows()
         return (a.runText or "") < (b.runText or "")
     end)
 
-    local nonKeystoneRunCount = heroicRunCount + mythicRunCount
-    local totalDungeonCount = mythicPlusRunCount + (nonKeystoneRunCount > 0 and nonKeystoneRunCount or #trackedNonKeystoneRuns)
+    local nonKeystoneRunCount = hasNonKeystoneRunCounts and (heroicRunCount + mythicRunCount) or #trackedNonKeystoneRuns
+    local totalDungeonCount = mythicPlusRunCount + nonKeystoneRunCount
     local trackedDungeonCount = math.min(math.max(totalDungeonCount, GetTrackedDungeonCount(slotLookup, #runHistory)), 8)
 
     for index = 1, 8 do
@@ -1490,6 +1557,8 @@ WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_DISABLED")
 WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
 WeeklyKeysEvents:SetScript("OnEvent", function(_, eventName)
     -- Alle relevanten Weekly-Vault- und Mythic+-Aenderungen laufen hier zusammen.
+    MarkChallengeModeActivityIfNeeded()
+
     if eventName == "PLAYER_ENTERING_WORLD"
         or eventName == "PLAYER_LOGIN"
         or eventName == "ZONE_CHANGED_NEW_AREA"
@@ -1499,6 +1568,10 @@ WeeklyKeysEvents:SetScript("OnEvent", function(_, eventName)
         if eventName == "PLAYER_ENTERING_WORLD" or eventName == "PLAYER_LOGIN" then
             RequestSavedInstanceData()
         end
+    elseif eventName == "CHALLENGE_MODE_COMPLETED" then
+        recentChallengeModeActivityAt = GetTimestamp()
+        trackedDungeonContext.completionLogged = true
+        RequestSavedInstanceData()
     elseif eventName == "SCENARIO_COMPLETED" or eventName == "LFG_COMPLETION_REWARD" then
         TrackCurrentDungeonCompletion()
         RequestSavedInstanceData()

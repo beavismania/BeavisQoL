@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.24.0 - 2026-03-26
+
+### Neu
+
+- neues Komfort-Modul `Jagd-Fortschritt` ergänzt
+- aktive Midnight-Jagden zeigen jetzt eine Stufenanzeige direkt am Blizzard-Jagd-Symbol
+
+### Verbessert
+
+- `Jagd-Fortschritt` verwendet jetzt die Anzeige `Phase 1/4` bis `Boss bereit` statt uneindeutiger Prozentwerte
+- `Jagd-Fortschritt` initialisiert sich nach Login, Reload und Weltwechsel robuster neu
+- `Jagd-Fortschritt` übernimmt die Frame-Ebene des Blizzard-Widgets, damit die Anzeige nicht dauerhaft vor Karte und großen Fenstern liegt
+
+### Behoben
+
+- `Weekly Keys` zählt für die Weekly-Gear-Anzeige nur noch abgeschlossene M+-Runs
+- `Weekly Keys` verhindert doppelte Einträge, wenn ein Key zusätzlich als normaler mythischer Dungeon erkannt wurde
+- `Angelhilfe`-Soundregler nutzt wieder einen sauberen Bereich und lässt sich korrekt ziehen
+- `Maus-Helfer` richtet den unteren Farbbutton jetzt sauber wie den oberen aus
+- `Gruppensuche` zeigt die `Easy LFG`-Slider und den unteren Bedienbereich wieder ohne Überlappungen
+- `Gruppenplaner` schneidet den unteren Bereich rechts nicht mehr ab
+
 ## 0.23.0 - 2026-03-24
 
 ### Neu

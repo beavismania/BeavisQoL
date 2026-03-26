@@ -484,6 +484,11 @@ local CameraDistanceEntry = RegisterModuleEntry(ComfortSection, "CAMERA_DISTANCE
     searchTextKeys = { "CAMERA_DISTANCE_HINT", "CAMERA_DISTANCE_MAX" },
     searchAliases = "camera zoom distance max",
 })
+local PreyHuntProgressEntry = RegisterModuleEntry(ComfortSection, "PREY_HUNT_PROGRESS", "Misc", {
+    miscSection = "PreyHuntProgress",
+    searchTextKeys = { "PREY_HUNT_PROGRESS_HINT" },
+    searchAliases = "midnight prey hunt jagd progress percent prozent symbol",
+})
 local FishingEntry = RegisterModuleEntry(ComfortSection, "FISHING_HELPER", "Fishing", {
     searchTextKeys = {
         "FISHING_HELPER_DESC",
