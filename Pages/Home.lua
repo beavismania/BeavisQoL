@@ -3,8 +3,9 @@ local ADDON_NAME, BeavisQoL = ...
 local Content = BeavisQoL.Content
 
 local L = BeavisQoL.L
-local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
-local name = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or L("UNKNOWN")
+local metadata = BeavisQoL.Metadata or {}
+local version = metadata.version or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
+local name = metadata.title or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or L("UNKNOWN")
 local TWITCH_URL = "https://www.twitch.tv/beavismania"
 local WEBSITE_URL = "https://www.beavismania.de"
 
@@ -119,12 +120,12 @@ local function CreateActionCard(parent, iconPath, titleText, bodyText, footerTex
     ApplyPanelSurface(surface, "card", false)
 
     local icon = button:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(38, 38)
+    icon:SetSize(56, 56)
     icon:SetPoint("TOPLEFT", button, "TOPLEFT", 18, -18)
     icon:SetTexture(iconPath)
 
     local title = button:CreateFontString(nil, "OVERLAY")
-    title:SetPoint("LEFT", icon, "RIGHT", 12, 5)
+    title:SetPoint("LEFT", icon, "RIGHT", 16, 5)
     title:SetPoint("RIGHT", button, "RIGHT", -18, 0)
     title:SetJustifyH("LEFT")
     title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
@@ -171,12 +172,30 @@ local function CreateActionCard(parent, iconPath, titleText, bodyText, footerTex
     return button
 end
 
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
 local PageHome = CreateFrame("Frame", nil, Content)
 PageHome:SetAllPoints()
 
-local IntroPanel = CreateFrame("Frame", nil, PageHome)
-IntroPanel:SetPoint("TOPLEFT", PageHome, "TOPLEFT", 22, -22)
-IntroPanel:SetPoint("TOPRIGHT", PageHome, "TOPRIGHT", -22, -22)
+local PageHomeScrollFrame = CreateFrame("ScrollFrame", nil, PageHome, "UIPanelScrollFrameTemplate")
+PageHomeScrollFrame:SetPoint("TOPLEFT", PageHome, "TOPLEFT", 0, 0)
+PageHomeScrollFrame:SetPoint("BOTTOMRIGHT", PageHome, "BOTTOMRIGHT", -28, 0)
+PageHomeScrollFrame:EnableMouseWheel(true)
+
+local PageHomeContent = CreateFrame("Frame", nil, PageHomeScrollFrame)
+PageHomeContent:SetSize(1, 1)
+PageHomeScrollFrame:SetScrollChild(PageHomeContent)
+
+local IntroPanel = CreateFrame("Frame", nil, PageHomeContent)
+IntroPanel:SetPoint("TOPLEFT", PageHomeContent, "TOPLEFT", 22, -22)
+IntroPanel:SetPoint("TOPRIGHT", PageHomeContent, "TOPRIGHT", -22, -22)
 IntroPanel:SetHeight(220)
 
 local IntroSurface = CreatePanelSurface(IntroPanel)
@@ -190,27 +209,33 @@ IntroEyebrow:SetText(L("HOME"))
 
 local SpotlightPanel = CreateFrame("Frame", nil, IntroPanel)
 SpotlightPanel:SetPoint("TOPRIGHT", IntroPanel, "TOPRIGHT", -20, -28)
-SpotlightPanel:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", -20, 18)
 SpotlightPanel:SetWidth(292)
+SpotlightPanel:SetHeight(174)
 
 local SpotlightSurface = CreatePanelSurface(SpotlightPanel)
 ApplyPanelSurface(SpotlightSurface, "card", false)
 
+local SpotlightHeader = CreateFrame("Frame", nil, SpotlightPanel)
+SpotlightHeader:SetPoint("TOPLEFT", SpotlightPanel, "TOPLEFT", 18, -16)
+SpotlightHeader:SetPoint("TOPRIGHT", SpotlightPanel, "TOPRIGHT", -18, -16)
+SpotlightHeader:SetHeight(44)
+
 local SpotlightLogo = SpotlightPanel:CreateTexture(nil, "ARTWORK")
-SpotlightLogo:SetSize(52, 52)
-SpotlightLogo:SetPoint("TOPLEFT", SpotlightPanel, "TOPLEFT", 18, -16)
+SpotlightLogo:SetSize(44, 44)
+SpotlightLogo:SetPoint("TOPLEFT", SpotlightHeader, "TOPLEFT", 0, 0)
 SpotlightLogo:SetTexture("Interface\\AddOns\\BeavisQoL\\Media\\logo.tga")
 
 local SpotlightTitle = SpotlightPanel:CreateFontString(nil, "OVERLAY")
-SpotlightTitle:SetPoint("LEFT", SpotlightLogo, "RIGHT", 12, 10)
-SpotlightTitle:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -18, 0)
+SpotlightTitle:SetPoint("LEFT", SpotlightLogo, "RIGHT", 14, 0)
+SpotlightTitle:SetPoint("RIGHT", SpotlightHeader, "RIGHT", 0, 0)
+SpotlightTitle:SetPoint("CENTER", SpotlightLogo, "CENTER", 0, 0)
 SpotlightTitle:SetJustifyH("LEFT")
 SpotlightTitle:SetFont("Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
 SpotlightTitle:SetTextColor(1, 0.82, 0, 1)
 SpotlightTitle:SetText(L("PROJECT_STATUS"))
 
 local SpotlightVersion = SpotlightPanel:CreateFontString(nil, "OVERLAY")
-SpotlightVersion:SetPoint("TOPLEFT", SpotlightLogo, "BOTTOMLEFT", 0, -14)
+SpotlightVersion:SetPoint("TOPLEFT", SpotlightTitle, "BOTTOMLEFT", 0, -12)
 SpotlightVersion:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -18, 0)
 SpotlightVersion:SetJustifyH("LEFT")
 SpotlightVersion:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
@@ -223,7 +248,7 @@ SpotlightState:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -18, 0)
 SpotlightState:SetJustifyH("LEFT")
 SpotlightState:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 SpotlightState:SetTextColor(1, 1, 1, 1)
-SpotlightState:SetText(L("STATUS_ALPHA"))
+SpotlightState:SetText(BeavisQoL.GetReleaseStatusText and BeavisQoL.GetReleaseStatusText() or L("STATUS_ALPHA"))
 
 local SpotlightFocus = SpotlightPanel:CreateFontString(nil, "OVERLAY")
 SpotlightFocus:SetPoint("TOPLEFT", SpotlightState, "BOTTOMLEFT", 0, -10)
@@ -232,10 +257,11 @@ SpotlightFocus:SetJustifyH("LEFT")
 SpotlightFocus:SetJustifyV("TOP")
 SpotlightFocus:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 SpotlightFocus:SetTextColor(0.93, 0.93, 0.95, 1)
-SpotlightFocus:SetText(L("STATUS_FOCUS"))
+SpotlightFocus:SetText("")
+SpotlightFocus:Hide()
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
-IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -8)
+IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -14)
 IntroTitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -28, 0)
 IntroTitle:SetJustifyH("LEFT")
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
@@ -259,9 +285,9 @@ IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(0.96, 0.96, 0.96, 1)
 IntroText:SetText(L("WELCOME_BODY"))
 
-local HighlightsRow = CreateFrame("Frame", nil, PageHome)
+local HighlightsRow = CreateFrame("Frame", nil, PageHomeContent)
 HighlightsRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
-HighlightsRow:SetPoint("RIGHT", PageHome, "RIGHT", -22, 0)
+HighlightsRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -22, 0)
 HighlightsRow:SetHeight(162)
 
 local ProgressCard = CreateInfoCard(
@@ -283,11 +309,12 @@ local ComfortCard = CreateInfoCard(
 ComfortCard:SetPoint("TOPRIGHT", HighlightsRow, "TOPRIGHT", 0, 0)
 ComfortCard:SetPoint("BOTTOMRIGHT", HighlightsRow, "BOTTOMRIGHT", 0, 0)
 ComfortCard:SetPoint("LEFT", HighlightsRow, "CENTER", 9, 0)
+HighlightsRow:Hide()
 
-local ActionRow = CreateFrame("Frame", nil, PageHome)
-ActionRow:SetPoint("TOPLEFT", HighlightsRow, "BOTTOMLEFT", 0, -18)
-ActionRow:SetPoint("RIGHT", PageHome, "RIGHT", -22, 0)
-ActionRow:SetHeight(170)
+local ActionRow = CreateFrame("Frame", nil, PageHomeContent)
+ActionRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -10)
+ActionRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -22, 0)
+ActionRow:SetHeight(184)
 
 local TwitchCard = CreateActionCard(
     ActionRow,
@@ -315,21 +342,63 @@ DiscordCard:SetPoint("TOPRIGHT", ActionRow, "TOPRIGHT", 0, 0)
 DiscordCard:SetPoint("BOTTOMRIGHT", ActionRow, "BOTTOMRIGHT", 0, 0)
 DiscordCard:SetPoint("LEFT", ActionRow, "CENTER", 9, 0)
 
-local FooterPanel = CreateFrame("Frame", nil, PageHome)
-FooterPanel:SetPoint("TOPLEFT", ActionRow, "BOTTOMLEFT", 0, -18)
-FooterPanel:SetPoint("TOPRIGHT", PageHome, "TOPRIGHT", -22, 0)
-FooterPanel:SetHeight(64)
+local function LayoutHomePage()
+    local contentWidth = math.max(1, PageHomeScrollFrame:GetWidth())
+    if contentWidth <= 1 then
+        return
+    end
 
-local FooterSurface = CreatePanelSurface(FooterPanel)
-ApplyPanelSurface(FooterSurface, "footer", false)
+    PageHomeContent:SetWidth(contentWidth)
 
-local FooterText = FooterPanel:CreateFontString(nil, "OVERLAY")
-FooterText:SetPoint("LEFT", FooterPanel, "LEFT", 18, 0)
-FooterText:SetPoint("RIGHT", FooterPanel, "RIGHT", -18, 0)
-FooterText:SetJustifyH("LEFT")
-FooterText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-FooterText:SetTextColor(0.9, 0.9, 0.92, 1)
-FooterText:SetText(L("FOOTER_TEXT"))
+    IntroTitle:ClearAllPoints()
+    IntroSubtitle:ClearAllPoints()
+    IntroText:ClearAllPoints()
+    SpotlightPanel:ClearAllPoints()
+
+    IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -14)
+    IntroTitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -22, 0)
+
+    IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -8)
+    IntroSubtitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -22, 0)
+
+    IntroText:SetPoint("TOPLEFT", IntroSubtitle, "BOTTOMLEFT", 0, -16)
+    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -22, 0)
+
+    SpotlightPanel:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -12)
+    SpotlightPanel:SetPoint("RIGHT", IntroPanel, "RIGHT", -20, 0)
+
+    local headerHeight = math.max(40, SpotlightLogo:GetHeight())
+    SpotlightHeader:SetHeight(headerHeight)
+
+    local leftColumnHeight =
+        18
+        + GetTextHeight(IntroEyebrow, 11)
+        + 14
+        + GetTextHeight(IntroTitle, 30)
+        + 8
+        + GetTextHeight(IntroSubtitle, 14)
+        + 16
+        + GetTextHeight(IntroText, 13)
+        + 12
+
+    local spotlightHeight =
+        16
+        + headerHeight
+        + GetTextHeight(SpotlightVersion, 12)
+        + 10
+        + GetTextHeight(SpotlightState, 12)
+        + 18
+
+    SpotlightPanel:SetHeight(math.max(104, math.ceil(spotlightHeight)))
+    IntroPanel:SetHeight(math.max(176, math.ceil(leftColumnHeight + 12 + spotlightHeight + 10)))
+
+    local contentHeight = 22
+        + IntroPanel:GetHeight()
+        + 10 + ActionRow:GetHeight()
+        + 20
+
+    PageHomeContent:SetHeight(contentHeight)
+end
 
 BeavisQoL.UpdateHome = function()
     IntroEyebrow:SetText(L("HOME"))
@@ -338,8 +407,9 @@ BeavisQoL.UpdateHome = function()
     IntroText:SetText(L("WELCOME_BODY"))
     SpotlightTitle:SetText(L("PROJECT_STATUS"))
     SpotlightVersion:SetText(L("VERSION") .. ": " .. version)
-    SpotlightState:SetText(L("STATUS_ALPHA"))
-    SpotlightFocus:SetText(L("STATUS_FOCUS"))
+    SpotlightState:SetText(BeavisQoL.GetReleaseStatusText and BeavisQoL.GetReleaseStatusText() or L("STATUS_ALPHA"))
+    SpotlightFocus:SetText("")
+    SpotlightFocus:Hide()
     ProgressCard.Title:SetText(L("PROGRESS_CARD_TITLE"))
     ProgressCard.Body:SetText(L("PROGRESS_CARD_BODY"))
     ProgressCard.Footer:SetText(L("PROGRESS_CARD_FOOTER"))
@@ -352,7 +422,28 @@ BeavisQoL.UpdateHome = function()
     DiscordCard.Title:SetText(L("DISCORD_TITLE"))
     DiscordCard.Body:SetText(L("DISCORD_BODY"))
     DiscordCard.Footer:SetText(L("DISCORD_FOOTER"))
-    FooterText:SetText(L("FOOTER_TEXT"))
+    LayoutHomePage()
 end
+
+PageHomeScrollFrame:SetScript("OnSizeChanged", LayoutHomePage)
+PageHomeScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageHomeContent:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
+PageHome:SetScript("OnShow", function()
+    LayoutHomePage()
+    PageHomeScrollFrame:SetVerticalScroll(0)
+end)
 
 BeavisQoL.Pages.Home = PageHome

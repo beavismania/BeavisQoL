@@ -1,14 +1,18 @@
 # Beavis Quality of Life
 
-Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in einem gemeinsamen Hauptfenster sammelt.
+Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in einem gemeinsamen Hauptfenster bündelt.
 
 ## Aktueller Stand
 
-- Version: `0.24.1`
-- Release-Datum: `2026-03-26`
-- Schwerpunkt dieser Version:
-  - `Jagd-Fortschritt` zeigt `Phase 1/4` nicht mehr ohne aktive Jagd an
-  - die Widget-Erkennung akzeptiert nur noch echte Blizzard-Prey-Hunt-Widgets
+- Version: `0.27.0`
+- Release-Datum: `2026-04-03`
+- Release-Kanal: `beta`
+- Highlights dieser Version:
+  - neues Komfort-Modul `Flugmeister-Timer` mit Countdown, lernenden Routenzeiten und optionalem Ankunftssound
+  - neues Komfort-Modul `Cutscene Skip`, das bekannte Movies und Cutscenes nach dem ersten Ansehen automatisch überspringt
+  - neues Komfort-Modul `Schlüsselstein-Buttons` mit `Readycheck`, `Timer & GO` und optionalem `Auto Timer`
+  - `Gruppensuche` zeigt jetzt sichtbare Invite-Timer für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen inklusive optionalem Countdown-Sound
+  - `Portal Viewer` als eigenes Fenster im Minimap-Schnellmenü für die aktuellen Midnight-S1-Dungeonportale
 
 ## Download
 
@@ -33,31 +37,28 @@ Das Projekt soll:
 `BeavisQoL` nutzt ein festes `major.minor.patch`-Schema:
 
 - `1.0.0`
-  - Hauptversion für größere Releases, Richtungswechsel oder bewusst große Paketzustände
+  - Hauptversion für größere Releases, Richtungswechsel oder bewusst große Meilensteine
 - `0.1.0`
-  - Featureversion für neue Funktionen oder neue Module
+  - mittlere Zahl für den nächsten Feature-/Modulstand
 - `0.0.1`
-  - Hotfixversion für kleine Fehlerbehebungen ohne neues Modul
+  - hintere Zahl als Hotfix-Zähler für Nachbesserungen an einem bereits veröffentlichten Stand
 
-Regel für künftige Releases:
+Regeln:
 
-- sobald ein neues Modul hinzugefügt wird, muss mindestens die `minor`-Version erhöht werden
-- reine Bugfixes ohne neues Modul erhöhen nur die `patch`-Version
-- größere Meilensteine oder bewusst große Umbauten erhöhen die `major`-Version
+- die mittlere Zahl steigt mit jedem neuen Feature- oder Modulstand
+- die hintere Zahl bleibt bei neuen Feature-/Modulständen auf `0`
+- Weiterentwicklung, Feinschliff und Bugfixes an neuen Modulen bleiben im selben laufenden Feature-Release und erhöhen nicht automatisch die `patch`-Version
+- reine Bugfixes an bereits veröffentlichten Ständen ohne neue Module erhöhen die `patch`-Version
+- bei einem neuen Feature-/Modulstand wird der Hotfix-Zähler wieder auf `0` gesetzt
+- größere Richtungswechsel oder bewusst große Meilensteine erhöhen die `major`-Version
 
-Beispiel:
+Beispiele:
 
-- `0.24.1` -> aktueller Stand
-- neues Modul -> `0.25.0`
-- weiterer Hotfix -> `0.24.2`
-- großer Hauptrelease -> `1.0.0`
-
-## Aktueller Schwerpunkt
-
-- ein gemeinsames Hauptfenster mit Tree-Navigation
-- mehrere sichtbare Overlay-Module für den Spielalltag
-- charakterbezogene Logs, Checklisten und Referenzseiten
-- code-nahe Dokumentation für Anfänger
+- `0.27.0` → aktueller Stand des laufenden Feature-Releases
+- `0.27.0` → korrekt, weil es für diesen Stand noch keine Hotfixes gibt
+- Hotfix nach veröffentlichtem `0.27.0` → `0.27.1`
+- nächstes neues Modul nach `0.27.0` → `0.28.0`
+- großer Hauptrelease → `1.0.0`
 
 ## Module im Addon
 
@@ -66,31 +67,25 @@ Beispiel:
 - `Levelzeit`
   - misst die gespielte Zeit pro Level
 - `Checkliste`
-  - Daily-, Weekly- und "Im Blick halten"-Aufgaben
-  - kleines Tracker-Fenster außerhalb des Hauptfensters
-  - kann in instanzierten Bereichen automatisch ausgeblendet werden, optional nur im Kampf
+  - Daily-, Weekly- und „Im Blick halten“-Aufgaben
+  - separates Tracker-Fenster außerhalb des Hauptfensters
+  - zusätzliche Weekly-Standardaufgaben für `PvP-Quests`, `Tiefenfortschritt` und `Tiefen-Held-Karte`
+  - Berufs-Weekly-Aufgaben werden beim Wochenreset wieder korrekt zurückgesetzt
 - `Weekly Keys`
-  - zeigt die höchsten 8 Weekly-Dungeons und den Vault-Loot
-  - kann in instanzierten Bereichen automatisch ausgeblendet werden, optional nur im Kampf
-  - zählt für die Weekly-Gear-Anzeige nur abgeschlossene M+-Runs
-  - verhindert doppelte Einträge zwischen Key und mythischem Non-Key-Run
+  - zeigt die höchsten 8 Wochenläufe und den Vault-Loot
+  - kann in instanzierten Bereichen automatisch ausgeblendet werden
 - `Itemlevel Guide`
   - saisonale Referenz für Upgradepfade, Crafting, Dungeon-, Raid- und Tiefen-Itemlevel
 - `Quest Check`
   - prüft Queststatus per Quest-ID, WoWHead-Link oder exaktem Namen
 - `Quest Abandon`
   - zeigt sichtbare aktive Quests in einer Auswahl-Liste
-  - erlaubt gezieltes Markieren, Sammel-Abbrechen und Schnellaktionen für alle markieren oder leeren
+  - erlaubt gezieltes Markieren und Sammel-Abbrechen
 
 ### Gold & Handel
 
 - `Logging`
-  - Verkaufslog
-  - Reparaturlog mit Tagessummen
-  - aufklappbare Verkaufs- und Reparaturdetails
-  - Gold-Einnahmen nach Kategorie
-  - Gold-Ausgaben nach Kategorie
-  - manuelles Löschen nach Zeitraum
+  - Verkaufslog, Reparaturlog sowie Gold-Einnahmen und -Ausgaben
 - `Auto Sell Junk`
   - verkauft graue Items beim Händler automatisch
 - `Auto Repair`
@@ -102,18 +97,32 @@ Beispiel:
   - lootet direkt beim Öffnen des Lootfensters
 - `Easy Delete`
   - ersetzt die DELETE-Texteingabe bei passenden Items durch eine einfache Bestätigung
+- `Cutscene Skip`
+  - zeigt unbekannte Movies und Cutscenes beim ersten Auslösen normal an
+  - überspringt bekannte Szenen bei späteren Auslösungen automatisch
+- `Flugmeister-Timer`
+  - zeigt während Flugmeister-Flügen mittig am Bildschirm einen Countdown bis zur Ankunft
+  - lernt fehlende Routenzeiten automatisch nach
+  - optionaler Ankunftssound mit Auswahl und Test-Button
+  - Overlay ist über die Optionen positionierbar, zurücksetzbar und standardmäßig fixiert
+- `Schlüsselstein-Buttons`
+  - ersetzt im Mythic+-Schlüsselsteinfenster den Aktivieren-Button durch `Readycheck` und `Timer & GO`
+  - optionaler `Auto Timer` startet nach dem eigenen Readycheck automatisch, sobald alle bereit sind
+  - Countdown-Dauer ist einstellbar und die Buttons können optional außerhalb von Gruppen gesperrt bleiben
 - `Tooltip-Itemlevel`
   - zeigt das ausgerüstete Itemlevel anderer Spieler direkt im Mouseover-Tooltip
-  - arbeitet über Blizzard-Inspect und daher nur in Reichweite des Zielspielers
 - `Kameraweite`
-  - schaltet zwischen Standard und Max Distance um und setzt den Wert nach Login erneut
+  - schaltet zwischen Standard und Max Distance um
 - `Angelhilfe`
-  - Ein-Tasten-Helfer für das Auswerfen und Einsammeln des Bobbers
-  - legt die gewählte Taste während aktivem Bobber vorübergehend auf Blizzard-Interaktion um
-  - kann die Effektlautstärke beim Angeln temporär anheben
+  - Ein-Tasten-Helfer für entspanntes Angeln
+  - hebt auf Wunsch den Bobber-Sound hervor und stellt den vorherigen Soundmix danach wieder her
 - `Jagd-Fortschritt`
-  - blendet bei aktiven Midnight-Jagden eine Stufenanzeige direkt am Blizzard-Symbol ein
-  - zeigt `Phase 1/4` bis `Phase 3/4` und in der letzten Stufe `Boss bereit`
+  - blendet bei aktiven Midnight-Jagden die aktuelle Stufe direkt am Blizzard-Symbol ein
+- `Portal Viewer`
+  - Schnellansicht für die aktuellen Midnight-S1-Dungeonportale
+  - zeigt freigeschaltete und fehlende Portale direkt in einem kompakten Fenster
+  - verfügbare Portale lassen sich direkt per Linksklick benutzen
+  - öffnet sich über das Minimap-Schnellmenü
 
 ### Interface & Kampf
 
@@ -121,107 +130,41 @@ Beispiel:
   - eigene Combat-Text-Anpassungen für Schrift und Bewegung
 - `Markerleiste`
   - transparente Leiste mit Raidmarkern für Zielmarker und Bodenmarker
-  - frei verschiebbar, skalierbar und fixierbar
-  - Bodenmarker funktionieren nur in Gruppen, im Raid zusätzlich nur mit Leiter- oder Assistentenrechten
 - `Maus-Helfer`
-  - eigene Komfortseite für Blizzard-Mausgröße, Cursor-Kreis und Maus-Trail
-  - Kreis und Trail lassen sich in Stil, Größe, Farbe und Sichtbarkeit anpassen
+  - Komfortseite für Blizzard-Mausgröße, Cursor-Kreis und Maus-Trail
 - `Boss Guides`
-  - zeigt in unterstützten Instanzen einen Overlay-Button für Boss-Taktiken an
-  - Guide-Fenster mit Instanz-Auswahl, Boss-Tabs, Rollenlegende und skalierbarer Darstellung
+  - Overlay-Button und Guide-Fenster für unterstützte Instanzen
 - `Stats`
   - kompaktes Overlay für Sekundärwerte
-  - frei verschiebbar, skalierbar und in der Transparenz anpassbar
-  - kann in instanzierten Bereichen automatisch ausgeblendet werden, optional nur im Kampf
 
 ### Gruppe & Suche
 
 - `Gruppensuche`
-  - Länderflaggen in der Premade-Suche
+  - Länderflaggen in der Premade-Suche mit robusterer Realm-Erkennung für mehr Regionen
   - `Easy LFG` als kompaktes Bewerber-Overlay für eigene aktive Listungen
-  - direktes Einladen oder Ablehnen aus dem Overlay heraus
-  - Rollen- und Spec-Symbole, Länderflaggen sowie aufklappbare Gruppenbewerbungen
-- `Weekly Keys`
-  - Overlay für die 8 höchsten Wochenläufe
-  - zeigt Weekly-Vault-Loot direkt in derselben Anzeige
-  - erfasst ergänzend erkannte heroische und mythische Non-Key-Runs, sofern Blizzard-Daten dafür vorliegen
+  - Invite-Timer für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen
+  - optionaler Countdown-Sound in den letzten fünf Sekunden
 
 ### Streamer Tools
 
 - `Gruppenplaner`
   - transparentes Overlay für feste Dungeon- und Raid-Slots
-  - Timerblock, Zielanzeige und Schnellaktion `Alle leeren` direkt im Overlay
-  - Sloteditor mit Klassen- und Spezialisierungsauswahl
-  - Zielvorschläge für Dungeons, Raids, Tiefen und Keystufen bis `M+20`
+  - Timerblock, Zielanzeige und Schnellaktion `Alle leeren`
 
 ### Begleiter
 
 - `Pet Stuff`
   - Auto Respawn Pet für Begleiter-Pets außerhalb des Kampfes
 
-## Modulerweiterungen bis 0.24.1
-
-- `Checkliste`
-  - eigene Fortschrittsseite mit Daily-, Weekly- und Watch-Kategorien
-  - manuelle Aufgaben pro Charakter
-  - separates Tracker-Fenster mit Schnellaktionen
-- `Itemlevel Guide`
-  - neue Saison-Referenzseite für Upgradepfade, Crafting, Dungeon, Raid und Tiefen
-- `Quest Check`
-  - Questprüfung per ID, WoWHead-Link oder exaktem Namen
-- `Quest Abandon`
-  - Quest-Abbruch als eigenes Modul mit Auswahl-Liste für sichtbare aktive Quests
-- `Logging`
-  - vollwertige Verkaufs-, Reparatur-, Einnahmen- und Ausgabenprotokolle
-- `Tooltip-Itemlevel`
-  - Komfort-Modul für das direkte Anzeigen fremder Itemlevel im Tooltip
-- `Stats` und `Weekly Keys`
-  - eigenständige Overlay-Module mit Position, Skalierung und Transparenz
-- `Markerleiste`
-  - Modul für Zielmarker und Bodenmarker mit transparenter Symbolleiste
-  - eigene Overlay-Steuerung für Anzeigen, Fixieren, Skalierung und Positions-Reset
-- `Maus-Helfer`
-  - Komfortseite für vergrößerten Blizzard-Cursor, Cursor-Kreis und Maus-Trail
-  - Kreis- und Trail-Stile lassen sich direkt im Addon konfigurieren
-- `Boss Guides`
-  - Modul für Boss-Taktiken mit Overlay-Button und Guide-Fenster pro unterstützter Instanz
-  - Instanz-Auswahl, Boss-Tabs und Rollenlegende direkt im Fenster enthalten
-- `Easy LFG`
-  - kompaktes Bewerber-Overlay für eigene Gruppenlistungen
-  - direkte Invite- und Ablehnen-Aktionen, Rollen-/Spec-Symbole und Länderflaggen
-  - gruppierte, aufklappbare Mehrspieler-Bewerbungen statt einer flachen Liste
-- `Gruppenplaner`
-  - transparenter Gruppenplaner mit eigenem Timerblock und erweiterten Overlay-Steuerungen
-  - Sloteditor mit Klassen- und Spec-Auswahl sowie Zielvorschlägen für verschiedene Inhalte
-- `Angelhilfe`
-  - Komfort-Modul für einen vereinfachten Ein-Tasten-Ablauf beim Angeln
-- `Jagd-Fortschritt`
-  - neues Komfort-Modul für Midnight-Jagden mit direkter Anzeige am Blizzard-Symbol
-  - stellt den Hunt-Fortschritt als `Phase 1/4` bis `Boss bereit` dar
-  - zeigt `Phase 1/4` nicht mehr fälschlich ohne aktive Jagd an
-- `Weekly Keys`
-  - zählt für die Weekly-Gear-Anzeige nur noch abgeschlossene M+-Runs
-  - verhindert doppelte Einträge, wenn ein Key zuvor als normaler mythischer Dungeon erkannt wurde
-- `UI und Komfortseiten`
-  - optische Korrekturen für `Gruppensuche`, `Gruppenplaner`, `Angelhilfe` und `Maus-Helfer`
-- `UI und Navigation`
-  - breitere Sidebar
-  - neue Hauptkategorien im Tree
-  - Schnellmenü am Minimap-Button
-- `Overlay-Steuerung`
-  - Schnell-Ausblenden für instanzierte Bereiche mit Detailauswahl für Checkliste, Weekly Keys und Stats
-  - optionale Einschränkung auf Kampf innerhalb instanzierter Bereiche
-- `Lokalisierung`
-  - Deutsch und Englisch direkt im Addon umschaltbar
-
 ## Bedienung
 
 - Slash-Command: `/beavis`
 - Minimap-Button:
   - Linksklick: Hauptfenster zeigen / verstecken
-  - Rechtsklick: Schnellmenü
+  - Rechtsklick: Schnellmenü öffnen
   - Shift-Klick: `ReloadUI()`
   - Schnellmenü: direkter Zugriff auf Checkliste-, Weekly-Keys-, Stats-, `Easy LFG`- und `Gruppenplaner`-Overlay
+  - Schnellmenü: `Portal Viewer` für die aktuellen Midnight-S1-Dungeonportale
   - Schnellmenü: Master-Schalter `Overlays schnell ausblenden`
 
 ## Installation
@@ -242,33 +185,16 @@ World of Warcraft\_retail_\Interface\AddOns\BeavisQoL
 Der Addon-Code ist bewusst so aufgebaut, dass man ihn gut lesen kann:
 
 - `Core.lua`
-  - Basis-Startpunkt und Slash-Command
+  - Basis-Startpunkt, Metadaten und Slash-Command
 - `UI.lua`
-  - Hauptfenster, Header, Sidebar, Content-Bereich, gemeinsames Link-Popup
+  - Hauptfenster, Header, Sidebar und Content-Bereich
 - `Tree.lua`
   - Navigation und Seitenwechsel
 - `Pages/`
   - jede größere Funktion hat eine eigene Seite oder Unterlogik
 
-Die Addon-eigenen Dateien sind inzwischen bewusst menschlich kommentiert.
-Fokus der Kommentare:
-
-- Was speichert die Funktion?
-- Warum ist ein bestimmter Guard nötig?
-- Welche Events steuern den Ablauf?
-- Was ist UI und was ist eigentliche Logik?
-
-Nicht kommentiert werden bewusst die eingebundenen Drittanbieter-Bibliotheken unter `Libs/`.
-
-## Entwicklungshinweis
-
-Wenn du das Addon als Lernprojekt lesen willst, starte am besten in dieser Reihenfolge:
-
-1. `Core.lua`
-2. `UI.lua`
-3. `Tree.lua`
-4. eine einzelne Seite unter `Pages/`
-5. danach die zugehörigen Unterdateien, zum Beispiel `Pages/Misc/*.lua`
+Die Addon-eigenen Dateien sind bewusst menschlich kommentiert.
+Nicht kommentiert werden die eingebundenen Drittanbieter-Bibliotheken unter `Libs/`.
 
 ## Feedback und Kontakt
 

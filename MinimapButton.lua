@@ -135,6 +135,11 @@ local function IsEasyLFGOverlayEnabled()
     return lfgModule and lfgModule.IsEasyLFGEnabled and lfgModule.IsEasyLFGEnabled() == true
 end
 
+local function IsPortalViewerEnabled()
+    local portalViewerModule = BeavisQoL.PortalViewerModule
+    return portalViewerModule and portalViewerModule.IsWindowEnabled and portalViewerModule.IsWindowEnabled() == true
+end
+
 local function ToggleMarkerBarOverlay()
     local markerBarModule = BeavisQoL.MarkerBarModule
     if not markerBarModule or not markerBarModule.IsOverlayEnabled or not markerBarModule.SetOverlayEnabled then
@@ -172,6 +177,15 @@ local function ToggleEasyLFGOverlay()
     if BeavisQoL.Pages and BeavisQoL.Pages.LFG and BeavisQoL.Pages.LFG.RefreshState then
         BeavisQoL.Pages.LFG:RefreshState()
     end
+end
+
+local function TogglePortalViewer()
+    local portalViewerModule = BeavisQoL.PortalViewerModule
+    if not portalViewerModule or not portalViewerModule.ToggleWindow then
+        return
+    end
+
+    portalViewerModule.ToggleWindow()
 end
 
 local function GetQuickHideOverlaysEnabled()
@@ -222,6 +236,7 @@ local function ShowMinimapContextMenu(anchorFrame)
     local hasMarkerBarToggle = BeavisQoL.MarkerBarModule and BeavisQoL.MarkerBarModule.IsOverlayEnabled and BeavisQoL.MarkerBarModule.SetOverlayEnabled
     local hasStreamerPlannerToggle = BeavisQoL.StreamerPlannerModule and BeavisQoL.StreamerPlannerModule.IsOverlayEnabled and BeavisQoL.StreamerPlannerModule.SetOverlayEnabled
     local hasEasyLFGToggle = BeavisQoL.LFG and BeavisQoL.LFG.IsEasyLFGEnabled and BeavisQoL.LFG.SetEasyLFGEnabled
+    local hasPortalViewerToggle = BeavisQoL.PortalViewerModule and BeavisQoL.PortalViewerModule.IsWindowEnabled and BeavisQoL.PortalViewerModule.SetWindowEnabled
 
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchorFrame or UIParent, function(_, rootDescription)
@@ -308,6 +323,18 @@ local function ShowMinimapContextMenu(anchorFrame)
                     end,
                     function()
                         ToggleEasyLFGOverlay()
+                    end
+                )
+            end
+
+            if hasPortalViewerToggle then
+                rootDescription:CreateCheckbox(
+                    L("MINIMAP_PORTAL_VIEWER_SHOW"),
+                    function()
+                        return IsPortalViewerEnabled()
+                    end,
+                    function()
+                        TogglePortalViewer()
                     end
                 )
             end
@@ -415,6 +442,15 @@ local function ShowMinimapContextMenu(anchorFrame)
             disabled = not hasEasyLFGToggle,
             func = function()
                 ToggleEasyLFGOverlay()
+            end,
+        },
+        {
+            text = L("MINIMAP_PORTAL_VIEWER_SHOW"),
+            checked = IsPortalViewerEnabled(),
+            isNotRadio = true,
+            disabled = not hasPortalViewerToggle,
+            func = function()
+                TogglePortalViewer()
             end,
         },
         {

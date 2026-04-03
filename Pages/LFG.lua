@@ -255,6 +255,43 @@ EasyLFGResetHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 EasyLFGResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
 EasyLFGResetHint:SetText(L("EASY_LFG_RESET_HINT"))
 
+-- ========================================
+-- Bereich: Einladungs-Timer
+-- ========================================
+
+local InviteTimerPanel = CreateFrame("Frame", nil, PageLFG)
+InviteTimerPanel:SetPoint("TOPLEFT", EasyLFGPanel, "BOTTOMLEFT", 0, -18)
+InviteTimerPanel:SetPoint("TOPRIGHT", EasyLFGPanel, "BOTTOMRIGHT", 0, -18)
+InviteTimerPanel:SetHeight(152)
+
+local InviteTimerPanelBg = InviteTimerPanel:CreateTexture(nil, "BACKGROUND")
+InviteTimerPanelBg:SetAllPoints()
+InviteTimerPanelBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local InviteTimerPanelBorder = InviteTimerPanel:CreateTexture(nil, "ARTWORK")
+InviteTimerPanelBorder:SetPoint("BOTTOMLEFT", InviteTimerPanel, "BOTTOMLEFT", 0, 0)
+InviteTimerPanelBorder:SetPoint("BOTTOMRIGHT", InviteTimerPanel, "BOTTOMRIGHT", 0, 0)
+InviteTimerPanelBorder:SetHeight(1)
+InviteTimerPanelBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local InviteTimerTitle = InviteTimerPanel:CreateFontString(nil, "OVERLAY")
+InviteTimerTitle:SetPoint("TOPLEFT", InviteTimerPanel, "TOPLEFT", 18, -14)
+InviteTimerTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+InviteTimerTitle:SetTextColor(1, 0.82, 0, 1)
+InviteTimerTitle:SetText(L("INVITE_TIMER_TITLE"))
+
+local InviteTimerHint = InviteTimerPanel:CreateFontString(nil, "OVERLAY")
+InviteTimerHint:SetPoint("TOPLEFT", InviteTimerTitle, "BOTTOMLEFT", 0, -8)
+InviteTimerHint:SetPoint("RIGHT", InviteTimerPanel, "RIGHT", -18, 0)
+InviteTimerHint:SetJustifyH("LEFT")
+InviteTimerHint:SetJustifyV("TOP")
+InviteTimerHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+InviteTimerHint:SetTextColor(0.80, 0.80, 0.80, 1)
+InviteTimerHint:SetText(L("INVITE_TIMER_HINT"))
+
+local InviteTimerCheckbox = CreateSectionCheckbox(InviteTimerPanel, InviteTimerHint, L("INVITE_TIMER_ENABLED"), L("INVITE_TIMER_ENABLED_HINT"))
+local InviteTimerCountdownCheckbox = CreateSectionCheckbox(InviteTimerPanel, InviteTimerCheckbox.Hint, L("INVITE_TIMER_COUNTDOWN_SOUND"), L("INVITE_TIMER_COUNTDOWN_SOUND_HINT"))
+
 function PageLFG:UpdateLayout()
     if not self:IsShown() then
         return
@@ -278,6 +315,8 @@ function PageLFG:RefreshState()
     local easyLFGLocked = false
     local easyLFGScale = 1.0
     local easyLFGAlpha = 0.58
+    local inviteTimerEnabled = false
+    local inviteTimerCountdownEnabled = false
 
     IntroTitle:SetText(L("LFG"))
     IntroText:SetText(L("LFG_DESC"))
@@ -296,6 +335,12 @@ function PageLFG:RefreshState()
     EasyLFGAlphaHint:SetText(L("EASY_LFG_BACKGROUND_ALPHA_HINT"))
     EasyLFGResetButton:SetText(L("RESET_POSITION"))
     EasyLFGResetHint:SetText(L("EASY_LFG_RESET_HINT"))
+    InviteTimerTitle:SetText(L("INVITE_TIMER_TITLE"))
+    InviteTimerHint:SetText(L("INVITE_TIMER_HINT"))
+    InviteTimerCheckbox.Label:SetText(L("INVITE_TIMER_ENABLED"))
+    InviteTimerCheckbox.Hint:SetText(L("INVITE_TIMER_ENABLED_HINT"))
+    InviteTimerCountdownCheckbox.Label:SetText(L("INVITE_TIMER_COUNTDOWN_SOUND"))
+    InviteTimerCountdownCheckbox.Hint:SetText(L("INVITE_TIMER_COUNTDOWN_SOUND_HINT"))
 
     if LFG.IsFlagsEnabled then
         flagsEnabled = LFG.IsFlagsEnabled()
@@ -317,12 +362,22 @@ function PageLFG:RefreshState()
         easyLFGAlpha = LFG.GetEasyLFGBackgroundAlpha()
     end
 
+    if LFG.IsInviteTimerEnabled then
+        inviteTimerEnabled = LFG.IsInviteTimerEnabled()
+    end
+
+    if LFG.IsInviteTimerCountdownEnabled then
+        inviteTimerCountdownEnabled = LFG.IsInviteTimerCountdownEnabled()
+    end
+
     isRefreshing = true
     FlagsCheckbox:SetChecked(flagsEnabled)
     EasyLFGShowOverlayCheckbox:SetChecked(easyLFGEnabled)
     EasyLFGOverlayLockCheckbox:SetChecked(easyLFGLocked)
     EasyLFGScaleSlider:SetValue(easyLFGScale)
     EasyLFGAlphaSlider:SetValue(easyLFGAlpha)
+    InviteTimerCheckbox:SetChecked(inviteTimerEnabled)
+    InviteTimerCountdownCheckbox:SetChecked(inviteTimerCountdownEnabled)
     isRefreshing = false
 
     RefreshSliderCaption(EasyLFGScaleSlider)
@@ -370,6 +425,22 @@ EasyLFGResetButton:SetScript("OnClick", function()
     if LFG.ResetEasyLFGPosition then
         LFG.ResetEasyLFGPosition()
     end
+end)
+
+InviteTimerCheckbox:SetScript("OnClick", function(self)
+    if LFG.SetInviteTimerEnabled then
+        LFG.SetInviteTimerEnabled(self:GetChecked())
+    end
+
+    PageLFG:RefreshState()
+end)
+
+InviteTimerCountdownCheckbox:SetScript("OnClick", function(self)
+    if LFG.SetInviteTimerCountdownEnabled then
+        LFG.SetInviteTimerCountdownEnabled(self:GetChecked())
+    end
+
+    PageLFG:RefreshState()
 end)
 
 PageLFG:SetScript("OnShow", function()

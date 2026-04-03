@@ -23,12 +23,15 @@ Konstanten -> SavedVariables -> Aufgabenlogik -> Tracker -> Hauptseiten-UI -> Ev
 local BUILT_IN_TODOS = {
     { id = "weekly_vault", labelKey = "CHECKLIST_TODO_WEEKLY_VAULT", cadence = "weekly" },
     { id = "weekly_raid", labelKey = "CHECKLIST_TODO_WEEKLY_RAID", cadence = "weekly" },
+    { id = "weekly_pvp_quests", labelKey = "CHECKLIST_TODO_WEEKLY_PVP_QUESTS", cadence = "weekly" },
     { id = "weekly_hunts", labelKey = "CHECKLIST_TODO_WEEKLY_HUNTS", cadence = "weekly" },
     { id = "weekly_soiree", labelKey = "CHECKLIST_TODO_WEEKLY_SOIREE", cadence = "weekly" },
     { id = "weekly_overflow", labelKey = "CHECKLIST_TODO_WEEKLY_OVERFLOW", cadence = "weekly" },
     { id = "weekly_stormarion", labelKey = "CHECKLIST_TODO_WEEKLY_STORMARION", cadence = "weekly" },
     { id = "weekly_harandir", labelKey = "CHECKLIST_TODO_WEEKLY_HARANDIR", cadence = "weekly" },
     { id = "weekly_voidstorm", labelKey = "CHECKLIST_TODO_WEEKLY_VOIDSTORM", cadence = "weekly" },
+    { id = "weekly_delve_progress", labelKey = "CHECKLIST_TODO_WEEKLY_DELVE_PROGRESS", cadence = "weekly" },
+    { id = "weekly_delve_hero_map", labelKey = "CHECKLIST_TODO_WEEKLY_DELVE_HERO_MAP", cadence = "weekly" },
     { id = "daily_delves", labelKey = "CHECKLIST_TODO_DAILY_DELVES", cadence = "daily" },
     { id = "daily_worldquests", labelKey = "CHECKLIST_TODO_DAILY_WORLDQUESTS", cadence = "daily" },
     { id = "daily_m0_tour", labelKey = "CHECKLIST_TODO_DAILY_M0", cadence = "daily" },
@@ -124,6 +127,28 @@ local function Clamp(value, minValue, maxValue)
     end
 
     return value
+end
+
+local function RoundToNearestInteger(value)
+    if value >= 0 then
+        return math.floor(value + 0.5)
+    end
+
+    return math.ceil(value - 0.5)
+end
+
+local function GetTrackerVerticalAnchorFactor(anchorPoint)
+    local pointText = tostring(anchorPoint or "")
+
+    if string.find(pointText, "TOP", 1, true) then
+        return 0
+    end
+
+    if string.find(pointText, "BOTTOM", 1, true) then
+        return 1
+    end
+
+    return 0.5
 end
 
 local function NormalizeCadence(cadence)
@@ -412,9 +437,18 @@ local function GetManualItems()
     return db.manualItems
 end
 
+local function IsProfessionWeeklyTodoID(todoID)
+    return type(todoID) == "string"
+        and string.match(todoID, "^weekly_profession_%d+$") ~= nil
+end
+
 local function GetTodoCadence(todoID)
     local todo = GetBuiltInTodoByID(todoID)
     if not todo then
+        if IsProfessionWeeklyTodoID(todoID) then
+            return "weekly"
+        end
+
         return "daily"
     end
 
@@ -482,9 +516,14 @@ local function ResetTodosForCadence(cadence)
     local targetCadence = NormalizeCadence(cadence)
     local db = GetChecklistCharacterData()
 
-    for _, todo in ipairs(GetBuiltInTodos()) do
-        if GetTodoCadence(todo.id) == targetCadence then
-            db.builtInState[todo.id] = nil
+    -- Der Reset arbeitet absichtlich auf den gespeicherten Check-Zustaenden.
+    -- Dynamische Aufgaben wie Berufs-Wochenaufgaben koennen beim Login kurz
+    -- fehlen, wenn der Client die Berufsdaten noch nicht geliefert hat.
+    -- Ueber die gespeicherten IDs gehen diese Aufgaben trotzdem sicher durch
+    -- denselben Weekly-Reset wie alle anderen Built-ins.
+    for todoID in pairs(db.builtInState) do
+        if GetTodoCadence(todoID) == targetCadence then
+            db.builtInState[todoID] = nil
         end
     end
 
@@ -1098,7 +1137,7 @@ end
 
 function Checklist.SetTrackerEnabled(enabled)
     GetChecklistSettings().trackerEnabled = enabled == true
-    Checklist.RefreshTrackerWindow()
+    Checklist.RefreshAllViews()
 end
 
 function Checklist.IsTrackerCollapsed()
@@ -1111,6 +1150,19 @@ function Checklist.SetTrackerCollapsed(collapsed)
 
     if settings.trackerCollapsed == shouldCollapse then
         return
+    end
+
+    local previousHeight = settings.trackerCollapsed and COLLAPSED_TRACKER_HEIGHT or settings.trackerHeight
+    if TrackerFrame and TrackerFrame:IsShown() then
+        previousHeight = TrackerFrame:GetHeight() or previousHeight
+    end
+
+    local nextHeight = shouldCollapse and COLLAPSED_TRACKER_HEIGHT or settings.trackerHeight
+    local verticalAnchorFactor = GetTrackerVerticalAnchorFactor(settings.trackerPoint)
+
+    if verticalAnchorFactor > 0 then
+        local offsetAdjustment = (previousHeight - nextHeight) * verticalAnchorFactor
+        settings.trackerOffsetY = RoundToNearestInteger((settings.trackerOffsetY or 0) + offsetAdjustment)
     end
 
     settings.trackerCollapsed = shouldCollapse
@@ -1219,7 +1271,7 @@ TrackerFrame:Hide()
 
 local TrackerHeader = CreateFrame("Button", nil, TrackerFrame)
 TrackerHeader:SetPoint("TOPLEFT", TrackerFrame, "TOPLEFT", 8, -6)
-TrackerHeader:SetPoint("TOPRIGHT", TrackerFrame, "TOPRIGHT", -194, -6)
+TrackerHeader:SetPoint("TOPRIGHT", TrackerFrame, "TOPRIGHT", -218, -6)
 TrackerHeader:SetHeight(18)
 TrackerHeader:RegisterForDrag("LeftButton")
 TrackerHeader:SetScript("OnDragStart", function()
@@ -1242,9 +1294,26 @@ TrackerTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
 TrackerTitle:SetTextColor(1, 0.82, 0, 1)
 TrackerTitle:SetText(L("CHECKLIST"))
 
+local TrackerCloseButton = CreateFrame("Button", nil, TrackerFrame, "UIPanelButtonTemplate")
+TrackerCloseButton:SetSize(20, 18)
+TrackerCloseButton:SetPoint("TOPRIGHT", TrackerFrame, "TOPRIGHT", -8, -6)
+TrackerCloseButton:SetText("X")
+TrackerCloseButton:SetScript("OnClick", function()
+    Checklist.SetTrackerEnabled(false)
+end)
+TrackerCloseButton:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine(L("CHECKLIST_CLOSE"), 1, 1, 1)
+    GameTooltip:AddLine(L("CHECKLIST_CLOSE_HINT"), 0.9, 0.9, 0.9, true)
+    GameTooltip:Show()
+end)
+TrackerCloseButton:SetScript("OnLeave", function()
+    GameTooltip:Hide()
+end)
+
 TrackerLockButton = CreateFrame("Button", nil, TrackerFrame)
 TrackerLockButton:SetSize(20, 18)
-TrackerLockButton:SetPoint("TOPRIGHT", TrackerFrame, "TOPRIGHT", -8, -6)
+TrackerLockButton:SetPoint("TOPRIGHT", TrackerCloseButton, "TOPLEFT", -4, 0)
 TrackerLockButton:SetHitRectInsets(-2, -2, -2, -2)
 TrackerLockButton:SetScript("OnClick", function()
     Checklist.SetTrackerLocked(not Checklist.IsTrackerLocked())

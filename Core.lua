@@ -14,6 +14,62 @@ einzelnen Seiten-Dateien.
 -- Hier sammeln die Seiten-Dateien ihre Frames ein.
 BeavisQoL.Pages = BeavisQoL.Pages or {}
 
+local L = BeavisQoL.L
+
+local function GetAddonMetadataValue(metadataKey, fallbackValue)
+    local metadataValue = C_AddOns.GetAddOnMetadata(ADDON_NAME, metadataKey)
+    if metadataValue == nil or metadataValue == "" then
+        return fallbackValue
+    end
+
+    return metadataValue
+end
+
+local function NormalizeReleaseChannel(channelName)
+    local normalizedChannel = string.lower(tostring(channelName or "release"))
+
+    if normalizedChannel == "alpha" or normalizedChannel == "beta" or normalizedChannel == "rc" or normalizedChannel == "release" then
+        return normalizedChannel
+    end
+
+    return "release"
+end
+
+BeavisQoL.Metadata = BeavisQoL.Metadata or {}
+
+local Metadata = BeavisQoL.Metadata
+Metadata.name = ADDON_NAME
+Metadata.title = GetAddonMetadataValue("Title", L("UNKNOWN"))
+Metadata.version = GetAddonMetadataValue("Version", L("UNKNOWN"))
+Metadata.author = GetAddonMetadataValue("Author", L("UNKNOWN"))
+Metadata.gameVersion = GetAddonMetadataValue("X-GameVersion", L("UNKNOWN"))
+Metadata.gameVersionLabel = GetAddonMetadataValue("X-GameVersionLabel", L("UNKNOWN"))
+Metadata.releaseDate = GetAddonMetadataValue("X-ReleaseDate", L("UNKNOWN"))
+Metadata.releaseChannel = NormalizeReleaseChannel(GetAddonMetadataValue("X-ReleaseChannel", "release"))
+
+BeavisQoL.Title = Metadata.title
+BeavisQoL.Version = Metadata.version
+
+local RELEASE_CHANNEL_LABEL_KEYS = {
+    alpha = "RELEASE_CHANNEL_ALPHA",
+    beta = "RELEASE_CHANNEL_BETA",
+    rc = "RELEASE_CHANNEL_RC",
+    release = "RELEASE_CHANNEL_RELEASE",
+}
+
+function BeavisQoL.GetReleaseChannel()
+    return Metadata.releaseChannel
+end
+
+function BeavisQoL.GetReleaseChannelLabel()
+    local channelKey = RELEASE_CHANNEL_LABEL_KEYS[Metadata.releaseChannel] or RELEASE_CHANNEL_LABEL_KEYS.release
+    return L(channelKey)
+end
+
+function BeavisQoL.GetReleaseStatusText()
+    return L("RELEASE_STATUS_FORMAT"):format(BeavisQoL.GetReleaseChannelLabel())
+end
+
 function BeavisQoL.GetGlobalSettings()
     BeavisQoLDB = BeavisQoLDB or {}
     BeavisQoLDB.settings = BeavisQoLDB.settings or {}
@@ -237,6 +293,10 @@ function BeavisQoL.RefreshLocale()
 
     if BeavisQoL.UpdateStreamerPlanner then
         BeavisQoL.UpdateStreamerPlanner()
+    end
+
+    if BeavisQoL.UpdatePortalViewer then
+        BeavisQoL.UpdatePortalViewer()
     end
 
     local refreshablePages = {

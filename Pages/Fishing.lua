@@ -9,12 +9,22 @@ local FishingModule = BeavisQoL.FishingModule
 local FISHING_SPELL_ID = 131474
 local WAITING_TIMEOUT = 32
 local STANDARD_SFX = 1.00
-local DEFAULT_MIN_SFX = STANDARD_SFX
-local MIN_SFX = 0.00
-local MAX_SFX = STANDARD_SFX
+local DEFAULT_SOUND_MULTIPLIER = 1.00
+local MIN_SOUND_MULTIPLIER = 1.00
+local MAX_SOUND_MULTIPLIER = 2.00
 local INTERACTION_COMMAND = "INTERACTTARGET"
 local SOFT_INTERACT_CVAR = "SoftTargetInteract"
 local SOFT_INTERACT_FISHING_VALUE = "3"
+local FISHING_SOUND_CVARS = {
+    "Sound_MasterVolume",
+    "Sound_SFXVolume",
+    "Sound_EnableAmbience",
+    "Sound_MusicVolume",
+    "Sound_EnableAllSound",
+    "Sound_EnablePetSounds",
+    "Sound_EnableSoundWhenGameIsInBG",
+    "Sound_EnableSFX",
+}
 
 local PageFishing
 local EnableCheckbox
@@ -41,7 +51,7 @@ local waitingExpiresAt = 0
 local pendingBindingRefresh = false
 local pendingStateRefresh = false
 local pendingCastButtonRefresh = false
-local boostedFromVolume = nil
+local cachedFishingSoundSettings = nil
 local overriddenSoftInteractValue = nil
 
 local function Clamp(value, minValue, maxValue)
@@ -74,11 +84,11 @@ local function GetFishingSettings()
         db.soundBoostEnabled = true
     end
 
-    if type(db.soundMinVolume) ~= "number" then
-        db.soundMinVolume = DEFAULT_MIN_SFX
+    if type(db.soundMultiplier) ~= "number" then
+        db.soundMultiplier = DEFAULT_SOUND_MULTIPLIER
     end
 
-    db.soundMinVolume = Clamp(db.soundMinVolume, MIN_SFX, MAX_SFX)
+    db.soundMultiplier = Clamp(db.soundMultiplier, MIN_SOUND_MULTIPLIER, MAX_SOUND_MULTIPLIER)
 
     return db
 end
@@ -117,14 +127,6 @@ local function IsFishingChannelActive()
     return channelName ~= nil and fishingSpellName ~= nil and channelName == fishingSpellName
 end
 
-local function GetCurrentSFXVolume()
-    if not GetCVar then
-        return 0
-    end
-
-    return Clamp(tonumber(GetCVar("Sound_SFXVolume")) or 0, 0, 1)
-end
-
 local function GetCurrentCVarValue(cvarName)
     if not GetCVar then
         return nil
@@ -149,21 +151,77 @@ local function SetCurrentCVarValue(cvarName, value)
     end
 end
 
-local function SetCurrentSFXVolume(value)
-    local normalizedValue = string.format("%.2f", Clamp(tonumber(value) or 0, 0, 1))
+local function SetCurrentVolumeCVar(cvarName, value)
+    local normalizedValue = string.format("%.2f", Clamp(tonumber(value) or 0, 0, STANDARD_SFX))
 
     if C_CVar and C_CVar.SetCVar then
-        C_CVar.SetCVar("Sound_SFXVolume", normalizedValue)
+        C_CVar.SetCVar(cvarName, normalizedValue)
         return
     end
 
     if SetCVar then
-        SetCVar("Sound_SFXVolume", normalizedValue)
+        SetCVar(cvarName, normalizedValue)
     end
 end
 
+local function SetCurrentSFXVolume(value)
+    SetCurrentVolumeCVar("Sound_SFXVolume", value)
+end
+
+local function SetCurrentMasterVolume(value)
+    SetCurrentVolumeCVar("Sound_MasterVolume", value)
+end
+
 local function GetSliderPercentText(value)
-    return string.format("%d%%", math.floor((Clamp(tonumber(value) or DEFAULT_MIN_SFX, MIN_SFX, MAX_SFX) * 100) + 0.5))
+    return string.format("%d%%", math.floor((Clamp(tonumber(value) or DEFAULT_SOUND_MULTIPLIER, MIN_SOUND_MULTIPLIER, MAX_SOUND_MULTIPLIER) * 100) + 0.5))
+end
+
+local function CaptureFishingSoundSettings()
+    local snapshot = {}
+
+    for _, cvarName in ipairs(FISHING_SOUND_CVARS) do
+        local currentValue = GetCurrentCVarValue(cvarName)
+        if currentValue ~= nil then
+            snapshot[cvarName] = currentValue
+        end
+    end
+
+    return snapshot
+end
+
+local function GetSnapshotVolume(snapshot, cvarName)
+    return Clamp(tonumber(snapshot and snapshot[cvarName]) or STANDARD_SFX, 0, STANDARD_SFX)
+end
+
+local function RestoreFishingSoundSettings()
+    if cachedFishingSoundSettings == nil then
+        return
+    end
+
+    for _, cvarName in ipairs(FISHING_SOUND_CVARS) do
+        local originalValue = cachedFishingSoundSettings[cvarName]
+        if originalValue ~= nil then
+            SetCurrentCVarValue(cvarName, originalValue)
+        end
+    end
+
+    cachedFishingSoundSettings = nil
+end
+
+local function ApplyFishingSoundSettings(multiplier)
+    if cachedFishingSoundSettings == nil then
+        cachedFishingSoundSettings = CaptureFishingSoundSettings()
+    end
+
+    SetCurrentCVarValue("Sound_EnableAllSound", "1")
+    SetCurrentCVarValue("Sound_EnableSFX", "1")
+    SetCurrentCVarValue("Sound_EnableSoundWhenGameIsInBG", "1")
+    SetCurrentCVarValue("Sound_EnableAmbience", "0")
+    SetCurrentCVarValue("Sound_MusicVolume", "0")
+    SetCurrentCVarValue("Sound_EnablePetSounds", "0")
+
+    SetCurrentMasterVolume(GetSnapshotVolume(cachedFishingSoundSettings, "Sound_MasterVolume") * multiplier)
+    SetCurrentSFXVolume(GetSnapshotVolume(cachedFishingSoundSettings, "Sound_SFXVolume") * multiplier)
 end
 
 local function FormatBindingKey(key)
@@ -271,10 +329,7 @@ local function RefreshSoftInteractCVar()
 end
 
 local function RestoreSoundBoost()
-    if boostedFromVolume ~= nil then
-        SetCurrentSFXVolume(boostedFromVolume)
-        boostedFromVolume = nil
-    end
+    RestoreFishingSoundSettings()
 end
 
 local function RefreshSoundBoost()
@@ -282,16 +337,7 @@ local function RefreshSoundBoost()
     local shouldBoost = settings.enabled == true and settings.soundBoostEnabled == true and currentMode == "waiting"
 
     if shouldBoost then
-        local currentVolume = GetCurrentSFXVolume()
-
-        if currentVolume < settings.soundMinVolume then
-            if boostedFromVolume == nil then
-                boostedFromVolume = currentVolume
-            end
-
-            SetCurrentSFXVolume(settings.soundMinVolume)
-        end
-
+        ApplyFishingSoundSettings(settings.soundMultiplier)
         return
     end
 
@@ -449,12 +495,12 @@ function FishingModule.SetSoundBoostEnabled(enabled)
     RefreshPageState()
 end
 
-function FishingModule.GetSoundMinVolume()
-    return GetFishingSettings().soundMinVolume
+function FishingModule.GetSoundMultiplier()
+    return GetFishingSettings().soundMultiplier
 end
 
-function FishingModule.SetSoundMinVolume(value)
-    GetFishingSettings().soundMinVolume = Clamp(tonumber(value) or DEFAULT_MIN_SFX, MIN_SFX, MAX_SFX)
+function FishingModule.SetSoundMultiplier(value)
+    GetFishingSettings().soundMultiplier = Clamp(tonumber(value) or DEFAULT_SOUND_MULTIPLIER, MIN_SOUND_MULTIPLIER, MAX_SOUND_MULTIPLIER)
     RefreshSoundBoost()
     RefreshPageState()
 end
@@ -525,24 +571,24 @@ end
 
 local function CreateSlider(parent)
     local slider = CreateFrame("Slider", ADDON_NAME .. "FishingSoundSlider", parent, "OptionsSliderTemplate")
-    slider:SetMinMaxValues(MIN_SFX, MAX_SFX)
+    slider:SetMinMaxValues(MIN_SOUND_MULTIPLIER, MAX_SOUND_MULTIPLIER)
     slider:SetValueStep(0.01)
     if slider.SetObeyStepOnDrag then
         slider:SetObeyStepOnDrag(true)
     end
     slider:SetWidth(260)
-    slider:EnableMouse(MIN_SFX < MAX_SFX)
+    slider:EnableMouse(MIN_SOUND_MULTIPLIER < MAX_SOUND_MULTIPLIER)
 
     local lowLabel = _G[slider:GetName() .. "Low"]
     local highLabel = _G[slider:GetName() .. "High"]
     local textLabel = _G[slider:GetName() .. "Text"]
 
     if lowLabel then
-        lowLabel:SetText(GetSliderPercentText(MIN_SFX))
+        lowLabel:SetText(GetSliderPercentText(MIN_SOUND_MULTIPLIER))
     end
 
     if highLabel then
-        highLabel:SetText(GetSliderPercentText(MAX_SFX))
+        highLabel:SetText(GetSliderPercentText(MAX_SOUND_MULTIPLIER))
     end
 
     if textLabel then
@@ -699,7 +745,7 @@ SoundSlider:SetScript("OnValueChanged", function(self, value)
         return
     end
 
-    FishingModule.SetSoundMinVolume(value)
+    FishingModule.SetSoundMultiplier(value)
     RefreshSoundSliderText()
 end)
 
@@ -818,7 +864,7 @@ function PageFishing:RefreshState()
     SoundCheckbox:SetChecked(settings.soundBoostEnabled == true)
     SoundCheckbox:SetEnabled(settings.enabled == true)
     SoundSlider:SetEnabled(settings.enabled == true and settings.soundBoostEnabled == true)
-    SoundSlider:SetValue(settings.soundMinVolume)
+    SoundSlider:SetValue(settings.soundMultiplier)
     RefreshSoundSliderText()
 
     isRefreshingPage = false

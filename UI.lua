@@ -24,8 +24,9 @@ local function Clamp(value, minValue, maxValue)
 end
 
 local L = BeavisQoL.L
-local version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
-local name = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or L("UNKNOWN")
+local metadata = BeavisQoL.Metadata or {}
+local version = metadata.version or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
+local name = metadata.title or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or L("UNKNOWN")
 
 BeavisQoL.Version = version
 BeavisQoL.Title = name
@@ -117,12 +118,12 @@ HeaderBorder:SetHeight(1)
 HeaderBorder:SetColorTexture(1, 0.82, 0, 0.9)
 
 local Logo = Header:CreateTexture(nil, "ARTWORK")
-Logo:SetSize(64, 64)
+Logo:SetSize(56, 56)
 Logo:SetPoint("LEFT", Header, "LEFT", 14, 2)
 Logo:SetTexture("Interface\\AddOns\\BeavisQoL\\Media\\logo.tga")
 
 local Title = Header:CreateFontString(nil, "OVERLAY")
-Title:SetPoint("TOPLEFT", Logo, "TOPRIGHT", 14, -6)
+Title:SetPoint("TOPLEFT", Logo, "TOPRIGHT", 14, -4)
 Title:SetPoint("RIGHT", Header, "RIGHT", -190, 0)
 Title:SetJustifyH("LEFT")
 Title:SetFont("Fonts\\FRIZQT__.TTF", 28, "OUTLINE")
@@ -138,11 +139,10 @@ HeaderSubtitle:SetTextColor(0.82, 0.82, 0.84, 1)
 HeaderSubtitle:SetText(L("HEADER_SUBTITLE"))
 
 local VersionContainer = CreateFrame("Frame", nil, Header)
-VersionContainer:SetPoint("TOPRIGHT", Header, "TOPRIGHT", -16, -8)
-VersionContainer:SetSize(180, 44)
+VersionContainer:SetPoint("TOPRIGHT", Header, "TOPRIGHT", -16, -34)
+VersionContainer:SetSize(180, 52)
 
 local VersionBadge = CreateFrame("Frame", nil, VersionContainer)
-VersionBadge:SetPoint("TOPRIGHT", VersionContainer, "TOPRIGHT", 0, 0)
 VersionBadge:SetSize(148, 24)
 
 local VersionBadgeBg = VersionBadge:CreateTexture(nil, "BACKGROUND")
@@ -165,13 +165,16 @@ VersionBadgeText:SetText(L("VERSION") .. " " .. version)
 
 local ReloadButton = CreateFrame("Button", nil, VersionContainer, "UIPanelButtonTemplate")
 ReloadButton:SetSize(148, 18)
-ReloadButton:SetPoint("BOTTOMRIGHT", VersionContainer, "BOTTOMRIGHT", 0, 0)
+ReloadButton:SetPoint("TOPRIGHT", VersionContainer, "TOPRIGHT", 0, 0)
 ReloadButton:SetText(L("RELOAD"))
 ReloadButton:SetNormalFontObject("GameFontNormalSmall")
 ReloadButton:SetHighlightFontObject("GameFontHighlightSmall")
 ReloadButton:SetScript("OnClick", function()
     ReloadUI()
 end)
+
+VersionBadge:ClearAllPoints()
+VersionBadge:SetPoint("TOPRIGHT", ReloadButton, "BOTTOMRIGHT", 0, -6)
 
 local Sidebar = CreateFrame("Frame", nil, BeavisFrame)
 Sidebar:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 10, -124)

@@ -37,90 +37,236 @@ local EasyLFGWasActiveListing = false
 
 -- Realm -> Flagge.
 -- Blizzard liefert uns kein direktes "Land", also leiten wir es hier über den Realm ab.
-local EU_REALM_FLAGS = {
-    ["Aegwynn"] = "DE",
-    ["Alexstrasza"] = "DE",
-    ["Alleria"] = "DE",
-    ["Antonidas"] = "DE",
-    ["Arthas"] = "DE",
-    ["Azshara"] = "DE",
-    ["Baelgun"] = "DE",
-    ["Blackhand"] = "DE",
-    ["Blackmoore"] = "DE",
-    ["Blackrock"] = "DE",
-    ["Destromath"] = "DE",
-    ["Die Aldor"] = "DE",
-    ["Die Arguswacht"] = "DE",
-    ["Dun Morogh"] = "DE",
-    ["Eredar"] = "DE",
-    ["Forscherliga"] = "DE",
-    ["Frostwolf"] = "DE",
-    ["Gilneas"] = "DE",
-    ["Gul'dan"] = "DE",
-    ["Kel'Thuzad"] = "DE",
-    ["Khaz'goroth"] = "DE",
-    ["Kult der Verdammten"] = "DE",
-    ["Lothar"] = "DE",
-    ["Madmortem"] = "DE",
-    ["Mal'Ganis"] = "DE",
-    ["Mannoroth"] = "DE",
-    ["Nefarian"] = "DE",
-    ["Nera'thor"] = "DE",
-    ["Nozdormu"] = "DE",
-    ["Rajaxx"] = "DE",
-    ["Rexxar"] = "DE",
-    ["Rubinwacht"] = "DE",
-    ["Sen'jin"] = "DE",
-    ["Thrall"] = "DE",
-    ["Tirion"] = "DE",
-    ["Todeswache"] = "DE",
-    ["Ulduar"] = "DE",
-    ["Un'Goro"] = "DE",
-    ["Vek'lor"] = "DE",
-    ["Wrathbringer"] = "DE",
-    ["Zirkel des Cenarius"] = "DE",
-    ["Argent Dawn"] = "GB",
-    ["Draenor"] = "GB",
-    ["Kazzak"] = "GB",
-    ["Ravencrest"] = "GB",
-    ["Silvermoon"] = "GB",
-    ["Stormscale"] = "GB",
-    ["Sylvanas"] = "GB",
-    ["Tarren Mill"] = "GB",
-    ["Twisting Nether"] = "GB",
-    ["Outland"] = "GB",
-    ["Ragnaros"] = "GB",
-    ["Sanguino"] = "ES",
-    ["C'Thun"] = "ES",
-    ["Dun Modr"] = "ES",
-    ["Exodar"] = "ES",
-    ["Los Errantes"] = "ES",
-    ["Minahonda"] = "ES",
-    ["Tyrande"] = "ES",
-    ["Uldum"] = "ES",
-    ["Aggra (Portuguese)"] = "PT",
-    ["Aggra (Portugues)"] = "PT",
-    ["Nemesis"] = "IT",
+-- Die Tabellen enthalten nur Realms mit Nicht-Default-Flagge plus bekannte Alias-Schreibweisen.
+-- EU fällt weiterhin auf GB zurück, US auf US.
+local EU_REALM_FLAG_GROUPS = {
+    DE = {
+        "aegwynn",
+        "alexstrasza",
+        "alleria",
+        "aman'thul",
+        "ambossar",
+        "anetheron",
+        "anub'arak",
+        "antonidas",
+        "area52",
+        "arygos",
+        "arthas",
+        "azshara",
+        "baelgun",
+        "blackhand",
+        "blackmoore",
+        "blackrock",
+        "blutkessel",
+        "daskonsortium",
+        "dassyndikat",
+        "dalvengyr",
+        "derabyssischerat",
+        "dermithrilorden",
+        "derratvondalaran",
+        "dethecus",
+        "diealdor",
+        "diearguswacht",
+        "dieewigewacht",
+        "dienachtwache",
+        "diesilbernehand",
+        "dietodeskrallen",
+        "dunmorogh",
+        "durotan",
+        "echsenkessel",
+        "eredar",
+        "festungderstürme",
+        "forscherliga",
+        "frostmourne",
+        "frostwolf",
+        "garrosh",
+        "gilneas",
+        "gorgonnash",
+        "gul'dan",
+        "kargath",
+        "kel'thuzad",
+        "khaz'goroth",
+        "kil'jaeden",
+        "krag'jin",
+        "kultderverdammten",
+        "lordaeron",
+        "lothar",
+        "madmortem",
+        "mal'ganis",
+        "malfurion",
+        "malorne",
+        "malygos",
+        "mannoroth",
+        "mug'thol",
+        "nathrezim",
+        "nazjatar",
+        "nefarian",
+        "nera'thor",
+        "nethersturm",
+        "norgannon",
+        "nozdormu",
+        "onyxia",
+        "perenolde",
+        "proudmoore",
+        "rajaxx",
+        "rexxar",
+        "rubinwacht",
+        "sen'jin",
+        "shattrath",
+        "taerar",
+        "teldrassil",
+        "terrordar",
+        "theradras",
+        "thrall",
+        "tichondrius",
+        "tirion",
+        "todeswache",
+        "ulduar",
+        "un'goro",
+        "vek'lor",
+        "wrathbringer",
+        "ysera",
+        "zirkeldescenarius",
+        "zuluhed",
+    },
+    ES = {
+        "c'thun",
+        "colinaspardas",
+        "dunmodr",
+        "exodar",
+        "loserrantes",
+        "mandokir",
+        "minahonda",
+        "sanguino",
+        "shen'dralar",
+        "tyrande",
+        "uldum",
+        "zul'jin",
+    },
+    PT = {
+        "aggra(português)",
+        "aggra(portuguese)",
+        "aggra(portugues)",
+    },
+    IT = {
+        "nemesis",
+        "pozzodell'eternità",
+        "pozzodell'eternita",
+    },
+    FR = {
+        "arakarahm",
+        "arathi",
+        "archimonde",
+        "chantséternels",
+        "cho'gall",
+        "confrérieduthorium",
+        "conseildesombres",
+        "cultedelarivenoire",
+        "dalaran",
+        "drek'thar",
+        "eldre'thalas",
+        "eitrigg",
+        "elune",
+        "garona",
+        "hyjal",
+        "illidan",
+        "kael'thas",
+        "khazmodan",
+        "kirintor",
+        "krasus",
+        "lacroisadeécarlate",
+        "lesclairvoyants",
+        "lessentinelles",
+        "marécagedezangar",
+        "medivh",
+        "naxxramas",
+        "ner'zhul",
+        "rashgarroth",
+        "sargeras",
+        "sinstralis",
+        "suramar",
+        "templenoir",
+        "throk'feroth",
+        "uldaman",
+        "varimathras",
+        "vol'jin",
+        "ysondre",
+    },
+    RU = {
+        "Азурегос",
+        "Борейская тундра",
+        "Вечная Песня",
+        "Галакронд",
+        "Голдринн",
+        "Гордунни",
+        "Гром",
+        "Дракономор",
+        "Король-лич",
+        "Пиратская Бухта",
+        "Подземье",
+        "Разувий",
+        "Ревущий фьорд",
+        "Свежеватель Душ",
+        "Седогрив",
+        "Страж Смерти",
+        "Термоштепсель",
+        "Ткач Смерти",
+        "Черный Шрам",
+        "Ясеневый лес",
+        "Azuregos",
+        "Borean Tundra",
+        "Eversong",
+        "Galakrond",
+        "Goldrinn",
+        "Gordunni",
+        "Grom",
+        "Drakonomor",
+        "Lich King",
+        "Booty Bay",
+        "Deepholm",
+        "Razuvious",
+        "Howling Fjord",
+        "Soulflayer",
+        "Greymane",
+        "Deathguard",
+        "Thermaplugg",
+        "Deathweaver",
+        "Blackscar",
+        "Ashenvale",
+    },
 }
 
-local US_REALM_FLAGS = {
-    ["Azralon"] = "BR",
-    ["Gallywix"] = "BR",
-    ["Goldrinn"] = "BR",
-    ["Nemesis"] = "BR",
-    ["Tol Barad"] = "BR",
-    ["Aman'Thul"] = "AU",
-    ["Barthilas"] = "AU",
-    ["Caelestrasz"] = "AU",
-    ["Dreadmaul"] = "AU",
-    ["Frostmourne"] = "AU",
-    ["Gundrak"] = "AU",
-    ["Jubei'Thos"] = "AU",
-    ["Khaz'goroth"] = "AU",
-    ["Nagrand"] = "AU",
-    ["Saurfang"] = "AU",
-    ["Thaurissan"] = "AU",
+local US_REALM_FLAG_GROUPS = {
+    BR = {
+        "azralon",
+        "gallywix",
+        "goldrinn",
+        "nemesis",
+        "tolbarad",
+    },
+    AU = {
+        "aman'thul",
+        "barthilas",
+        "caelestrasz",
+        "dath'remar",
+        "dreadmaul",
+        "frostmourne",
+        "gundrak",
+        "jubei'thos",
+        "khaz'goroth",
+        "nagrand",
+        "saurfang",
+        "thaurissan",
+    },
+    MX = {
+        "drakkari",
+        "quel'thalas",
+        "ragnaros",
+    },
 }
+
+local EU_REALM_FLAGS = nil
+local US_REALM_FLAGS = nil
 
 function LFG.GetLFGDB()
     BeavisQoLDB = BeavisQoLDB or {}
@@ -217,6 +363,38 @@ local function NormalizeRealmName(realmName)
     return realmName
 end
 
+local function NormalizeRealmLookupKey(realmName)
+    realmName = NormalizeRealmName(realmName)
+    if not realmName then
+        return nil
+    end
+
+    realmName = realmName:gsub("[%s%-]+", "")
+    realmName = realmName:gsub("[A-Z]", function(letter)
+        return string.lower(letter)
+    end)
+
+    return realmName
+end
+
+local function BuildRealmFlagMap(groups)
+    local realmFlags = {}
+
+    for countryCode, realms in pairs(groups) do
+        for _, realmName in ipairs(realms) do
+            local realmKey = NormalizeRealmLookupKey(realmName)
+            if realmKey then
+                realmFlags[realmKey] = countryCode
+            end
+        end
+    end
+
+    return realmFlags
+end
+
+EU_REALM_FLAGS = BuildRealmFlagMap(EU_REALM_FLAG_GROUPS)
+US_REALM_FLAGS = BuildRealmFlagMap(US_REALM_FLAG_GROUPS)
+
 -- Applicant-Namen kommen als "Name-Realm". Für denselben Realm wie wir selbst gibt es nicht immer einen Bindestrich.
 local function GetRealmNameFromFullName(fullName)
     if not IsUsablePlainString(fullName) then
@@ -231,6 +409,21 @@ local function GetRealmNameFromFullName(fullName)
     if GetRealmName then
         return NormalizeRealmName(GetRealmName())
     end
+end
+
+local function GetDisplayNameFromFullName(fullName)
+    if not IsUsablePlainString(fullName) then
+        return nil
+    end
+
+    if Ambiguate then
+        local ok, shortName = pcall(Ambiguate, fullName, "short")
+        if ok and IsUsablePlainString(shortName) then
+            return shortName
+        end
+    end
+
+    return fullName:match("^[^-]+") or fullName
 end
 
 -- Fallback, falls ein Realm noch nicht in unserer Liste steht.
@@ -251,17 +444,17 @@ end
 
 -- Die eigentliche Zuordnung läuft absichtlich separat, damit man die Realm-Listen später leichter erweitern kann.
 function LFG.GetCountryCodeForRealm(realmName)
-    realmName = NormalizeRealmName(realmName)
-    if not realmName then
+    local realmKey = NormalizeRealmLookupKey(realmName)
+    if not realmKey then
         return nil
     end
 
     if GetCurrentRegion and GetCurrentRegion() == 3 then
-        return EU_REALM_FLAGS[realmName] or GetDefaultFlagForRegion()
+        return EU_REALM_FLAGS[realmKey] or GetDefaultFlagForRegion()
     end
 
     if GetCurrentRegion and GetCurrentRegion() == 1 then
-        return US_REALM_FLAGS[realmName] or GetDefaultFlagForRegion()
+        return US_REALM_FLAGS[realmKey] or GetDefaultFlagForRegion()
     end
 
     return nil
@@ -425,6 +618,21 @@ local function DrawBrazilFlag(flagFrame)
     orb:Show()
 end
 
+local function DrawMexicoFlag(flagFrame)
+    DrawVerticalStripes(flagFrame, {
+        { 0.0, 0.40, 0.21 },
+        { 1.0, 1.0, 1.0 },
+        { 0.81, 0.12, 0.17 },
+    }, { 1, 1, 1 })
+
+    local emblem = flagFrame.Parts[4]
+    emblem:ClearAllPoints()
+    emblem:SetPoint("CENTER", flagFrame, "CENTER", 0, 0)
+    emblem:SetSize(2, 2)
+    SetTextureColor(emblem, { 0.42, 0.29, 0.10 })
+    emblem:Show()
+end
+
 local function DrawAustraliaFlag(flagFrame)
     flagFrame.Background:SetColorTexture(0.0, 0.16, 0.53, 1)
     flagFrame.Background:Show()
@@ -540,10 +748,24 @@ local function RenderFlag(flagFrame, countryCode)
             { 1.0, 1.0, 1.0 },
             { 0.81, 0.0, 0.0 },
         }, { 1, 1, 1 })
+    elseif countryCode == "FR" then
+        DrawVerticalStripes(flagFrame, {
+            { 0.0, 0.19, 0.57 },
+            { 1.0, 1.0, 1.0 },
+            { 0.86, 0.14, 0.20 },
+        }, { 1, 1, 1 })
+    elseif countryCode == "RU" then
+        DrawHorizontalStripes(flagFrame, {
+            { 1.0, 1.0, 1.0 },
+            { 0.0, 0.22, 0.72 },
+            { 0.84, 0.17, 0.22 },
+        }, { 1, 1, 1 })
     elseif countryCode == "US" then
         DrawUSFlag(flagFrame)
     elseif countryCode == "BR" then
         DrawBrazilFlag(flagFrame)
+    elseif countryCode == "MX" then
+        DrawMexicoFlag(flagFrame)
     elseif countryCode == "AU" then
         DrawAustraliaFlag(flagFrame)
     else
@@ -584,6 +806,68 @@ local function GetAllFontStrings(frame)
     return fontStrings
 end
 
+local function FontStringContainsDisplayName(fontString, displayName)
+    if not fontString or not displayName or not fontString.GetText then
+        return false
+    end
+
+    local text = fontString:GetText()
+    if not IsUsablePlainString(text) then
+        return false
+    end
+
+    return text == displayName or text:find(displayName, 1, true) ~= nil
+end
+
+local function GetVisibleFontStringWidth(fontString)
+    if not fontString or not fontString.GetStringWidth then
+        return nil
+    end
+
+    local width = fontString:GetStringWidth() or 0
+    if width <= 0 then
+        return nil
+    end
+
+    local regionWidth = fontString:GetWidth() or 0
+    if regionWidth > 0 then
+        width = math.min(width, regionWidth)
+    end
+
+    return width
+end
+
+local function AnchorFlagBehindName(flagFrame, anchorRegion, paddingX, offsetY)
+    flagFrame:ClearAllPoints()
+
+    if not anchorRegion or not anchorRegion.GetObjectType or anchorRegion:GetObjectType() ~= "FontString" then
+        flagFrame:SetPoint("LEFT", anchorRegion, "RIGHT", paddingX or 6, offsetY or 0)
+        return
+    end
+
+    local regionWidth = anchorRegion:GetWidth() or 0
+    local visibleWidth = GetVisibleFontStringWidth(anchorRegion) or 0
+    local justifyH = anchorRegion.GetJustifyH and anchorRegion:GetJustifyH() or "LEFT"
+    local anchorOffset = visibleWidth
+
+    if regionWidth > 0 then
+        if justifyH == "RIGHT" then
+            anchorOffset = regionWidth
+        elseif justifyH == "CENTER" then
+            anchorOffset = (regionWidth + visibleWidth) / 2
+        end
+    end
+
+    if anchorOffset <= 0 then
+        flagFrame:SetPoint("LEFT", anchorRegion, "RIGHT", paddingX or 6, offsetY or 0)
+        return
+    end
+
+    -- Wir verankern an der sichtbaren Textbreite statt am gesamten Namensfeld,
+    -- damit die Flagge wirklich hinter dem Namen bleibt und nicht in Score-Spalten rutscht.
+    flagFrame:SetPoint("LEFT", anchorRegion, "LEFT", anchorOffset + (paddingX or 6), offsetY or 0)
+end
+
 -- Der Blizzard-Applicant-Row ist nicht super konsistent benannt.
 -- Deshalb suchen wir zuerst nach bekannten Keys und fallen dann auf die Regionen des Frames zurück.
 local function GetApplicantNameRegion(memberFrame)
@@ -608,16 +892,35 @@ local function GetApplicantNameRegion(memberFrame)
 end
 
 -- Bei Suchergebnissen hängen wir die Flagge an den sichtbaren Gruppentitel.
-local function GetSearchResultNameRegion(resultFrame)
+local function GetSearchResultNameRegion(resultFrame, leaderFullName)
+    local displayName = GetDisplayNameFromFullName(leaderFullName)
     local preferredKeys = {
+        "LeaderName",
+        "Leader",
+        "LeaderText",
+        "LeaderNameText",
         "Name",
         "name",
         "Title",
         "TitleText",
         "NameString",
         "ActivityName",
-        "LeaderName",
     }
+
+    if displayName then
+        for _, key in ipairs(preferredKeys) do
+            local region = GetFontStringByKeys(resultFrame, { key })
+            if region and FontStringContainsDisplayName(region, displayName) then
+                return region
+            end
+        end
+
+        for _, fontString in ipairs(GetAllFontStrings(resultFrame)) do
+            if FontStringContainsDisplayName(fontString, displayName) then
+                return fontString
+            end
+        end
+    end
 
     local region = GetFontStringByKeys(resultFrame, preferredKeys)
     if region then
@@ -727,9 +1030,7 @@ function LFG.ApplyFlagToApplicantMember(memberFrame, applicantID, memberIdx)
         return
     end
 
-    flagFrame:ClearAllPoints()
-    -- Der negative Offset zieht die Flagge leicht in den Namensbereich, damit sie optisch wie im Blizzard-Layout sitzt.
-    flagFrame:SetPoint("LEFT", nameRegion, "RIGHT", -14, 0)
+    AnchorFlagBehindName(flagFrame, nameRegion, 4, 0)
     RenderFlag(flagFrame, countryCode)
 end
 
@@ -792,15 +1093,14 @@ function LFG.ApplyFlagToSearchResult(resultFrame, ...)
 
     local realmName = GetRealmNameFromFullName(searchResultInfo.leaderName)
     local countryCode = LFG.GetCountryCodeForRealm(realmName)
-    local nameRegion = GetSearchResultNameRegion(resultFrame)
+    local nameRegion = GetSearchResultNameRegion(resultFrame, searchResultInfo.leaderName)
 
     if not countryCode or not nameRegion then
         flagFrame:Hide()
         return
     end
 
-    flagFrame:ClearAllPoints()
-    flagFrame:SetPoint("LEFT", nameRegion, "RIGHT", 6, 0)
+    AnchorFlagBehindName(flagFrame, nameRegion, 4, 0)
     RenderFlag(flagFrame, countryCode)
 end
 
@@ -893,6 +1193,37 @@ local function HasActiveListing()
     return false
 end
 
+local function IsPlayerListingLeader()
+    local partyCategory = LE_PARTY_CATEGORY_HOME
+
+    if IsInRaid and IsInRaid(partyCategory) then
+        if UnitIsGroupLeader then
+            return UnitIsGroupLeader("player", partyCategory) == true
+        end
+
+        if IsRaidLeader then
+            return IsRaidLeader() == true
+        end
+
+        return false
+    end
+
+    if IsInGroup and IsInGroup(partyCategory) then
+        if UnitIsGroupLeader then
+            return UnitIsGroupLeader("player", partyCategory) == true
+        end
+
+        if IsPartyLeader then
+            return IsPartyLeader() == true
+        end
+
+        return false
+    end
+
+    -- Solo-Listungen duerfen weiterhin sichtbar sein.
+    return true
+end
+
 local function GetEasyLFGClassColor(classFile)
     if RAID_CLASS_COLORS and classFile and RAID_CLASS_COLORS[classFile] then
         local color = RAID_CLASS_COLORS[classFile]
@@ -903,18 +1234,12 @@ local function GetEasyLFGClassColor(classFile)
 end
 
 local function GetEasyLFGShortName(fullName)
-    if not IsUsablePlainString(fullName) then
-        return UNKNOWN or "Unknown"
+    local shortName = GetDisplayNameFromFullName(fullName)
+    if IsUsablePlainString(shortName) then
+        return shortName
     end
 
-    if Ambiguate then
-        local shortName = Ambiguate(fullName, "short")
-        if IsUsablePlainString(shortName) then
-            return shortName
-        end
-    end
-
-    return fullName:match("^[^-]+") or fullName
+    return UNKNOWN or "Unknown"
 end
 
 local function GetEasyLFGTextureMarkup(texturePath, width, height, left, right, top, bottom)
@@ -1080,20 +1405,22 @@ local function GetEasyLFGApplicants()
     local applicants = C_LFGList.GetApplicants() or {}
     local orderedApplicants = {}
 
+    -- Blizzard liefert hier inzwischen Secret-Werte mit. Wir behalten deshalb
+    -- keine Applicant-Tabellen, sondern nur die Felder, die das Overlay braucht.
     for _, applicantID in ipairs(applicants) do
         local applicantData = C_LFGList.GetApplicantInfo(applicantID)
         if type(applicantData) == "table" then
             orderedApplicants[#orderedApplicants + 1] = {
                 applicantID = applicantID,
-                applicantData = applicantData,
+                displayOrderID = tonumber(applicantData.displayOrderID) or applicantID,
+                applicationStatus = applicantData.applicationStatus,
+                numMembers = tonumber(applicantData.numMembers) or 0,
             }
         end
     end
 
     table.sort(orderedApplicants, function(left, right)
-        local leftOrder = left.applicantData.displayOrderID or left.applicantID
-        local rightOrder = right.applicantData.displayOrderID or right.applicantID
-        return leftOrder < rightOrder
+        return left.displayOrderID < right.displayOrderID
     end)
 
     applicantCount = #orderedApplicants
@@ -1101,14 +1428,13 @@ local function GetEasyLFGApplicants()
     local visibleApplicantCount = 0
 
     for _, applicant in ipairs(orderedApplicants) do
-        local applicantData = applicant.applicantData
-        if not IsEasyLFGVisibleStatus(applicantData.applicationStatus) then
+        if not IsEasyLFGVisibleStatus(applicant.applicationStatus) then
             EasyLFGExpandedApplicants[applicant.applicantID] = nil
         else
-        local numMembers = math.max(0, applicantData.numMembers or 0)
+            local numMembers = math.max(0, applicant.numMembers or 0)
             local applicantEntry = {
                 applicantID = applicant.applicantID,
-                applicationStatus = applicantData.applicationStatus,
+                applicationStatus = applicant.applicationStatus,
                 memberCount = numMembers,
                 members = {},
             }
@@ -1131,11 +1457,9 @@ local function GetEasyLFGApplicants()
                     canTank = canTank,
                     canHealer = canHealer,
                     canDamage = canDamage,
-                    applicationStatus = applicantData.applicationStatus,
+                    applicationStatus = applicant.applicationStatus,
                     isPrimary = memberIndex == 1,
                     memberCount = numMembers,
-                    isNew = applicantData.isNew == true,
-                    comment = applicantData.comment,
                     isLeaver = isLeaver == true,
                 }
             end
@@ -1596,14 +1920,15 @@ local function RefreshEasyLFGOverlay()
     end
 
     local activeListing = HasActiveListing()
-    if activeListing and not EasyLFGWasActiveListing then
+    local controllableListing = activeListing and IsPlayerListingLeader()
+    if controllableListing and not EasyLFGWasActiveListing then
         EasyLFGSuppressed = false
-    elseif not activeListing then
+    elseif not controllableListing then
         EasyLFGSuppressed = false
     end
-    EasyLFGWasActiveListing = activeListing
+    EasyLFGWasActiveListing = controllableListing
 
-    if not activeListing then
+    if not controllableListing then
         overlay.Summary:SetText(L("EASY_LFG_OVERLAY_NO_GROUP_SHORT"))
         LayoutEasyLFGRows(0, false)
         overlay:Hide()
