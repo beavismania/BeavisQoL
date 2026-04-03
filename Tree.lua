@@ -39,16 +39,8 @@ SidebarSearchPlaceholder:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 SidebarSearchPlaceholder:SetTextColor(0.58, 0.58, 0.60, 1)
 SidebarSearchPlaceholder:SetText(L("NAVIGATION_SEARCH_PLACEHOLDER"))
 
-local SidebarSearchStatus = SidebarFrame:CreateFontString(nil, "ARTWORK")
-SidebarSearchStatus:SetPoint("TOPLEFT", SidebarSearchEditBox, "BOTTOMLEFT", -2, -7)
-SidebarSearchStatus:SetPoint("RIGHT", SidebarFrame, "RIGHT", -12, 0)
-SidebarSearchStatus:SetJustifyH("LEFT")
-SidebarSearchStatus:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-SidebarSearchStatus:SetTextColor(0.74, 0.74, 0.76, 1)
-SidebarSearchStatus:SetText(L("NAVIGATION_SEARCH_HINT"))
-
 local SidebarScrollFrame = CreateFrame("ScrollFrame", nil, SidebarFrame, "UIPanelScrollFrameTemplate")
-SidebarScrollFrame:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 10, -92)
+SidebarScrollFrame:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 10, -74)
 SidebarScrollFrame:SetPoint("BOTTOMRIGHT", SidebarFrame, "BOTTOMRIGHT", -28, 10)
 SidebarScrollFrame:EnableMouseWheel(true)
 
@@ -169,8 +161,7 @@ local function UpdateSearchPlaceholder()
 end
 
 local function SetSearchStatusText(text, red, green, blue)
-    SidebarSearchStatus:SetText(text or "")
-    SidebarSearchStatus:SetTextColor(red or 0.74, green or 0.74, blue or 0.76, 1)
+    return
 end
 
 local function BuildVisibleEntriesForSearch(entries, groupSearchText)
@@ -402,7 +393,7 @@ local function RegisterModuleEntry(section, labelTextKey, pageKey, options)
 end
 
 local TreeHomeButton, TreeHomeText = RegisterGeneralEntry("Home", "HOME", {
-    searchTextKeys = { "WELCOME_SUBTITLE", "WELCOME_BODY", "PROJECT_STATUS", "PROGRESS_CARD_BODY", "COMFORT_CARD_BODY", "DISCORD_BODY" },
+    searchTextKeys = { "WELCOME_SUBTITLE", "WELCOME_BODY", "PROJECT_STATUS", "TWITCH_BODY", "DISCORD_BODY" },
     searchAliases = "hub dashboard start overview",
 })
 local TreeVersionButton, TreeVersionText = RegisterGeneralEntry("Version", "VERSION", {
@@ -472,6 +463,16 @@ local EasyDeleteEntry = RegisterModuleEntry(ComfortSection, "EASY_DELETE", "Misc
     searchTextKeys = { "EASY_DELETE_HINT" },
     searchAliases = "delete remove confirm item",
 })
+local CutsceneSkipEntry = RegisterModuleEntry(ComfortSection, "CUTSCENE_SKIP", "Misc", {
+    miscSection = "CutsceneSkip",
+    searchTextKeys = { "CUTSCENE_SKIP_HINT" },
+    searchAliases = "cutscene cinematic movie story video skip autoskip",
+})
+local FlightMasterTimerEntry = RegisterModuleEntry(ComfortSection, "FLIGHT_MASTER_TIMER", "Misc", {
+    miscSection = "FlightMasterTimer",
+    searchTextKeys = { "FLIGHT_MASTER_TIMER_HINT", "FLIGHT_MASTER_TIMER_UNKNOWN" },
+    searchAliases = "flight taxi gryphon wyvern flightmaster travel timer arrival countdown",
+})
 -- Dieser Tree-Eintrag springt nicht auf eine eigene Seite, sondern direkt auf
 -- die passende Karte innerhalb der Misc-Seite.
 local TooltipItemLevelEntry = RegisterModuleEntry(ComfortSection, "TOOLTIP_ITEMLEVEL", "Misc", {
@@ -488,6 +489,15 @@ local PreyHuntProgressEntry = RegisterModuleEntry(ComfortSection, "PREY_HUNT_PRO
     miscSection = "PreyHuntProgress",
     searchTextKeys = { "PREY_HUNT_PROGRESS_HINT" },
     searchAliases = "midnight prey hunt jagd progress percent prozent symbol",
+})
+local KeystoneActionsEntry = RegisterModuleEntry(ComfortSection, "KEYSTONE_ACTIONS", "Misc", {
+    miscSection = "KeystoneActions",
+    searchTextKeys = { "KEYSTONE_ACTIONS_HINT", "KEYSTONE_ACTIONS_READYCHECK", "KEYSTONE_ACTIONS_PULLTIMER" },
+    searchAliases = "mythic plus keystone readycheck pulltimer countdown start",
+})
+local PortalViewerEntry = RegisterModuleEntry(ComfortSection, "PORTAL_VIEWER_TITLE", "PortalViewer", {
+    searchTextKeys = { "PORTAL_VIEWER_HINT", "PORTAL_VIEWER_SECTION_AVAILABLE", "PORTAL_VIEWER_SECTION_MISSING" },
+    searchAliases = "portal viewer portals dungeon teleport midnight mythic plus season",
 })
 local FishingEntry = RegisterModuleEntry(ComfortSection, "FISHING_HELPER", "Fishing", {
     searchTextKeys = {
@@ -532,8 +542,8 @@ local BossGuidesEntry = RegisterModuleEntry(InterfaceSection, "BOSS_GUIDES", "Bo
     searchAliases = "boss guide raid dungeon tactics tabs overlay button",
 })
 local LFGEntry = RegisterModuleEntry(GroupSection, "LFG", "LFG", {
-    searchTextKeys = { "LFG_DESC", "FLAGS_HINT", "EASY_LFG_HINT", "EASY_LFG_SHOW_OVERLAY_HINT" },
-    searchAliases = "group finder premade flags realms applicants invite easy lfg overlay queue",
+    searchTextKeys = { "LFG_DESC", "FLAGS_HINT", "EASY_LFG_HINT", "EASY_LFG_SHOW_OVERLAY_HINT", "INVITE_TIMER_HINT" },
+    searchAliases = "group finder premade flags realms applicants invite easy lfg overlay queue timer countdown ready",
 })
 local StreamerPlannerEntry = RegisterModuleEntry(StreamerSection, "STREAMER_PLANNER", "StreamerPlanner", {
     searchTextKeys = {
@@ -777,8 +787,11 @@ BeavisQoL.UpdateTree = function()
     AutoRepairEntry.text:SetText(L("AUTOREPAIR"))
     FastLootEntry.text:SetText(L("FAST_LOOT"))
     EasyDeleteEntry.text:SetText(L("EASY_DELETE"))
+    CutsceneSkipEntry.text:SetText(L("CUTSCENE_SKIP"))
     TooltipItemLevelEntry.text:SetText(L("TOOLTIP_ITEMLEVEL"))
     CameraDistanceEntry.text:SetText(L("CAMERA_DISTANCE"))
+    KeystoneActionsEntry.text:SetText(L("KEYSTONE_ACTIONS"))
+    PortalViewerEntry.text:SetText(L("PORTAL_VIEWER_TITLE"))
     FishingEntry.text:SetText(L("FISHING_HELPER"))
     StatsEntry.text:SetText(L("STATS"))
     MarkerBarEntry.text:SetText(L("MARKER_BAR"))
@@ -886,6 +899,14 @@ for _, entry in ipairs(ModuleEntries) do
     entry.button:SetScript("OnClick", function()
         if entry.miscSection then
             BeavisQoL.OpenMiscSection(entry.miscSection, entry.text)
+            return
+        end
+
+        if entry.pageKey == "PortalViewer" then
+            local portalViewerModule = BeavisQoL.PortalViewerModule
+            if portalViewerModule and portalViewerModule.ToggleWindow then
+                portalViewerModule.ToggleWindow()
+            end
             return
         end
 

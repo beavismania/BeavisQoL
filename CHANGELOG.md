@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.27.0 - 2026-04-03
+
+### Versionshinweis
+
+- `0.27.0` ist der aktuelle Feature-Stand; die heutigen Erweiterungen an neuen Modulen gehören weiter zu diesem Release und sind kein separates Hotfix-Release
+- die mittlere Zahl steht für den nächsten Feature-/Modulstand, die hintere Zahl bleibt ohne Hotfixes auf `0`
+
+### Neu
+
+- neues Komfort-Modul `Cutscene Skip` ergänzt
+- neues Komfort-Modul `Flugmeister-Timer` ergänzt
+- neues Komfort-Modul `Schlüsselstein-Buttons` ergänzt
+- neues Fenster-Modul `Portal Viewer` ergänzt
+- `Schlüsselstein-Buttons` ersetzen im Mythic+-Schlüsselsteinfenster den Aktivieren-Button durch `Readycheck`, `Timer & GO` und optionalen `Auto Timer`
+- `Portal Viewer` im Minimap-Schnellmenü ergänzt
+- `Gruppensuche` zeigt jetzt für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen einen sichtbaren Ablauf-Timer
+- `Flugmeister-Timer` zeigt beim Flugmeister einen mittigen Countdown bis zur Ankunft
+- `Flugmeister-Timer` unterstützt optionale Ankunftssounds mit Auswahl und Test-Button
+- `Checkliste` enthält neue Weekly-Standardaufgaben für `PvP-Quests`, `Tiefenfortschritt` und `Tiefen-Held-Karte`
+
+### Verbessert
+
+- `Portal Viewer` kompakter und transparenter gestaltet und erkennt den Portalstatus robuster über Zauber- und Erfolgsdaten
+- `Cutscene Skip` merkt sich ausgelöste Movie- und Cinematic-Events dauerhaft und zeigt unbekannte Szenen weiterhin einmal normal an
+- `Flugmeister-Timer` lernt fehlende Flugrouten automatisch nach und nutzt bekannte Zeiten direkt als Schätzung
+- `Flugmeister-Timer` bietet jetzt auswählbare Ankunftssounds, einen Test-Button sowie einen Positioniermodus mit fixierbarem Overlay
+- `Flugmeister-Timer` lässt sich über ein Beispiel-Overlay auch ohne aktiven Flug ausrichten und auf seine Standardposition zurücksetzen
+- `Schlüsselstein-Buttons` unterstützen optionalen Gruppen-Lock sowie frei einstellbare Timer-Sekunden zwischen `1` und `30`
+- `Angelhilfe` hebt Angelgeräusche gezielter hervor, indem Musik, Ambiente und Haustier-Sounds während des Wartens reduziert und die ursprünglichen Soundeinstellungen danach wiederhergestellt werden
+- Versions- und Startseiteninfos lesen Version, Release-Datum, Spielversion und Release-Kanal jetzt zentral aus den Addon-Metadaten, damit der Projektstatus korrekt den aktuellen Status wie `Beta` statt eines festen `Alpha`-Labels zeigt
+- `Gruppensuche` bietet optionalen Countdown-Sound für Einladungen in den letzten fünf Sekunden
+- `Gruppensuche` registriert optionale Battlefield-Events jetzt client-sicherer
+- `Gruppensuche` deckt mit den Länderflaggen jetzt deutlich mehr Realms ab und verankert sie sauberer am sichtbaren Namen
+
+### Behoben
+
+- `Checkliste` setzt Berufs-Weekly-Aufgaben wieder zuverlässig beim Wochenreset zurück
+
 ## 0.24.1 - 2026-03-26
 
 ### Behoben

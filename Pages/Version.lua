@@ -2,6 +2,7 @@ local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
 local L = BeavisQoL.L
+local metadata = BeavisQoL.Metadata or {}
 
 --[[
 Diese Seite hat zwei Rollen:
@@ -14,12 +15,12 @@ Der Versionsvergleich funktioniert rein über Spieler, die dieselbe
 Versionsnachricht im Spiel austauschen.
 ]]
 
-local addonTitle = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or ADDON_NAME
-local addonVersion = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
-local addonAuthor = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Author") or L("UNKNOWN")
-local addonGameVersion = C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-GameVersion") or L("UNKNOWN")
-local addonGameVersionLabel = C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-GameVersionLabel") or L("UNKNOWN")
-local addonReleaseDate = C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-ReleaseDate") or L("UNKNOWN")
+local addonTitle = metadata.title or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or ADDON_NAME
+local addonVersion = metadata.version or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
+local addonAuthor = metadata.author or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Author") or L("UNKNOWN")
+local addonGameVersion = metadata.gameVersion or C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-GameVersion") or L("UNKNOWN")
+local addonGameVersionLabel = metadata.gameVersionLabel or C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-GameVersionLabel") or L("UNKNOWN")
+local addonReleaseDate = metadata.releaseDate or C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-ReleaseDate") or L("UNKNOWN")
 
 local WEBSITE_URL = "https://www.beavismania.de"
 local RELEASES_URL = "https://github.com/beavismania/BeavisQoL/releases"

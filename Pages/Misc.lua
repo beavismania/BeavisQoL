@@ -5,6 +5,14 @@ local L = BeavisQoL.L
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 
+if not rawget(_G, "UIDropDownMenuTemplate") then
+    if C_AddOns and C_AddOns.LoadAddOn then
+        C_AddOns.LoadAddOn("Blizzard_UIDropDownMenu")
+    elseif UIParentLoadAddOn then
+        UIParentLoadAddOn("Blizzard_UIDropDownMenu")
+    end
+end
+
 -- Misc.lua ist die Sammelseite für mehrere kleine Komfortmodule.
 -- Die eigentliche Fachlogik lebt in den Unterdateien unter `Pages/Misc/`,
 -- diese Datei baut hauptsächlich die sichtbare Seite und ihre Schalter.
@@ -254,6 +262,214 @@ FastLootHint:SetTextColor(0.80, 0.80, 0.80, 1)
 FastLootHint:SetText(L("FAST_LOOT_HINT"))
 
 -- ========================================
+-- Bereich: Cutscene Skip
+-- ========================================
+
+local CutsceneSkipPanel = CreateFrame("Frame", nil, PageMiscContent)
+CutsceneSkipPanel:SetPoint("TOPLEFT", FastLootPanel, "BOTTOMLEFT", 0, -18)
+CutsceneSkipPanel:SetPoint("TOPRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, -18)
+CutsceneSkipPanel:SetHeight(115)
+
+local CutsceneSkipBg = CutsceneSkipPanel:CreateTexture(nil, "BACKGROUND")
+CutsceneSkipBg:SetAllPoints()
+CutsceneSkipBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local CutsceneSkipBorder = CutsceneSkipPanel:CreateTexture(nil, "ARTWORK")
+CutsceneSkipBorder:SetPoint("BOTTOMLEFT", CutsceneSkipPanel, "BOTTOMLEFT", 0, 0)
+CutsceneSkipBorder:SetPoint("BOTTOMRIGHT", CutsceneSkipPanel, "BOTTOMRIGHT", 0, 0)
+CutsceneSkipBorder:SetHeight(1)
+CutsceneSkipBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local CutsceneSkipTitle = CutsceneSkipPanel:CreateFontString(nil, "OVERLAY")
+CutsceneSkipTitle:SetPoint("TOPLEFT", CutsceneSkipPanel, "TOPLEFT", 18, -14)
+CutsceneSkipTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+CutsceneSkipTitle:SetTextColor(1, 0.82, 0, 1)
+CutsceneSkipTitle:SetText(L("CUTSCENE_SKIP"))
+
+local CutsceneSkipCheckbox = CreateFrame("CheckButton", nil, CutsceneSkipPanel, "UICheckButtonTemplate")
+CutsceneSkipCheckbox:SetPoint("TOPLEFT", CutsceneSkipTitle, "BOTTOMLEFT", -4, -12)
+
+local CutsceneSkipLabel = CutsceneSkipPanel:CreateFontString(nil, "OVERLAY")
+CutsceneSkipLabel:SetPoint("LEFT", CutsceneSkipCheckbox, "RIGHT", 6, 0)
+CutsceneSkipLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+CutsceneSkipLabel:SetTextColor(1, 1, 1, 1)
+CutsceneSkipLabel:SetText(L("ACTIVE"))
+
+local CutsceneSkipHint = CutsceneSkipPanel:CreateFontString(nil, "OVERLAY")
+CutsceneSkipHint:SetPoint("TOPLEFT", CutsceneSkipCheckbox, "BOTTOMLEFT", 34, -2)
+CutsceneSkipHint:SetPoint("RIGHT", CutsceneSkipPanel, "RIGHT", -18, 0)
+CutsceneSkipHint:SetJustifyH("LEFT")
+CutsceneSkipHint:SetJustifyV("TOP")
+CutsceneSkipHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+CutsceneSkipHint:SetTextColor(0.80, 0.80, 0.80, 1)
+CutsceneSkipHint:SetText(L("CUTSCENE_SKIP_HINT"))
+
+-- ========================================
+-- Bereich: Flight Master Timer
+-- ========================================
+
+local FlightMasterTimerPanel = CreateFrame("Frame", nil, PageMiscContent)
+local FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT = 320
+local FLIGHT_MASTER_TIMER_PANEL_BOTTOM_PADDING = 18
+FlightMasterTimerPanel:SetPoint("TOPLEFT", CutsceneSkipPanel, "BOTTOMLEFT", 0, -18)
+FlightMasterTimerPanel:SetPoint("TOPRIGHT", CutsceneSkipPanel, "BOTTOMRIGHT", 0, -18)
+FlightMasterTimerPanel:SetHeight(FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT)
+
+local FlightMasterTimerBg = FlightMasterTimerPanel:CreateTexture(nil, "BACKGROUND")
+FlightMasterTimerBg:SetAllPoints()
+FlightMasterTimerBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local FlightMasterTimerBorder = FlightMasterTimerPanel:CreateTexture(nil, "ARTWORK")
+FlightMasterTimerBorder:SetPoint("BOTTOMLEFT", FlightMasterTimerPanel, "BOTTOMLEFT", 0, 0)
+FlightMasterTimerBorder:SetPoint("BOTTOMRIGHT", FlightMasterTimerPanel, "BOTTOMRIGHT", 0, 0)
+FlightMasterTimerBorder:SetHeight(1)
+FlightMasterTimerBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local FlightMasterTimerTitle = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerTitle:SetPoint("TOPLEFT", FlightMasterTimerPanel, "TOPLEFT", 18, -14)
+FlightMasterTimerTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+FlightMasterTimerTitle:SetTextColor(1, 0.82, 0, 1)
+FlightMasterTimerTitle:SetText(L("FLIGHT_MASTER_TIMER"))
+
+local FlightMasterTimerCheckbox = CreateFrame("CheckButton", nil, FlightMasterTimerPanel, "UICheckButtonTemplate")
+FlightMasterTimerCheckbox:SetPoint("TOPLEFT", FlightMasterTimerTitle, "BOTTOMLEFT", -4, -12)
+
+local FlightMasterTimerLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerLabel:SetPoint("LEFT", FlightMasterTimerCheckbox, "RIGHT", 6, 0)
+FlightMasterTimerLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+FlightMasterTimerLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerLabel:SetText(L("ACTIVE"))
+
+local FlightMasterTimerHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerHint:SetPoint("TOPLEFT", FlightMasterTimerCheckbox, "BOTTOMLEFT", 34, -2)
+FlightMasterTimerHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
+FlightMasterTimerHint:SetJustifyH("LEFT")
+FlightMasterTimerHint:SetJustifyV("TOP")
+FlightMasterTimerHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+FlightMasterTimerHint:SetTextColor(0.80, 0.80, 0.80, 1)
+FlightMasterTimerHint:SetText(L("FLIGHT_MASTER_TIMER_HINT"))
+
+local FlightMasterTimerSoundCheckbox = CreateFrame("CheckButton", nil, FlightMasterTimerPanel, "UICheckButtonTemplate")
+FlightMasterTimerSoundCheckbox:SetPoint("TOPLEFT", FlightMasterTimerHint, "BOTTOMLEFT", -14, -16)
+FlightMasterTimerSoundCheckbox:SetScale(0.85)
+
+local FlightMasterTimerSoundLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerSoundLabel:SetPoint("LEFT", FlightMasterTimerSoundCheckbox, "RIGHT", 4, 0)
+FlightMasterTimerSoundLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+FlightMasterTimerSoundLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerSoundLabel:SetText(L("FLIGHT_MASTER_TIMER_SOUND"))
+
+local FlightMasterTimerSoundHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerSoundHint:SetPoint("TOPLEFT", FlightMasterTimerSoundCheckbox, "BOTTOMLEFT", 30, -4)
+FlightMasterTimerSoundHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
+FlightMasterTimerSoundHint:SetJustifyH("LEFT")
+FlightMasterTimerSoundHint:SetJustifyV("TOP")
+FlightMasterTimerSoundHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+FlightMasterTimerSoundHint:SetTextColor(0.80, 0.80, 0.80, 1)
+FlightMasterTimerSoundHint:SetText(L("FLIGHT_MASTER_TIMER_SOUND_HINT"))
+
+local FlightMasterTimerSoundSelectLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerSoundSelectLabel:SetPoint("TOPLEFT", FlightMasterTimerSoundHint, "BOTTOMLEFT", 0, -14)
+FlightMasterTimerSoundSelectLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+FlightMasterTimerSoundSelectLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerSoundSelectLabel:SetText(L("FLIGHT_MASTER_TIMER_SOUND_SELECT"))
+
+local FlightMasterTimerSoundDropdown = CreateFrame("Frame", "BeavisQoLFlightMasterTimerSoundDropdown", FlightMasterTimerPanel, "UIDropDownMenuTemplate")
+FlightMasterTimerSoundDropdown:SetPoint("TOPLEFT", FlightMasterTimerSoundSelectLabel, "BOTTOMLEFT", -18, -2)
+UIDropDownMenu_SetWidth(FlightMasterTimerSoundDropdown, 175)
+UIDropDownMenu_SetText(FlightMasterTimerSoundDropdown, L("UNKNOWN"))
+
+local FlightMasterTimerSoundTestButton = CreateFrame("Button", nil, FlightMasterTimerPanel, "UIPanelButtonTemplate")
+FlightMasterTimerSoundTestButton:SetSize(26, 22)
+FlightMasterTimerSoundTestButton:SetPoint("TOPLEFT", FlightMasterTimerSoundDropdown, "TOPRIGHT", -4, -2)
+FlightMasterTimerSoundTestButton:SetText(">")
+
+local FlightMasterTimerLockCheckbox = CreateFrame("CheckButton", nil, FlightMasterTimerPanel, "UICheckButtonTemplate")
+FlightMasterTimerLockCheckbox:SetPoint("TOPLEFT", FlightMasterTimerSoundDropdown, "BOTTOMLEFT", 18, -10)
+FlightMasterTimerLockCheckbox:SetScale(0.85)
+
+local FlightMasterTimerLockLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerLockLabel:SetPoint("LEFT", FlightMasterTimerLockCheckbox, "RIGHT", 4, 0)
+FlightMasterTimerLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+FlightMasterTimerLockLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerLockLabel:SetText(L("FLIGHT_MASTER_TIMER_LOCK_OVERLAY"))
+
+local FlightMasterTimerLockHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerLockHint:SetPoint("TOPLEFT", FlightMasterTimerLockCheckbox, "BOTTOMLEFT", 30, -4)
+FlightMasterTimerLockHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
+FlightMasterTimerLockHint:SetJustifyH("LEFT")
+FlightMasterTimerLockHint:SetJustifyV("TOP")
+FlightMasterTimerLockHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+FlightMasterTimerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+FlightMasterTimerLockHint:SetText(L("FLIGHT_MASTER_TIMER_LOCK_OVERLAY_HINT"))
+
+local FlightMasterTimerPreviewButton = CreateFrame("Button", nil, FlightMasterTimerPanel, "UIPanelButtonTemplate")
+FlightMasterTimerPreviewButton:SetSize(170, 22)
+FlightMasterTimerPreviewButton:SetPoint("TOPLEFT", FlightMasterTimerLockHint, "BOTTOMLEFT", 0, -14)
+FlightMasterTimerPreviewButton:SetText(L("FLIGHT_MASTER_TIMER_POSITION_MODE"))
+
+local FlightMasterTimerPreviewHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerPreviewHint:SetPoint("TOPLEFT", FlightMasterTimerPreviewButton, "TOPRIGHT", 10, -3)
+FlightMasterTimerPreviewHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
+FlightMasterTimerPreviewHint:SetJustifyH("LEFT")
+FlightMasterTimerPreviewHint:SetJustifyV("TOP")
+FlightMasterTimerPreviewHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+FlightMasterTimerPreviewHint:SetTextColor(0.72, 0.72, 0.72, 1)
+FlightMasterTimerPreviewHint:SetText(L("FLIGHT_MASTER_TIMER_POSITION_MODE_HINT"))
+
+local FlightMasterTimerResetButton = CreateFrame("Button", nil, FlightMasterTimerPanel, "UIPanelButtonTemplate")
+FlightMasterTimerResetButton:SetSize(170, 22)
+FlightMasterTimerResetButton:SetPoint("TOPLEFT", FlightMasterTimerPreviewButton, "BOTTOMLEFT", 0, -14)
+FlightMasterTimerResetButton:SetText(L("RESET_POSITION"))
+
+local FlightMasterTimerResetHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
+FlightMasterTimerResetHint:SetPoint("TOPLEFT", FlightMasterTimerResetButton, "TOPRIGHT", 10, -3)
+FlightMasterTimerResetHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
+FlightMasterTimerResetHint:SetJustifyH("LEFT")
+FlightMasterTimerResetHint:SetJustifyV("TOP")
+FlightMasterTimerResetHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+FlightMasterTimerResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
+FlightMasterTimerResetHint:SetText(L("FLIGHT_MASTER_TIMER_RESET_HINT"))
+
+local function UpdateFlightMasterTimerPanelLayout()
+    local panelTop = FlightMasterTimerPanel:GetTop()
+    local lowestBottom = nil
+
+    if not panelTop then
+        FlightMasterTimerPanel:SetHeight(FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT)
+        return false
+    end
+
+    for _, region in ipairs({
+        FlightMasterTimerPreviewHint,
+        FlightMasterTimerResetHint,
+        FlightMasterTimerResetButton,
+    }) do
+        local bottom = region and region:GetBottom()
+        if bottom and (not lowestBottom or bottom < lowestBottom) then
+            lowestBottom = bottom
+        end
+    end
+
+    if not lowestBottom then
+        FlightMasterTimerPanel:SetHeight(FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT)
+        return false
+    end
+
+    local targetHeight = math.max(
+        FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT,
+        math.ceil((panelTop - lowestBottom) + FLIGHT_MASTER_TIMER_PANEL_BOTTOM_PADDING)
+    )
+
+    if FlightMasterTimerPanel:GetHeight() ~= targetHeight then
+        FlightMasterTimerPanel:SetHeight(targetHeight)
+        return true
+    end
+
+    return false
+end
+
+-- ========================================
 -- Bereich: Tooltip Itemlevel
 -- ========================================
 
@@ -261,8 +477,8 @@ FastLootHint:SetText(L("FAST_LOOT_HINT"))
 -- Der eigentliche Inspect- und Tooltip-Code lebt in Pages/Misc/TooltipItemLevel.lua,
 -- die UI hier ist nur die sichtbare Bedienoberfläche dafür.
 local TooltipItemLevelPanel = CreateFrame("Frame", nil, PageMiscContent)
-TooltipItemLevelPanel:SetPoint("TOPLEFT", FastLootPanel, "BOTTOMLEFT", 0, -18)
-TooltipItemLevelPanel:SetPoint("TOPRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, -18)
+TooltipItemLevelPanel:SetPoint("TOPLEFT", FlightMasterTimerPanel, "BOTTOMLEFT", 0, -18)
+TooltipItemLevelPanel:SetPoint("TOPRIGHT", FlightMasterTimerPanel, "BOTTOMRIGHT", 0, -18)
 TooltipItemLevelPanel:SetHeight(115)
 
 local TooltipItemLevelBg = TooltipItemLevelPanel:CreateTexture(nil, "BACKGROUND")
@@ -408,17 +624,215 @@ PreyHuntProgressHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 PreyHuntProgressHint:SetTextColor(0.80, 0.80, 0.80, 1)
 PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
 
+-- ========================================
+-- Bereich: Keystone Buttons
+-- ========================================
+
+local KeystoneActionsPanel = CreateFrame("Frame", nil, PageMiscContent)
+KeystoneActionsPanel:SetPoint("TOPLEFT", PreyHuntProgressPanel, "BOTTOMLEFT", 0, -18)
+KeystoneActionsPanel:SetPoint("TOPRIGHT", PreyHuntProgressPanel, "BOTTOMRIGHT", 0, -18)
+KeystoneActionsPanel:SetHeight(250)
+
+local KeystoneActionsBg = KeystoneActionsPanel:CreateTexture(nil, "BACKGROUND")
+KeystoneActionsBg:SetAllPoints()
+KeystoneActionsBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local KeystoneActionsBorder = KeystoneActionsPanel:CreateTexture(nil, "ARTWORK")
+KeystoneActionsBorder:SetPoint("BOTTOMLEFT", KeystoneActionsPanel, "BOTTOMLEFT", 0, 0)
+KeystoneActionsBorder:SetPoint("BOTTOMRIGHT", KeystoneActionsPanel, "BOTTOMRIGHT", 0, 0)
+KeystoneActionsBorder:SetHeight(1)
+KeystoneActionsBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local KeystoneActionsTitle = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
+KeystoneActionsTitle:SetPoint("TOPLEFT", KeystoneActionsPanel, "TOPLEFT", 18, -14)
+KeystoneActionsTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+KeystoneActionsTitle:SetTextColor(1, 0.82, 0, 1)
+KeystoneActionsTitle:SetText(L("KEYSTONE_ACTIONS"))
+
+local KeystoneActionsCheckbox = CreateFrame("CheckButton", nil, KeystoneActionsPanel, "UICheckButtonTemplate")
+KeystoneActionsCheckbox:SetPoint("TOPLEFT", KeystoneActionsTitle, "BOTTOMLEFT", -4, -12)
+
+local KeystoneActionsLabel = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
+KeystoneActionsLabel:SetPoint("LEFT", KeystoneActionsCheckbox, "RIGHT", 6, 0)
+KeystoneActionsLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+KeystoneActionsLabel:SetTextColor(1, 1, 1, 1)
+KeystoneActionsLabel:SetText(L("ACTIVE"))
+
+local KeystoneActionsHint = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
+KeystoneActionsHint:SetPoint("TOPLEFT", KeystoneActionsCheckbox, "BOTTOMLEFT", 34, -2)
+KeystoneActionsHint:SetPoint("RIGHT", KeystoneActionsPanel, "RIGHT", -18, 0)
+KeystoneActionsHint:SetJustifyH("LEFT")
+KeystoneActionsHint:SetJustifyV("TOP")
+KeystoneActionsHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+KeystoneActionsHint:SetTextColor(0.80, 0.80, 0.80, 1)
+KeystoneActionsHint:SetText(L("KEYSTONE_ACTIONS_HINT"))
+
+local KeystoneActionsGroupLockCheckbox = CreateFrame("CheckButton", nil, KeystoneActionsPanel, "UICheckButtonTemplate")
+KeystoneActionsGroupLockCheckbox:SetPoint("TOPLEFT", KeystoneActionsHint, "BOTTOMLEFT", -14, -14)
+KeystoneActionsGroupLockCheckbox:SetScale(0.85)
+
+local KeystoneActionsGroupLockLabel = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
+KeystoneActionsGroupLockLabel:SetPoint("LEFT", KeystoneActionsGroupLockCheckbox, "RIGHT", 4, 0)
+KeystoneActionsGroupLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+KeystoneActionsGroupLockLabel:SetTextColor(1, 1, 1, 1)
+KeystoneActionsGroupLockLabel:SetText(L("KEYSTONE_ACTIONS_GROUP_LOCK"))
+
+local KeystoneActionsGroupLockHint = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
+KeystoneActionsGroupLockHint:SetPoint("TOPLEFT", KeystoneActionsGroupLockCheckbox, "BOTTOMLEFT", 30, -4)
+KeystoneActionsGroupLockHint:SetPoint("RIGHT", KeystoneActionsPanel, "RIGHT", -18, 0)
+KeystoneActionsGroupLockHint:SetJustifyH("LEFT")
+KeystoneActionsGroupLockHint:SetJustifyV("TOP")
+KeystoneActionsGroupLockHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+KeystoneActionsGroupLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+KeystoneActionsGroupLockHint:SetText(L("KEYSTONE_ACTIONS_GROUP_LOCK_HINT"))
+
+local KeystoneActionsSecondsLabel = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
+KeystoneActionsSecondsLabel:SetPoint("TOPLEFT", KeystoneActionsGroupLockHint, "BOTTOMLEFT", 0, -14)
+KeystoneActionsSecondsLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+KeystoneActionsSecondsLabel:SetTextColor(1, 1, 1, 1)
+KeystoneActionsSecondsLabel:SetText(L("KEYSTONE_ACTIONS_SECONDS"))
+
+local KeystoneActionsSecondsInput = CreateFrame("EditBox", nil, KeystoneActionsPanel, "InputBoxTemplate")
+KeystoneActionsSecondsInput:SetSize(54, 24)
+KeystoneActionsSecondsInput:SetPoint("LEFT", KeystoneActionsSecondsLabel, "RIGHT", 10, 0)
+KeystoneActionsSecondsInput:SetAutoFocus(false)
+KeystoneActionsSecondsInput:SetNumeric(true)
+KeystoneActionsSecondsInput:SetMaxLetters(2)
+KeystoneActionsSecondsInput:SetJustifyH("CENTER")
+
+local KeystoneActionsSecondsHint = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
+KeystoneActionsSecondsHint:SetPoint("TOPLEFT", KeystoneActionsSecondsLabel, "BOTTOMLEFT", 0, -4)
+KeystoneActionsSecondsHint:SetPoint("RIGHT", KeystoneActionsPanel, "RIGHT", -18, 0)
+KeystoneActionsSecondsHint:SetJustifyH("LEFT")
+KeystoneActionsSecondsHint:SetJustifyV("TOP")
+KeystoneActionsSecondsHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+KeystoneActionsSecondsHint:SetTextColor(0.80, 0.80, 0.80, 1)
+KeystoneActionsSecondsHint:SetText(L("KEYSTONE_ACTIONS_SECONDS_HINT"))
+
 local SectionPanels = {
     AutoSell = AutoSellPanel,
     AutoRepair = AutoRepairPanel,
     EasyDelete = EasyDeletePanel,
     FastLoot = FastLootPanel,
+    CutsceneSkip = CutsceneSkipPanel,
+    FlightMasterTimer = FlightMasterTimerPanel,
     -- Der Schlüsselname muss zum Tree-Eintrag passen, damit die Sidebar diese
     -- Karte gezielt ansteuern und sichtbar machen kann.
     TooltipItemLevel = TooltipItemLevelPanel,
     CameraDistance = CameraDistancePanel,
     PreyHuntProgress = PreyHuntProgressPanel,
+    KeystoneActions = KeystoneActionsPanel,
 }
+
+PageMisc.Widgets = {
+    IntroTitle = IntroTitle,
+    IntroText = IntroText,
+    AutoSellTitle = AutoSellTitle,
+    AutoSellLabel = AutoSellLabel,
+    AutoSellHint = AutoSellHint,
+    AutoSellCheckbox = AutoSellCheckbox,
+    AutoRepairTitle = AutoRepairTitle,
+    AutoRepairLabel = AutoRepairLabel,
+    AutoRepairHint = AutoRepairHint,
+    AutoRepairCheckbox = AutoRepairCheckbox,
+    AutoRepairGuildLabel = AutoRepairGuildLabel,
+    AutoRepairGuildHint = AutoRepairGuildHint,
+    AutoRepairGuildCheckbox = AutoRepairGuildCheckbox,
+    EasyDeleteTitle = EasyDeleteTitle,
+    EasyDeleteLabel = EasyDeleteLabel,
+    EasyDeleteHint = EasyDeleteHint,
+    EasyDeleteCheckbox = EasyDeleteCheckbox,
+    FastLootTitle = FastLootTitle,
+    FastLootLabel = FastLootLabel,
+    FastLootHint = FastLootHint,
+    FastLootCheckbox = FastLootCheckbox,
+    CutsceneSkipTitle = CutsceneSkipTitle,
+    CutsceneSkipLabel = CutsceneSkipLabel,
+    CutsceneSkipHint = CutsceneSkipHint,
+    CutsceneSkipCheckbox = CutsceneSkipCheckbox,
+    FlightMasterTimerTitle = FlightMasterTimerTitle,
+    FlightMasterTimerLabel = FlightMasterTimerLabel,
+    FlightMasterTimerHint = FlightMasterTimerHint,
+    FlightMasterTimerCheckbox = FlightMasterTimerCheckbox,
+    FlightMasterTimerSoundLabel = FlightMasterTimerSoundLabel,
+    FlightMasterTimerSoundHint = FlightMasterTimerSoundHint,
+    FlightMasterTimerSoundSelectLabel = FlightMasterTimerSoundSelectLabel,
+    FlightMasterTimerSoundCheckbox = FlightMasterTimerSoundCheckbox,
+    FlightMasterTimerSoundDropdown = FlightMasterTimerSoundDropdown,
+    FlightMasterTimerSoundTestButton = FlightMasterTimerSoundTestButton,
+    FlightMasterTimerLockCheckbox = FlightMasterTimerLockCheckbox,
+    FlightMasterTimerLockLabel = FlightMasterTimerLockLabel,
+    FlightMasterTimerLockHint = FlightMasterTimerLockHint,
+    FlightMasterTimerPreviewButton = FlightMasterTimerPreviewButton,
+    FlightMasterTimerPreviewHint = FlightMasterTimerPreviewHint,
+    FlightMasterTimerResetButton = FlightMasterTimerResetButton,
+    FlightMasterTimerResetHint = FlightMasterTimerResetHint,
+    TooltipItemLevelTitle = TooltipItemLevelTitle,
+    TooltipItemLevelLabel = TooltipItemLevelLabel,
+    TooltipItemLevelHint = TooltipItemLevelHint,
+    TooltipItemLevelCheckbox = TooltipItemLevelCheckbox,
+    CameraDistanceTitle = CameraDistanceTitle,
+    CameraDistanceHint = CameraDistanceHint,
+    CameraDistanceStatusLabel = CameraDistanceStatusLabel,
+    CameraDistanceStatusValue = CameraDistanceStatusValue,
+    CameraDistanceMaxButton = CameraDistanceMaxButton,
+    CameraDistanceStandardButton = CameraDistanceStandardButton,
+    PreyHuntProgressTitle = PreyHuntProgressTitle,
+    PreyHuntProgressLabel = PreyHuntProgressLabel,
+    PreyHuntProgressHint = PreyHuntProgressHint,
+    PreyHuntProgressCheckbox = PreyHuntProgressCheckbox,
+    KeystoneActionsTitle = KeystoneActionsTitle,
+    KeystoneActionsLabel = KeystoneActionsLabel,
+    KeystoneActionsHint = KeystoneActionsHint,
+    KeystoneActionsCheckbox = KeystoneActionsCheckbox,
+    KeystoneActionsGroupLockCheckbox = KeystoneActionsGroupLockCheckbox,
+    KeystoneActionsGroupLockLabel = KeystoneActionsGroupLockLabel,
+    KeystoneActionsGroupLockHint = KeystoneActionsGroupLockHint,
+    KeystoneActionsSecondsLabel = KeystoneActionsSecondsLabel,
+    KeystoneActionsSecondsInput = KeystoneActionsSecondsInput,
+    KeystoneActionsSecondsHint = KeystoneActionsSecondsHint,
+}
+
+local function RefreshFlightMasterTimerSoundDropdown()
+    if not FlightMasterTimerSoundDropdown then
+        return
+    end
+
+    local currentSoundKey = Misc.GetFlightMasterTimerArrivalSoundKey and Misc.GetFlightMasterTimerArrivalSoundKey() or nil
+    local arrivalSoundOptions = Misc.GetFlightMasterTimerArrivalSoundOptions and Misc.GetFlightMasterTimerArrivalSoundOptions() or {}
+    local selectedLabel = L("UNKNOWN")
+
+    for _, soundOption in ipairs(arrivalSoundOptions) do
+        if soundOption.key == currentSoundKey then
+            selectedLabel = soundOption.label
+            break
+        end
+    end
+
+    UIDropDownMenu_SetSelectedValue(FlightMasterTimerSoundDropdown, currentSoundKey)
+    UIDropDownMenu_SetText(FlightMasterTimerSoundDropdown, selectedLabel)
+end
+
+UIDropDownMenu_Initialize(FlightMasterTimerSoundDropdown, function(_, level)
+    local currentSoundKey = Misc.GetFlightMasterTimerArrivalSoundKey and Misc.GetFlightMasterTimerArrivalSoundKey() or nil
+    local arrivalSoundOptions = Misc.GetFlightMasterTimerArrivalSoundOptions and Misc.GetFlightMasterTimerArrivalSoundOptions() or {}
+
+    for _, soundOption in ipairs(arrivalSoundOptions) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = soundOption.label
+        info.value = soundOption.key
+        info.func = function()
+            if Misc.SetFlightMasterTimerArrivalSound then
+                Misc.SetFlightMasterTimerArrivalSound(soundOption.key)
+            end
+
+            UIDropDownMenu_SetSelectedValue(FlightMasterTimerSoundDropdown, soundOption.key)
+            PageMisc:RefreshState()
+        end
+        info.checked = currentSoundKey == soundOption.key
+        UIDropDownMenu_AddButton(info, level)
+    end
+end)
 
 -- ========================================
 -- UI-Status
@@ -426,13 +840,22 @@ local SectionPanels = {
 
 -- Die Checkboxen lesen ihren Zustand direkt aus den Modulen.
 function PageMisc:RefreshState()
+    local widgets = self.Widgets
     local autoSellEnabled = false
     local autoRepairEnabled = false
     local autoRepairGuildEnabled = false
     local easyDeleteEnabled = false
     local fastLootEnabled = false
+    local cutsceneSkipEnabled = false
+    local flightMasterTimerEnabled = false
+    local flightMasterTimerSoundEnabled = false
+    local flightMasterTimerLocked = true
+    local flightMasterTimerPreviewVisible = false
     local tooltipItemLevelEnabled = false
     local preyHuntProgressEnabled = false
+    local keystoneActionsEnabled = false
+    local keystoneActionsGroupLockEnabled = true
+    local keystoneActionsSeconds = 10
     -- Für die Kamera brauchen wir nicht nur "an/aus", sondern sowohl den
     -- groben Modus als auch den fertigen Text für die Anzeige.
     local cameraDistanceMode = "unknown"
@@ -458,6 +881,26 @@ function PageMisc:RefreshState()
         fastLootEnabled = Misc.IsFastLootEnabled()
     end
 
+    if Misc.IsCutsceneSkipEnabled then
+        cutsceneSkipEnabled = Misc.IsCutsceneSkipEnabled()
+    end
+
+    if Misc.IsFlightMasterTimerEnabled then
+        flightMasterTimerEnabled = Misc.IsFlightMasterTimerEnabled()
+    end
+
+    if Misc.IsFlightMasterTimerArrivalSoundEnabled then
+        flightMasterTimerSoundEnabled = Misc.IsFlightMasterTimerArrivalSoundEnabled()
+    end
+
+    if Misc.IsFlightMasterTimerLocked then
+        flightMasterTimerLocked = Misc.IsFlightMasterTimerLocked()
+    end
+
+    if Misc.IsFlightMasterTimerPreviewVisible then
+        flightMasterTimerPreviewVisible = Misc.IsFlightMasterTimerPreviewVisible()
+    end
+
     -- Der Tooltip-Schalter wird direkt aus dem Modul gelesen, damit UI und
     -- SavedVariables immer denselben Wahrheitswert anzeigen.
     if Misc.IsTooltipItemLevelEnabled then
@@ -466,6 +909,18 @@ function PageMisc:RefreshState()
 
     if Misc.IsPreyHuntProgressEnabled then
         preyHuntProgressEnabled = Misc.IsPreyHuntProgressEnabled()
+    end
+
+    if Misc.IsKeystoneActionsEnabled then
+        keystoneActionsEnabled = Misc.IsKeystoneActionsEnabled()
+    end
+
+    if Misc.IsKeystoneGroupLockEnabled then
+        keystoneActionsGroupLockEnabled = Misc.IsKeystoneGroupLockEnabled()
+    end
+
+    if Misc.GetKeystoneCountdownSeconds then
+        keystoneActionsSeconds = Misc.GetKeystoneCountdownSeconds()
     end
 
     if Misc.GetCurrentCameraDistanceMode then
@@ -479,59 +934,156 @@ function PageMisc:RefreshState()
     -- So bleibt die UI robust, selbst wenn ein Teilmodul später einmal
     -- umgebaut oder vorübergehend nicht geladen sein sollte.
 
-    IntroTitle:SetText(L("MISC_TITLE"))
-    IntroText:SetText(L("MISC_DESC"))
-    AutoSellTitle:SetText(L("AUTOSELL_JUNK"))
-    AutoSellLabel:SetText(L("ACTIVE"))
-    AutoSellHint:SetText(L("AUTOSELL_HINT"))
-    AutoRepairTitle:SetText(L("AUTOREPAIR"))
-    AutoRepairLabel:SetText(L("ACTIVE"))
-    AutoRepairHint:SetText(L("AUTOREPAIR_HINT"))
-    AutoRepairGuildLabel:SetText(L("AUTOREPAIR_GUILD"))
-    AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
-    EasyDeleteTitle:SetText(L("EASY_DELETE"))
-    EasyDeleteLabel:SetText(L("ACTIVE"))
-    EasyDeleteHint:SetText(L("EASY_DELETE_HINT"))
-    FastLootTitle:SetText(L("FAST_LOOT"))
-    FastLootLabel:SetText(L("ACTIVE"))
-    FastLootHint:SetText(L("FAST_LOOT_HINT"))
-    TooltipItemLevelTitle:SetText(L("TOOLTIP_ITEMLEVEL"))
-    TooltipItemLevelLabel:SetText(L("ACTIVE"))
-    TooltipItemLevelHint:SetText(L("TOOLTIP_ITEMLEVEL_HINT"))
-    CameraDistanceTitle:SetText(L("CAMERA_DISTANCE"))
-    CameraDistanceHint:SetText(L("CAMERA_DISTANCE_HINT"))
-    CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
-    CameraDistanceMaxButton:SetText(L("CAMERA_DISTANCE_MAX"))
-    CameraDistanceStandardButton:SetText(L("STANDARD"))
-    PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
-    PreyHuntProgressLabel:SetText(L("ACTIVE"))
-    PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
+    widgets.IntroTitle:SetText(L("MISC_TITLE"))
+    widgets.IntroText:SetText(L("MISC_DESC"))
+    widgets.AutoSellTitle:SetText(L("AUTOSELL_JUNK"))
+    widgets.AutoSellLabel:SetText(L("ACTIVE"))
+    widgets.AutoSellHint:SetText(L("AUTOSELL_HINT"))
+    widgets.AutoRepairTitle:SetText(L("AUTOREPAIR"))
+    widgets.AutoRepairLabel:SetText(L("ACTIVE"))
+    widgets.AutoRepairHint:SetText(L("AUTOREPAIR_HINT"))
+    widgets.AutoRepairGuildLabel:SetText(L("AUTOREPAIR_GUILD"))
+    widgets.AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
+    widgets.EasyDeleteTitle:SetText(L("EASY_DELETE"))
+    widgets.EasyDeleteLabel:SetText(L("ACTIVE"))
+    widgets.EasyDeleteHint:SetText(L("EASY_DELETE_HINT"))
+    widgets.FastLootTitle:SetText(L("FAST_LOOT"))
+    widgets.FastLootLabel:SetText(L("ACTIVE"))
+    widgets.FastLootHint:SetText(L("FAST_LOOT_HINT"))
+    widgets.CutsceneSkipTitle:SetText(L("CUTSCENE_SKIP"))
+    widgets.CutsceneSkipLabel:SetText(L("ACTIVE"))
+    widgets.CutsceneSkipHint:SetText(L("CUTSCENE_SKIP_HINT"))
+    widgets.FlightMasterTimerTitle:SetText(L("FLIGHT_MASTER_TIMER"))
+    widgets.FlightMasterTimerLabel:SetText(L("ACTIVE"))
+    widgets.FlightMasterTimerHint:SetText(L("FLIGHT_MASTER_TIMER_HINT"))
+    widgets.FlightMasterTimerSoundLabel:SetText(L("FLIGHT_MASTER_TIMER_SOUND"))
+    widgets.FlightMasterTimerSoundHint:SetText(L("FLIGHT_MASTER_TIMER_SOUND_HINT"))
+    widgets.FlightMasterTimerSoundSelectLabel:SetText(L("FLIGHT_MASTER_TIMER_SOUND_SELECT"))
+    RefreshFlightMasterTimerSoundDropdown()
+    widgets.FlightMasterTimerLockLabel:SetText(L("FLIGHT_MASTER_TIMER_LOCK_OVERLAY"))
+    widgets.FlightMasterTimerLockHint:SetText(L("FLIGHT_MASTER_TIMER_LOCK_OVERLAY_HINT"))
+    if flightMasterTimerPreviewVisible then
+        widgets.FlightMasterTimerPreviewButton:SetText(L("FLIGHT_MASTER_TIMER_POSITION_MODE_STOP"))
+    else
+        widgets.FlightMasterTimerPreviewButton:SetText(L("FLIGHT_MASTER_TIMER_POSITION_MODE"))
+    end
+    widgets.FlightMasterTimerPreviewHint:SetText(L("FLIGHT_MASTER_TIMER_POSITION_MODE_HINT"))
+    widgets.FlightMasterTimerResetButton:SetText(L("RESET_POSITION"))
+    widgets.FlightMasterTimerResetHint:SetText(L("FLIGHT_MASTER_TIMER_RESET_HINT"))
+    widgets.TooltipItemLevelTitle:SetText(L("TOOLTIP_ITEMLEVEL"))
+    widgets.TooltipItemLevelLabel:SetText(L("ACTIVE"))
+    widgets.TooltipItemLevelHint:SetText(L("TOOLTIP_ITEMLEVEL_HINT"))
+    widgets.CameraDistanceTitle:SetText(L("CAMERA_DISTANCE"))
+    widgets.CameraDistanceHint:SetText(L("CAMERA_DISTANCE_HINT"))
+    widgets.CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
+    widgets.CameraDistanceMaxButton:SetText(L("CAMERA_DISTANCE_MAX"))
+    widgets.CameraDistanceStandardButton:SetText(L("STANDARD"))
+    widgets.PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
+    widgets.PreyHuntProgressLabel:SetText(L("ACTIVE"))
+    widgets.PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
+    widgets.KeystoneActionsTitle:SetText(L("KEYSTONE_ACTIONS"))
+    widgets.KeystoneActionsLabel:SetText(L("ACTIVE"))
+    widgets.KeystoneActionsHint:SetText(L("KEYSTONE_ACTIONS_HINT"))
+    widgets.KeystoneActionsGroupLockLabel:SetText(L("KEYSTONE_ACTIONS_GROUP_LOCK"))
+    widgets.KeystoneActionsGroupLockHint:SetText(L("KEYSTONE_ACTIONS_GROUP_LOCK_HINT"))
+    widgets.KeystoneActionsSecondsLabel:SetText(L("KEYSTONE_ACTIONS_SECONDS"))
+    widgets.KeystoneActionsSecondsHint:SetText(L("KEYSTONE_ACTIONS_SECONDS_HINT"))
+    if not widgets.KeystoneActionsSecondsInput:HasFocus() then
+        widgets.KeystoneActionsSecondsInput:SetText(tostring(keystoneActionsSeconds))
+    end
 
-    AutoSellCheckbox:SetChecked(autoSellEnabled)
-    AutoRepairCheckbox:SetChecked(autoRepairEnabled)
-    AutoRepairGuildCheckbox:SetChecked(autoRepairGuildEnabled)
-    EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
-    FastLootCheckbox:SetChecked(fastLootEnabled)
-    TooltipItemLevelCheckbox:SetChecked(tooltipItemLevelEnabled)
-    PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
+    widgets.AutoSellCheckbox:SetChecked(autoSellEnabled)
+    widgets.AutoRepairCheckbox:SetChecked(autoRepairEnabled)
+    widgets.AutoRepairGuildCheckbox:SetChecked(autoRepairGuildEnabled)
+    widgets.EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
+    widgets.FastLootCheckbox:SetChecked(fastLootEnabled)
+    widgets.CutsceneSkipCheckbox:SetChecked(cutsceneSkipEnabled)
+    widgets.FlightMasterTimerCheckbox:SetChecked(flightMasterTimerEnabled)
+    widgets.FlightMasterTimerSoundCheckbox:SetChecked(flightMasterTimerSoundEnabled)
+    widgets.FlightMasterTimerLockCheckbox:SetChecked(flightMasterTimerLocked)
+    widgets.TooltipItemLevelCheckbox:SetChecked(tooltipItemLevelEnabled)
+    widgets.PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
+    widgets.KeystoneActionsCheckbox:SetChecked(keystoneActionsEnabled)
+    widgets.KeystoneActionsGroupLockCheckbox:SetChecked(keystoneActionsGroupLockEnabled)
     -- Die Kamera-Karte zeigt bewusst den echten Status aus dem Modul an,
     -- nicht bloß den letzten Button-Klick.
-    CameraDistanceStatusValue:SetText(cameraDistanceStatusText)
+    widgets.CameraDistanceStatusValue:SetText(cameraDistanceStatusText)
     -- Der bereits aktive Preset-Button wird deaktiviert.
     -- Das macht die Karte lesbarer und verhindert unnötige Wiederhol-Klicks.
-    CameraDistanceMaxButton:SetEnabled(cameraDistanceMode ~= "max")
-    CameraDistanceStandardButton:SetEnabled(cameraDistanceMode ~= "standard")
+    widgets.CameraDistanceMaxButton:SetEnabled(cameraDistanceMode ~= "max")
+    widgets.CameraDistanceStandardButton:SetEnabled(cameraDistanceMode ~= "standard")
 
     -- Die Gilden-Option ergibt nur Sinn, wenn Auto Repair aktiv ist.
-    AutoRepairGuildCheckbox:SetEnabled(autoRepairEnabled)
+    widgets.AutoRepairGuildCheckbox:SetEnabled(autoRepairEnabled)
+    widgets.FlightMasterTimerSoundCheckbox:SetEnabled(flightMasterTimerEnabled)
+    widgets.FlightMasterTimerSoundTestButton:SetEnabled(flightMasterTimerEnabled and flightMasterTimerSoundEnabled)
+    widgets.FlightMasterTimerLockCheckbox:SetEnabled(flightMasterTimerEnabled)
+    widgets.FlightMasterTimerPreviewButton:SetEnabled(flightMasterTimerEnabled)
+    widgets.FlightMasterTimerResetButton:SetEnabled(flightMasterTimerEnabled)
+    widgets.KeystoneActionsGroupLockCheckbox:SetEnabled(keystoneActionsEnabled)
+    if keystoneActionsEnabled then
+        widgets.KeystoneActionsSecondsInput:Enable()
+    else
+        widgets.KeystoneActionsSecondsInput:Disable()
+    end
+
+    if flightMasterTimerEnabled and flightMasterTimerSoundEnabled then
+        UIDropDownMenu_EnableDropDown(widgets.FlightMasterTimerSoundDropdown)
+    else
+        UIDropDownMenu_DisableDropDown(widgets.FlightMasterTimerSoundDropdown)
+    end
 
     if autoRepairEnabled then
-        AutoRepairGuildLabel:SetTextColor(1, 1, 1, 1)
-        AutoRepairGuildHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        widgets.AutoRepairGuildLabel:SetTextColor(1, 1, 1, 1)
+        widgets.AutoRepairGuildHint:SetTextColor(0.80, 0.80, 0.80, 1)
     else
-        AutoRepairGuildLabel:SetTextColor(0.50, 0.50, 0.50, 1)
-        AutoRepairGuildHint:SetTextColor(0.45, 0.45, 0.45, 1)
-        AutoRepairGuildCheckbox:SetChecked(false)
+        widgets.AutoRepairGuildLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.AutoRepairGuildHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.AutoRepairGuildCheckbox:SetChecked(false)
+    end
+
+    if flightMasterTimerEnabled then
+        widgets.FlightMasterTimerSoundLabel:SetTextColor(1, 1, 1, 1)
+        widgets.FlightMasterTimerSoundSelectLabel:SetTextColor(1, 1, 1, 1)
+
+        if flightMasterTimerSoundEnabled then
+            widgets.FlightMasterTimerSoundHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        else
+            widgets.FlightMasterTimerSoundHint:SetTextColor(0.55, 0.55, 0.55, 1)
+        end
+
+        widgets.FlightMasterTimerLockLabel:SetTextColor(1, 1, 1, 1)
+        widgets.FlightMasterTimerResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
+        widgets.FlightMasterTimerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        widgets.FlightMasterTimerPreviewHint:SetTextColor(0.72, 0.72, 0.72, 1)
+    else
+        widgets.FlightMasterTimerSoundLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.FlightMasterTimerSoundHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.FlightMasterTimerSoundSelectLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.FlightMasterTimerSoundCheckbox:SetChecked(false)
+        widgets.FlightMasterTimerLockLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.FlightMasterTimerLockHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.FlightMasterTimerPreviewHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.FlightMasterTimerResetHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.FlightMasterTimerLockCheckbox:SetChecked(true)
+    end
+
+    if keystoneActionsEnabled then
+        widgets.KeystoneActionsGroupLockLabel:SetTextColor(1, 1, 1, 1)
+        widgets.KeystoneActionsGroupLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        widgets.KeystoneActionsSecondsLabel:SetTextColor(1, 1, 1, 1)
+        widgets.KeystoneActionsSecondsHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        widgets.KeystoneActionsSecondsInput:SetTextColor(1, 1, 1, 1)
+    else
+        widgets.KeystoneActionsGroupLockLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.KeystoneActionsGroupLockHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.KeystoneActionsSecondsLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.KeystoneActionsSecondsHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.KeystoneActionsSecondsInput:SetTextColor(0.70, 0.70, 0.70, 1)
+    end
+
+    if UpdateFlightMasterTimerPanelLayout() and self.UpdateScrollLayout then
+        self:UpdateScrollLayout()
     end
 end
 
@@ -547,11 +1099,14 @@ function PageMisc:UpdateScrollLayout()
         + 18 + AutoRepairPanel:GetHeight()
         + 18 + EasyDeletePanel:GetHeight()
         + 18 + FastLootPanel:GetHeight()
+        + 18 + CutsceneSkipPanel:GetHeight()
+        + 18 + FlightMasterTimerPanel:GetHeight()
         + 18 + TooltipItemLevelPanel:GetHeight()
         -- Die neue Kamera-Karte gehört fest in die Gesamthöhe,
         -- damit der Scrollbereich unten nicht zu früh endet.
         + 18 + CameraDistancePanel:GetHeight()
         + 18 + PreyHuntProgressPanel:GetHeight()
+        + 18 + KeystoneActionsPanel:GetHeight()
         + 20
 
     PageMiscContent:SetWidth(contentWidth)
@@ -589,6 +1144,10 @@ end
 
 PageMiscScrollFrame:SetScript("OnSizeChanged", function()
     PageMisc:UpdateScrollLayout()
+
+    if UpdateFlightMasterTimerPanelLayout() then
+        PageMisc:UpdateScrollLayout()
+    end
 end)
 
 -- Mit dem Mausrad fühlt sich die Seite etwas angenehmer an.
@@ -652,6 +1211,76 @@ FastLootCheckbox:SetScript("OnClick", function(self)
     PageMisc:RefreshState()
 end)
 
+CutsceneSkipCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetCutsceneSkipEnabled then
+        Misc.SetCutsceneSkipEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+FlightMasterTimerCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetFlightMasterTimerEnabled then
+        Misc.SetFlightMasterTimerEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+FlightMasterTimerSoundCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetFlightMasterTimerArrivalSoundEnabled then
+        Misc.SetFlightMasterTimerArrivalSoundEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+FlightMasterTimerSoundTestButton:SetScript("OnClick", function()
+    if Misc.TestFlightMasterTimerArrivalSound then
+        Misc.TestFlightMasterTimerArrivalSound()
+    end
+end)
+
+FlightMasterTimerSoundTestButton:SetScript("OnEnter", function(self)
+    if not GameTooltip then
+        return
+    end
+
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:AddLine(L("FLIGHT_MASTER_TIMER_SOUND_PLAY_HINT"), 1, 1, 1)
+    GameTooltip:Show()
+end)
+
+FlightMasterTimerSoundTestButton:SetScript("OnLeave", function()
+    if GameTooltip then
+        GameTooltip:Hide()
+    end
+end)
+
+FlightMasterTimerLockCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetFlightMasterTimerLocked then
+        Misc.SetFlightMasterTimerLocked(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+FlightMasterTimerPreviewButton:SetScript("OnClick", function()
+    if Misc.ToggleFlightMasterTimerPreview then
+        Misc.ToggleFlightMasterTimerPreview()
+    end
+
+    PageMisc:RefreshState()
+end)
+
+FlightMasterTimerResetButton:SetScript("OnClick", function()
+    if Misc.ResetFlightMasterTimerPosition then
+        Misc.ResetFlightMasterTimerPosition()
+    end
+
+    PageMisc:RefreshState()
+end)
+
 TooltipItemLevelCheckbox:SetScript("OnClick", function(self)
     -- Die UI speichert den Zustand nicht selbst, sondern reicht ihn direkt
     -- an das Modul weiter. Danach wird die komplette Seite neu synchronisiert.
@@ -667,6 +1296,45 @@ PreyHuntProgressCheckbox:SetScript("OnClick", function(self)
         Misc.SetPreyHuntProgressEnabled(self:GetChecked())
     end
 
+    PageMisc:RefreshState()
+end)
+
+KeystoneActionsCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetKeystoneActionsEnabled then
+        Misc.SetKeystoneActionsEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+KeystoneActionsGroupLockCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetKeystoneGroupLockEnabled then
+        Misc.SetKeystoneGroupLockEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+local function ApplyKeystoneActionsSecondsInput()
+    local rawValue = KeystoneActionsSecondsInput:GetText()
+    if Misc.SetKeystoneCountdownSeconds then
+        Misc.SetKeystoneCountdownSeconds(rawValue)
+    end
+
+    PageMisc:RefreshState()
+end
+
+KeystoneActionsSecondsInput:SetScript("OnEnterPressed", function(self)
+    ApplyKeystoneActionsSecondsInput()
+    self:ClearFocus()
+end)
+
+KeystoneActionsSecondsInput:SetScript("OnEditFocusLost", function()
+    ApplyKeystoneActionsSecondsInput()
+end)
+
+KeystoneActionsSecondsInput:SetScript("OnEscapePressed", function(self)
+    self:ClearFocus()
     PageMisc:RefreshState()
 end)
 
@@ -693,6 +1361,19 @@ PageMisc:SetScript("OnShow", function()
     PageMisc:RefreshState()
     PageMisc:UpdateScrollLayout()
     PageMiscScrollFrame:SetVerticalScroll(0)
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, function()
+            if not PageMisc:IsShown() then
+                return
+            end
+
+            if UpdateFlightMasterTimerPanelLayout() then
+                PageMisc:UpdateScrollLayout()
+                PageMiscScrollFrame:SetVerticalScroll(0)
+            end
+        end)
+    end
 end)
 
 PageMisc:UpdateScrollLayout()

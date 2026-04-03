@@ -1,13 +1,14 @@
 ## Title: Beavis Quality of Life
 ## Notes: Beavis QoL
 ## Author: Beavis
-## Version: 0.24.1
+## Version: 0.27.0
 ## Interface: 120001 
 ##X-GameVersion: 120001
 ## X-GameVersionLabel: Patch 12.0.1
+## X-ReleaseChannel: beta
 ## SavedVariables: BeavisQoLDB
 ## SavedVariablesPerCharacter: BeavisQoLCharDB
-## X-ReleaseDate: 2026-03-26
+## X-ReleaseDate: 2026-04-03
 
 Localization\Localization.lua
 Localization\deDE.lua
@@ -27,11 +28,16 @@ Pages\Misc\AutoSellJunk.lua
 Pages\Misc\AutoRepair.lua
 Pages\Misc\EasyDelete.lua
 Pages\Misc\FastLoot.lua
+Pages\Misc\CutsceneSkip.lua
+Pages\Misc\FlightMasterTimerData.lua
+Pages\Misc\FlightMasterTimer.lua
 Pages\Misc\CameraDistance.lua
 Pages\Misc\TooltipItemLevel.lua
 Pages\Misc\PreyHuntProgress.lua
+Pages\Misc\KeystoneActions.lua
 Pages\PetStuff\AutoRespawnPet.lua
 Pages\LFG\Flags.lua
+Pages\LFG\InviteTimer.lua
 Pages\Stats.lua
 Pages\MarkerBar.lua
 Pages\Fishing.lua
@@ -51,5 +57,6 @@ Pages\LFG.lua
 Pages\DamageText.lua
 Pages\MouseHelper.lua
 Pages\BossGuides.lua
+Pages\PortalViewer.lua
 Tree.lua
 MinimapButton.lua
