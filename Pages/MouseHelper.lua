@@ -1,3 +1,15 @@
+-- Hinweistext zu Blizzard-Limitierung bei Cursorgrößen
+local function ShowCursorSizeInfoLabel()
+    if not MouseHelper.CursorSizeInfoLabel then
+        MouseHelper.CursorSizeInfoLabel = CursorSizeDropdown:CreateFontString(nil, "OVERLAY")
+        MouseHelper.CursorSizeInfoLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+        MouseHelper.CursorSizeInfoLabel:SetTextColor(1, 0.82, 0, 0.85)
+        MouseHelper.CursorSizeInfoLabel:SetPoint("TOPLEFT", CursorSizeDropdown, "BOTTOMLEFT", 0, -4)
+        MouseHelper.CursorSizeInfoLabel:SetWidth(260)
+        MouseHelper.CursorSizeInfoLabel:SetJustifyH("LEFT")
+    end
+    MouseHelper.CursorSizeInfoLabel:SetText("Hinweis: 96x96 und 128x128 werden von Blizzard aktuell identisch dargestellt. Dies ist eine Limitierung des Spiels.")
+end
 local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
@@ -117,9 +129,8 @@ function MouseHelper.GetDB()
         db.trailStyle = DEFAULT_TRAIL_STYLE
     end
 
-    if db.enabled ~= true and (db.circleEnabled == true or db.trailEnabled == true) then
-        db.enabled = true
-    end
+    -- Entfernt: db.enabled wird nicht mehr automatisch auf true gesetzt, wenn circleEnabled oder trailEnabled aktiv sind
+    -- Die Aktivierung erfolgt nur noch explizit durch den Nutzer
 
     return db
 end
@@ -142,11 +153,11 @@ local function ApplyBlizzardCursorSize()
     local preset = db.blizzardCursorSize or "default"
     local preferredMap = {
         ["default"] = "0",
-        ["32"] = "1",
-        ["48"] = "2",
-        ["64"] = "3",
-        ["96"] = "4",
-        ["128"] = "5",
+        ["32"] = "0",
+        ["48"] = "1",
+        ["64"] = "2",
+        ["96"] = "3",
+        ["128"] = "4", -- 128x128 wird auf 96x96 gemappt, da Blizzard nur 0-4 nutzt
     }
 
     if type(SetCVarValue) ~= "function" then
@@ -156,11 +167,13 @@ local function ApplyBlizzardCursorSize()
     if IsCursorSizeCVarSupported("cursorSizePreferred") then
         local preferredValue = preferredMap[preset] or "0"
         SetCVarValue("cursorSizePreferred", preferredValue)
+        -- Kein Chat- oder CVar-Refresh-Spam mehr
     end
 
     if IsCursorSizeCVarSupported("gxCursorSize") then
         local legacyValue = (preset == "default") and "0" or "1"
         SetCVarValue("gxCursorSize", legacyValue)
+        -- Kein Chat-Spam mehr
     end
 end
 
@@ -651,6 +664,7 @@ RuntimeFrame:SetScript("OnUpdate", function(_, elapsed)
         ApplyCircleVisual(db)
         CursorCircleFrame:ClearAllPoints()
         CursorCircleFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cursorX, cursorY)
+        CursorCircleFrame:Show()
     else
         CursorCircleFrame:Hide()
     end
@@ -731,6 +745,8 @@ end
 
 local LoginWatcher = CreateFrame("Frame")
 LoginWatcher:RegisterEvent("PLAYER_LOGIN")
+LoginWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+LoginWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
 LoginWatcher:SetScript("OnEvent", function()
     MouseHelper.GetDB()
     ApplyBlizzardCursorSize()
@@ -1235,9 +1251,6 @@ end)
 CircleCheckbox:SetScript("OnClick", function(self)
     local db = MouseHelper.GetDB()
     db.circleEnabled = self:GetChecked() == true
-    if db.circleEnabled == true then
-        db.enabled = true
-    end
     ApplyVisualState()
     PageMouseHelper:RefreshState()
 end)
@@ -1269,9 +1282,6 @@ end)
 TrailCheckbox:SetScript("OnClick", function(self)
     local db = MouseHelper.GetDB()
     db.trailEnabled = self:GetChecked() == true
-    if db.trailEnabled == true then
-        db.enabled = true
-    end
     ApplyVisualState()
     PageMouseHelper:RefreshState()
 end)

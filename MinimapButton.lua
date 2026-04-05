@@ -200,6 +200,14 @@ local function ToggleQuickHideOverlays()
     BeavisQoL.SetQuickHideOverlaysEnabled(not GetQuickHideOverlaysEnabled())
 end
 
+local function IsMinimapContextEntryVisible(entryKey)
+    if not BeavisQoL.IsMinimapContextMenuEntryVisible then
+        return true
+    end
+
+    return BeavisQoL.IsMinimapContextMenuEntryVisible(entryKey)
+end
+
 local function EnsureContextMenuSupport()
     -- Das alte Dropdown-Menü ist in manchen Clients nicht sofort geladen.
     -- Diese Funktion zieht Blizzard_UIDropDownMenu nur bei Bedarf nach.
@@ -237,25 +245,48 @@ local function ShowMinimapContextMenu(anchorFrame)
     local hasStreamerPlannerToggle = BeavisQoL.StreamerPlannerModule and BeavisQoL.StreamerPlannerModule.IsOverlayEnabled and BeavisQoL.StreamerPlannerModule.SetOverlayEnabled
     local hasEasyLFGToggle = BeavisQoL.LFG and BeavisQoL.LFG.IsEasyLFGEnabled and BeavisQoL.LFG.SetEasyLFGEnabled
     local hasPortalViewerToggle = BeavisQoL.PortalViewerModule and BeavisQoL.PortalViewerModule.IsWindowEnabled and BeavisQoL.PortalViewerModule.SetWindowEnabled
+    local showLevelTimeEntry = IsMinimapContextEntryVisible("levelTime")
+    local showQuestCheckEntry = IsMinimapContextEntryVisible("questCheck")
+    local showQuestAbandonEntry = IsMinimapContextEntryVisible("questAbandon")
+    local showLoggingEntry = IsMinimapContextEntryVisible("logging")
+    local showChecklistEntry = IsMinimapContextEntryVisible("checklist")
+    local showWeeklyKeysEntry = IsMinimapContextEntryVisible("weeklyKeys")
+    local showStatsEntry = IsMinimapContextEntryVisible("stats")
+    local showMarkerBarEntry = IsMinimapContextEntryVisible("markerBar")
+    local showStreamerPlannerEntry = IsMinimapContextEntryVisible("streamerPlanner")
+    local showEasyLFGEntry = IsMinimapContextEntryVisible("easyLFG")
+    local showPortalViewerEntry = IsMinimapContextEntryVisible("portalViewer")
+    local showQuickHideEntry = IsMinimapContextEntryVisible("quickHideOverlays")
 
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchorFrame or UIParent, function(_, rootDescription)
             rootDescription:CreateTitle(addonTitle)
             rootDescription:CreateDivider()
-            rootDescription:CreateButton(L("LEVEL_TIME"), function()
-                OpenAddonPage("LevelTime")
-            end)
-            rootDescription:CreateButton(L("QUEST_CHECK"), function()
-                OpenAddonPage("QuestCheck")
-            end)
-            rootDescription:CreateButton(L("QUEST_ABANDON"), function()
-                OpenAddonPage("QuestAbandon")
-            end)
-            rootDescription:CreateButton(L("LOGGING"), function()
-                OpenAddonPage("Logging")
-            end)
+            if showLevelTimeEntry then
+                rootDescription:CreateButton(L("LEVEL_TIME"), function()
+                    OpenAddonPage("LevelTime")
+                end)
+            end
 
-            if hasChecklistToggle then
+            if showQuestCheckEntry then
+                rootDescription:CreateButton(L("QUEST_CHECK"), function()
+                    OpenAddonPage("QuestCheck")
+                end)
+            end
+
+            if showQuestAbandonEntry then
+                rootDescription:CreateButton(L("QUEST_ABANDON"), function()
+                    OpenAddonPage("QuestAbandon")
+                end)
+            end
+
+            if showLoggingEntry then
+                rootDescription:CreateButton(L("LOGGING"), function()
+                    OpenAddonPage("Logging")
+                end)
+            end
+
+            if hasChecklistToggle and showChecklistEntry then
                 rootDescription:CreateCheckbox(
                     L("MINIMAP_TRACKER_SHOW"),
                     function()
@@ -267,7 +298,7 @@ local function ShowMinimapContextMenu(anchorFrame)
                 )
             end
 
-            if hasWeeklyKeysToggle then
+            if hasWeeklyKeysToggle and showWeeklyKeysEntry then
                 rootDescription:CreateCheckbox(
                     L("MINIMAP_WEEKLY_KEYS_SHOW"),
                     function()
@@ -279,7 +310,7 @@ local function ShowMinimapContextMenu(anchorFrame)
                 )
             end
 
-            if hasStatsToggle then
+            if hasStatsToggle and showStatsEntry then
                 rootDescription:CreateCheckbox(
                     L("MINIMAP_STATS_SHOW"),
                     function()
@@ -291,7 +322,7 @@ local function ShowMinimapContextMenu(anchorFrame)
                 )
             end
 
-            if hasMarkerBarToggle then
+            if hasMarkerBarToggle and showMarkerBarEntry then
                 rootDescription:CreateCheckbox(
                     L("MINIMAP_MARKER_BAR_SHOW"),
                     function()
@@ -303,7 +334,7 @@ local function ShowMinimapContextMenu(anchorFrame)
                 )
             end
 
-            if hasStreamerPlannerToggle then
+            if hasStreamerPlannerToggle and showStreamerPlannerEntry then
                 rootDescription:CreateCheckbox(
                     L("MINIMAP_STREAMER_PLANNER_SHOW"),
                     function()
@@ -315,7 +346,7 @@ local function ShowMinimapContextMenu(anchorFrame)
                 )
             end
 
-            if hasEasyLFGToggle then
+            if hasEasyLFGToggle and showEasyLFGEntry then
                 rootDescription:CreateCheckbox(
                     L("MINIMAP_EASY_LFG_SHOW"),
                     function()
@@ -327,7 +358,7 @@ local function ShowMinimapContextMenu(anchorFrame)
                 )
             end
 
-            if hasPortalViewerToggle then
+            if hasPortalViewerToggle and showPortalViewerEntry then
                 rootDescription:CreateCheckbox(
                     L("MINIMAP_PORTAL_VIEWER_SHOW"),
                     function()
@@ -339,15 +370,17 @@ local function ShowMinimapContextMenu(anchorFrame)
                 )
             end
 
-            rootDescription:CreateCheckbox(
-                L("QUICK_HIDE_OVERLAYS"),
-                function()
-                    return GetQuickHideOverlaysEnabled()
-                end,
-                function()
-                    ToggleQuickHideOverlays()
-                end
-            )
+            if showQuickHideEntry then
+                rootDescription:CreateCheckbox(
+                    L("QUICK_HIDE_OVERLAYS"),
+                    function()
+                        return GetQuickHideOverlaysEnabled()
+                    end,
+                    function()
+                        ToggleQuickHideOverlays()
+                    end
+                )
+            end
         end)
         return
     end
@@ -362,107 +395,65 @@ local function ShowMinimapContextMenu(anchorFrame)
             isTitle = true,
             notCheckable = true,
         },
-        {
-            text = L("LEVEL_TIME"),
-            notCheckable = true,
-            func = function()
-                OpenAddonPage("LevelTime")
-            end,
-        },
-        {
-            text = L("QUEST_CHECK"),
-            notCheckable = true,
-            func = function()
-                OpenAddonPage("QuestCheck")
-            end,
-        },
-        {
-            text = L("QUEST_ABANDON"),
-            notCheckable = true,
-            func = function()
-                OpenAddonPage("QuestAbandon")
-            end,
-        },
-        {
-            text = L("LOGGING"),
-            notCheckable = true,
-            func = function()
-                OpenAddonPage("Logging")
-            end,
-        },
-        {
-            text = L("MINIMAP_TRACKER_SHOW"),
-            checked = IsChecklistTrackerEnabled(),
-            isNotRadio = true,
-            disabled = not hasChecklistToggle,
-            func = function()
-                ToggleChecklistTracker()
-            end,
-        },
-        {
-            text = L("MINIMAP_WEEKLY_KEYS_SHOW"),
-            checked = IsWeeklyKeysOverlayEnabled(),
-            isNotRadio = true,
-            disabled = not hasWeeklyKeysToggle,
-            func = function()
-                ToggleWeeklyKeysOverlay()
-            end,
-        },
-        {
-            text = L("MINIMAP_STATS_SHOW"),
-            checked = IsStatsOverlayEnabled(),
-            isNotRadio = true,
-            disabled = not hasStatsToggle,
-            func = function()
-                ToggleStatsOverlay()
-            end,
-        },
-        {
-            text = L("MINIMAP_MARKER_BAR_SHOW"),
-            checked = IsMarkerBarOverlayEnabled(),
-            isNotRadio = true,
-            disabled = not hasMarkerBarToggle,
-            func = function()
-                ToggleMarkerBarOverlay()
-            end,
-        },
-        {
-            text = L("MINIMAP_STREAMER_PLANNER_SHOW"),
-            checked = IsStreamerPlannerOverlayEnabled(),
-            isNotRadio = true,
-            disabled = not hasStreamerPlannerToggle,
-            func = function()
-                ToggleStreamerPlannerOverlay()
-            end,
-        },
-        {
-            text = L("MINIMAP_EASY_LFG_SHOW"),
-            checked = IsEasyLFGOverlayEnabled(),
-            isNotRadio = true,
-            disabled = not hasEasyLFGToggle,
-            func = function()
-                ToggleEasyLFGOverlay()
-            end,
-        },
-        {
-            text = L("MINIMAP_PORTAL_VIEWER_SHOW"),
-            checked = IsPortalViewerEnabled(),
-            isNotRadio = true,
-            disabled = not hasPortalViewerToggle,
-            func = function()
-                TogglePortalViewer()
-            end,
-        },
-        {
-            text = L("QUICK_HIDE_OVERLAYS"),
-            checked = GetQuickHideOverlaysEnabled(),
-            isNotRadio = true,
-            notCheckable = false,
-            func = function()
-                ToggleQuickHideOverlays()
-            end,
-        },
     }
+
+    local function AddActionEntry(visible, textKey, pageKey)
+        if not visible then
+            return
+        end
+
+        menu[#menu + 1] = {
+            text = L(textKey),
+            notCheckable = true,
+            func = function()
+                OpenAddonPage(pageKey)
+            end,
+        }
+    end
+
+    local function AddToggleEntry(visible, textKey, checked, disabled, callback)
+        if not visible then
+            return
+        end
+
+        menu[#menu + 1] = {
+            text = L(textKey),
+            checked = checked,
+            isNotRadio = true,
+            disabled = disabled,
+            func = callback,
+        }
+    end
+
+    AddActionEntry(showLevelTimeEntry, "LEVEL_TIME", "LevelTime")
+    AddActionEntry(showQuestCheckEntry, "QUEST_CHECK", "QuestCheck")
+    AddActionEntry(showQuestAbandonEntry, "QUEST_ABANDON", "QuestAbandon")
+    AddActionEntry(showLoggingEntry, "LOGGING", "Logging")
+
+    AddToggleEntry(showChecklistEntry, "MINIMAP_TRACKER_SHOW", IsChecklistTrackerEnabled(), not hasChecklistToggle, function()
+        ToggleChecklistTracker()
+    end)
+    AddToggleEntry(showWeeklyKeysEntry, "MINIMAP_WEEKLY_KEYS_SHOW", IsWeeklyKeysOverlayEnabled(), not hasWeeklyKeysToggle, function()
+        ToggleWeeklyKeysOverlay()
+    end)
+    AddToggleEntry(showStatsEntry, "MINIMAP_STATS_SHOW", IsStatsOverlayEnabled(), not hasStatsToggle, function()
+        ToggleStatsOverlay()
+    end)
+    AddToggleEntry(showMarkerBarEntry, "MINIMAP_MARKER_BAR_SHOW", IsMarkerBarOverlayEnabled(), not hasMarkerBarToggle, function()
+        ToggleMarkerBarOverlay()
+    end)
+    AddToggleEntry(showStreamerPlannerEntry, "MINIMAP_STREAMER_PLANNER_SHOW", IsStreamerPlannerOverlayEnabled(), not hasStreamerPlannerToggle, function()
+        ToggleStreamerPlannerOverlay()
+    end)
+    AddToggleEntry(showEasyLFGEntry, "MINIMAP_EASY_LFG_SHOW", IsEasyLFGOverlayEnabled(), not hasEasyLFGToggle, function()
+        ToggleEasyLFGOverlay()
+    end)
+    AddToggleEntry(showPortalViewerEntry, "MINIMAP_PORTAL_VIEWER_SHOW", IsPortalViewerEnabled(), not hasPortalViewerToggle, function()
+        TogglePortalViewer()
+    end)
+    AddToggleEntry(showQuickHideEntry, "QUICK_HIDE_OVERLAYS", GetQuickHideOverlaysEnabled(), false, function()
+        ToggleQuickHideOverlays()
+    end)
 
     if CloseDropDownMenus then
         CloseDropDownMenus()

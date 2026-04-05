@@ -15,6 +15,48 @@ local LFG = BeavisQoL.LFG
 -- Die LFG-Seite sammelt nur Komfortfunktionen für den Blizzard-Group-Finder.
 local sliderCounter = 0
 local isRefreshing = false
+local PageScrollFrame
+local PageContentFrame
+
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
+local function GetMeasuredPanelHeight(panel, bottomObject, minimumHeight, bottomPadding)
+    if not panel or not bottomObject then
+        return minimumHeight or 1
+    end
+
+    local panelTop = panel:GetTop()
+    local bottom = bottomObject:GetBottom()
+
+    if not panelTop or not bottom then
+        return minimumHeight or 1
+    end
+
+    return math.max(minimumHeight or 1, math.ceil((panelTop - bottom) + (bottomPadding or 0)))
+end
+
+local function GetLowerBottomObject(primaryObject, secondaryObject)
+    local primaryBottom = primaryObject and primaryObject.GetBottom and primaryObject:GetBottom()
+    local secondaryBottom = secondaryObject and secondaryObject.GetBottom and secondaryObject:GetBottom()
+
+    if primaryBottom and secondaryBottom then
+        if primaryBottom <= secondaryBottom then
+            return primaryObject
+        end
+
+        return secondaryObject
+    end
+
+    return primaryBottom and primaryObject or secondaryObject
+end
 
 local function FormatSliderValue(value, mode)
     if mode == "scale" or mode == "alpha" then
@@ -106,13 +148,22 @@ local PageLFG = CreateFrame("Frame", nil, Content)
 PageLFG:SetAllPoints()
 PageLFG:Hide()
 
+PageScrollFrame = CreateFrame("ScrollFrame", nil, PageLFG, "UIPanelScrollFrameTemplate")
+PageScrollFrame:SetPoint("TOPLEFT", PageLFG, "TOPLEFT", 0, 0)
+PageScrollFrame:SetPoint("BOTTOMRIGHT", PageLFG, "BOTTOMRIGHT", -28, 0)
+PageScrollFrame:EnableMouseWheel(true)
+
+PageContentFrame = CreateFrame("Frame", nil, PageScrollFrame)
+PageContentFrame:SetSize(1, 1)
+PageScrollFrame:SetScrollChild(PageContentFrame)
+
 -- ========================================
 -- Header
 -- ========================================
 
-local IntroPanel = CreateFrame("Frame", nil, PageLFG)
-IntroPanel:SetPoint("TOPLEFT", PageLFG, "TOPLEFT", 20, -20)
-IntroPanel:SetPoint("TOPRIGHT", PageLFG, "TOPRIGHT", -20, -20)
+local IntroPanel = CreateFrame("Frame", nil, PageContentFrame)
+IntroPanel:SetPoint("TOPLEFT", PageContentFrame, "TOPLEFT", 20, -20)
+IntroPanel:SetPoint("TOPRIGHT", PageContentFrame, "TOPRIGHT", -20, -20)
 IntroPanel:SetHeight(110)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
@@ -144,7 +195,7 @@ IntroText:SetText(L("LFG_DESC"))
 -- Bereich: Länderflaggen
 -- ========================================
 
-local FlagsPanel = CreateFrame("Frame", nil, PageLFG)
+local FlagsPanel = CreateFrame("Frame", nil, PageContentFrame)
 FlagsPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 FlagsPanel:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
 FlagsPanel:SetHeight(115)
@@ -187,7 +238,7 @@ FlagsHint:SetText(L("FLAGS_HINT"))
 -- Bereich: Easy LFG
 -- ========================================
 
-local EasyLFGPanel = CreateFrame("Frame", nil, PageLFG)
+local EasyLFGPanel = CreateFrame("Frame", nil, PageContentFrame)
 EasyLFGPanel:SetPoint("TOPLEFT", FlagsPanel, "BOTTOMLEFT", 0, -18)
 EasyLFGPanel:SetPoint("TOPRIGHT", FlagsPanel, "BOTTOMRIGHT", 0, -18)
 EasyLFGPanel:SetHeight(300)
@@ -259,7 +310,7 @@ EasyLFGResetHint:SetText(L("EASY_LFG_RESET_HINT"))
 -- Bereich: Einladungs-Timer
 -- ========================================
 
-local InviteTimerPanel = CreateFrame("Frame", nil, PageLFG)
+local InviteTimerPanel = CreateFrame("Frame", nil, PageContentFrame)
 InviteTimerPanel:SetPoint("TOPLEFT", EasyLFGPanel, "BOTTOMLEFT", 0, -18)
 InviteTimerPanel:SetPoint("TOPRIGHT", EasyLFGPanel, "BOTTOMRIGHT", 0, -18)
 InviteTimerPanel:SetHeight(152)
@@ -293,19 +344,51 @@ local InviteTimerCheckbox = CreateSectionCheckbox(InviteTimerPanel, InviteTimerH
 local InviteTimerCountdownCheckbox = CreateSectionCheckbox(InviteTimerPanel, InviteTimerCheckbox.Hint, L("INVITE_TIMER_COUNTDOWN_SOUND"), L("INVITE_TIMER_COUNTDOWN_SOUND_HINT"))
 
 function PageLFG:UpdateLayout()
+    local contentWidth = math.max(1, PageScrollFrame:GetWidth())
+    PageContentFrame:SetWidth(contentWidth)
+
     if not self:IsShown() then
         return
     end
 
-    local panelTop = EasyLFGPanel:GetTop()
-    local buttonBottom = EasyLFGResetButton:GetBottom()
-    local hintBottom = EasyLFGResetHint:GetBottom()
-    if not panelTop or not buttonBottom or not hintBottom then
-        return
-    end
+    IntroPanel:SetHeight(math.max(
+        110,
+        math.ceil(
+            16
+            + GetTextHeight(IntroTitle, 24)
+            + 10
+            + GetTextHeight(IntroText, 13)
+            + 18
+        )
+    ))
 
-    local desiredHeight = math.ceil((panelTop - math.min(buttonBottom, hintBottom)) + 20)
-    EasyLFGPanel:SetHeight(math.max(300, desiredHeight))
+    FlagsPanel:SetHeight(math.max(
+        115,
+        math.ceil(
+            14
+            + GetTextHeight(FlagsTitle, 16)
+            + 12
+            + FlagsCheckbox:GetHeight()
+            + 2
+            + GetTextHeight(FlagsHint, 12)
+            + 18
+        )
+    ))
+
+    local easyLFGBottomObject = GetLowerBottomObject(EasyLFGResetButton, EasyLFGResetHint)
+    EasyLFGPanel:SetHeight(GetMeasuredPanelHeight(EasyLFGPanel, easyLFGBottomObject, 300, 20))
+
+    local inviteTimerBottomObject = GetLowerBottomObject(InviteTimerCountdownCheckbox, InviteTimerCountdownCheckbox.Hint)
+    InviteTimerPanel:SetHeight(GetMeasuredPanelHeight(InviteTimerPanel, inviteTimerBottomObject, 152, 20))
+
+    local contentHeight = 20
+        + IntroPanel:GetHeight()
+        + 18 + FlagsPanel:GetHeight()
+        + 18 + EasyLFGPanel:GetHeight()
+        + 18 + InviteTimerPanel:GetHeight()
+        + 20
+
+    PageContentFrame:SetHeight(math.max(PageScrollFrame:GetHeight(), contentHeight))
 end
 
 -- Die Checkbox liest ihren Zustand direkt aus dem Modul, damit die Seite kaum eigene Logik braucht.
@@ -443,9 +526,29 @@ InviteTimerCountdownCheckbox:SetScript("OnClick", function(self)
     PageLFG:RefreshState()
 end)
 
+PageScrollFrame:SetScript("OnSizeChanged", function()
+    PageLFG:UpdateLayout()
+end)
+
+PageScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageContentFrame:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
 PageLFG:SetScript("OnShow", function()
     PageLFG:RefreshState()
     PageLFG:UpdateLayout()
+    PageScrollFrame:SetVerticalScroll(0)
 end)
 
 PageLFG:RefreshState()

@@ -30,8 +30,25 @@ local DEFAULT_TIMER_DURATION_SECONDS = 15 * 60
 local TIMER_WARNING_THRESHOLD_SECONDS = 60
 local MIN_TIMER_DURATION_MINUTES = 1
 local MAX_TIMER_DURATION_MINUTES = 60
+local INSPECT_REQUEST_INTERVAL_SECONDS = 2
+local INSPECT_REQUEST_TIMEOUT_SECONDS = 4
+local WHISPER_SPEC_REQUEST_COOLDOWN_SECONDS = 15
+local STREAMER_PLANNER_ADDON_PREFIX = "BeavisQoLSP"
+local STREAMER_PLANNER_ADDON_SPEC_QUERY = "SPEC_QUERY"
+local STREAMER_PLANNER_ADDON_SPEC_REPLY = "SPEC_REPLY"
+local WHISPER_SPEC_PROMPT_WIDTH = 264
+local WHISPER_SPEC_PROMPT_MIN_HEIGHT = 126
+local WHISPER_CLASS_PROMPT_BUTTON_SIZE = 40
+local WHISPER_CLASS_PROMPT_BUTTON_COLUMNS = 5
+local WHISPER_CLASS_PROMPT_BUTTON_SPACING = 6
+local WHISPER_SPEC_PROMPT_BUTTON_SIZE = 72
+local WHISPER_SPEC_PROMPT_BUTTON_COLUMNS = 2
+local WHISPER_SPEC_PROMPT_BUTTON_SPACING = 12
+local ROLE_ICON_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-ROLES"
+local WHISPER_ROLE_PROMPT_BUTTON_SIZE = 42
+local WHISPER_ROLE_PROMPT_BUTTON_SPACING = 8
 
-local SPEC_DATA_BY_CLASS = {
+StreamerPlannerModule.SPEC_DATA_BY_CLASS = {
     WARRIOR = { 71, 72, 73 },
     PALADIN = { 65, 66, 70 },
     HUNTER = { 253, 254, 255 },
@@ -47,7 +64,7 @@ local SPEC_DATA_BY_CLASS = {
     EVOKER = { 1467, 1468, 1473 },
 }
 
-local CLASS_ROLE_SUPPORT = {
+StreamerPlannerModule.CLASS_ROLE_SUPPORT = {
     WARRIOR = { tank = true, dps = true },
     PALADIN = { tank = true, healer = true, dps = true },
     HUNTER = { dps = true },
@@ -63,7 +80,7 @@ local CLASS_ROLE_SUPPORT = {
     EVOKER = { healer = true, dps = true },
 }
 
-local SPEC_ROLE_SUPPORT = {
+StreamerPlannerModule.SPEC_ROLE_SUPPORT = {
     [71] = "dps",
     [72] = "dps",
     [73] = "tank",
@@ -105,6 +122,59 @@ local SPEC_ROLE_SUPPORT = {
     [1473] = "dps",
 }
 
+local WHISPER_ROLE_ALIAS_MAP = {
+    tank = "tank",
+    heal = "healer",
+    healer = "healer",
+    heiler = "healer",
+    dps = "dps",
+    dd = "dps",
+    damage = "dps",
+    damager = "dps",
+}
+
+StreamerPlannerModule.WHISPER_SPEC_ALIAS_HINTS = {
+    [71] = { "arms", "waffen" },
+    [72] = { "fury", "wut", "furor" },
+    [73] = { "protection", "prot", "schutz" },
+    [65] = { "holy", "heilig" },
+    [66] = { "protection", "prot", "schutz" },
+    [70] = { "retribution", "ret", "retri", "vergeltung" },
+    [253] = { "bm", "beast mastery", "beastmastery", "beast", "tierherrschaft" },
+    [254] = { "mm", "marksmanship", "marksman", "treffsicherheit" },
+    [255] = { "survival", "sv", "surv", "ueberleben", "uberleben", "überleben" },
+    [259] = { "assassination", "assa", "meucheln" },
+    [260] = { "outlaw", "gesetzlosigkeit" },
+    [261] = { "subtlety", "sub", "taeuschung", "täuschung" },
+    [256] = { "discipline", "disc", "diszi", "disziplin" },
+    [257] = { "holy", "heilig" },
+    [258] = { "shadow", "schatten" },
+    [250] = { "blood", "blut" },
+    [251] = { "frost" },
+    [252] = { "unholy", "unheilig" },
+    [262] = { "elemental", "ele", "elementar" },
+    [263] = { "enhancement", "enh", "enha", "enhance", "verstaerkung", "verstarkung", "verstärkung" },
+    [264] = { "restoration", "resto", "wiederherstellung" },
+    [62] = { "arcane", "arkan" },
+    [63] = { "fire", "feuer" },
+    [64] = { "frost" },
+    [265] = { "affliction", "affli", "gebrechen" },
+    [266] = { "demonology", "demo", "daemonology", "dämonologie", "daemonologie" },
+    [267] = { "destruction", "destro", "zerstoerung", "zerstörung" },
+    [268] = { "brewmaster", "brew", "braumeister" },
+    [269] = { "windwalker", "ww", "windlaeufer", "windläufer" },
+    [270] = { "mistweaver", "mist", "mw", "nebelwirker", "nebel" },
+    [102] = { "balance", "boomkin", "boomy", "owlkin", "moonkin", "eule" },
+    [103] = { "feral", "cat", "katze" },
+    [104] = { "guardian", "bear", "baer", "bär" },
+    [105] = { "restoration", "resto", "tree", "baum", "wiederherstellung" },
+    [577] = { "havoc", "verwuestung", "verwüstung" },
+    [581] = { "vengeance", "rache" },
+    [1467] = { "devastation", "dev", "verheerung" },
+    [1468] = { "preservation", "prev", "bewahrung" },
+    [1473] = { "augmentation", "aug", "verstaerkung", "verstarkung", "verstärkung" },
+}
+
 local DUNGEON_SLOT_ROLE_REQUIREMENTS = {
     tank = "tank",
     healer = "healer",
@@ -113,14 +183,14 @@ local DUNGEON_SLOT_ROLE_REQUIREMENTS = {
     dps3 = "dps",
 }
 
-local DESTINATION_CATEGORIES = {
+StreamerPlannerModule.DESTINATION_CATEGORIES = {
     { key = "s1", labelKey = "STREAMER_PLANNER_DESTINATION_CATEGORY_S1" },
     { key = "delves", labelKey = "STREAMER_PLANNER_DESTINATION_CATEGORY_DELVES" },
     { key = "midnight", labelKey = "STREAMER_PLANNER_DESTINATION_CATEGORY_MIDNIGHT" },
     { key = "raids", labelKey = "STREAMER_PLANNER_DESTINATION_CATEGORY_RAIDS" },
 }
 
-local DESTINATION_OPTIONS = {
+StreamerPlannerModule.DESTINATION_OPTIONS = {
     s1 = {
         "STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE",
         "STREAMER_PLANNER_DESTINATION_S1_MAISARA_CAVERNS",
@@ -165,7 +235,7 @@ local DESTINATION_OPTIONS = {
     },
 }
 
-local DUNGEON_LAYOUT = {
+StreamerPlannerModule.DUNGEON_LAYOUT = {
     { key = "tank", labelKey = "STREAMER_PLANNER_ROLE_TANK" },
     { key = "healer", labelKey = "STREAMER_PLANNER_ROLE_HEALER" },
     { key = "dps1", labelKey = "STREAMER_PLANNER_ROLE_DPS1" },
@@ -191,13 +261,25 @@ local OverlayDestinationValue
 local OverlayRaidSummary
 local OverlayDungeonModeButton
 local OverlayRaidModeButton
+local OverlayInviteRow
+local OverlayFullInviteButton
+local OverlayAutoInviteCheckbox
 local OverlayDungeonContainer
 local OverlayRaidContainer
 local OverlayTimer = {}
-local PreviewTitle
-local PreviewHint
-local PreviewDungeonContainer
-local PreviewRaidContainer
+local ApplicantPanel
+local ApplicantPanelTitle
+local ApplicantPanelHint
+local ApplicantPanelEmptyText
+local WhisperSpecPromptUI = {
+    Buttons = {},
+    ClassButtons = {},
+    RoleButtons = {},
+}
+local PreviewUI = {
+    DungeonButtons = {},
+    RaidButtons = {},
+}
 local ShowOverlayCheckbox
 local LockOverlayCheckbox
 local ScaleSlider
@@ -220,32 +302,55 @@ local EditSpecTitle
 local EditDestinationCategoryLabel
 local EditDestinationSuggestionLabel
 local EditDestinationKeystoneLabel
-local isRefreshingPage = false
 
-local PreviewDungeonButtons = {}
-local PreviewRaidButtons = {}
 local OverlayDungeonButtons = {}
 local OverlayRaidButtons = {}
-
-local editingLayout = nil
-local editingSlotIndex = nil
-local editingField = nil
-local editingClassFile = nil
-local editingSpecID = nil
-
-local ClassOptionsCache
-local ClassInfoByFileCache
-local SpecOptionsCache = {}
-local EditClassButtons = {}
-local EditSpecButtons = {}
-local SaveSlotButton
-local ClearSlotButton
-local CancelSlotButton
+local ApplicantRows = {}
 local HideEditDialog
 local GetStreamerPlannerSettings
 local GetDungeonSlotInfo
 local LayoutEditDialogOptionButtons
-local timerRefreshElapsed = 0
+local PlannerPrivate = {
+    applicantSnapshot = nil,
+    applicantByName = {},
+    inspectSpecByGUID = {},
+    inspectSpecByName = {},
+    pendingSpecPromptQueue = {},
+    pendingSpecPromptLookup = {},
+    activeSpecPromptIdentity = nil,
+    specRequestCooldownByName = {},
+    pendingInspectGUID = nil,
+    pendingInspectUnit = nil,
+    pendingInspectFullName = nil,
+    pendingInspectClassFile = nil,
+    pendingInspectExpiresAt = 0,
+    nextInspectAllowedAt = 0,
+    periodicSyncElapsed = 0,
+    lastDungeonSyncSignature = nil,
+    whisperSessionInitialized = false,
+    isRefreshingPage = false,
+    editingLayout = nil,
+    editingSlotIndex = nil,
+    editingField = nil,
+    editingClassFile = nil,
+    editingSpecID = nil,
+    editingRoleKey = nil,
+    editingUsesSelfRoleOverride = false,
+    classOptionsCache = nil,
+    classInfoByFileCache = nil,
+    specOptionsCache = {},
+    editClassButtons = {},
+    editSpecButtons = {},
+    editRoleButtons = {},
+    saveSlotButton = nil,
+    clearSlotButton = nil,
+    cancelSlotButton = nil,
+    timerRefreshElapsed = 0,
+    watcher = nil,
+}
+
+local WhisperSpecAliasLookupByClass = nil
+local WhisperSpecAliasLookupGlobal = nil
 
 local function Clamp(value, minValue, maxValue)
     if value < minValue then
@@ -267,6 +372,213 @@ local function GetCurrentTimestamp()
     return time()
 end
 
+PlannerPrivate.ClearPendingInspectRequest = function()
+    if PlannerPrivate.pendingInspectGUID ~= nil and type(ClearInspectPlayer) == "function" then
+        ClearInspectPlayer()
+    end
+
+    PlannerPrivate.pendingInspectGUID = nil
+    PlannerPrivate.pendingInspectUnit = nil
+    PlannerPrivate.pendingInspectFullName = nil
+    PlannerPrivate.pendingInspectClassFile = nil
+    PlannerPrivate.pendingInspectExpiresAt = 0
+end
+
+PlannerPrivate.ExpirePendingInspectRequest = function()
+    if PlannerPrivate.pendingInspectGUID == nil then
+        return
+    end
+
+    local expiresAt = tonumber(PlannerPrivate.pendingInspectExpiresAt) or 0
+    if expiresAt > 0 and GetCurrentTimestamp() < expiresAt then
+        return
+    end
+
+    PlannerPrivate.ClearPendingInspectRequest()
+end
+
+PlannerPrivate.GetRoleKeyFromSpecID = function(specID)
+    if type(specID) ~= "number" or specID <= 0 then
+        return nil
+    end
+
+    return PlannerPrivate.NormalizePlannerRoleKey(StreamerPlannerModule.SPEC_ROLE_SUPPORT[specID])
+end
+
+PlannerPrivate.GetKnownSpecID = function(fullName, playerGUID)
+    if PlannerPrivate.IsUsablePlainString(playerGUID) then
+        local guidSpecID = PlannerPrivate.inspectSpecByGUID[playerGUID]
+        if type(guidSpecID) == "number" and guidSpecID > 0 then
+            return guidSpecID
+        end
+    end
+
+    local identityKey = PlannerPrivate.GetIdentityKey(fullName)
+    if identityKey then
+        local nameSpecID = PlannerPrivate.inspectSpecByName[identityKey]
+        if type(nameSpecID) == "number" and nameSpecID > 0 then
+            return nameSpecID
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.StoreKnownCharacterInfo = function(fullName, playerGUID, classFile, specID)
+    local changed = false
+
+    if type(specID) == "number" and specID > 0 then
+        if PlannerPrivate.IsUsablePlainString(playerGUID) and PlannerPrivate.inspectSpecByGUID[playerGUID] ~= specID then
+            PlannerPrivate.inspectSpecByGUID[playerGUID] = specID
+            changed = true
+        end
+
+        local identityKey = PlannerPrivate.GetIdentityKey(fullName)
+        if identityKey and PlannerPrivate.inspectSpecByName[identityKey] ~= specID then
+            PlannerPrivate.inspectSpecByName[identityKey] = specID
+            changed = true
+        end
+    end
+
+    local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(fullName)
+    if whisperEntry then
+        local whisperChanged = false
+        local resolvedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(whisperEntry.roleKey)
+
+        if PlannerPrivate.IsUsablePlainString(classFile) and whisperEntry.classFile ~= classFile then
+            whisperEntry.classFile = classFile
+            whisperChanged = true
+        end
+
+        if type(specID) == "number" and specID > 0 and whisperEntry.specID ~= specID then
+            whisperEntry.specID = specID
+            whisperChanged = true
+        end
+
+        if resolvedRoleKey == nil then
+            resolvedRoleKey = PlannerPrivate.GetSingleSupportedRoleKey(whisperEntry.classFile or classFile)
+        end
+
+        if resolvedRoleKey ~= nil and whisperEntry.roleKey ~= resolvedRoleKey then
+            whisperEntry.roleKey = resolvedRoleKey
+            whisperChanged = true
+        end
+
+        if whisperChanged then
+            whisperEntry.updatedAt = GetCurrentTimestamp()
+            local settings = GetStreamerPlannerSettings and GetStreamerPlannerSettings() or nil
+            if type(settings) == "table" then
+                settings.whisperApplicants = PlannerPrivate.NormalizeWhisperApplicantList(settings.whisperApplicants)
+            end
+            if whisperEntry.command == "enter" and PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
+                PlannerPrivate.EnqueueWhisperSpecPrompt(whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName)
+            end
+            changed = true
+        end
+    end
+
+    return changed
+end
+
+PlannerPrivate.FindGroupUnitByGUID = function(targetGUID)
+    if not PlannerPrivate.IsUsablePlainString(targetGUID) or not UnitGUID then
+        return nil
+    end
+
+    if UnitExists and UnitExists("player") and UnitGUID("player") == targetGUID then
+        return "player"
+    end
+
+    if IsInRaid and IsInRaid() and GetNumGroupMembers then
+        for memberIndex = 1, (GetNumGroupMembers() or 0) do
+            local unit = "raid" .. memberIndex
+            if UnitExists and UnitExists(unit) and UnitGUID(unit) == targetGUID then
+                return unit
+            end
+        end
+    elseif IsInGroup and IsInGroup() and GetNumSubgroupMembers then
+        for memberIndex = 1, (GetNumSubgroupMembers() or 0) do
+            local unit = "party" .. memberIndex
+            if UnitExists and UnitExists(unit) and UnitGUID(unit) == targetGUID then
+                return unit
+            end
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.ShouldInspectUnitParticipant = function(classFile, specID, roleKey)
+    if type(specID) == "number" and specID > 0 then
+        return false
+    end
+
+    if PlannerPrivate.NormalizePlannerRoleKey(roleKey) ~= nil then
+        return false
+    end
+
+    local supportedRoles = classFile and StreamerPlannerModule.CLASS_ROLE_SUPPORT[classFile] or nil
+    if type(supportedRoles) ~= "table" then
+        return false
+    end
+
+    local supportedRoleCount = 0
+    for _, candidateRoleKey in ipairs({ "tank", "healer", "dps" }) do
+        if supportedRoles[candidateRoleKey] then
+            supportedRoleCount = supportedRoleCount + 1
+        end
+    end
+
+    return supportedRoleCount > 1
+end
+
+PlannerPrivate.QueueInspectForUnit = function(unit, fullName, classFile)
+    PlannerPrivate.ExpirePendingInspectRequest()
+
+    if not unit
+        or unit == "player"
+        or not UnitExists
+        or not UnitExists(unit)
+        or type(NotifyInspect) ~= "function"
+        or type(GetInspectSpecialization) ~= "function"
+        or not UnitGUID
+    then
+        return false
+    end
+
+    local unitGUID = UnitGUID(unit)
+    if not PlannerPrivate.IsUsablePlainString(unitGUID) then
+        return false
+    end
+
+    if PlannerPrivate.GetKnownSpecID(fullName, unitGUID) ~= nil then
+        return false
+    end
+
+    if type(CanInspect) == "function" and CanInspect(unit) ~= true then
+        return false
+    end
+
+    if PlannerPrivate.pendingInspectGUID ~= nil then
+        return PlannerPrivate.pendingInspectGUID == unitGUID
+    end
+
+    local currentTimestamp = GetCurrentTimestamp()
+    if type(PlannerPrivate.nextInspectAllowedAt) == "number" and currentTimestamp < PlannerPrivate.nextInspectAllowedAt then
+        return false
+    end
+
+    PlannerPrivate.pendingInspectGUID = unitGUID
+    PlannerPrivate.pendingInspectUnit = unit
+    PlannerPrivate.pendingInspectFullName = fullName
+    PlannerPrivate.pendingInspectClassFile = classFile
+    PlannerPrivate.pendingInspectExpiresAt = currentTimestamp + INSPECT_REQUEST_TIMEOUT_SECONDS
+    PlannerPrivate.nextInspectAllowedAt = currentTimestamp + INSPECT_REQUEST_INTERVAL_SECONDS
+
+    NotifyInspect(unit)
+    return true
+end
+
 local function GetSliderPercentText(value)
     return string.format("%d%%", math.floor(((tonumber(value) or DEFAULT_OVERLAY_SCALE) * 100) + 0.5))
 end
@@ -280,12 +592,22 @@ local function GetTimerDurationText(minutes)
     return string.format(L("STREAMER_PLANNER_TIMER_DURATION_VALUE"), resolvedMinutes)
 end
 
+local function GetMeasuredPanelHeight(panel, bottomObject, padding, minimumHeight)
+    local fallbackHeight = minimumHeight or (panel and panel:GetHeight()) or 0
+
+    if not panel or not bottomObject or not panel:GetTop() or not bottomObject:GetBottom() then
+        return fallbackHeight
+    end
+
+    return math.max(fallbackHeight, math.ceil((panel:GetTop() - bottomObject:GetBottom()) + (padding or 0)))
+end
+
 local function GetDestinationCategoryOptions()
-    return DESTINATION_CATEGORIES
+    return StreamerPlannerModule.DESTINATION_CATEGORIES
 end
 
 local function GetDestinationSuggestions(categoryKey)
-    local suggestionKeys = DESTINATION_OPTIONS[categoryKey] or {}
+    local suggestionKeys = StreamerPlannerModule.DESTINATION_OPTIONS[categoryKey] or {}
     local suggestions = {}
 
     for _, suggestionKey in ipairs(suggestionKeys) do
@@ -309,7 +631,508 @@ local function GetKeystoneLabel(level)
     return string.format("M+%d", Clamp(math.floor((tonumber(level) or 0) + 0.5), 0, 20))
 end
 
-local function FindDestinationSuggestion(categoryKey, destinationText)
+PlannerPrivate.destinationAliasCache = nil
+
+PlannerPrivate.IsSecretValue = function(value)
+    if not issecretvalue then
+        return false
+    end
+
+    local ok, isSecret = pcall(issecretvalue, value)
+    return ok and isSecret == true
+end
+
+PlannerPrivate.IsUsablePlainString = function(value)
+    return type(value) == "string" and value ~= "" and not PlannerPrivate.IsSecretValue(value)
+end
+
+PlannerPrivate.NormalizePlannerRoleKey = function(roleKey)
+    if roleKey == "tank" or roleKey == "healer" or roleKey == "dps" then
+        return roleKey
+    end
+
+    if type(roleKey) ~= "string" then
+        return nil
+    end
+
+    local normalized = roleKey:upper()
+    if normalized == "TANK" then
+        return "tank"
+    end
+
+    if normalized == "HEALER" then
+        return "healer"
+    end
+
+    if normalized == "DAMAGER" or normalized == "DAMAGE" or normalized == "DPS" then
+        return "dps"
+    end
+
+    return nil
+end
+
+PlannerPrivate.GetPlannerRoleLabel = function(roleKey)
+    local normalizedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(roleKey)
+    if normalizedRoleKey == "tank" then
+        return L("STREAMER_PLANNER_ROLE_TANK")
+    end
+
+    if normalizedRoleKey == "healer" then
+        return L("STREAMER_PLANNER_ROLE_HEALER")
+    end
+
+    if normalizedRoleKey == "dps" then
+        return "DPS"
+    end
+
+    return nil
+end
+
+PlannerPrivate.GetRoleIconTexCoords = function(roleKey)
+    local normalizedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(roleKey)
+    if normalizedRoleKey == "tank" then
+        return 0, 0.26171875, 0.26171875, 0.5234375
+    end
+
+    if normalizedRoleKey == "healer" then
+        return 0.26171875, 0.5234375, 0, 0.26171875
+    end
+
+    if normalizedRoleKey == "dps" then
+        return 0.26171875, 0.5234375, 0.26171875, 0.5234375
+    end
+
+    return 0, 1, 0, 1
+end
+
+PlannerPrivate.NormalizeCompareText = function(value)
+    if not PlannerPrivate.IsUsablePlainString(value) then
+        return nil
+    end
+
+    local normalized = value:lower()
+    normalized = normalized:gsub("[%p|]", " ")
+    normalized = normalized:gsub("%s+", " ")
+    normalized = normalized:match("^%s*(.-)%s*$")
+    if normalized == "" then
+        return nil
+    end
+
+    return normalized
+end
+
+local function AddWhisperSpecAlias(target, aliasText, specID)
+    local normalizedAlias = PlannerPrivate.NormalizeCompareText(aliasText)
+    if normalizedAlias == nil or type(specID) ~= "number" or specID <= 0 then
+        return
+    end
+
+    if target[normalizedAlias] == nil then
+        target[normalizedAlias] = specID
+    elseif target[normalizedAlias] ~= specID then
+        target[normalizedAlias] = false
+    end
+end
+
+local function BuildWhisperSpecAliasLookups()
+    if WhisperSpecAliasLookupByClass ~= nil and WhisperSpecAliasLookupGlobal ~= nil then
+        return WhisperSpecAliasLookupByClass, WhisperSpecAliasLookupGlobal
+    end
+
+    local byClass = {}
+    local global = {}
+
+    for classFile, specList in pairs(StreamerPlannerModule.SPEC_DATA_BY_CLASS) do
+        byClass[classFile] = byClass[classFile] or {}
+
+        for _, specID in ipairs(specList or {}) do
+            AddWhisperSpecAlias(byClass[classFile], tostring(specID), specID)
+            AddWhisperSpecAlias(global, tostring(specID), specID)
+
+            local localizedSpecName = nil
+            if GetSpecializationInfoByID then
+                local _, resolvedSpecName = GetSpecializationInfoByID(specID)
+                localizedSpecName = resolvedSpecName
+            end
+
+            if localizedSpecName then
+                AddWhisperSpecAlias(byClass[classFile], localizedSpecName, specID)
+                AddWhisperSpecAlias(global, localizedSpecName, specID)
+            end
+
+            for _, aliasText in ipairs(WHISPER_SPEC_ALIAS_HINTS[specID] or {}) do
+                AddWhisperSpecAlias(byClass[classFile], aliasText, specID)
+                AddWhisperSpecAlias(global, aliasText, specID)
+            end
+        end
+    end
+
+    WhisperSpecAliasLookupByClass = byClass
+    WhisperSpecAliasLookupGlobal = global
+    return WhisperSpecAliasLookupByClass, WhisperSpecAliasLookupGlobal
+end
+
+local function PayloadContainsAlias(payloadText, aliasText)
+    if payloadText == nil or aliasText == nil then
+        return false
+    end
+
+    if payloadText == aliasText then
+        return true
+    end
+
+    return (" " .. payloadText .. " "):find(" " .. aliasText .. " ", 1, true) ~= nil
+end
+
+PlannerPrivate.GetWhisperCommandPayload = function(messageText)
+    if type(messageText) ~= "string" then
+        return nil
+    end
+
+    local trimmedMessage = messageText:match("^%s*(.-)%s*$") or ""
+    local commandName, payloadText = trimmedMessage:match("^!(%S+)%s*(.-)%s*$")
+    if type(commandName) ~= "string" then
+        return nil
+    end
+
+    commandName = commandName:lower()
+    if commandName ~= "enter" and commandName ~= "inv" then
+        return nil
+    end
+
+    if payloadText == "" then
+        return nil
+    end
+
+    return payloadText
+end
+
+PlannerPrivate.ResolveWhisperRoleHint = function(messageText)
+    local payloadText = PlannerPrivate.NormalizeCompareText(PlannerPrivate.GetWhisperCommandPayload(messageText))
+    if payloadText == nil then
+        return nil
+    end
+
+    local matchedRoleKey = nil
+    for aliasText, roleKey in pairs(WHISPER_ROLE_ALIAS_MAP) do
+        if PayloadContainsAlias(payloadText, aliasText) then
+            if matchedRoleKey ~= nil and matchedRoleKey ~= roleKey then
+                return nil
+            end
+            matchedRoleKey = roleKey
+        end
+    end
+
+    return PlannerPrivate.NormalizePlannerRoleKey(matchedRoleKey)
+end
+
+PlannerPrivate.ResolveWhisperSpecHint = function(messageText, classFile)
+    local payloadText = PlannerPrivate.NormalizeCompareText(PlannerPrivate.GetWhisperCommandPayload(messageText))
+    if payloadText == nil then
+        return nil
+    end
+
+    local lookupByClass, globalLookup = BuildWhisperSpecAliasLookups()
+    local aliasLookup = classFile and lookupByClass[classFile] or globalLookup
+    if type(aliasLookup) ~= "table" then
+        return nil
+    end
+
+    local matchedSpecID = nil
+    for aliasText, specID in pairs(aliasLookup) do
+        if specID ~= false and PayloadContainsAlias(payloadText, aliasText) then
+            if matchedSpecID ~= nil and matchedSpecID ~= specID then
+                return nil
+            end
+            matchedSpecID = specID
+        end
+    end
+
+    return type(matchedSpecID) == "number" and matchedSpecID or nil
+end
+
+PlannerPrivate.GetIdentityKey = function(value)
+    return PlannerPrivate.NormalizeCompareText(value)
+end
+
+PlannerPrivate.GetDisplayNameFromFullName = function(fullName)
+    if not PlannerPrivate.IsUsablePlainString(fullName) then
+        return UNKNOWN or "Unknown"
+    end
+
+    if Ambiguate then
+        local ok, shortName = pcall(Ambiguate, fullName, "short")
+        if ok and PlannerPrivate.IsUsablePlainString(shortName) then
+            return shortName
+        end
+    end
+
+    return fullName:match("^[^-]+") or fullName
+end
+
+PlannerPrivate.AddUniqueCandidate = function(target, seen, value)
+    if not PlannerPrivate.IsUsablePlainString(value) then
+        return
+    end
+
+    local trimmed = value:match("^%s*(.-)%s*$")
+    if trimmed == "" or seen[trimmed] then
+        return
+    end
+
+    seen[trimmed] = true
+    target[#target + 1] = trimmed
+end
+
+PlannerPrivate.NormalizeDestinationLevel = function(categoryKey, level)
+    if type(level) ~= "number" then
+        return nil
+    end
+
+    local roundedLevel = math.floor(level + 0.5)
+    if categoryKey == "delves" then
+        return Clamp(roundedLevel, 1, 11)
+    end
+
+    if categoryKey == "s1" then
+        return Clamp(roundedLevel, 0, 20)
+    end
+
+    return nil
+end
+
+PlannerPrivate.GetDestinationLevelLabel = function(categoryKey, level)
+    local normalizedLevel = PlannerPrivate.NormalizeDestinationLevel(categoryKey, level)
+    if normalizedLevel == nil then
+        return nil
+    end
+
+    if categoryKey == "delves" then
+        return tostring(normalizedLevel)
+    end
+
+    return GetKeystoneLabel(normalizedLevel)
+end
+
+PlannerPrivate.RegisterDestinationAlias = function(cache, aliasText, categoryKey, destinationText)
+    local normalizedAlias = PlannerPrivate.NormalizeCompareText(aliasText)
+    if not normalizedAlias or not PlannerPrivate.IsUsablePlainString(destinationText) then
+        return
+    end
+
+    if cache.byText[normalizedAlias] then
+        return
+    end
+
+    local aliasEntry = {
+        normalized = normalizedAlias,
+        categoryKey = categoryKey,
+        destinationText = destinationText,
+    }
+
+    cache.byText[normalizedAlias] = aliasEntry
+    cache.ordered[#cache.ordered + 1] = aliasEntry
+end
+
+PlannerPrivate.BuildDestinationAliasCache = function()
+    if PlannerPrivate.destinationAliasCache then
+        return PlannerPrivate.destinationAliasCache
+    end
+
+    local cache = {
+        byText = {},
+        ordered = {},
+    }
+
+    for _, categoryInfo in ipairs(StreamerPlannerModule.DESTINATION_CATEGORIES) do
+        for _, suggestionText in ipairs(GetDestinationSuggestions(categoryInfo.key)) do
+            PlannerPrivate.RegisterDestinationAlias(cache, suggestionText, categoryInfo.key, suggestionText)
+        end
+    end
+
+    PlannerPrivate.RegisterDestinationAlias(cache, "Terrasse der Magister", "s1", L("STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE"))
+    PlannerPrivate.RegisterDestinationAlias(cache, "Die Terrasse der Magister", "s1", L("STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE"))
+    PlannerPrivate.RegisterDestinationAlias(cache, "Magisters' Terrace", "s1", L("STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE"))
+    PlannerPrivate.RegisterDestinationAlias(cache, "Magisters Terrace", "s1", L("STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE"))
+
+    table.sort(cache.ordered, function(left, right)
+        if #left.normalized ~= #right.normalized then
+            return #left.normalized > #right.normalized
+        end
+
+        return left.destinationText < right.destinationText
+    end)
+
+    PlannerPrivate.destinationAliasCache = cache
+    return PlannerPrivate.destinationAliasCache
+end
+
+PlannerPrivate.IsRaidDestinationText = function(destinationText)
+    for _, raidSuggestion in ipairs(GetDestinationSuggestions("raids")) do
+        if raidSuggestion == destinationText then
+            return true
+        end
+    end
+
+    return false
+end
+
+PlannerPrivate.ResolveDestinationFromCandidates = function(textCandidates)
+    local cache = PlannerPrivate.BuildDestinationAliasCache()
+
+    for _, candidateText in ipairs(textCandidates) do
+        local normalizedCandidate = PlannerPrivate.NormalizeCompareText(candidateText)
+        if normalizedCandidate then
+            local directMatch = cache.byText[normalizedCandidate]
+            if directMatch then
+                return directMatch.categoryKey, directMatch.destinationText
+            end
+
+            for _, aliasEntry in ipairs(cache.ordered) do
+                if normalizedCandidate:find(aliasEntry.normalized, 1, true) then
+                    return aliasEntry.categoryKey, aliasEntry.destinationText
+                end
+            end
+        end
+    end
+
+    return nil, nil
+end
+
+PlannerPrivate.GetActiveEntryInfoTable = function()
+    if not C_LFGList or not C_LFGList.GetActiveEntryInfo then
+        return nil
+    end
+
+    local activeEntryInfo = C_LFGList.GetActiveEntryInfo()
+    if type(activeEntryInfo) == "table" then
+        return activeEntryInfo
+    end
+
+    local activityID, _, _, name, comment = C_LFGList.GetActiveEntryInfo()
+    if activityID == nil and name == nil and comment == nil then
+        return nil
+    end
+
+    return {
+        activityID = activityID,
+        name = name,
+        comment = comment,
+    }
+end
+
+PlannerPrivate.GetActiveEntryActivityID = function(activeEntryInfo)
+    if type(activeEntryInfo) ~= "table" then
+        return nil
+    end
+
+    if type(activeEntryInfo.activityID) == "number" then
+        return activeEntryInfo.activityID
+    end
+
+    if type(activeEntryInfo.activityIDs) == "table" then
+        local firstActivityID = tonumber(activeEntryInfo.activityIDs[1])
+        if firstActivityID then
+            return firstActivityID
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.GetEntryCreationTextCandidates = function()
+    local candidates = {}
+    local seenCandidates = {}
+    local activeEntryInfo = PlannerPrivate.GetActiveEntryInfoTable()
+    if not activeEntryInfo then
+        return candidates, nil, nil
+    end
+
+    PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activeEntryInfo.name)
+    PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activeEntryInfo.comment)
+    PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activeEntryInfo["title"])
+
+    local activityInfo = nil
+    local activityID = PlannerPrivate.GetActiveEntryActivityID(activeEntryInfo)
+    if activityID and C_LFGList then
+        if C_LFGList.GetActivityInfoTable then
+            activityInfo = C_LFGList.GetActivityInfoTable(activityID)
+            if type(activityInfo) == "table" then
+                PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activityInfo.shortName)
+                PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activityInfo.fullName)
+                PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activityInfo["activityName"])
+            end
+        end
+
+        if C_LFGList.GetActivityInfo then
+            PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, C_LFGList.GetActivityInfo(activityID))
+        end
+    end
+
+    if LFGListFrame and LFGListFrame.EntryCreation then
+        if LFGListFrame.EntryCreation.Name and LFGListFrame.EntryCreation.Name.GetText then
+            PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, LFGListFrame.EntryCreation.Name:GetText())
+        end
+
+        if LFGListFrame.EntryCreation.Description and LFGListFrame.EntryCreation.Description.GetText then
+            PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, LFGListFrame.EntryCreation.Description:GetText())
+        end
+    end
+
+    return candidates, activeEntryInfo, activityInfo
+end
+
+PlannerPrivate.ParseDestinationLevelFromText = function(textCandidates, categoryKey)
+    local minLevel = categoryKey == "delves" and 1 or 0
+    local maxLevel = categoryKey == "delves" and 11 or 20
+
+    local function NormalizeParsedLevel(parsedLevel)
+        if type(parsedLevel) ~= "number" then
+            return nil
+        end
+
+        local roundedLevel = math.floor(parsedLevel + 0.5)
+        if roundedLevel < minLevel or roundedLevel > maxLevel then
+            return nil
+        end
+
+        return roundedLevel
+    end
+
+    for _, candidateText in ipairs(textCandidates) do
+        local mythicLevel = type(candidateText) == "string" and candidateText:match("[Mm]%+%s*(%d+)") or nil
+        if mythicLevel then
+            local normalizedLevel = NormalizeParsedLevel(tonumber(mythicLevel))
+            if normalizedLevel ~= nil then
+                return normalizedLevel
+            end
+        end
+
+        local plusLevel = type(candidateText) == "string" and candidateText:match("%+(%d+)") or nil
+        if plusLevel then
+            local normalizedLevel = NormalizeParsedLevel(tonumber(plusLevel))
+            if normalizedLevel ~= nil then
+                return normalizedLevel
+            end
+        end
+
+        if categoryKey == "delves" then
+            local delveLevel = type(candidateText) == "string" and (candidateText:match("[Tt]ier%s*(%d+)")
+                or candidateText:match("[Tt](%d+)")
+                or candidateText:match("(%d+)%s*$")) or nil
+            if delveLevel then
+                local normalizedLevel = NormalizeParsedLevel(tonumber(delveLevel))
+                if normalizedLevel ~= nil then
+                    return normalizedLevel
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.FindDestinationSuggestion = function(categoryKey, destinationText)
     local normalizedText = tostring(destinationText or "")
     for _, suggestion in ipairs(GetDestinationSuggestions(categoryKey)) do
         if suggestion == normalizedText then
@@ -320,12 +1143,16 @@ local function FindDestinationSuggestion(categoryKey, destinationText)
     return nil
 end
 
-local function NormalizeSlotEntry(entry)
+PlannerPrivate.NormalizeSlotEntry = function(entry)
     if type(entry) == "table" then
         return {
             name = tostring(entry.name or ""),
-            classFile = type(entry.classFile) == "string" and entry.classFile or nil,
+            classFile = PlannerPrivate.IsUsablePlainString(entry.classFile) and entry.classFile or nil,
             specID = type(entry.specID) == "number" and entry.specID or nil,
+            roleKey = PlannerPrivate.NormalizePlannerRoleKey(entry.roleKey),
+            inviteName = PlannerPrivate.IsUsablePlainString(entry.inviteName) and entry.inviteName
+                or (PlannerPrivate.IsUsablePlainString(entry.name) and entry.name or nil),
+            sourceKey = PlannerPrivate.IsUsablePlainString(entry.sourceKey) and entry.sourceKey or nil,
         }
     end
 
@@ -334,6 +1161,9 @@ local function NormalizeSlotEntry(entry)
             name = entry,
             classFile = nil,
             specID = nil,
+            roleKey = nil,
+            inviteName = nil,
+            sourceKey = nil,
         }
     end
 
@@ -341,12 +1171,591 @@ local function NormalizeSlotEntry(entry)
         name = "",
         classFile = nil,
         specID = nil,
+        roleKey = nil,
+        inviteName = nil,
+        sourceKey = nil,
     }
 end
 
+PlannerPrivate.NormalizeWhisperApplicantEntry = function(entry)
+    if type(entry) ~= "table" then
+        return nil
+    end
+
+    local fullName = PlannerPrivate.IsUsablePlainString(entry.fullName) and entry.fullName or nil
+    local inviteName = PlannerPrivate.IsUsablePlainString(entry.inviteName) and entry.inviteName or fullName
+    local displayName = PlannerPrivate.IsUsablePlainString(entry.displayName) and entry.displayName
+        or PlannerPrivate.GetDisplayNameFromFullName(fullName or inviteName)
+    local createdAt = type(entry.createdAt) == "number" and entry.createdAt or GetCurrentTimestamp()
+    local updatedAt = type(entry.updatedAt) == "number" and entry.updatedAt or createdAt
+    local command = entry.command == "inv" and "inv" or "enter"
+    local identitySource = fullName or inviteName or displayName
+    local identityKey = PlannerPrivate.GetIdentityKey(identitySource)
+
+    if not identityKey then
+        return nil
+    end
+
+    return {
+        fullName = fullName,
+        displayName = displayName or "",
+        inviteName = inviteName,
+        classFile = PlannerPrivate.IsUsablePlainString(entry.classFile) and entry.classFile or nil,
+        specID = type(entry.specID) == "number" and entry.specID or nil,
+        roleKey = PlannerPrivate.NormalizePlannerRoleKey(entry.roleKey),
+        sourceKey = PlannerPrivate.IsUsablePlainString(entry.sourceKey) and entry.sourceKey or ("whisper:" .. identityKey),
+        command = command,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        lastInvitedAt = type(entry.lastInvitedAt) == "number" and entry.lastInvitedAt or nil,
+    }
+end
+
+PlannerPrivate.NormalizeWhisperApplicantList = function(entries)
+    local normalizedEntries = {}
+    local seenIdentities = {}
+    local cutoffTimestamp = GetCurrentTimestamp() - (7 * 24 * 60 * 60)
+
+    if type(entries) == "table" then
+        for _, entry in ipairs(entries) do
+            local normalizedEntry = PlannerPrivate.NormalizeWhisperApplicantEntry(entry)
+            if normalizedEntry and normalizedEntry.updatedAt >= cutoffTimestamp then
+                local identityKey = PlannerPrivate.GetIdentityKey(normalizedEntry.fullName or normalizedEntry.inviteName or normalizedEntry.displayName)
+                if identityKey and not seenIdentities[identityKey] then
+                    seenIdentities[identityKey] = true
+                    normalizedEntries[#normalizedEntries + 1] = normalizedEntry
+                end
+            end
+        end
+    end
+
+    table.sort(normalizedEntries, function(left, right)
+        if (left.updatedAt or 0) ~= (right.updatedAt or 0) then
+            return (left.updatedAt or 0) > (right.updatedAt or 0)
+        end
+
+        return tostring(left.displayName or left.inviteName or "") < tostring(right.displayName or right.inviteName or "")
+    end)
+
+    while #normalizedEntries > 80 do
+        table.remove(normalizedEntries)
+    end
+
+    return normalizedEntries
+end
+
+PlannerPrivate.ResolveWhisperCommand = function(messageText)
+    if type(messageText) ~= "string" then
+        return nil
+    end
+
+    local normalizedMessage = messageText:lower():match("^%s*(.-)%s*$") or ""
+    if normalizedMessage:find("^!enter") then
+        return "enter"
+    end
+
+    if normalizedMessage:find("^!inv") then
+        return "inv"
+    end
+
+    return nil
+end
+
+PlannerPrivate.BuildCharacterFullName = function(characterName, realmName)
+    if not PlannerPrivate.IsUsablePlainString(characterName) then
+        return nil
+    end
+
+    if PlannerPrivate.IsUsablePlainString(realmName) and realmName ~= "" then
+        return string.format("%s-%s", characterName, realmName:gsub("%s+", ""))
+    end
+
+    return characterName
+end
+
+PlannerPrivate.GetPlayerFullName = function()
+    if UnitFullName then
+        local playerName, realmName = UnitFullName("player")
+        if PlannerPrivate.IsUsablePlainString(playerName) then
+            return PlannerPrivate.BuildCharacterFullName(playerName, realmName)
+        end
+    end
+
+    local unitFullName = PlannerPrivate.GetUnitFullName and PlannerPrivate.GetUnitFullName("player") or nil
+    if PlannerPrivate.IsUsablePlainString(unitFullName) then
+        return unitFullName
+    end
+
+    local shortName = UnitName and UnitName("player") or nil
+    if PlannerPrivate.IsUsablePlainString(shortName) then
+        return shortName
+    end
+
+    return nil
+end
+
+PlannerPrivate.FindPlayerGUIDInEventArgs = function(...)
+    for argumentIndex = 1, select("#", ...) do
+        local guidCandidate = select(argumentIndex, ...)
+        if type(guidCandidate) == "string" and guidCandidate:find("^Player%-") then
+            return guidCandidate
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.NormalizeClassFile = function(classValue)
+    if not PlannerPrivate.IsUsablePlainString(classValue) then
+        return nil
+    end
+
+    if StreamerPlannerModule.CLASS_ROLE_SUPPORT[classValue] then
+        return classValue
+    end
+
+    for classFile, localizedName in pairs(LOCALIZED_CLASS_NAMES_MALE or {}) do
+        if classValue == localizedName then
+            return classFile
+        end
+    end
+
+    for classFile, localizedName in pairs(LOCALIZED_CLASS_NAMES_FEMALE or {}) do
+        if classValue == localizedName then
+            return classFile
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.GetSupportedRoleInfo = function(classFile)
+    local supportedRoles = classFile and StreamerPlannerModule.CLASS_ROLE_SUPPORT[classFile] or nil
+    if type(supportedRoles) ~= "table" then
+        return 0, nil
+    end
+
+    local supportedRoleCount = 0
+    local singleRoleKey = nil
+    for _, candidateRoleKey in ipairs({ "tank", "healer", "dps" }) do
+        if supportedRoles[candidateRoleKey] then
+            supportedRoleCount = supportedRoleCount + 1
+            if supportedRoleCount == 1 then
+                singleRoleKey = candidateRoleKey
+            else
+                singleRoleKey = nil
+            end
+        end
+    end
+
+    return supportedRoleCount, singleRoleKey
+end
+
+PlannerPrivate.GetSingleSupportedRoleKey = function(classFile)
+    local supportedRoleCount, singleRoleKey = PlannerPrivate.GetSupportedRoleInfo(classFile)
+    if supportedRoleCount == 1 then
+        return singleRoleKey
+    end
+
+    return nil
+end
+
+PlannerPrivate.RefreshSelectionButton = function(button, selected)
+    if not button then
+        return
+    end
+
+    if button.Selected then
+        button.Selected:SetShown(selected == true)
+    end
+
+    if button.Label then
+        if selected == true then
+            button.Label:SetTextColor(1, 0.92, 0.32, 1)
+        else
+            button.Label:SetTextColor(1, 0.82, 0, 1)
+        end
+    end
+end
+
+PlannerPrivate.IsPlayerName = function(name)
+    local playerFullName = PlannerPrivate.GetPlayerFullName()
+    local playerIdentityKey = PlannerPrivate.GetIdentityKey(playerFullName)
+    local candidateIdentityKey = PlannerPrivate.GetIdentityKey(name)
+    return playerIdentityKey ~= nil and playerIdentityKey == candidateIdentityKey
+end
+
+PlannerPrivate.SendPlannerAddonWhisper = function(targetName, payloadText)
+    if not C_ChatInfo
+        or type(C_ChatInfo.SendAddonMessage) ~= "function"
+        or not PlannerPrivate.IsUsablePlainString(targetName)
+        or not PlannerPrivate.IsUsablePlainString(payloadText) then
+        return false
+    end
+
+    C_ChatInfo.SendAddonMessage(STREAMER_PLANNER_ADDON_PREFIX, payloadText, "WHISPER", targetName)
+    return true
+end
+
+PlannerPrivate.RequestWhisperApplicantSpec = function(whisperEntry)
+    if type(whisperEntry) ~= "table" then
+        return false
+    end
+
+    if type(whisperEntry.specID) == "number" and whisperEntry.specID > 0 then
+        return false
+    end
+
+    local targetName = whisperEntry.inviteName or whisperEntry.fullName or whisperEntry.displayName
+    local identityKey = PlannerPrivate.GetIdentityKey(targetName)
+    if identityKey == nil or PlannerPrivate.IsPlayerName(targetName) then
+        return false
+    end
+
+    local now = GetCurrentTimestamp()
+    if type(PlannerPrivate.specRequestCooldownByName[identityKey]) == "number"
+        and (now - PlannerPrivate.specRequestCooldownByName[identityKey]) < WHISPER_SPEC_REQUEST_COOLDOWN_SECONDS then
+        return false
+    end
+
+    if PlannerPrivate.SendPlannerAddonWhisper(targetName, STREAMER_PLANNER_ADDON_SPEC_QUERY) then
+        PlannerPrivate.specRequestCooldownByName[identityKey] = now
+        return true
+    end
+
+    return false
+end
+
+PlannerPrivate.HandlePlannerAddonMessage = function(prefix, message, distribution, senderName)
+    if prefix ~= STREAMER_PLANNER_ADDON_PREFIX or not PlannerPrivate.IsUsablePlainString(message) then
+        return false
+    end
+
+    if PlannerPrivate.IsPlayerName(senderName) then
+        return false
+    end
+
+    local messageType, firstValue, secondValue = strsplit("\t", message)
+    if messageType == STREAMER_PLANNER_ADDON_SPEC_QUERY then
+        if distribution == "WHISPER" and PlannerPrivate.IsUsablePlainString(senderName) then
+            local playerClassFile = nil
+            if UnitClass then
+                local _, resolvedClassFile = UnitClass("player")
+                playerClassFile = resolvedClassFile
+            end
+            local playerSpecID = PlannerPrivate.GetPlayerSpecID()
+            PlannerPrivate.SendPlannerAddonWhisper(
+                senderName,
+                table.concat({
+                    STREAMER_PLANNER_ADDON_SPEC_REPLY,
+                    tostring(playerSpecID or 0),
+                    playerClassFile or "",
+                }, "\t")
+            )
+        end
+
+        return false
+    end
+
+    if messageType ~= STREAMER_PLANNER_ADDON_SPEC_REPLY then
+        return false
+    end
+
+    local specID = tonumber(firstValue)
+    if type(specID) ~= "number" or specID <= 0 then
+        specID = nil
+    end
+
+    local classFile = PlannerPrivate.IsUsablePlainString(secondValue) and secondValue or nil
+    return PlannerPrivate.StoreKnownCharacterInfo(senderName, nil, classFile, specID)
+end
+
+PlannerPrivate.ResolveBattleNetWhisperAuthorInfo = function(senderBnetIDAccount)
+    if type(senderBnetIDAccount) ~= "number" then
+        return nil, nil
+    end
+
+    local battleNetAPI = rawget(_G, "C_BattleNet")
+    if type(battleNetAPI) ~= "table" or type(battleNetAPI.GetFriendAccountInfo) ~= "function" then
+        return nil, nil
+    end
+
+    local getNumFriends = rawget(_G, "BNGetNumFriends")
+    if type(getNumFriends) ~= "function" then
+        return nil, nil
+    end
+
+    local friendCount = tonumber((getNumFriends())) or 0
+    local wowProjectID = rawget(_G, "WOW_PROJECT_MAINLINE")
+    local wowClientProgram = rawget(_G, "BNET_CLIENT_WOW")
+
+    local function ResolveGameAccountInfo(gameAccountInfo)
+        if type(gameAccountInfo) ~= "table" then
+            return nil, nil
+        end
+
+        local isRightClient = wowClientProgram == nil or gameAccountInfo.clientProgram == wowClientProgram
+        local isRightProject = wowProjectID == nil or gameAccountInfo.wowProjectID == wowProjectID
+        if not isRightClient or not isRightProject or gameAccountInfo.isInCurrentRegion == false then
+            return nil, nil
+        end
+
+        return PlannerPrivate.BuildCharacterFullName(gameAccountInfo.characterName, gameAccountInfo.realmName),
+            PlannerPrivate.NormalizeClassFile(gameAccountInfo.className)
+    end
+
+    for friendIndex = 1, (friendCount or 0) do
+        local accountInfo = battleNetAPI.GetFriendAccountInfo(friendIndex)
+        if type(accountInfo) == "table" and accountInfo.bnetAccountID == senderBnetIDAccount then
+            local resolvedName, resolvedClassFile = ResolveGameAccountInfo(accountInfo.gameAccountInfo)
+            if resolvedName then
+                return resolvedName, resolvedClassFile
+            end
+
+            if type(battleNetAPI.GetFriendNumGameAccounts) == "function" and type(battleNetAPI.GetFriendGameAccountInfo) == "function" then
+                for accountIndex = 1, (battleNetAPI.GetFriendNumGameAccounts(friendIndex) or 0) do
+                    resolvedName, resolvedClassFile = ResolveGameAccountInfo(battleNetAPI.GetFriendGameAccountInfo(friendIndex, accountIndex))
+                    if resolvedName then
+                        return resolvedName, resolvedClassFile
+                    end
+                end
+            end
+        end
+    end
+
+    return nil, nil
+end
+
+PlannerPrivate.ResolveWhisperAuthorName = function(authorName, playerGUID, senderBnetIDAccount)
+    local resolvedName = PlannerPrivate.IsUsablePlainString(authorName) and authorName or nil
+    local resolvedClassFile = nil
+
+    local battleNetName, battleNetClassFile = PlannerPrivate.ResolveBattleNetWhisperAuthorInfo(senderBnetIDAccount)
+    if battleNetName then
+        resolvedName = battleNetName
+    end
+    if battleNetClassFile then
+        resolvedClassFile = battleNetClassFile
+    end
+
+    local getPlayerInfoByGUID = rawget(_G, "GetPlayerInfoByGUID")
+    if type(getPlayerInfoByGUID) == "function" and PlannerPrivate.IsUsablePlainString(playerGUID) then
+        local _, classFile, _, _, _, playerName, realmName = getPlayerInfoByGUID(playerGUID)
+        resolvedClassFile = resolvedClassFile or PlannerPrivate.NormalizeClassFile(classFile)
+        if resolvedName == nil and PlannerPrivate.IsUsablePlainString(playerName) then
+            resolvedName = playerName
+        end
+
+        if resolvedName and PlannerPrivate.IsUsablePlainString(realmName) and realmName ~= "" then
+            return PlannerPrivate.BuildCharacterFullName(resolvedName, realmName), resolvedClassFile
+        end
+
+        if resolvedName then
+            return resolvedName, resolvedClassFile
+        end
+
+        if PlannerPrivate.IsUsablePlainString(playerName) then
+            return playerName, resolvedClassFile
+        end
+
+        if classFile then
+            return resolvedName, resolvedClassFile
+        end
+    end
+
+    return resolvedName, resolvedClassFile
+end
+
+PlannerPrivate.FindWhisperApplicantByName = function(name)
+    local settings = GetStreamerPlannerSettings()
+    local identityKey = PlannerPrivate.GetIdentityKey(name)
+    if not identityKey then
+        return nil, nil
+    end
+
+    for index, entry in ipairs(settings.whisperApplicants or {}) do
+        local entryIdentityKey = PlannerPrivate.GetIdentityKey(entry.fullName or entry.inviteName or entry.displayName)
+        if entryIdentityKey == identityKey then
+            return entry, index
+        end
+    end
+
+    return nil, nil
+end
+
+PlannerPrivate.IsWhisperSourceKey = function(sourceKey)
+    return type(sourceKey) == "string" and sourceKey:sub(1, 8) == "whisper:"
+end
+
+PlannerPrivate.IsSelfSourceKey = function(sourceKey)
+    return type(sourceKey) == "string" and sourceKey:sub(1, 5) == "self:"
+end
+
+PlannerPrivate.IsSelfSlotEntry = function(entry)
+    if type(entry) ~= "table" then
+        return false
+    end
+
+    if PlannerPrivate.IsSelfSourceKey(entry.sourceKey) then
+        return true
+    end
+
+    local playerFullName = PlannerPrivate.GetPlayerFullName()
+    local playerDisplayName = PlannerPrivate.GetDisplayNameFromFullName(playerFullName)
+    local playerIdentityKey = PlannerPrivate.GetIdentityKey(playerFullName)
+    local playerDisplayIdentityKey = PlannerPrivate.GetIdentityKey(playerDisplayName)
+
+    -- Prüfe alle möglichen Namensfelder im Slot-Eintrag
+    local entryNames = {
+        entry.inviteName,
+        entry.name,
+        entry.displayName,
+    }
+    for _, entryName in ipairs(entryNames) do
+        local entryIdentityKey = PlannerPrivate.GetIdentityKey(entryName)
+        if entryIdentityKey ~= nil then
+            if (playerIdentityKey ~= nil and playerIdentityKey == entryIdentityKey)
+                or (playerDisplayIdentityKey ~= nil and playerDisplayIdentityKey == entryIdentityKey)
+            then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+PlannerPrivate.MarkWhisperApplicantInvited = function(name)
+    local settings = GetStreamerPlannerSettings()
+    local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(name)
+    if not whisperEntry then
+        return
+    end
+
+    whisperEntry.lastInvitedAt = GetCurrentTimestamp()
+    whisperEntry.updatedAt = whisperEntry.lastInvitedAt
+    settings.whisperApplicants = PlannerPrivate.NormalizeWhisperApplicantList(settings.whisperApplicants)
+end
+
+PlannerPrivate.RemoveWhisperApplicantByName = function(name, skipSync)
+    local settings = GetStreamerPlannerSettings()
+    local _, whisperIndex = PlannerPrivate.FindWhisperApplicantByName(name)
+    if type(whisperIndex) ~= "number" then
+        return false
+    end
+
+    table.remove(settings.whisperApplicants, whisperIndex)
+    settings.whisperApplicants = PlannerPrivate.NormalizeWhisperApplicantList(settings.whisperApplicants)
+
+    if skipSync == true then
+        return true
+    end
+
+    PlannerPrivate.periodicSyncElapsed = 0
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
+    return true
+end
+
+PlannerPrivate.ClearWhisperManagedSlots = function(settings)
+    if type(settings) ~= "table" or type(settings.slots) ~= "table" then
+        return
+    end
+
+    if type(settings.slots.dungeon) == "table" and type(StreamerPlannerModule.DUNGEON_LAYOUT) == "table" then
+        for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+            local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotInfo.key])
+            if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
+                settings.slots.dungeon[slotInfo.key] = PlannerPrivate.NormalizeSlotEntry(nil)
+            end
+        end
+    end
+
+    if type(settings.slots.raid) == "table" then
+        for index = 1, RAID_SLOT_COUNT do
+            local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
+            if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
+                settings.slots.raid[index] = PlannerPrivate.NormalizeSlotEntry(nil)
+            end
+        end
+    end
+end
+
+PlannerPrivate.UpsertWhisperApplicant = function(authorName, playerGUID, command, senderBnetIDAccount, messageText)
+    local settings = GetStreamerPlannerSettings()
+    local resolvedCommand = command == "inv" and "inv" or "enter"
+    local fullName, resolvedAuthorClassFile = PlannerPrivate.ResolveWhisperAuthorName(authorName, playerGUID, senderBnetIDAccount)
+    local identityKey = PlannerPrivate.GetIdentityKey(fullName)
+
+    if not identityKey then
+        return nil
+    end
+
+    local existingEntry, existingIndex = PlannerPrivate.FindWhisperApplicantByName(fullName)
+    local applicantData = PlannerPrivate.FindApplicantByName(fullName)
+    local displayName = PlannerPrivate.GetDisplayNameFromFullName(fullName) or fullName
+    local classFile = PlannerPrivate.NormalizeClassFile(existingEntry and existingEntry.classFile or nil)
+    if classFile == nil and resolvedAuthorClassFile then
+        classFile = PlannerPrivate.NormalizeClassFile(resolvedAuthorClassFile)
+    end
+    if classFile == nil and applicantData and applicantData.classFile then
+        classFile = PlannerPrivate.NormalizeClassFile(applicantData.classFile)
+    end
+    local getPlayerInfoByGUID = rawget(_G, "GetPlayerInfoByGUID")
+    if classFile == nil and type(getPlayerInfoByGUID) == "function" and PlannerPrivate.IsUsablePlainString(playerGUID) then
+        local _, guidClassFile = getPlayerInfoByGUID(playerGUID)
+        guidClassFile = PlannerPrivate.NormalizeClassFile(guidClassFile)
+        if PlannerPrivate.IsUsablePlainString(guidClassFile) then
+            classFile = guidClassFile
+        end
+    end
+
+    local whisperedSpecID = PlannerPrivate.ResolveWhisperSpecHint(messageText, classFile)
+    local whisperedRoleKey = PlannerPrivate.ResolveWhisperRoleHint(messageText)
+    local specID = whisperedSpecID
+        or (existingEntry and existingEntry.specID)
+        or (applicantData and applicantData.specID)
+        or PlannerPrivate.GetKnownSpecID(fullName, playerGUID)
+        or nil
+    local roleKey = whisperedRoleKey
+        or (existingEntry and existingEntry.roleKey)
+        or (applicantData and PlannerPrivate.GetApplicantRoleKey(applicantData))
+        or nil
+    if roleKey == nil and PlannerPrivate.IsUsablePlainString(classFile) then
+        roleKey = PlannerPrivate.GetSingleSupportedRoleKey(classFile)
+    end
+
+    local normalizedEntry = PlannerPrivate.NormalizeWhisperApplicantEntry({
+        fullName = fullName,
+        displayName = displayName,
+        inviteName = fullName,
+        classFile = classFile,
+        specID = specID,
+        roleKey = roleKey,
+        sourceKey = "whisper:" .. identityKey,
+        command = resolvedCommand,
+        createdAt = existingEntry and existingEntry.createdAt or GetCurrentTimestamp(),
+        updatedAt = GetCurrentTimestamp(),
+        lastInvitedAt = existingEntry and existingEntry.lastInvitedAt or nil,
+    })
+
+    if not normalizedEntry then
+        return nil
+    end
+
+    if existingIndex then
+        settings.whisperApplicants[existingIndex] = normalizedEntry
+    else
+        settings.whisperApplicants[#settings.whisperApplicants + 1] = normalizedEntry
+    end
+
+    settings.whisperApplicants = PlannerPrivate.NormalizeWhisperApplicantList(settings.whisperApplicants)
+    return normalizedEntry
+end
+
 local function BuildClassOptions()
-    if ClassOptionsCache and ClassInfoByFileCache then
-        return ClassOptionsCache, ClassInfoByFileCache
+    if PlannerPrivate.classOptionsCache and PlannerPrivate.classInfoByFileCache then
+        return PlannerPrivate.classOptionsCache, PlannerPrivate.classInfoByFileCache
     end
 
     local options = {
@@ -400,9 +1809,9 @@ local function BuildClassOptions()
         return left.name < right.name
     end)
 
-    ClassOptionsCache = options
-    ClassInfoByFileCache = infoByFile
-    return ClassOptionsCache, ClassInfoByFileCache
+    PlannerPrivate.classOptionsCache = options
+    PlannerPrivate.classInfoByFileCache = infoByFile
+    return PlannerPrivate.classOptionsCache, PlannerPrivate.classInfoByFileCache
 end
 
 local function GetClassColor(classFile)
@@ -447,7 +1856,7 @@ local function IsClassAllowedForRole(classFile, roleRequirement)
         return true
     end
 
-    local supportedRoles = CLASS_ROLE_SUPPORT[classFile]
+    local supportedRoles = StreamerPlannerModule.CLASS_ROLE_SUPPORT[classFile]
     return supportedRoles ~= nil and supportedRoles[roleRequirement] == true
 end
 
@@ -456,13 +1865,13 @@ local function IsSpecAllowedForRole(specID, roleRequirement)
         return true
     end
 
-    return SPEC_ROLE_SUPPORT[specID] == roleRequirement
+    return StreamerPlannerModule.SPEC_ROLE_SUPPORT[specID] == roleRequirement
 end
 
 local function BuildSpecOptions(classFile, roleRequirement)
     local cacheKey = string.format("%s|%s", classFile or "__none", roleRequirement or "any")
-    if SpecOptionsCache[cacheKey] then
-        return SpecOptionsCache[cacheKey]
+    if PlannerPrivate.specOptionsCache[cacheKey] then
+        return PlannerPrivate.specOptionsCache[cacheKey]
     end
 
     local options = {
@@ -473,7 +1882,7 @@ local function BuildSpecOptions(classFile, roleRequirement)
         },
     }
 
-    for _, specID in ipairs(SPEC_DATA_BY_CLASS[classFile] or {}) do
+    for _, specID in ipairs(StreamerPlannerModule.SPEC_DATA_BY_CLASS[classFile] or {}) do
         if IsSpecAllowedForRole(specID, roleRequirement) then
             local specName
             local specIcon
@@ -491,12 +1900,23 @@ local function BuildSpecOptions(classFile, roleRequirement)
         end
     end
 
-    SpecOptionsCache[cacheKey] = options
+    PlannerPrivate.specOptionsCache[cacheKey] = options
     return options
 end
 
-local function GetSpecName(classFile, specID)
-    if not classFile or type(specID) ~= "number" then
+PlannerPrivate.GetSpecName = function(classFile, specID)
+    if type(specID) ~= "number" then
+        return nil
+    end
+
+    if GetSpecializationInfoByID then
+        local _, resolvedSpecName = GetSpecializationInfoByID(specID)
+        if PlannerPrivate.IsUsablePlainString(resolvedSpecName) then
+            return resolvedSpecName
+        end
+    end
+
+    if not classFile then
         return nil
     end
 
@@ -509,16 +1929,34 @@ local function GetSpecName(classFile, specID)
     return nil
 end
 
-local function GetEntryAssignedRole(entry)
+PlannerPrivate.IsSpecForClass = function(classFile, specID)
+    if not PlannerPrivate.IsUsablePlainString(classFile) or type(specID) ~= "number" then
+        return false
+    end
+
+    for _, candidateSpecID in ipairs(StreamerPlannerModule.SPEC_DATA_BY_CLASS[classFile] or {}) do
+        if candidateSpecID == specID then
+            return true
+        end
+    end
+
+    return false
+end
+
+PlannerPrivate.GetEntryAssignedRole = function(entry)
     if type(entry) ~= "table" then
         return nil
     end
 
-    if type(entry.specID) == "number" then
-        return SPEC_ROLE_SUPPORT[entry.specID]
+    if entry.roleKey then
+        return PlannerPrivate.NormalizePlannerRoleKey(entry.roleKey)
     end
 
-    local supportedRoles = entry.classFile and CLASS_ROLE_SUPPORT[entry.classFile] or nil
+    if type(entry.specID) == "number" then
+        return PlannerPrivate.NormalizePlannerRoleKey(StreamerPlannerModule.SPEC_ROLE_SUPPORT[entry.specID])
+    end
+
+    local supportedRoles = entry.classFile and StreamerPlannerModule.CLASS_ROLE_SUPPORT[entry.classFile] or nil
     if not supportedRoles then
         return nil
     end
@@ -659,6 +2097,7 @@ GetStreamerPlannerSettings = function()
     BeavisQoLDB.streamerPlanner = BeavisQoLDB.streamerPlanner or {}
 
     local db = BeavisQoLDB.streamerPlanner
+    local needsWhisperSessionReset = PlannerPrivate.whisperSessionInitialized ~= true
 
     if db.overlayEnabled == nil then
         db.overlayEnabled = false
@@ -697,15 +2136,11 @@ GetStreamerPlannerSettings = function()
         db.destination = ""
     end
 
-    if type(db.destinationCategory) ~= "string" or not DESTINATION_OPTIONS[db.destinationCategory] then
-        db.destinationCategory = DESTINATION_CATEGORIES[1].key
+    if type(db.destinationCategory) ~= "string" or not StreamerPlannerModule.DESTINATION_OPTIONS[db.destinationCategory] then
+        db.destinationCategory = StreamerPlannerModule.DESTINATION_CATEGORIES[1].key
     end
 
-    if type(db.destinationKeystoneLevel) == "number" then
-        db.destinationKeystoneLevel = Clamp(math.floor(db.destinationKeystoneLevel + 0.5), 0, 20)
-    else
-        db.destinationKeystoneLevel = nil
-    end
+    db.destinationKeystoneLevel = PlannerPrivate.NormalizeDestinationLevel(db.destinationCategory, db.destinationKeystoneLevel)
 
     if type(db.timerDurationSeconds) ~= "number" or db.timerDurationSeconds < 60 then
         db.timerDurationSeconds = DEFAULT_TIMER_DURATION_SECONDS
@@ -739,12 +2174,25 @@ GetStreamerPlannerSettings = function()
         db.slots = {}
     end
 
+    db.whisperCommandAutoInvite = db.whisperCommandAutoInvite == true
+    db.selfRoleOverride = PlannerPrivate.NormalizePlannerRoleKey(db.selfRoleOverride)
+
+    if type(db.whisperApplicants) ~= "table" then
+        db.whisperApplicants = {}
+    end
+
+    if needsWhisperSessionReset then
+        db.whisperApplicants = {}
+    end
+
+    db.whisperApplicants = PlannerPrivate.NormalizeWhisperApplicantList(db.whisperApplicants)
+
     if type(db.slots.dungeon) ~= "table" then
         db.slots.dungeon = {}
     end
 
-    for _, slotInfo in ipairs(DUNGEON_LAYOUT) do
-        db.slots.dungeon[slotInfo.key] = NormalizeSlotEntry(db.slots.dungeon[slotInfo.key])
+    for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+        db.slots.dungeon[slotInfo.key] = PlannerPrivate.NormalizeSlotEntry(db.slots.dungeon[slotInfo.key])
     end
 
     if type(db.slots.raid) ~= "table" then
@@ -752,7 +2200,12 @@ GetStreamerPlannerSettings = function()
     end
 
     for index = 1, RAID_SLOT_COUNT do
-        db.slots.raid[index] = NormalizeSlotEntry(db.slots.raid[index])
+        db.slots.raid[index] = PlannerPrivate.NormalizeSlotEntry(db.slots.raid[index])
+    end
+
+    if needsWhisperSessionReset then
+        PlannerPrivate.ClearWhisperManagedSlots(db)
+        PlannerPrivate.whisperSessionInitialized = true
     end
 
     return db
@@ -769,9 +2222,10 @@ end
 local function GetDestinationText()
     local settings = GetStreamerPlannerSettings()
     local destinationText = settings.destination or ""
+    local destinationLevelLabel = PlannerPrivate.GetDestinationLevelLabel(settings.destinationCategory, settings.destinationKeystoneLevel)
 
-    if destinationText ~= "" and settings.destinationCategory == "s1" and type(settings.destinationKeystoneLevel) == "number" then
-        return string.format("%s %s", destinationText, GetKeystoneLabel(settings.destinationKeystoneLevel))
+    if destinationText ~= "" and destinationLevelLabel then
+        return string.format("%s %s", destinationText, destinationLevelLabel)
     end
 
     return destinationText
@@ -791,17 +2245,13 @@ end
 
 local function SetDestinationKeystoneLevel(level)
     local settings = GetStreamerPlannerSettings()
-    if type(level) ~= "number" then
-        settings.destinationKeystoneLevel = nil
-        return
-    end
-
-    settings.destinationKeystoneLevel = Clamp(math.floor(level + 0.5), 0, 20)
+    settings.destinationKeystoneLevel = PlannerPrivate.NormalizeDestinationLevel(settings.destinationCategory, level)
 end
 
 local function SetDestinationCategory(categoryKey)
     local settings = GetStreamerPlannerSettings()
-    settings.destinationCategory = DESTINATION_OPTIONS[categoryKey] and categoryKey or DESTINATION_CATEGORIES[1].key
+    settings.destinationCategory = StreamerPlannerModule.DESTINATION_OPTIONS[categoryKey] and categoryKey or StreamerPlannerModule.DESTINATION_CATEGORIES[1].key
+    settings.destinationKeystoneLevel = PlannerPrivate.NormalizeDestinationLevel(settings.destinationCategory, settings.destinationKeystoneLevel)
 end
 
 local function SetCurrentMode(mode)
@@ -813,12 +2263,12 @@ local function SetCurrentMode(mode)
             settings.destinationCategory = "raids"
         end
     elseif settings.destinationCategory == "raids" then
-        settings.destinationCategory = DESTINATION_CATEGORIES[1].key
+        settings.destinationCategory = StreamerPlannerModule.DESTINATION_CATEGORIES[1].key
     end
 end
 
 GetDungeonSlotInfo = function(index)
-    return DUNGEON_LAYOUT[index]
+    return StreamerPlannerModule.DUNGEON_LAYOUT[index]
 end
 
 local function GetRaidGroupAndPosition(index)
@@ -856,22 +2306,22 @@ local function GetSlotValue(layout, index)
         entry = settings.slots.dungeon[slotInfo.key]
     end
 
-    return NormalizeSlotEntry(entry).name
+    return PlannerPrivate.NormalizeSlotEntry(entry).name
 end
 
 local function GetSlotEntry(layout, index)
     local settings = GetStreamerPlannerSettings()
 
     if layout == "raid" then
-        return NormalizeSlotEntry(settings.slots.raid[index])
+        return PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
     end
 
     local slotInfo = GetDungeonSlotInfo(index)
     if not slotInfo then
-        return NormalizeSlotEntry(nil)
+        return PlannerPrivate.NormalizeSlotEntry(nil)
     end
 
-    return NormalizeSlotEntry(settings.slots.dungeon[slotInfo.key])
+    return PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotInfo.key])
 end
 
 local function GetRaidRoleCounts()
@@ -884,7 +2334,7 @@ local function GetRaidRoleCounts()
     for index = 1, RAID_SLOT_COUNT do
         local entry = GetSlotEntry("raid", index)
         if entry.name ~= "" or entry.classFile ~= nil or entry.specID ~= nil then
-            local role = GetEntryAssignedRole(entry)
+            local role = PlannerPrivate.GetEntryAssignedRole(entry)
             if role and counts[role] then
                 counts[role] = counts[role] + 1
             end
@@ -901,7 +2351,7 @@ end
 
 local function SetSlotEntry(layout, index, entry)
     local settings = GetStreamerPlannerSettings()
-    local normalizedEntry = NormalizeSlotEntry(entry)
+    local normalizedEntry = PlannerPrivate.NormalizeSlotEntry(entry)
 
     if layout == "raid" then
         settings.slots.raid[index] = normalizedEntry
@@ -925,19 +2375,1140 @@ local function ClearLayout(layout)
 
     if layout == "raid" then
         for index = 1, RAID_SLOT_COUNT do
-            settings.slots.raid[index] = NormalizeSlotEntry(nil)
+            settings.slots.raid[index] = PlannerPrivate.NormalizeSlotEntry(nil)
         end
         return
     end
 
-    for _, slotInfo in ipairs(DUNGEON_LAYOUT) do
-        settings.slots.dungeon[slotInfo.key] = NormalizeSlotEntry(nil)
+    for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+        settings.slots.dungeon[slotInfo.key] = PlannerPrivate.NormalizeSlotEntry(nil)
     end
 end
 
 local function ClearAllLayouts()
     ClearLayout("dungeon")
     ClearLayout("raid")
+end
+
+PlannerPrivate.IsVisibleApplicantStatus = function(status)
+    if status == "failed" or status == "cancelled" or status == "timedout" then
+        return false
+    end
+
+    if status == "declined" or status == "declined_full" or status == "declined_delisted" or status == "invitedeclined" then
+        return false
+    end
+
+    return true
+end
+
+PlannerPrivate.CanInviteApplicantStatus = function(status)
+    return status == "applied"
+end
+
+PlannerPrivate.GetApplicantStatusLabel = function(status)
+    if status == "applied" then
+        return L("EASY_LFG_STATUS_APPLIED")
+    end
+
+    if status == "invited" then
+        return L("EASY_LFG_STATUS_INVITED")
+    end
+
+    if status == "inviteaccepted" then
+        return L("EASY_LFG_STATUS_INVITE_ACCEPTED")
+    end
+
+    if status == "declined" or status == "declined_full" or status == "declined_delisted" then
+        return L("EASY_LFG_STATUS_DECLINED")
+    end
+
+    if status == "invitedeclined" then
+        return L("EASY_LFG_STATUS_INVITE_DECLINED")
+    end
+
+    if status == "failed" or status == "cancelled" or status == "timedout" then
+        return L("EASY_LFG_STATUS_INACTIVE")
+    end
+
+    return tostring(status or "")
+end
+
+PlannerPrivate.GetApplicantRoleKey = function(memberData)
+    if type(memberData) ~= "table" then
+        return nil
+    end
+
+    local assignedRole = PlannerPrivate.NormalizePlannerRoleKey(memberData.assignedRole)
+    if assignedRole then
+        return assignedRole
+    end
+
+    if type(memberData.specID) == "number" then
+        local specRole = PlannerPrivate.GetRoleKeyFromSpecID(memberData.specID)
+        if specRole then
+            return specRole
+        end
+    end
+
+    local resolvedRole = nil
+    if memberData.canTank then
+        resolvedRole = resolvedRole and nil or "tank"
+    end
+    if memberData.canHealer then
+        resolvedRole = resolvedRole and nil or "healer"
+    end
+    if memberData.canDamage then
+        resolvedRole = resolvedRole and nil or "dps"
+    end
+
+    return resolvedRole
+end
+
+PlannerPrivate.GetApplicantPanelRoleOrder = function(roleKey)
+    local normalizedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(roleKey)
+    if normalizedRoleKey == "tank" then
+        return 1
+    end
+
+    if normalizedRoleKey == "healer" then
+        return 2
+    end
+
+    if normalizedRoleKey == "dps" then
+        return 3
+    end
+
+    return 4
+end
+
+PlannerPrivate.GetApplicantSnapshot = function()
+    local snapshot = {}
+
+    if not C_LFGList or not C_LFGList.GetApplicants or not C_LFGList.GetApplicantInfo or not C_LFGList.GetApplicantMemberInfo then
+        return snapshot
+    end
+
+    local orderedApplicants = {}
+    for _, applicantID in ipairs(C_LFGList.GetApplicants() or {}) do
+        local applicantInfo = C_LFGList.GetApplicantInfo(applicantID)
+        if type(applicantInfo) == "table" then
+            orderedApplicants[#orderedApplicants + 1] = {
+                applicantID = applicantID,
+                displayOrderID = tonumber(applicantInfo.displayOrderID) or applicantID,
+                applicationStatus = applicantInfo.applicationStatus,
+                numMembers = tonumber(applicantInfo.numMembers) or 0,
+            }
+        end
+    end
+
+    table.sort(orderedApplicants, function(left, right)
+        return left.displayOrderID < right.displayOrderID
+    end)
+
+    for _, applicant in ipairs(orderedApplicants) do
+        if PlannerPrivate.IsVisibleApplicantStatus(applicant.applicationStatus) then
+            local applicantEntry = {
+                applicantID = applicant.applicantID,
+                applicationStatus = applicant.applicationStatus,
+                displayOrderID = applicant.displayOrderID,
+                memberCount = math.max(0, applicant.numMembers or 0),
+                members = {},
+            }
+
+            for memberIndex = 1, applicantEntry.memberCount do
+                local fullName, classFile, localizedClass, level, itemLevel, honorLevel, canTank, canHealer, canDamage, assignedRole, relationship, dungeonScore, pvpItemLevel, factionGroup, raceID, specID, isLeaver = C_LFGList.GetApplicantMemberInfo(applicant.applicantID, memberIndex)
+                local displayName = PlannerPrivate.GetDisplayNameFromFullName(fullName) or tostring(fullName or "")
+
+                applicantEntry.members[#applicantEntry.members + 1] = {
+                    applicantID = applicant.applicantID,
+                    memberIndex = memberIndex,
+                    applicationStatus = applicant.applicationStatus,
+                    fullName = fullName,
+                    displayName = displayName,
+                    classFile = classFile,
+                    localizedClass = localizedClass,
+                    level = level,
+                    itemLevel = itemLevel,
+                    dungeonScore = dungeonScore,
+                    assignedRole = assignedRole,
+                    specID = type(specID) == "number" and specID > 0 and specID or nil,
+                    canTank = canTank == true,
+                    canHealer = canHealer == true,
+                    canDamage = canDamage == true,
+                    isPrimary = memberIndex == 1,
+                    memberCount = applicantEntry.memberCount,
+                    isLeaver = isLeaver == true,
+                }
+            end
+
+            snapshot[#snapshot + 1] = applicantEntry
+        end
+    end
+
+    return snapshot
+end
+
+PlannerPrivate.RebuildApplicantIndex = function(snapshot)
+    local applicantByName = {}
+
+    for _, applicantEntry in ipairs(snapshot or {}) do
+        for _, memberData in ipairs(applicantEntry.members or {}) do
+            local fullNameKey = PlannerPrivate.GetIdentityKey(memberData.fullName)
+            if fullNameKey and applicantByName[fullNameKey] == nil then
+                applicantByName[fullNameKey] = memberData
+            end
+
+            local displayNameKey = PlannerPrivate.GetIdentityKey(memberData.displayName)
+            if displayNameKey and applicantByName[displayNameKey] == nil then
+                applicantByName[displayNameKey] = memberData
+            end
+        end
+    end
+
+    PlannerPrivate.applicantByName = applicantByName
+end
+
+PlannerPrivate.RefreshApplicantSnapshot = function()
+    local snapshot = PlannerPrivate.GetApplicantSnapshot()
+    PlannerPrivate.applicantSnapshot = snapshot
+    PlannerPrivate.RebuildApplicantIndex(snapshot)
+    return snapshot
+end
+
+PlannerPrivate.FindApplicantByName = function(name)
+    local identityKey = PlannerPrivate.GetIdentityKey(name)
+    if not identityKey then
+        return nil
+    end
+
+    return PlannerPrivate.applicantByName[identityKey]
+end
+
+PlannerPrivate.IsAutoManagedSourceKey = function(sourceKey)
+    return type(sourceKey) == "string"
+        and (sourceKey:sub(1, 5) == "self:"
+            or sourceKey:sub(1, 6) == "group:"
+            or sourceKey:sub(1, 8) == "whisper:"
+            or sourceKey:sub(1, 10) == "applicant:")
+end
+
+PlannerPrivate.IsAutoManagedEntry = function(entry)
+    return type(entry) == "table" and PlannerPrivate.IsAutoManagedSourceKey(entry.sourceKey)
+end
+
+PlannerPrivate.GetPlayerSpecID = function()
+    if not GetSpecialization or not GetSpecializationInfo then
+        return nil
+    end
+
+    local currentSpecIndex = GetSpecialization()
+    if type(currentSpecIndex) ~= "number" then
+        return nil
+    end
+
+    local specID = select(1, GetSpecializationInfo(currentSpecIndex))
+    return type(specID) == "number" and specID > 0 and specID or nil
+end
+
+PlannerPrivate.GetUnitFullName = function(unit)
+    if not unit or not UnitExists or not UnitExists(unit) then
+        return nil
+    end
+
+    local fullName = GetUnitName and GetUnitName(unit, true) or nil
+    if PlannerPrivate.IsUsablePlainString(fullName) then
+        return fullName
+    end
+
+    local shortName = GetUnitName and GetUnitName(unit, false) or nil
+    return PlannerPrivate.IsUsablePlainString(shortName) and shortName or nil
+end
+
+PlannerPrivate.GetUnitParticipant = function(unit)
+    if not unit or not UnitExists or not UnitExists(unit) then
+        return nil
+    end
+
+    local fullName = PlannerPrivate.GetUnitFullName(unit)
+    if not fullName then
+        return nil
+    end
+
+    local displayName = PlannerPrivate.GetDisplayNameFromFullName(fullName) or fullName
+    local _, classFile = UnitClass(unit)
+    local playerGUID = UnitGUID and UnitGUID(unit) or nil
+    local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(fullName)
+    local specID = nil
+    if unit == "player" then
+        specID = PlannerPrivate.GetPlayerSpecID()
+    elseif GetInspectSpecialization then
+        local inspectSpecID = GetInspectSpecialization(unit)
+        if type(inspectSpecID) == "number" and inspectSpecID > 0 then
+            specID = inspectSpecID
+        end
+    end
+
+    if specID == nil then
+        specID = PlannerPrivate.GetKnownSpecID(fullName, playerGUID)
+    end
+
+    if specID == nil and type(whisperEntry) == "table" then
+        specID = whisperEntry.specID
+    end
+
+    local applicantData = PlannerPrivate.FindApplicantByName(fullName)
+    if specID == nil and type(applicantData) == "table" then
+        specID = applicantData.specID
+    end
+
+    local roleKey = nil
+    if unit == "player" then
+        roleKey = PlannerPrivate.NormalizePlannerRoleKey(GetStreamerPlannerSettings().selfRoleOverride)
+    end
+
+    if roleKey == nil and type(whisperEntry) == "table" then
+        roleKey = PlannerPrivate.NormalizePlannerRoleKey(whisperEntry.roleKey)
+    end
+
+    if roleKey == nil then
+        roleKey = PlannerPrivate.NormalizePlannerRoleKey(UnitGroupRolesAssigned and UnitGroupRolesAssigned(unit) or nil)
+    end
+
+    if roleKey == nil and type(applicantData) == "table" then
+        roleKey = PlannerPrivate.GetApplicantRoleKey(applicantData)
+    end
+
+    if roleKey == nil and specID ~= nil then
+        roleKey = PlannerPrivate.GetRoleKeyFromSpecID(specID)
+    end
+
+    if roleKey == nil then
+        roleKey = PlannerPrivate.GetEntryAssignedRole({
+            classFile = classFile,
+            specID = specID,
+        })
+    end
+
+    if unit ~= "player" then
+        if specID ~= nil then
+            PlannerPrivate.StoreKnownCharacterInfo(fullName, playerGUID, classFile, specID)
+        elseif PlannerPrivate.ShouldInspectUnitParticipant(classFile, specID, roleKey) then
+            PlannerPrivate.QueueInspectForUnit(unit, fullName, classFile)
+        end
+    end
+
+    return {
+        name = displayName,
+        fullName = fullName,
+        inviteName = fullName,
+        classFile = classFile,
+        specID = specID,
+        roleKey = roleKey,
+        sourceKey = (unit == "player" and "self:" or "group:") .. (PlannerPrivate.GetIdentityKey(fullName) or tostring(fullName)),
+    }
+end
+
+PlannerPrivate.AddParticipant = function(target, seen, blocked, participant)
+    if type(participant) ~= "table" then
+        return
+    end
+
+    local fullNameKey = PlannerPrivate.GetIdentityKey(participant.fullName)
+    local displayNameKey = PlannerPrivate.GetIdentityKey(participant.name)
+    if (fullNameKey and blocked[fullNameKey]) or (displayNameKey and blocked[displayNameKey]) then
+        return
+    end
+
+    local dedupeKey = fullNameKey or displayNameKey
+    if dedupeKey and seen[dedupeKey] then
+        return
+    end
+
+    if dedupeKey then
+        seen[dedupeKey] = true
+    end
+
+    target[#target + 1] = participant
+end
+
+PlannerPrivate.GetApplicantParticipants = function(blocked, seen)
+    local participants = {}
+
+    for _, applicantEntry in ipairs(PlannerPrivate.applicantSnapshot or {}) do
+        for _, memberData in ipairs(applicantEntry.members or {}) do
+            local applicantParticipant = {
+                name = memberData.displayName or memberData.fullName or "",
+                fullName = memberData.fullName,
+                inviteName = memberData.fullName,
+                classFile = memberData.classFile,
+                specID = memberData.specID,
+                roleKey = PlannerPrivate.GetApplicantRoleKey(memberData),
+                applicantID = memberData.applicantID,
+                memberIndex = memberData.memberIndex,
+                applicantStatus = memberData.applicationStatus,
+                displayOrderID = applicantEntry.displayOrderID or applicantEntry.applicantID or 0,
+                sourcePriority = memberData.applicationStatus == "inviteaccepted" and 1 or (memberData.applicationStatus == "invited" and 2 or 3),
+                sourceKey = string.format("applicant:%s:%s", tostring(memberData.applicantID or ""), tostring(memberData.memberIndex or "")),
+            }
+
+            PlannerPrivate.AddParticipant(participants, seen, blocked, applicantParticipant)
+        end
+    end
+
+    table.sort(participants, function(left, right)
+        if left.sourcePriority ~= right.sourcePriority then
+            return left.sourcePriority < right.sourcePriority
+        end
+
+        if left.displayOrderID ~= right.displayOrderID then
+            return left.displayOrderID < right.displayOrderID
+        end
+
+        return (left.memberIndex or 0) < (right.memberIndex or 0)
+    end)
+
+    return participants
+end
+
+PlannerPrivate.GetWhisperParticipants = function(settings, blocked, seen)
+    local participants = {}
+
+    for _, whisperEntry in ipairs(settings.whisperApplicants or {}) do
+        if PlannerPrivate.IsWhisperApplicantReadyForPlanner(whisperEntry) then
+            local fullName = whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName
+            local applicantData = PlannerPrivate.FindApplicantByName(fullName)
+            local specID = whisperEntry.specID
+                or (applicantData and applicantData.specID)
+                or PlannerPrivate.GetKnownSpecID(fullName, nil)
+                or nil
+            local roleKey = whisperEntry.roleKey
+                or (applicantData and PlannerPrivate.GetApplicantRoleKey(applicantData))
+                or PlannerPrivate.GetSingleSupportedRoleKey(whisperEntry.classFile)
+                or nil
+
+            PlannerPrivate.AddParticipant(participants, seen, blocked, {
+                name = whisperEntry.displayName ~= "" and whisperEntry.displayName
+                    or PlannerPrivate.GetDisplayNameFromFullName(fullName)
+                    or tostring(fullName or ""),
+                fullName = fullName,
+                inviteName = whisperEntry.inviteName or fullName,
+                classFile = whisperEntry.classFile or (applicantData and applicantData.classFile) or nil,
+                specID = specID,
+                roleKey = roleKey,
+                sourceKey = whisperEntry.sourceKey or ("whisper:" .. tostring(PlannerPrivate.GetIdentityKey(fullName) or "")),
+            })
+        end
+    end
+
+    return participants
+end
+
+PlannerPrivate.BuildManualDungeonBlocklist = function(settings)
+    local blocked = {}
+
+    for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+        local slotKey = slotInfo.key
+        local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotKey])
+
+        if PlannerPrivate.IsAutoManagedEntry(currentEntry) then
+            settings.slots.dungeon[slotKey] = PlannerPrivate.NormalizeSlotEntry(nil)
+        else
+            local inviteNameKey = PlannerPrivate.GetIdentityKey(currentEntry.inviteName)
+            if inviteNameKey then
+                blocked[inviteNameKey] = true
+            end
+
+            local entryNameKey = PlannerPrivate.GetIdentityKey(currentEntry.name)
+            if entryNameKey then
+                blocked[entryNameKey] = true
+            end
+        end
+    end
+
+    return blocked
+end
+
+PlannerPrivate.BuildManualRaidBlocklist = function(settings)
+    local blocked = {}
+
+    for index = 1, RAID_SLOT_COUNT do
+        local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
+
+        if PlannerPrivate.IsAutoManagedEntry(currentEntry) then
+            settings.slots.raid[index] = PlannerPrivate.NormalizeSlotEntry(nil)
+        else
+            local inviteNameKey = PlannerPrivate.GetIdentityKey(currentEntry.inviteName)
+            if inviteNameKey then
+                blocked[inviteNameKey] = true
+            end
+
+            local entryNameKey = PlannerPrivate.GetIdentityKey(currentEntry.name)
+            if entryNameKey then
+                blocked[entryNameKey] = true
+            end
+        end
+    end
+
+    return blocked
+end
+
+PlannerPrivate.GetLiveDungeonParticipants = function(settings)
+    local participants = {}
+    local seen = {}
+    local blocked = PlannerPrivate.BuildManualDungeonBlocklist(settings)
+    local isRaidGroup = IsInRaid and IsInRaid() or false
+    local isGrouped = IsInGroup and IsInGroup() or false
+
+    -- Den eigenen Charakter wollen wir auch im Dungeon-Planer sehen,
+    -- selbst wenn wir parallel in einem Raid sind.
+    PlannerPrivate.AddParticipant(participants, seen, blocked, PlannerPrivate.GetUnitParticipant("player"))
+
+    if not isRaidGroup and isGrouped then
+        local subgroupMemberCount = GetNumSubgroupMembers and GetNumSubgroupMembers() or 0
+        for memberIndex = 1, subgroupMemberCount do
+            PlannerPrivate.AddParticipant(participants, seen, blocked, PlannerPrivate.GetUnitParticipant("party" .. memberIndex))
+        end
+    end
+
+    for _, participant in ipairs(PlannerPrivate.GetWhisperParticipants(settings, blocked, seen)) do
+        participants[#participants + 1] = participant
+    end
+
+    return participants
+end
+
+PlannerPrivate.GetLiveRaidParticipants = function(settings)
+    local participants = {}
+    local seen = {}
+    local blocked = PlannerPrivate.BuildManualRaidBlocklist(settings)
+    local isRaidGroup = IsInRaid and IsInRaid() or false
+    local isGrouped = IsInGroup and IsInGroup() or false
+
+    PlannerPrivate.AddParticipant(participants, seen, blocked, PlannerPrivate.GetUnitParticipant("player"))
+
+    if isRaidGroup and GetNumGroupMembers then
+        for memberIndex = 1, (GetNumGroupMembers() or 0) do
+            PlannerPrivate.AddParticipant(participants, seen, blocked, PlannerPrivate.GetUnitParticipant("raid" .. memberIndex))
+        end
+    elseif isGrouped and GetNumSubgroupMembers then
+        for memberIndex = 1, (GetNumSubgroupMembers() or 0) do
+            PlannerPrivate.AddParticipant(participants, seen, blocked, PlannerPrivate.GetUnitParticipant("party" .. memberIndex))
+        end
+    end
+
+    for _, participant in ipairs(PlannerPrivate.GetWhisperParticipants(settings, blocked, seen)) do
+        participants[#participants + 1] = participant
+    end
+
+    return participants
+end
+
+PlannerPrivate.GetParticipantRoleKey = function(participant)
+    if type(participant) ~= "table" then
+        return nil
+    end
+
+    if participant.roleKey then
+        return PlannerPrivate.NormalizePlannerRoleKey(participant.roleKey)
+    end
+
+    return PlannerPrivate.GetEntryAssignedRole(participant)
+end
+
+PlannerPrivate.FindDungeonSlotForParticipant = function(settings, participant)
+    local preferredSlotKey = nil
+    local fallbackSlotKey = nil
+    local participantRole = PlannerPrivate.GetParticipantRoleKey(participant)
+
+    for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+        local slotKey = slotInfo.key
+        local slotEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotKey])
+        local isEmptySlot = slotEntry.name == ""
+            and slotEntry.classFile == nil
+            and slotEntry.specID == nil
+            and slotEntry.roleKey == nil
+            and slotEntry.inviteName == nil
+            and slotEntry.sourceKey == nil
+
+        if isEmptySlot then
+            fallbackSlotKey = fallbackSlotKey or slotKey
+
+            if preferredSlotKey == nil and participantRole ~= nil and DUNGEON_SLOT_ROLE_REQUIREMENTS[slotKey] == participantRole then
+                preferredSlotKey = slotKey
+            end
+        end
+    end
+
+    return preferredSlotKey or fallbackSlotKey
+end
+
+PlannerPrivate.ApplyDungeonParticipantsToSlots = function(settings, participants)
+    for _, participant in ipairs(participants) do
+        local targetSlotKey = PlannerPrivate.FindDungeonSlotForParticipant(settings, participant)
+        if targetSlotKey then
+            settings.slots.dungeon[targetSlotKey] = PlannerPrivate.NormalizeSlotEntry({
+                name = participant.name,
+                classFile = participant.classFile,
+                specID = participant.specID,
+                roleKey = PlannerPrivate.GetParticipantRoleKey(participant),
+                inviteName = participant.inviteName,
+                sourceKey = participant.sourceKey,
+            })
+        end
+    end
+end
+
+PlannerPrivate.FindRaidSlotForParticipant = function(settings)
+    for index = 1, RAID_SLOT_COUNT do
+        local slotEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
+        local isEmptySlot = slotEntry.name == ""
+            and slotEntry.classFile == nil
+            and slotEntry.specID == nil
+            and slotEntry.roleKey == nil
+            and slotEntry.inviteName == nil
+            and slotEntry.sourceKey == nil
+
+        if isEmptySlot then
+            return index
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.ApplyRaidParticipantsToSlots = function(settings, participants)
+    for _, participant in ipairs(participants) do
+        local targetSlotIndex = PlannerPrivate.FindRaidSlotForParticipant(settings)
+        if targetSlotIndex then
+            settings.slots.raid[targetSlotIndex] = PlannerPrivate.NormalizeSlotEntry({
+                name = participant.name,
+                classFile = participant.classFile,
+                specID = participant.specID,
+                roleKey = PlannerPrivate.GetParticipantRoleKey(participant),
+                inviteName = participant.inviteName,
+                sourceKey = participant.sourceKey,
+            })
+        end
+    end
+end
+
+PlannerPrivate.GetActiveListingState = function()
+    local textCandidates, activeEntryInfo = PlannerPrivate.GetEntryCreationTextCandidates()
+    if type(activeEntryInfo) ~= "table" then
+        return nil
+    end
+
+    local categoryKey, destinationText = PlannerPrivate.ResolveDestinationFromCandidates(textCandidates)
+    if categoryKey == nil and destinationText == nil then
+        return nil
+    end
+
+    local level = categoryKey and PlannerPrivate.ParseDestinationLevelFromText(textCandidates, categoryKey) or nil
+    local mode = nil
+    if categoryKey == "raids" or PlannerPrivate.IsRaidDestinationText(destinationText) then
+        mode = "raid"
+    else
+        mode = "dungeon"
+    end
+
+    return {
+        mode = mode,
+        categoryKey = categoryKey,
+        destinationText = destinationText,
+        level = level,
+    }
+end
+
+PlannerPrivate.ApplyActiveListingState = function(listingState)
+    if type(listingState) ~= "table" then
+        return
+    end
+
+    local settings = GetStreamerPlannerSettings()
+
+    if listingState.mode == "raid" or listingState.mode == "dungeon" then
+        settings.mode = listingState.mode
+    end
+
+    if type(listingState.categoryKey) == "string" and StreamerPlannerModule.DESTINATION_OPTIONS[listingState.categoryKey] then
+        settings.destinationCategory = listingState.categoryKey
+    end
+
+    if PlannerPrivate.IsUsablePlainString(listingState.destinationText) then
+        settings.destination = listingState.destinationText
+    end
+
+    if settings.mode == "raid" then
+        if settings.destinationCategory == "s1" or settings.destinationCategory == "delves" then
+            settings.destinationCategory = "raids"
+        end
+    elseif settings.destinationCategory == "raids" and not PlannerPrivate.IsRaidDestinationText(settings.destination) then
+        settings.destinationCategory = StreamerPlannerModule.DESTINATION_CATEGORIES[1].key
+    end
+
+    if listingState.categoryKey ~= nil then
+        settings.destinationKeystoneLevel = PlannerPrivate.NormalizeDestinationLevel(settings.destinationCategory, listingState.level)
+    end
+end
+
+PlannerPrivate.BuildDungeonSyncSignature = function(listingState, dungeonParticipants, raidParticipants)
+    local signatureParts = {
+        listingState and listingState.mode or "",
+        listingState and listingState.categoryKey or "",
+        listingState and listingState.destinationText or "",
+        listingState and tostring(listingState.level or "") or "",
+    }
+
+    local function AddParticipants(prefix, participants)
+        for _, participant in ipairs(participants or {}) do
+            signatureParts[#signatureParts + 1] = table.concat({
+                prefix,
+                tostring(participant.sourceKey or ""),
+                tostring(participant.fullName or participant.name or ""),
+                tostring(participant.roleKey or ""),
+                tostring(participant.specID or ""),
+                tostring(participant.classFile or ""),
+                tostring(participant.applicantStatus or ""),
+            }, "|")
+        end
+    end
+
+    AddParticipants("dungeon", dungeonParticipants)
+    AddParticipants("raid", raidParticipants)
+
+    return table.concat(signatureParts, "||")
+end
+
+PlannerPrivate.SyncDynamicPlannerState = function(forceRefresh)
+    PlannerPrivate.ExpirePendingInspectRequest()
+
+    local snapshot = PlannerPrivate.RefreshApplicantSnapshot()
+    local listingState = PlannerPrivate.GetActiveListingState()
+    local settings = GetStreamerPlannerSettings()
+    local dungeonParticipants = PlannerPrivate.GetLiveDungeonParticipants(settings)
+    local raidParticipants = PlannerPrivate.GetLiveRaidParticipants(settings)
+    local nextSignature = PlannerPrivate.BuildDungeonSyncSignature(listingState, dungeonParticipants, raidParticipants)
+    local previousSignature = PlannerPrivate.lastDungeonSyncSignature
+
+    if not forceRefresh and previousSignature == nextSignature then
+        return false
+    end
+
+    PlannerPrivate.ApplyActiveListingState(listingState)
+    PlannerPrivate.ApplyDungeonParticipantsToSlots(settings, dungeonParticipants)
+    PlannerPrivate.ApplyRaidParticipantsToSlots(settings, raidParticipants)
+    PlannerPrivate.lastDungeonSyncSignature = nextSignature
+
+    if PlannerPrivate.RefreshApplicantPanel then
+        PlannerPrivate.RefreshApplicantPanel(snapshot)
+    end
+
+    if StreamerPlannerModule and StreamerPlannerModule.RefreshAllDisplays then
+        StreamerPlannerModule.RefreshAllDisplays()
+    end
+
+    return true
+end
+
+PlannerPrivate.InviteApplicantByID = function(applicantID)
+    if not applicantID or not C_LFGList or not C_LFGList.InviteApplicant then
+        return false
+    end
+
+    C_LFGList.InviteApplicant(applicantID)
+    return true
+end
+
+PlannerPrivate.InviteApplicantByName = function(name)
+    local applicantData = PlannerPrivate.FindApplicantByName(name)
+    if not applicantData or not PlannerPrivate.CanInviteApplicantStatus(applicantData.applicationStatus) then
+        return false
+    end
+
+    return PlannerPrivate.InviteApplicantByID(applicantData.applicantID)
+end
+
+PlannerPrivate.BuildCurrentGroupLookup = function()
+    local lookup = {}
+
+    local function AddName(name)
+        local identityKey = PlannerPrivate.GetIdentityKey(name)
+        if identityKey then
+            lookup[identityKey] = true
+        end
+    end
+
+    AddName(PlannerPrivate.GetUnitFullName("player") or (UnitName and UnitName("player")) or nil)
+
+    if IsInRaid and IsInRaid() and GetNumGroupMembers and GetRaidRosterInfo then
+        for memberIndex = 1, (GetNumGroupMembers() or 0) do
+            AddName(GetRaidRosterInfo(memberIndex))
+        end
+    elseif IsInGroup and IsInGroup() and GetNumSubgroupMembers then
+        for memberIndex = 1, (GetNumSubgroupMembers() or 0) do
+            AddName(PlannerPrivate.GetUnitFullName("party" .. memberIndex))
+        end
+    end
+
+    return lookup
+end
+
+PlannerPrivate.IsNameInCurrentGroup = function(name, groupLookup)
+    local identityKey = PlannerPrivate.GetIdentityKey(name)
+    if not identityKey then
+        return false
+    end
+
+    local resolvedLookup = type(groupLookup) == "table" and groupLookup or PlannerPrivate.BuildCurrentGroupLookup()
+    return resolvedLookup[identityKey] == true
+end
+
+PlannerPrivate.SendRegularInvite = function(inviteName)
+    if not PlannerPrivate.IsUsablePlainString(inviteName) then
+        return false
+    end
+
+    local partyInfoAPI = rawget(_G, "C_PartyInfo")
+    if type(partyInfoAPI) == "table" and type(partyInfoAPI.InviteUnit) == "function" then
+        partyInfoAPI.InviteUnit(inviteName)
+        return true
+    end
+
+    local inviteUnitValue = rawget(_G, "InviteUnit")
+    if type(inviteUnitValue) == "function" then
+        inviteUnitValue(inviteName)
+        return true
+    end
+
+    return false
+end
+
+PlannerPrivate.InvitePlayerByName = function(inviteName)
+    if not PlannerPrivate.IsUsablePlainString(inviteName) then
+        return false
+    end
+
+    if PlannerPrivate.IsNameInCurrentGroup(inviteName) then
+        return false
+    end
+
+    local isGrouped = IsInGroup and IsInGroup() or false
+    local isRaid = IsInRaid and IsInRaid() or false
+    local groupMemberCount = GetNumGroupMembers and GetNumGroupMembers() or 0
+
+    local convertToRaidValue = rawget(_G, "ConvertToRaid")
+    local timerAPI = rawget(_G, "C_Timer")
+    if isGrouped and not isRaid and groupMemberCount >= 5 and type(convertToRaidValue) == "function" then
+        convertToRaidValue()
+        if type(timerAPI) == "table" and type(timerAPI.After) == "function" then
+            timerAPI.After(0.2, function()
+                PlannerPrivate.SendRegularInvite(inviteName)
+            end)
+        else
+            PlannerPrivate.SendRegularInvite(inviteName)
+        end
+    else
+        if not PlannerPrivate.SendRegularInvite(inviteName) then
+            return false
+        end
+    end
+
+    PlannerPrivate.MarkWhisperApplicantInvited(inviteName)
+    return true
+end
+
+PlannerPrivate.ResolveInviteTarget = function(rowData, groupLookup)
+    if type(rowData) ~= "table" then
+        return nil
+    end
+
+    if rowData.applicantID and PlannerPrivate.CanInviteApplicantStatus(rowData.applicationStatus) then
+        return {
+            mode = "applicant",
+            applicantID = rowData.applicantID,
+        }
+    end
+
+    if rowData.applicationStatus == "invited" or rowData.applicationStatus == "inviteaccepted" then
+        return nil
+    end
+
+    local inviteName = rowData.inviteName or rowData.fullName or rowData.name
+    if not PlannerPrivate.IsUsablePlainString(inviteName) then
+        return nil
+    end
+
+    if PlannerPrivate.IsNameInCurrentGroup(inviteName, groupLookup) then
+        return nil
+    end
+
+    return {
+        mode = "unit",
+        inviteName = inviteName,
+    }
+end
+
+PlannerPrivate.InviteResolvedTarget = function(target)
+    if type(target) ~= "table" then
+        return false
+    end
+
+    if target.mode == "applicant" then
+        return PlannerPrivate.InviteApplicantByID(target.applicantID)
+    end
+
+    if target.mode == "unit" then
+        return PlannerPrivate.InvitePlayerByName(target.inviteName)
+    end
+
+    return false
+end
+
+PlannerPrivate.AddSourceLabel = function(rowData, labelText)
+    if type(rowData) ~= "table" or type(labelText) ~= "string" or labelText == "" then
+        return
+    end
+
+    rowData.sourceLabels = rowData.sourceLabels or {}
+    rowData.sourceLabelLookup = rowData.sourceLabelLookup or {}
+
+    if rowData.sourceLabelLookup[labelText] then
+        return
+    end
+
+    rowData.sourceLabelLookup[labelText] = true
+    rowData.sourceLabels[#rowData.sourceLabels + 1] = labelText
+end
+
+PlannerPrivate.BuildApplicantPanelRowData = function(snapshot)
+    local settings = GetStreamerPlannerSettings()
+    local groupLookup = PlannerPrivate.BuildCurrentGroupLookup()
+    local rowByIdentity = {}
+    local orderedRows = {}
+
+    local function GetOrCreateRow(identityKey, rowData)
+        local existingRow = rowByIdentity[identityKey]
+        if existingRow then
+            return existingRow
+        end
+
+        rowData.sourceLabels = rowData.sourceLabels or {}
+        rowData.sourceLabelLookup = rowData.sourceLabelLookup or {}
+        rowByIdentity[identityKey] = rowData
+        orderedRows[#orderedRows + 1] = rowData
+        return rowData
+    end
+
+    local function MergeApplicantPanelRow(rowData)
+        local identityKey = PlannerPrivate.GetIdentityKey(rowData.fullName or rowData.inviteName or rowData.name)
+        if not identityKey then
+            return
+        end
+
+        local targetRow = GetOrCreateRow(identityKey, rowData)
+        if targetRow ~= rowData then
+            targetRow.fullName = targetRow.fullName or rowData.fullName
+            targetRow.inviteName = targetRow.inviteName or rowData.inviteName
+            targetRow.name = targetRow.name ~= "" and targetRow.name or rowData.name
+            targetRow.whisperIdentityName = targetRow.whisperIdentityName or rowData.whisperIdentityName
+            targetRow.classFile = targetRow.classFile or rowData.classFile
+            targetRow.specID = targetRow.specID or rowData.specID
+            targetRow.roleKey = targetRow.roleKey or rowData.roleKey
+            targetRow.itemLevel = targetRow.itemLevel or rowData.itemLevel
+            targetRow.dungeonScore = targetRow.dungeonScore or rowData.dungeonScore
+            targetRow.displayOrderID = math.min(targetRow.displayOrderID or math.huge, rowData.displayOrderID or math.huge)
+            targetRow.updatedAt = math.max(targetRow.updatedAt or 0, rowData.updatedAt or 0)
+            targetRow.memberCount = targetRow.memberCount or rowData.memberCount
+            targetRow.isPrimary = targetRow.isPrimary or rowData.isPrimary
+
+            if targetRow.statusKey ~= "grouped" then
+                if rowData.statusKey == "grouped" or targetRow.statusKey == nil or rowData.applicantID then
+                    targetRow.statusKey = rowData.statusKey
+                    targetRow.statusText = rowData.statusText
+                end
+            end
+
+            if rowData.applicantID then
+                targetRow.applicantID = rowData.applicantID
+                targetRow.applicationStatus = rowData.applicationStatus
+            end
+
+            if rowData.inviteTarget and (targetRow.inviteTarget == nil or rowData.applicantID) then
+                targetRow.inviteTarget = rowData.inviteTarget
+            end
+
+            if rowData.sortPriority and ((targetRow.sortPriority or rowData.sortPriority) > rowData.sortPriority) then
+                targetRow.sortPriority = rowData.sortPriority
+            end
+        end
+
+        for _, labelText in ipairs(rowData.sourceLabels or {}) do
+            PlannerPrivate.AddSourceLabel(targetRow, labelText)
+        end
+
+        targetRow.inviteTarget = PlannerPrivate.ResolveInviteTarget(targetRow, groupLookup)
+        targetRow.canInvite = targetRow.inviteTarget ~= nil
+        if targetRow.statusKey == "grouped" then
+            targetRow.canInvite = false
+            targetRow.inviteTarget = nil
+            targetRow.sortPriority = 4
+        elseif targetRow.canInvite then
+            targetRow.sortPriority = math.min(targetRow.sortPriority or 3, 1)
+        else
+            targetRow.sortPriority = targetRow.sortPriority or 3
+        end
+    end
+
+    for _, whisperEntry in ipairs(settings.whisperApplicants or {}) do
+        local applicantData = PlannerPrivate.FindApplicantByName(whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName)
+        local specID = whisperEntry.specID
+            or (applicantData and applicantData.specID)
+            or PlannerPrivate.GetKnownSpecID(whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName, nil)
+            or nil
+        local roleKey = whisperEntry.roleKey
+            or (applicantData and PlannerPrivate.GetApplicantRoleKey(applicantData))
+            or PlannerPrivate.GetSingleSupportedRoleKey(whisperEntry.classFile)
+            or nil
+        local rowData = {
+            name = whisperEntry.displayName ~= "" and whisperEntry.displayName
+                or PlannerPrivate.GetDisplayNameFromFullName(whisperEntry.fullName or whisperEntry.inviteName)
+                or "",
+            fullName = whisperEntry.fullName,
+            inviteName = whisperEntry.inviteName,
+            whisperIdentityName = whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName,
+            classFile = whisperEntry.classFile or (applicantData and applicantData.classFile) or nil,
+            specID = specID,
+            roleKey = roleKey,
+            itemLevel = applicantData and applicantData.itemLevel or nil,
+            dungeonScore = applicantData and applicantData.dungeonScore or nil,
+            applicantID = applicantData and applicantData.applicantID or nil,
+            applicationStatus = applicantData and applicantData.applicationStatus or nil,
+            updatedAt = whisperEntry.updatedAt or 0,
+            displayOrderID = whisperEntry.createdAt or 0,
+            sourceLabels = {},
+            sourceLabelLookup = {},
+            sortPriority = 2,
+            roleOrder = PlannerPrivate.GetApplicantPanelRoleOrder(roleKey),
+        }
+
+        PlannerPrivate.AddSourceLabel(rowData, whisperEntry.command == "inv"
+            and L("STREAMER_PLANNER_SOURCE_WHISPER_INV")
+            or L("STREAMER_PLANNER_SOURCE_WHISPER_ENTER"))
+
+        if PlannerPrivate.IsNameInCurrentGroup(rowData.inviteName or rowData.fullName, groupLookup) then
+            rowData.statusKey = "grouped"
+            rowData.statusText = L("STREAMER_PLANNER_STATUS_GROUPED")
+            rowData.sortPriority = 4
+        elseif applicantData and applicantData.applicationStatus then
+            rowData.statusKey = applicantData.applicationStatus
+            rowData.statusText = PlannerPrivate.GetApplicantStatusLabel(applicantData.applicationStatus)
+            rowData.sortPriority = PlannerPrivate.CanInviteApplicantStatus(applicantData.applicationStatus) and 1 or 3
+        elseif type(whisperEntry.lastInvitedAt) == "number" and (GetCurrentTimestamp() - whisperEntry.lastInvitedAt) < 600 then
+            rowData.statusKey = "invited"
+            rowData.statusText = L("STREAMER_PLANNER_STATUS_INVITED")
+            rowData.sortPriority = 3
+        else
+            rowData.statusKey = whisperEntry.command == "inv" and "whisper_inv" or "whisper_enter"
+            rowData.statusText = whisperEntry.command == "inv"
+                and L("STREAMER_PLANNER_STATUS_WHISPER_INV")
+                or L("STREAMER_PLANNER_STATUS_WHISPER_ENTER")
+            rowData.sortPriority = 2
+        end
+
+        rowData.inviteTarget = PlannerPrivate.ResolveInviteTarget(rowData, groupLookup)
+        MergeApplicantPanelRow(rowData)
+    end
+
+    table.sort(orderedRows, function(left, right)
+        if (left.sortPriority or 99) ~= (right.sortPriority or 99) then
+            return (left.sortPriority or 99) < (right.sortPriority or 99)
+        end
+
+        if (left.roleOrder or 99) ~= (right.roleOrder or 99) then
+            return (left.roleOrder or 99) < (right.roleOrder or 99)
+        end
+
+        if (left.updatedAt or 0) ~= (right.updatedAt or 0) then
+            return (left.updatedAt or 0) > (right.updatedAt or 0)
+        end
+
+        if (left.displayOrderID or 0) ~= (right.displayOrderID or 0) then
+            return (left.displayOrderID or 0) < (right.displayOrderID or 0)
+        end
+
+        return tostring(left.name or left.fullName or "") < tostring(right.name or right.fullName or "")
+    end)
+
+    return orderedRows
+end
+
+PlannerPrivate.CollectLayoutInviteTargets = function(layout, inviteTargets, seenTargets)
+    local groupLookup = PlannerPrivate.BuildCurrentGroupLookup()
+    local slotCount = layout == "raid" and RAID_SLOT_COUNT or #StreamerPlannerModule.DUNGEON_LAYOUT
+
+    for index = 1, slotCount do
+        local slotEntry = GetSlotEntry(layout, index)
+        local applicantData = PlannerPrivate.FindApplicantByName(slotEntry.inviteName or slotEntry.name)
+        local inviteTarget = PlannerPrivate.ResolveInviteTarget({
+            name = slotEntry.name,
+            fullName = slotEntry.inviteName,
+            inviteName = slotEntry.inviteName,
+            applicantID = applicantData and applicantData.applicantID or nil,
+            applicationStatus = applicantData and applicantData.applicationStatus or nil,
+        }, groupLookup)
+
+        local targetKey = nil
+        if inviteTarget and inviteTarget.mode == "applicant" then
+            targetKey = string.format("applicant:%s", tostring(inviteTarget.applicantID or ""))
+        elseif inviteTarget and inviteTarget.mode == "unit" then
+            targetKey = string.format("unit:%s", tostring(PlannerPrivate.GetIdentityKey(inviteTarget.inviteName) or inviteTarget.inviteName or ""))
+        end
+
+        if inviteTarget and targetKey and not seenTargets[targetKey] then
+            seenTargets[targetKey] = true
+            inviteTargets[#inviteTargets + 1] = inviteTarget
+        end
+    end
+end
+
+PlannerPrivate.InviteAllApplicantRows = function(rowDataList, layout)
+    if layout ~= "raid" then
+        return false
+    end
+
+    local inviteTargets = {}
+    local seenTargets = {}
+
+    for _, rowData in ipairs(rowDataList or {}) do
+        local inviteTarget = rowData and rowData.inviteTarget or nil
+        local targetKey = nil
+        if inviteTarget and inviteTarget.mode == "applicant" then
+            targetKey = string.format("applicant:%s", tostring(inviteTarget.applicantID or ""))
+        elseif inviteTarget and inviteTarget.mode == "unit" then
+            targetKey = string.format("unit:%s", tostring(PlannerPrivate.GetIdentityKey(inviteTarget.inviteName) or inviteTarget.inviteName or ""))
+        end
+
+        if inviteTarget and targetKey and not seenTargets[targetKey] then
+            seenTargets[targetKey] = true
+            inviteTargets[#inviteTargets + 1] = inviteTarget
+        end
+    end
+
+    PlannerPrivate.CollectLayoutInviteTargets(layout == "raid" and "raid" or "dungeon", inviteTargets, seenTargets)
+
+    for index, inviteTarget in ipairs(inviteTargets) do
+        local timerAPI = rawget(_G, "C_Timer")
+        if type(timerAPI) == "table" and type(timerAPI.After) == "function" then
+            timerAPI.After((index - 1) * 0.15, function()
+                PlannerPrivate.InviteResolvedTarget(inviteTarget)
+            end)
+        else
+            PlannerPrivate.InviteResolvedTarget(inviteTarget)
+        end
+    end
+
+    return #inviteTargets > 0
 end
 
 local function OpenStreamerPlannerSettings()
@@ -1006,10 +3577,10 @@ local function RefreshDestinationSuggestionDropdown()
 
     local categoryKey = GetDestinationCategory()
     local destinationText = GetDestinationBaseText()
-    if editingField == "destination" and DestinationInput and DestinationInput:IsShown() then
+    if PlannerPrivate.editingField == "destination" and DestinationInput and DestinationInput:IsShown() then
         destinationText = DestinationInput:GetText()
     end
-    local selectedSuggestion = FindDestinationSuggestion(categoryKey, destinationText)
+    local selectedSuggestion = PlannerPrivate.FindDestinationSuggestion(categoryKey, destinationText)
 
     UIDropDownMenu_SetWidth(DestinationSuggestionDropdown, 232)
     UIDropDownMenu_SetSelectedValue(DestinationSuggestionDropdown, selectedSuggestion)
@@ -1017,16 +3588,17 @@ local function RefreshDestinationSuggestionDropdown()
 end
 
 local function ShouldShowDestinationKeystoneControls()
-    if GetDestinationCategory() ~= "s1" then
+    local categoryKey = GetDestinationCategory()
+    if categoryKey ~= "s1" and categoryKey ~= "delves" then
         return false
     end
 
     local destinationText = GetDestinationBaseText()
-    if editingField == "destination" and DestinationInput and DestinationInput:IsShown() then
+    if PlannerPrivate.editingField == "destination" and DestinationInput and DestinationInput:IsShown() then
         destinationText = DestinationInput:GetText()
     end
 
-    return FindDestinationSuggestion("s1", destinationText) ~= nil
+    return PlannerPrivate.FindDestinationSuggestion(categoryKey, destinationText) ~= nil
 end
 
 local function RefreshDestinationKeystoneDropdown()
@@ -1034,23 +3606,24 @@ local function RefreshDestinationKeystoneDropdown()
         return
     end
 
-    local shouldShow = editingField == "destination" and ShouldShowDestinationKeystoneControls()
+    local shouldShow = PlannerPrivate.editingField == "destination" and ShouldShowDestinationKeystoneControls()
 
     if EditDestinationKeystoneLabel then
         EditDestinationKeystoneLabel:SetShown(shouldShow)
     end
 
     if shouldShow then
+        local categoryKey = GetDestinationCategory()
         local selectedLevel = GetDestinationKeystoneLevel()
         if type(selectedLevel) ~= "number" then
-            selectedLevel = 0
+            selectedLevel = categoryKey == "delves" and 1 or 0
             SetDestinationKeystoneLevel(selectedLevel)
         end
 
         DestinationKeystoneDropdown:Show()
         UIDropDownMenu_SetWidth(DestinationKeystoneDropdown, 88)
         UIDropDownMenu_SetSelectedValue(DestinationKeystoneDropdown, selectedLevel)
-        UIDropDownMenu_SetText(DestinationKeystoneDropdown, GetKeystoneLabel(selectedLevel))
+        UIDropDownMenu_SetText(DestinationKeystoneDropdown, PlannerPrivate.GetDestinationLevelLabel(categoryKey, selectedLevel) or "")
 
         DestinationInput:ClearAllPoints()
         DestinationInput:SetPoint("TOPLEFT", EditDestinationKeystoneLabel, "BOTTOMLEFT", 0, -20)
@@ -1064,12 +3637,13 @@ local function RefreshDestinationKeystoneDropdown()
 end
 
 local function RefreshClassSpecButtons()
-    local isSlotEditing = editingField == "slot"
-    local isDestinationEditing = editingField == "destination"
-    local roleRequirement = GetSlotRoleRequirement(editingLayout, editingSlotIndex)
+    local isSlotEditing = PlannerPrivate.editingField == "slot"
+    local isDestinationEditing = PlannerPrivate.editingField == "destination"
+    local isSelfRoleEditing = isSlotEditing and PlannerPrivate.editingUsesSelfRoleOverride == true
+    local roleRequirement = GetSlotRoleRequirement(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
 
     if EditDialogInput then
-        if isSlotEditing then
+        if isSlotEditing and not isSelfRoleEditing then
             EditDialogInput:Show()
         else
             EditDialogInput:Hide()
@@ -1077,7 +3651,7 @@ local function RefreshClassSpecButtons()
     end
 
     if EditDialogTargetLabel then
-        if isSlotEditing then
+        if isSlotEditing and not isSelfRoleEditing then
             EditDialogTargetLabel:Show()
         else
             EditDialogTargetLabel:Hide()
@@ -1126,6 +3700,43 @@ local function RefreshClassSpecButtons()
 
     RefreshDestinationKeystoneDropdown()
 
+    if EditDialog and EditDialog.RoleTitle then
+        EditDialog.RoleTitle:SetText(L("STREAMER_PLANNER_ROLE"))
+        EditDialog.RoleTitle:SetShown(isSelfRoleEditing)
+    end
+
+    if isSelfRoleEditing then
+        for _, button in ipairs(PlannerPrivate.editRoleButtons) do
+            local isAuto = button.RoleKey == false
+            local active = (isAuto and PlannerPrivate.editingRoleKey == nil) or (button.RoleKey == PlannerPrivate.editingRoleKey)
+            PlannerPrivate.RefreshSelectionButton(button, active)
+            button:Show()
+        end
+
+        if EditClassTitle then
+            EditClassTitle:Hide()
+        end
+
+        if EditSpecTitle then
+            EditSpecTitle:Hide()
+        end
+
+        for _, button in ipairs(PlannerPrivate.editClassButtons) do
+            button:Hide()
+        end
+
+        for _, button in ipairs(PlannerPrivate.editSpecButtons) do
+            button:Hide()
+        end
+
+        LayoutEditDialogOptionButtons()
+        return
+    end
+
+    for _, button in ipairs(PlannerPrivate.editRoleButtons) do
+        button:Hide()
+    end
+
     if EditClassTitle then
         if isSlotEditing then
             EditClassTitle:Show()
@@ -1142,19 +3753,19 @@ local function RefreshClassSpecButtons()
         end
     end
 
-    if isSlotEditing and editingClassFile and not IsClassAllowedForRole(editingClassFile, roleRequirement) then
-        editingClassFile = nil
-        editingSpecID = nil
-    elseif isSlotEditing and editingSpecID and not IsSpecAllowedForRole(editingSpecID, roleRequirement) then
-        editingSpecID = nil
+    if isSlotEditing and PlannerPrivate.editingClassFile and not IsClassAllowedForRole(PlannerPrivate.editingClassFile, roleRequirement) then
+        PlannerPrivate.editingClassFile = nil
+        PlannerPrivate.editingSpecID = nil
+    elseif isSlotEditing and PlannerPrivate.editingSpecID and not IsSpecAllowedForRole(PlannerPrivate.editingSpecID, roleRequirement) then
+        PlannerPrivate.editingSpecID = nil
     end
 
-    for _, button in ipairs(EditClassButtons) do
+    for _, button in ipairs(PlannerPrivate.editClassButtons) do
         if isSlotEditing then
             local isAllowed = IsClassAllowedForRole(button.ClassFile, roleRequirement)
             button:SetShown(isAllowed)
             if isAllowed then
-                local active = button.ClassFile == editingClassFile
+                local active = button.ClassFile == PlannerPrivate.editingClassFile
                 local red, green, blue = GetClassColor(button.ClassFile)
                 button.Icon:SetVertexColor(active and 1 or red, active and 1 or green, active and 1 or blue, 1)
                 button.Selected:SetShown(active)
@@ -1164,28 +3775,28 @@ local function RefreshClassSpecButtons()
         end
     end
 
-    for _, button in ipairs(EditSpecButtons) do
+    for _, button in ipairs(PlannerPrivate.editSpecButtons) do
         button:Hide()
     end
 
-    if not isSlotEditing or not editingClassFile then
+    if not isSlotEditing or not PlannerPrivate.editingClassFile then
         LayoutEditDialogOptionButtons()
         return
     end
 
-    local specOptions = BuildSpecOptions(editingClassFile, roleRequirement)
+    local specOptions = BuildSpecOptions(PlannerPrivate.editingClassFile, roleRequirement)
     local visibleIndex = 0
     for _, specInfo in ipairs(specOptions) do
         if specInfo.id ~= nil then
             visibleIndex = visibleIndex + 1
-            local button = EditSpecButtons[visibleIndex]
+            local button = PlannerPrivate.editSpecButtons[visibleIndex]
             if button then
                 button.SpecID = specInfo.id
                 button.DisplayName = specInfo.name
                 button.Icon:SetTexture(specInfo.icon or 134400)
                 button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
                 button.Label:SetText(specInfo.name)
-                button.Selected:SetShown(editingSpecID == specInfo.id)
+                button.Selected:SetShown(PlannerPrivate.editingSpecID == specInfo.id)
                 button:Show()
             end
         end
@@ -1195,19 +3806,60 @@ local function RefreshClassSpecButtons()
 end
 
 LayoutEditDialogOptionButtons = function()
+    local visibleRoleButtons = {}
     local visibleClassButtons = {}
     local visibleSpecButtons = {}
 
-    for _, button in ipairs(EditClassButtons) do
+    for _, button in ipairs(PlannerPrivate.editRoleButtons) do
+        if button:IsShown() then
+            visibleRoleButtons[#visibleRoleButtons + 1] = button
+        end
+    end
+
+    for _, button in ipairs(PlannerPrivate.editClassButtons) do
         if button:IsShown() then
             visibleClassButtons[#visibleClassButtons + 1] = button
         end
     end
 
-    for _, button in ipairs(EditSpecButtons) do
+    for _, button in ipairs(PlannerPrivate.editSpecButtons) do
         if button:IsShown() then
             visibleSpecButtons[#visibleSpecButtons + 1] = button
         end
+    end
+
+    if PlannerPrivate.editingUsesSelfRoleOverride == true and EditDialog and EditDialog.RoleTitle then
+        EditDialog.RoleTitle:ClearAllPoints()
+        EditDialog.RoleTitle:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -18)
+
+        for index, button in ipairs(visibleRoleButtons) do
+            button:ClearAllPoints()
+            button:SetPoint(
+                "TOPLEFT",
+                EditDialog.RoleTitle,
+                "BOTTOMLEFT",
+                ((index - 1) % 2) * 132,
+                -8 - (math.floor((index - 1) / 2) * 34)
+            )
+        end
+
+        if PlannerPrivate.saveSlotButton and PlannerPrivate.clearSlotButton and PlannerPrivate.cancelSlotButton then
+            PlannerPrivate.saveSlotButton:ClearAllPoints()
+            if #visibleRoleButtons > 0 then
+                PlannerPrivate.saveSlotButton:SetPoint("TOPLEFT", visibleRoleButtons[#visibleRoleButtons], "BOTTOMLEFT", 0, -18)
+            else
+                PlannerPrivate.saveSlotButton:SetPoint("TOPLEFT", EditDialog.RoleTitle, "BOTTOMLEFT", 0, -18)
+            end
+
+            PlannerPrivate.clearSlotButton:ClearAllPoints()
+            PlannerPrivate.clearSlotButton:SetPoint("LEFT", PlannerPrivate.saveSlotButton, "RIGHT", 10, 0)
+
+            PlannerPrivate.cancelSlotButton:ClearAllPoints()
+            PlannerPrivate.cancelSlotButton:SetPoint("LEFT", PlannerPrivate.clearSlotButton, "RIGHT", 10, 0)
+        end
+
+        EditDialog:SetHeight(244)
+        return
     end
 
     local classRowCount = math.max(1, math.ceil(#visibleClassButtons / EDIT_CLASS_BUTTON_COLUMNS))
@@ -1245,40 +3897,46 @@ LayoutEditDialogOptionButtons = function()
         )
     end
 
-    if editingField == "slot" and SaveSlotButton and ClearSlotButton and CancelSlotButton and EditDialog then
-        SaveSlotButton:ClearAllPoints()
+    if PlannerPrivate.editingField == "slot"
+        and PlannerPrivate.saveSlotButton
+        and PlannerPrivate.clearSlotButton
+        and PlannerPrivate.cancelSlotButton
+        and EditDialog then
+        PlannerPrivate.saveSlotButton:ClearAllPoints()
 
         if #visibleSpecButtons > 0 then
-            SaveSlotButton:SetPoint("TOPLEFT", visibleSpecButtons[1], "BOTTOMLEFT", 0, -18)
+            PlannerPrivate.saveSlotButton:SetPoint("TOPLEFT", visibleSpecButtons[1], "BOTTOMLEFT", 0, -18)
         else
-            SaveSlotButton:SetPoint("TOPLEFT", EditSpecTitle, "BOTTOMLEFT", 0, -18)
+            PlannerPrivate.saveSlotButton:SetPoint("TOPLEFT", EditSpecTitle, "BOTTOMLEFT", 0, -18)
         end
 
-        ClearSlotButton:ClearAllPoints()
-        ClearSlotButton:SetPoint("LEFT", SaveSlotButton, "RIGHT", 10, 0)
+        PlannerPrivate.clearSlotButton:ClearAllPoints()
+        PlannerPrivate.clearSlotButton:SetPoint("LEFT", PlannerPrivate.saveSlotButton, "RIGHT", 10, 0)
 
-        CancelSlotButton:ClearAllPoints()
-        CancelSlotButton:SetPoint("LEFT", ClearSlotButton, "RIGHT", 10, 0)
+        PlannerPrivate.cancelSlotButton:ClearAllPoints()
+        PlannerPrivate.cancelSlotButton:SetPoint("LEFT", PlannerPrivate.clearSlotButton, "RIGHT", 10, 0)
 
         EditDialog:SetHeight(EDIT_DIALOG_SLOT_HEIGHT + math.max(0, classRowCount - 1) * (EDIT_CLASS_BUTTON_SIZE + EDIT_CLASS_BUTTON_SPACING))
-    elseif SaveSlotButton and ClearSlotButton and CancelSlotButton then
-        SaveSlotButton:ClearAllPoints()
-        SaveSlotButton:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 16, 20)
+    elseif PlannerPrivate.saveSlotButton and PlannerPrivate.clearSlotButton and PlannerPrivate.cancelSlotButton then
+        PlannerPrivate.saveSlotButton:ClearAllPoints()
+        PlannerPrivate.saveSlotButton:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 16, 20)
 
-        ClearSlotButton:ClearAllPoints()
-        ClearSlotButton:SetPoint("LEFT", SaveSlotButton, "RIGHT", 10, 0)
+        PlannerPrivate.clearSlotButton:ClearAllPoints()
+        PlannerPrivate.clearSlotButton:SetPoint("LEFT", PlannerPrivate.saveSlotButton, "RIGHT", 10, 0)
 
-        CancelSlotButton:ClearAllPoints()
-        CancelSlotButton:SetPoint("LEFT", ClearSlotButton, "RIGHT", 10, 0)
+        PlannerPrivate.cancelSlotButton:ClearAllPoints()
+        PlannerPrivate.cancelSlotButton:SetPoint("LEFT", PlannerPrivate.clearSlotButton, "RIGHT", 10, 0)
     end
 end
 
 HideEditDialog = function()
-    editingLayout = nil
-    editingSlotIndex = nil
-    editingField = nil
-    editingClassFile = nil
-    editingSpecID = nil
+    PlannerPrivate.editingLayout = nil
+    PlannerPrivate.editingSlotIndex = nil
+    PlannerPrivate.editingField = nil
+    PlannerPrivate.editingClassFile = nil
+    PlannerPrivate.editingSpecID = nil
+    PlannerPrivate.editingRoleKey = nil
+    PlannerPrivate.editingUsesSelfRoleOverride = false
     RefreshClassSpecButtons()
 
     if EditDialog then
@@ -1392,6 +4050,584 @@ local function CreateActionButton(parent, width, text, onClick)
     return button
 end
 
+PlannerPrivate.NeedsWhisperSpecSelection = function(whisperEntry)
+    if type(whisperEntry) ~= "table" then
+        return false
+    end
+
+    if not PlannerPrivate.IsUsablePlainString(whisperEntry.classFile) then
+        return true
+    end
+
+    local supportedRoleCount = PlannerPrivate.GetSupportedRoleInfo(whisperEntry.classFile)
+    return supportedRoleCount > 1
+end
+
+PlannerPrivate.GetWhisperApplicantResolvedRoleKey = function(whisperEntry)
+    if type(whisperEntry) ~= "table" then
+        return nil
+    end
+
+    local classFile = whisperEntry.classFile
+    local roleKey = PlannerPrivate.NormalizePlannerRoleKey(whisperEntry.roleKey)
+    local supportedRoles = classFile and StreamerPlannerModule.CLASS_ROLE_SUPPORT[classFile] or nil
+    if roleKey ~= nil and type(supportedRoles) == "table" and supportedRoles[roleKey] ~= true then
+        roleKey = nil
+    end
+
+    return roleKey or PlannerPrivate.GetSingleSupportedRoleKey(classFile)
+end
+
+PlannerPrivate.IsWhisperApplicantReadyForPlanner = function(whisperEntry)
+    if type(whisperEntry) ~= "table" then
+        return false
+    end
+
+    if not PlannerPrivate.IsUsablePlainString(whisperEntry.classFile) then
+        return false
+    end
+
+    return PlannerPrivate.GetWhisperApplicantResolvedRoleKey(whisperEntry) ~= nil
+end
+
+PlannerPrivate.DismissActiveWhisperSpecPrompt = function()
+    PlannerPrivate.activeSpecPromptIdentity = nil
+    WhisperSpecPromptUI.ActiveIdentity = nil
+    WhisperSpecPromptUI.SelectedClassFile = nil
+    WhisperSpecPromptUI.SelectedRoleKey = nil
+    WhisperSpecPromptUI.SelectedSpecID = nil
+
+    if WhisperSpecPromptUI.Frame then
+        WhisperSpecPromptUI.Frame.ActiveName = nil
+        WhisperSpecPromptUI.Frame:Hide()
+    end
+end
+
+PlannerPrivate.ApplyWhisperPromptSelection = function(name, classFile, roleKey, specID)
+    local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(name)
+    if type(whisperEntry) ~= "table" then
+        PlannerPrivate.DismissActiveWhisperSpecPrompt()
+        return false
+    end
+
+    local resolvedClassFile = PlannerPrivate.IsUsablePlainString(classFile) and classFile or whisperEntry.classFile
+    if not PlannerPrivate.IsUsablePlainString(resolvedClassFile) then
+        return false
+    end
+
+    local supportedRoles = StreamerPlannerModule.CLASS_ROLE_SUPPORT[resolvedClassFile] or {}
+    local resolvedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(roleKey)
+        or PlannerPrivate.NormalizePlannerRoleKey(whisperEntry.roleKey)
+        or PlannerPrivate.GetSingleSupportedRoleKey(resolvedClassFile)
+    if resolvedRoleKey ~= nil and supportedRoles[resolvedRoleKey] ~= true then
+        resolvedRoleKey = nil
+    end
+
+    local resolvedSpecID = type(specID) == "number" and specID > 0 and specID or nil
+    if resolvedSpecID ~= nil and not PlannerPrivate.IsSpecForClass(resolvedClassFile, resolvedSpecID) then
+        resolvedSpecID = nil
+    end
+    if resolvedSpecID == nil and not PlannerPrivate.IsSpecForClass(resolvedClassFile, whisperEntry.specID) then
+        resolvedSpecID = nil
+    elseif resolvedSpecID == nil then
+        resolvedSpecID = whisperEntry.specID
+    end
+
+    if resolvedRoleKey == nil then
+        return false
+    end
+
+    whisperEntry.classFile = resolvedClassFile
+    whisperEntry.specID = resolvedSpecID
+    whisperEntry.roleKey = resolvedRoleKey
+    whisperEntry.updatedAt = GetCurrentTimestamp()
+
+    local settings = GetStreamerPlannerSettings()
+    settings.whisperApplicants = PlannerPrivate.NormalizeWhisperApplicantList(settings.whisperApplicants)
+
+    PlannerPrivate.DismissActiveWhisperSpecPrompt()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
+    return true
+end
+
+PlannerPrivate.RefreshWhisperSpecPromptButtons = function(whisperEntry)
+    if not WhisperSpecPromptUI.Frame or not WhisperSpecPromptUI.Frame.SpecButtonAnchor then
+        return
+    end
+
+    local promptWidth = WHISPER_SPEC_PROMPT_WIDTH - 32
+    local selectedClassFile = PlannerPrivate.IsUsablePlainString(WhisperSpecPromptUI.SelectedClassFile)
+        and WhisperSpecPromptUI.SelectedClassFile
+        or whisperEntry.classFile
+
+    local supportedRoleCount, singleRoleKey = PlannerPrivate.GetSupportedRoleInfo(selectedClassFile)
+    local supportedRoles = selectedClassFile and StreamerPlannerModule.CLASS_ROLE_SUPPORT[selectedClassFile] or {}
+    local selectedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(WhisperSpecPromptUI.SelectedRoleKey)
+        or PlannerPrivate.NormalizePlannerRoleKey(whisperEntry.roleKey)
+    if selectedRoleKey ~= nil and type(supportedRoles) == "table" and supportedRoles[selectedRoleKey] ~= true then
+        selectedRoleKey = nil
+    end
+    if supportedRoleCount == 1 then
+        selectedRoleKey = singleRoleKey
+    end
+
+    WhisperSpecPromptUI.SelectedClassFile = selectedClassFile
+    WhisperSpecPromptUI.SelectedRoleKey = selectedRoleKey
+
+    local classText = GetLocalizedClassName(selectedClassFile)
+    local showClassText = PlannerPrivate.IsUsablePlainString(classText)
+    WhisperSpecPromptUI.Class:SetShown(showClassText)
+    WhisperSpecPromptUI.Class:SetText(showClassText and classText or "")
+    if showClassText then
+        local classRed, classGreen, classBlue = GetClassColor(selectedClassFile)
+        WhisperSpecPromptUI.Class:SetTextColor(classRed, classGreen, classBlue, 0.96)
+    else
+        WhisperSpecPromptUI.Class:SetTextColor(1, 0.82, 0, 0.92)
+    end
+
+    local showClassChooser = not PlannerPrivate.IsUsablePlainString(selectedClassFile)
+    local classAnchor = showClassText and WhisperSpecPromptUI.Class or WhisperSpecPromptUI.Name
+    local classButtonsHeight = 0
+    if WhisperSpecPromptUI.ClassTitle then
+        WhisperSpecPromptUI.ClassTitle:Hide()
+    end
+
+    if showClassChooser and WhisperSpecPromptUI.Frame.ClassButtonAnchor then
+        WhisperSpecPromptUI.Frame.ClassButtonAnchor:ClearAllPoints()
+        WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("TOPLEFT", classAnchor, "BOTTOMLEFT", 0, -8)
+        WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+
+        local classVisibleIndex = 0
+        for _, classInfo in ipairs(BuildClassOptions()) do
+            if classInfo.file then
+                classVisibleIndex = classVisibleIndex + 1
+                local button = WhisperSpecPromptUI.ClassButtons[classVisibleIndex]
+                if not button then
+                    button = CreateIconPickerButton(WhisperSpecPromptUI.Frame, WHISPER_CLASS_PROMPT_BUTTON_SIZE, false)
+                    button:SetScript("OnClick", function(self)
+                        WhisperSpecPromptUI.SelectedClassFile = self.ClassFile
+
+                        local nextRoleKey = PlannerPrivate.NormalizePlannerRoleKey(WhisperSpecPromptUI.SelectedRoleKey)
+                        local nextSupportedRoles = StreamerPlannerModule.CLASS_ROLE_SUPPORT[self.ClassFile] or {}
+                        local nextSupportedRoleCount, nextSingleRoleKey = PlannerPrivate.GetSupportedRoleInfo(self.ClassFile)
+                        if nextRoleKey ~= nil and nextSupportedRoles[nextRoleKey] ~= true then
+                            nextRoleKey = nil
+                        end
+                        if nextSupportedRoleCount == 1 then
+                            nextRoleKey = nextSingleRoleKey
+                        end
+
+                        WhisperSpecPromptUI.SelectedRoleKey = nextRoleKey
+                        local targetName = WhisperSpecPromptUI.Frame.ActiveName
+                        if nextSingleRoleKey ~= nil and PlannerPrivate.IsUsablePlainString(targetName) then
+                            PlannerPrivate.ApplyWhisperPromptSelection(targetName, self.ClassFile, nextSingleRoleKey, nil)
+                            return
+                        end
+
+                        PlannerPrivate.RefreshWhisperSpecPrompt()
+                    end)
+                    WhisperSpecPromptUI.ClassButtons[classVisibleIndex] = button
+                end
+
+                local classColumnIndex = (classVisibleIndex - 1) % WHISPER_CLASS_PROMPT_BUTTON_COLUMNS
+                local classRowIndex = math.floor((classVisibleIndex - 1) / WHISPER_CLASS_PROMPT_BUTTON_COLUMNS)
+                button.ClassFile = classInfo.file
+                button.DisplayName = classInfo.name
+                button:ClearAllPoints()
+                button:SetPoint(
+                    "TOPLEFT",
+                    WhisperSpecPromptUI.Frame.ClassButtonAnchor,
+                    "TOPLEFT",
+                    classColumnIndex * (WHISPER_CLASS_PROMPT_BUTTON_SIZE + WHISPER_CLASS_PROMPT_BUTTON_SPACING),
+                    -(classRowIndex * (WHISPER_CLASS_PROMPT_BUTTON_SIZE + WHISPER_CLASS_PROMPT_BUTTON_SPACING))
+                )
+                button:SetSize(WHISPER_CLASS_PROMPT_BUTTON_SIZE, WHISPER_CLASS_PROMPT_BUTTON_SIZE)
+                button.Icon:SetTexture(CLASS_ICON_TEXTURE)
+                button.Icon:SetTexCoord(GetClassIconCoords(classInfo.file))
+                button.Label:SetText("")
+                button.Label:Hide()
+                button.Selected:SetShown(selectedClassFile == classInfo.file)
+                button:Show()
+            end
+        end
+
+        for index = classVisibleIndex + 1, #WhisperSpecPromptUI.ClassButtons do
+            WhisperSpecPromptUI.ClassButtons[index]:Hide()
+        end
+
+        local classRowCount = math.max(1, math.ceil(classVisibleIndex / WHISPER_CLASS_PROMPT_BUTTON_COLUMNS))
+        classButtonsHeight = classRowCount * WHISPER_CLASS_PROMPT_BUTTON_SIZE
+            + math.max(0, classRowCount - 1) * WHISPER_CLASS_PROMPT_BUTTON_SPACING
+        WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetHeight(classButtonsHeight)
+    else
+        if WhisperSpecPromptUI.Frame.ClassButtonAnchor then
+            WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetHeight(0)
+        end
+
+        for _, button in ipairs(WhisperSpecPromptUI.ClassButtons) do
+            button:Hide()
+        end
+    end
+
+    local roleVisibleIndex = 0
+    local roleButtonSize = WHISPER_ROLE_PROMPT_BUTTON_SIZE
+    local showRoleChooser = selectedClassFile ~= nil and supportedRoleCount > 1
+    local roleButtonRowWidth = showRoleChooser
+            and ((supportedRoleCount * roleButtonSize) + (math.max(0, supportedRoleCount - 1) * WHISPER_ROLE_PROMPT_BUTTON_SPACING))
+        or 0
+    local roleButtonStartOffset = math.max(0, math.floor((promptWidth - roleButtonRowWidth) / 2))
+
+    WhisperSpecPromptUI.RoleTitle:Hide()
+    WhisperSpecPromptUI.Frame.RoleButtonAnchor:ClearAllPoints()
+    WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint(
+        "TOPLEFT",
+        classButtonsHeight > 0 and WhisperSpecPromptUI.Frame.ClassButtonAnchor or classAnchor,
+        classButtonsHeight > 0 and "BOTTOMLEFT" or "BOTTOMLEFT",
+        0,
+        classButtonsHeight > 0 and -10 or -12
+    )
+    WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+
+    for _, roleKey in ipairs({ "tank", "healer", "dps" }) do
+        if showRoleChooser and supportedRoles[roleKey] then
+            roleVisibleIndex = roleVisibleIndex + 1
+            local button = WhisperSpecPromptUI.RoleButtons[roleVisibleIndex]
+            if not button then
+                button = CreateIconPickerButton(WhisperSpecPromptUI.Frame, roleButtonSize, false)
+                button:SetScript("OnClick", function(self)
+                    WhisperSpecPromptUI.SelectedRoleKey = self.RoleKey
+                    local targetName = WhisperSpecPromptUI.Frame.ActiveName
+                    if PlannerPrivate.IsUsablePlainString(targetName) then
+                        PlannerPrivate.ApplyWhisperPromptSelection(
+                            targetName,
+                            WhisperSpecPromptUI.SelectedClassFile,
+                            self.RoleKey,
+                            nil
+                        )
+                        return
+                    end
+
+                    PlannerPrivate.RefreshWhisperSpecPrompt()
+                end)
+                WhisperSpecPromptUI.RoleButtons[roleVisibleIndex] = button
+            end
+
+            button.RoleKey = roleKey
+            button.DisplayName = PlannerPrivate.GetPlannerRoleLabel(roleKey) or tostring(roleKey)
+            button:SetSize(roleButtonSize, roleButtonSize)
+            button.Icon:SetTexture(ROLE_ICON_TEXTURE)
+            button.Icon:SetTexCoord(PlannerPrivate.GetRoleIconTexCoords(roleKey))
+            button.Label:SetText("")
+            button.Label:Hide()
+            button:ClearAllPoints()
+            button:SetPoint(
+                "TOPLEFT",
+                WhisperSpecPromptUI.Frame.RoleButtonAnchor,
+                "TOPLEFT",
+                roleButtonStartOffset + ((roleVisibleIndex - 1) * (roleButtonSize + WHISPER_ROLE_PROMPT_BUTTON_SPACING)),
+                0
+            )
+            PlannerPrivate.RefreshSelectionButton(button, selectedRoleKey == roleKey)
+            button:Show()
+        end
+    end
+
+    for index = roleVisibleIndex + 1, #WhisperSpecPromptUI.RoleButtons do
+        WhisperSpecPromptUI.RoleButtons[index]:Hide()
+    end
+
+    local roleButtonsHeight = roleVisibleIndex > 0 and roleButtonSize or 0
+    WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetHeight(roleButtonsHeight)
+
+    WhisperSpecPromptUI.SpecTitle:Hide()
+    WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetHeight(0)
+    for index = 1, #WhisperSpecPromptUI.Buttons do
+        WhisperSpecPromptUI.Buttons[index]:Hide()
+    end
+
+    WhisperSpecPromptUI.Frame.ApplyButton:Hide()
+    WhisperSpecPromptUI.Frame:SetHeight(math.max(
+        WHISPER_SPEC_PROMPT_MIN_HEIGHT,
+        78
+            + (showClassText and 14 or 0)
+            + classButtonsHeight
+            + roleButtonsHeight
+            + (showClassChooser and 8 or 0)
+            + (showRoleChooser and 12 or 0)
+    ))
+end
+
+PlannerPrivate.RefreshWhisperSpecPrompt = function()
+    if not WhisperSpecPromptUI.Frame then
+        return
+    end
+
+    if PlannerPrivate.activeSpecPromptIdentity then
+        local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(PlannerPrivate.activeSpecPromptIdentity)
+        if not PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
+            PlannerPrivate.DismissActiveWhisperSpecPrompt()
+        else
+            if WhisperSpecPromptUI.ActiveIdentity ~= PlannerPrivate.activeSpecPromptIdentity then
+                WhisperSpecPromptUI.ActiveIdentity = PlannerPrivate.activeSpecPromptIdentity
+                WhisperSpecPromptUI.SelectedClassFile = whisperEntry.classFile
+                WhisperSpecPromptUI.SelectedRoleKey = PlannerPrivate.GetWhisperApplicantResolvedRoleKey(whisperEntry)
+            else
+                if WhisperSpecPromptUI.SelectedClassFile == nil and whisperEntry.classFile ~= nil then
+                    WhisperSpecPromptUI.SelectedClassFile = whisperEntry.classFile
+                end
+                if WhisperSpecPromptUI.SelectedRoleKey == nil then
+                    WhisperSpecPromptUI.SelectedRoleKey = PlannerPrivate.GetWhisperApplicantResolvedRoleKey(whisperEntry)
+                end
+            end
+
+            WhisperSpecPromptUI.Frame.ActiveName = whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName
+            local showClassChooser = not PlannerPrivate.IsUsablePlainString(WhisperSpecPromptUI.SelectedClassFile or whisperEntry.classFile)
+            WhisperSpecPromptUI.Title:SetText(L("STREAMER_PLANNER_SPEC_PROMPT_TITLE"))
+            WhisperSpecPromptUI.Hint:SetText(showClassChooser and L("STREAMER_PLANNER_SPEC_PROMPT_HINT_CLASS") or L("STREAMER_PLANNER_SPEC_PROMPT_HINT_ROLE"))
+            WhisperSpecPromptUI.Name:SetText(whisperEntry.displayName ~= "" and whisperEntry.displayName or (whisperEntry.fullName or whisperEntry.inviteName or ""))
+            WhisperSpecPromptUI.Frame.LaterButton:Hide()
+            if WhisperSpecPromptUI.Frame.RemoveButton.Label then
+                WhisperSpecPromptUI.Frame.RemoveButton.Label:SetText("X")
+            end
+            WhisperSpecPromptUI.Frame.RemoveButton:Show()
+            local classRed, classGreen, classBlue = GetClassColor(WhisperSpecPromptUI.SelectedClassFile or whisperEntry.classFile)
+            WhisperSpecPromptUI.Name:SetTextColor(classRed, classGreen, classBlue, 1)
+            PlannerPrivate.RefreshWhisperSpecPromptButtons(whisperEntry)
+            WhisperSpecPromptUI.Frame:Show()
+            return
+        end
+    end
+
+    while #PlannerPrivate.pendingSpecPromptQueue > 0 do
+        local promptIdentity = table.remove(PlannerPrivate.pendingSpecPromptQueue, 1)
+        PlannerPrivate.pendingSpecPromptLookup[promptIdentity] = nil
+
+        local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(promptIdentity)
+        if PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
+            PlannerPrivate.activeSpecPromptIdentity = promptIdentity
+            PlannerPrivate.RefreshWhisperSpecPrompt()
+            return
+        end
+    end
+
+    WhisperSpecPromptUI.Frame:Hide()
+end
+
+PlannerPrivate.EnqueueWhisperSpecPrompt = function(name)
+    local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(name)
+    if not PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
+        return false
+    end
+
+    local identityKey = PlannerPrivate.GetIdentityKey(whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName)
+    if identityKey == nil then
+        return false
+    end
+
+    if PlannerPrivate.activeSpecPromptIdentity == identityKey then
+        PlannerPrivate.RefreshWhisperSpecPrompt()
+        return true
+    end
+
+    if PlannerPrivate.pendingSpecPromptLookup[identityKey] ~= true then
+        PlannerPrivate.pendingSpecPromptLookup[identityKey] = true
+        PlannerPrivate.pendingSpecPromptQueue[#PlannerPrivate.pendingSpecPromptQueue + 1] = identityKey
+    end
+
+    PlannerPrivate.RefreshWhisperSpecPrompt()
+    return true
+end
+
+PlannerPrivate.EnsureApplicantRow = function(index)
+    if ApplicantRows[index] then
+        return ApplicantRows[index]
+    end
+
+    local row = CreateFrame("Frame", nil, ApplicantPanel)
+    row:EnableMouse(true)
+    row:SetHeight(34)
+    row:SetPoint("TOPLEFT", ApplicantPanel.RowAnchor, "TOPLEFT", 0, -((index - 1) * 38))
+    row:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -14, 0)
+
+    row.Background = row:CreateTexture(nil, "BACKGROUND")
+    row.Background:SetAllPoints()
+    row.Background:SetColorTexture(0.05, 0.05, 0.06, 0.72)
+
+    row.Border = row:CreateTexture(nil, "ARTWORK")
+    row.Border:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+    row.Border:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+    row.Border:SetHeight(1)
+    row.Border:SetColorTexture(1, 0.82, 0, 0.18)
+
+    row.Name = row:CreateFontString(nil, "OVERLAY")
+    row.Name:SetPoint("TOPLEFT", row, "TOPLEFT", 10, -5)
+    row.Name:SetPoint("RIGHT", row, "RIGHT", -168, 0)
+    row.Name:SetJustifyH("LEFT")
+    row.Name:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+
+    row.Meta = row:CreateFontString(nil, "OVERLAY")
+    row.Meta:SetPoint("TOPLEFT", row.Name, "BOTTOMLEFT", 0, -1)
+    row.Meta:SetPoint("RIGHT", row, "RIGHT", -168, 0)
+    row.Meta:SetJustifyH("LEFT")
+    row.Meta:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    row.Meta:SetTextColor(0.78, 0.78, 0.80, 1)
+
+    row.Status = row:CreateFontString(nil, "OVERLAY")
+    row.Status:SetPoint("RIGHT", row, "RIGHT", -84, 0)
+    row.Status:SetJustifyH("RIGHT")
+    row.Status:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    row.Status:SetTextColor(1, 0.82, 0, 1)
+
+    row.InviteButton = CreateActionButton(row, 72, "", function(self)
+        if self.InviteTarget then
+            PlannerPrivate.InviteResolvedTarget(self.InviteTarget)
+        end
+    end)
+    row.InviteButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+
+    row:SetScript("OnMouseUp", function(self, mouseButton)
+        if mouseButton == "LeftButton" and self.CanChooseSpec and PlannerPrivate.IsUsablePlainString(self.WhisperIdentityName) then
+            PlannerPrivate.EnqueueWhisperSpecPrompt(self.WhisperIdentityName)
+            return
+        end
+
+        if mouseButton == "RightButton" and PlannerPrivate.IsUsablePlainString(self.WhisperIdentityName) then
+            PlannerPrivate.RemoveWhisperApplicantByName(self.WhisperIdentityName)
+        end
+    end)
+
+    ApplicantRows[index] = row
+    return row
+end
+
+PlannerPrivate.RefreshApplicantPanel = function(snapshot)
+    if not ApplicantPanel or not ApplicantPanelTitle or not ApplicantPanelHint or not ApplicantPanelEmptyText then
+        return
+    end
+
+    local settings = GetStreamerPlannerSettings()
+    local allowRaidInviteAutomation = GetCurrentMode() == "raid"
+    local showPanel = true
+    ApplicantPanel:SetShown(showPanel)
+
+    if not showPanel then
+        ApplicantPanel:SetHeight(0)
+        return
+    end
+
+    ApplicantPanelTitle:SetText(L("STREAMER_PLANNER_QUEUE_TITLE"))
+    ApplicantPanelHint:SetText(L("STREAMER_PLANNER_QUEUE_HINT"))
+
+    if ApplicantPanel and ApplicantPanel.AutoInviteCheckbox then
+        ApplicantPanel.AutoInviteCheckbox.Label:SetText(L("STREAMER_PLANNER_AUTO_INVITE_WHISPER"))
+        ApplicantPanel.AutoInviteCheckbox:SetChecked(settings.whisperCommandAutoInvite == true)
+        ApplicantPanel.AutoInviteCheckbox:SetEnabled(allowRaidInviteAutomation)
+    end
+
+    local rowDataList = PlannerPrivate.BuildApplicantPanelRowData(snapshot)
+    local hasInviteableRow = false
+    for _, rowData in ipairs(rowDataList) do
+        if rowData.canInvite then
+            hasInviteableRow = true
+            break
+        end
+    end
+
+    local layoutInviteTargets = {}
+    if allowRaidInviteAutomation then
+        PlannerPrivate.CollectLayoutInviteTargets(GetCurrentMode(), layoutInviteTargets, {})
+    end
+    local hasInviteableTarget = allowRaidInviteAutomation and (hasInviteableRow or #layoutInviteTargets > 0)
+
+    if ApplicantPanel and ApplicantPanel.FullInviteButton then
+        ApplicantPanel.FullInviteButton:SetText(L("STREAMER_PLANNER_FULL_INVITE"))
+        ApplicantPanel.FullInviteButton:SetEnabled(hasInviteableTarget)
+    end
+
+    if OverlayFullInviteButton then
+        OverlayFullInviteButton:SetText(L("STREAMER_PLANNER_FULL_INVITE"))
+        OverlayFullInviteButton:SetEnabled(hasInviteableTarget)
+    end
+
+    if OverlayAutoInviteCheckbox then
+        OverlayAutoInviteCheckbox.Label:SetText(L("STREAMER_PLANNER_AUTO_INVITE_WHISPER"))
+        OverlayAutoInviteCheckbox:SetChecked(settings.whisperCommandAutoInvite == true)
+        OverlayAutoInviteCheckbox:SetEnabled(allowRaidInviteAutomation)
+    end
+
+    local maxRows = 10
+    local visibleRowCount = math.min(#rowDataList, maxRows)
+
+    for index = 1, visibleRowCount do
+        local row = PlannerPrivate.EnsureApplicantRow(index)
+        local rowData = rowDataList[index]
+        row.WhisperIdentityName = rowData.whisperIdentityName
+        local classRed, classGreen, classBlue = GetClassColor(rowData.classFile)
+        local roleLabel = PlannerPrivate.GetPlannerRoleLabel(rowData.roleKey)
+        local specName = PlannerPrivate.GetSpecName(rowData.classFile, rowData.specID)
+        local metaParts = {}
+
+        if roleLabel then
+            metaParts[#metaParts + 1] = roleLabel
+        end
+
+        if specName and specName ~= roleLabel then
+            metaParts[#metaParts + 1] = specName
+        end
+
+        if type(rowData.itemLevel) == "number" and rowData.itemLevel > 0 then
+            metaParts[#metaParts + 1] = L("EASY_LFG_ITEM_LEVEL"):format(string.format("%.1f", rowData.itemLevel))
+        end
+
+        if type(rowData.dungeonScore) == "number" and rowData.dungeonScore > 0 then
+            metaParts[#metaParts + 1] = L("EASY_LFG_SCORE"):format(math.floor(rowData.dungeonScore + 0.5))
+        end
+
+        if type(rowData.sourceLabels) == "table" and #rowData.sourceLabels > 0 then
+            metaParts[#metaParts + 1] = table.concat(rowData.sourceLabels, " | ")
+        end
+
+        local canInvite = rowData.canInvite == true
+        local canChooseSpec = PlannerPrivate.IsUsablePlainString(rowData.whisperIdentityName)
+            and PlannerPrivate.NeedsWhisperSpecSelection({
+                classFile = rowData.classFile,
+                specID = rowData.specID,
+            })
+        local statusText = rowData.statusText or ""
+        if rowData.isPrimary and type(rowData.memberCount) == "number" and rowData.memberCount > 1 and rowData.statusKey ~= "grouped" then
+            statusText = string.format("%s | %s", statusText, L("EASY_LFG_GROUP_BADGE"):format(rowData.memberCount))
+        end
+
+        row.Name:SetText(rowData.name or rowData.displayName or rowData.fullName or "")
+        row.Name:SetTextColor(classRed, classGreen, classBlue, 1)
+        row.Meta:SetText(table.concat(metaParts, " | "))
+        row.Status:SetText(statusText)
+        row.CanChooseSpec = canChooseSpec
+        row.InviteButton:SetText(L("EASY_LFG_INVITE"))
+        row.InviteButton.InviteTarget = canInvite and rowData.inviteTarget or nil
+        row.InviteButton:SetShown(canInvite)
+        row:Show()
+    end
+
+    for index = visibleRowCount + 1, #ApplicantRows do
+        ApplicantRows[index]:Hide()
+    end
+
+    ApplicantPanelEmptyText:SetShown(visibleRowCount == 0)
+    ApplicantPanelEmptyText:SetText(L("STREAMER_PLANNER_QUEUE_EMPTY"))
+
+    if ApplicantPanel.MoreText then
+        local extraCount = math.max(0, #rowDataList - maxRows)
+        ApplicantPanel.MoreText:SetShown(extraCount > 0)
+        ApplicantPanel.MoreText:SetText(extraCount > 0 and L("EASY_LFG_OVERLAY_MORE"):format(extraCount) or "")
+    end
+
+    local rowsHeight = visibleRowCount > 0 and ((visibleRowCount * 34) + ((visibleRowCount - 1) * 4)) or 26
+    local extraHeight = ApplicantPanel.MoreText and ApplicantPanel.MoreText:IsShown() and 18 or 0
+    ApplicantPanel:SetHeight(96 + rowsHeight + extraHeight)
+end
+
 local function CreateOverlayHeaderButton(parent, width, labelText, onClick, tooltipTitle, tooltipText)
     local button = CreateFrame("Button", nil, parent)
     button:SetSize(width, 22)
@@ -1482,6 +4718,7 @@ local function CreateSlotButton(parent, width, height, layout, index)
     button:RegisterForClicks("AnyUp")
     button.Layout = layout
     button.Index = index
+    button.SlotHeight = height
 
     local background = button:CreateTexture(nil, "BACKGROUND")
     background:SetAllPoints()
@@ -1520,6 +4757,15 @@ local function CreateSlotButton(parent, width, height, layout, index)
     value:SetWordWrap(false)
     button.Value = value
 
+    button.InviteButton = CreateActionButton(button, 54, "", function(self)
+        if self.InviteTarget then
+            PlannerPrivate.InviteResolvedTarget(self.InviteTarget)
+        end
+    end)
+    button.InviteButton:SetSize(54, 20)
+    button.InviteButton:SetPoint("RIGHT", button, "RIGHT", -8, 0)
+    button.InviteButton:Hide()
+
     if height <= 24 then
         label:ClearAllPoints()
         label:SetPoint("TOPLEFT", button, "TOPLEFT", 8, -4)
@@ -1557,13 +4803,31 @@ local function OpenEditor(layout, index)
         return
     end
 
-    editingField = "slot"
-    editingLayout = layout
-    editingSlotIndex = index
+    PlannerPrivate.editingField = "slot"
+    PlannerPrivate.editingLayout = layout
+    PlannerPrivate.editingSlotIndex = index
     local slotEntry = GetSlotEntry(layout, index)
-    editingClassFile = slotEntry.classFile
-    editingSpecID = slotEntry.specID
+    PlannerPrivate.editingClassFile = slotEntry.classFile
+    PlannerPrivate.editingSpecID = slotEntry.specID
+    PlannerPrivate.editingUsesSelfRoleOverride = layout == "dungeon" and PlannerPrivate.IsSelfSlotEntry(slotEntry)
+    PlannerPrivate.editingRoleKey = PlannerPrivate.NormalizePlannerRoleKey(GetStreamerPlannerSettings().selfRoleOverride)
+
+    if PlannerPrivate.editingUsesSelfRoleOverride then
+        EditDialog:SetSize(EDIT_DIALOG_WIDTH, 244)
+        EditDialogTitle:SetText(L("STREAMER_PLANNER_SELF_ROLE_TITLE"))
+        EditDialogHint:SetText(L("STREAMER_PLANNER_SELF_ROLE_HINT"))
+        PlannerPrivate.saveSlotButton:SetText(L("STREAMER_PLANNER_APPLY"))
+        PlannerPrivate.clearSlotButton:SetText(L("STREAMER_PLANNER_ROLE_AUTO"))
+        PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
+        RefreshClassSpecButtons()
+        EditDialog:Show()
+        return
+    end
+
     EditDialog:SetSize(EDIT_DIALOG_WIDTH, EDIT_DIALOG_SLOT_HEIGHT)
+    PlannerPrivate.saveSlotButton:SetText(L("STREAMER_PLANNER_SAVE_SLOT"))
+    PlannerPrivate.clearSlotButton:SetText(L("STREAMER_PLANNER_CLEAR_SLOT"))
+    PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
 
     EditDialogTitle:SetText(string.format("%s: %s", L("STREAMER_PLANNER_SLOT_EDIT"), GetSlotLabel(layout, index)))
     EditDialogHint:SetText(L("STREAMER_PLANNER_SLOT_EDIT_HINT"))
@@ -1580,12 +4844,17 @@ local function OpenDestinationEditor()
         return
     end
 
-    editingField = "destination"
-    editingLayout = nil
-    editingSlotIndex = nil
-    editingClassFile = nil
-    editingSpecID = nil
+    PlannerPrivate.editingField = "destination"
+    PlannerPrivate.editingLayout = nil
+    PlannerPrivate.editingSlotIndex = nil
+    PlannerPrivate.editingClassFile = nil
+    PlannerPrivate.editingSpecID = nil
+    PlannerPrivate.editingRoleKey = nil
+    PlannerPrivate.editingUsesSelfRoleOverride = false
     EditDialog:SetSize(EDIT_DIALOG_WIDTH, EDIT_DIALOG_DESTINATION_HEIGHT)
+    PlannerPrivate.saveSlotButton:SetText(L("STREAMER_PLANNER_SAVE_SLOT"))
+    PlannerPrivate.clearSlotButton:SetText(L("STREAMER_PLANNER_CLEAR_SLOT"))
+    PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
 
     EditDialogTitle:SetText(L("STREAMER_PLANNER_DESTINATION_EDIT"))
     EditDialogHint:SetText(L("STREAMER_PLANNER_DESTINATION_EDIT_HINT"))
@@ -1608,12 +4877,68 @@ local function RefreshSlotButton(button)
     local slotEntry = GetSlotEntry(button.Layout, button.Index)
     local slotValue = slotEntry.name
     local classRed, classGreen, classBlue = GetClassColor(slotEntry.classFile)
-    local specName = GetSpecName(slotEntry.classFile, slotEntry.specID)
+    local specName = PlannerPrivate.GetSpecName(slotEntry.classFile, slotEntry.specID)
+    local roleLabel = PlannerPrivate.GetPlannerRoleLabel(PlannerPrivate.GetEntryAssignedRole(slotEntry))
+    local applicantData = PlannerPrivate.FindApplicantByName(slotEntry.inviteName or slotEntry.name)
+    local inviteTarget = PlannerPrivate.ResolveInviteTarget({
+        name = slotEntry.name,
+        fullName = slotEntry.inviteName,
+        inviteName = slotEntry.inviteName,
+        applicantID = applicantData and applicantData.applicantID or nil,
+        applicationStatus = applicantData and applicantData.applicationStatus or nil,
+    })
+    local showInviteButton = inviteTarget ~= nil
+
+    if button.InviteButton then
+        button.InviteButton:SetText(L("EASY_LFG_INVITE"))
+        button.InviteButton.InviteTarget = inviteTarget
+        button.InviteButton:SetShown(showInviteButton)
+    end
+
+    local rightAnchor = showInviteButton and button.InviteButton or button
+    local rightPoint = showInviteButton and "LEFT" or "RIGHT"
+    local rightOffset = showInviteButton and -8 or (button.SlotHeight <= 24 and -8 or -10)
+
+    button.Label:ClearAllPoints()
+    button.Value:ClearAllPoints()
+
+    if button.SlotHeight <= 24 then
+        button.Label:SetPoint("TOPLEFT", button, "TOPLEFT", 8, -4)
+        button.Label:SetPoint("RIGHT", rightAnchor, rightPoint, rightOffset, 0)
+        button.Label:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+
+        button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, 0)
+        button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 4)
+        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+    elseif button.SlotHeight <= 30 then
+        button.Label:SetPoint("TOPLEFT", button, "TOPLEFT", 10, -7)
+        button.Label:SetPoint("RIGHT", rightAnchor, rightPoint, rightOffset, 0)
+        button.Label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+
+        button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, 0)
+        button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 4)
+        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    else
+        button.Label:SetPoint("TOPLEFT", button, "TOPLEFT", 10, -7)
+        button.Label:SetPoint("RIGHT", rightAnchor, rightPoint, rightOffset, 0)
+        button.Label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+
+        button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, -3)
+        button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 6)
+        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+    end
 
     button.Label:SetText(slotLabel)
     if slotValue ~= "" then
-        if specName then
+        local assignedRoleKey = PlannerPrivate.GetEntryAssignedRole(slotEntry)
+        local specRoleKey = slotEntry.specID and PlannerPrivate.GetRoleKeyFromSpecID(slotEntry.specID) or nil
+
+        if roleLabel and specName and assignedRoleKey ~= nil and specRoleKey ~= nil and assignedRoleKey ~= specRoleKey then
+            button.Value:SetText(string.format("%s (%s | %s)", slotValue, roleLabel, specName))
+        elseif specName then
             button.Value:SetText(string.format("%s (%s)", slotValue, specName))
+        elseif roleLabel then
+            button.Value:SetText(string.format("%s (%s)", slotValue, roleLabel))
         else
             button.Value:SetText(slotValue)
         end
@@ -1625,9 +4950,15 @@ local function RefreshSlotButton(button)
 
     button:SetScript("OnClick", function(_, mouseButton)
         if mouseButton == "RightButton" then
-            SetSlotEntry(button.Layout, button.Index, NormalizeSlotEntry(nil))
+            local currentEntry = GetSlotEntry(button.Layout, button.Index)
+            if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
+                PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
+            end
+
+            SetSlotEntry(button.Layout, button.Index, PlannerPrivate.NormalizeSlotEntry(nil))
             HideEditDialog()
-            StreamerPlannerModule.RefreshAllDisplays()
+            PlannerPrivate.lastDungeonSyncSignature = nil
+            PlannerPrivate.SyncDynamicPlannerState(true)
             return
         end
 
@@ -1644,7 +4975,7 @@ end
 local function CreateDungeonLayout(parent, targetButtons, width)
     local previousButton
 
-    for index = 1, #DUNGEON_LAYOUT do
+    for index = 1, #StreamerPlannerModule.DUNGEON_LAYOUT do
         local button = CreateSlotButton(parent, width, 44, "dungeon", index)
 
         if previousButton then
@@ -1737,19 +5068,19 @@ local function RefreshLayoutVisibility()
     local showRaid = mode == "raid"
     local destinationText = GetDestinationText()
 
-    if PreviewDungeonContainer then
+    if PreviewUI.DungeonContainer then
         if showRaid then
-            PreviewDungeonContainer:Hide()
+            PreviewUI.DungeonContainer:Hide()
         else
-            PreviewDungeonContainer:Show()
+            PreviewUI.DungeonContainer:Show()
         end
     end
 
-    if PreviewRaidContainer then
+    if PreviewUI.RaidContainer then
         if showRaid then
-            PreviewRaidContainer:Show()
+            PreviewUI.RaidContainer:Show()
         else
-            PreviewRaidContainer:Hide()
+            PreviewUI.RaidContainer:Hide()
         end
     end
 
@@ -1769,6 +5100,10 @@ local function RefreshLayoutVisibility()
         end
     end
 
+    if OverlayInviteRow then
+        OverlayInviteRow:SetShown(showRaid)
+    end
+
     if OverlayDestinationLabel then
         OverlayDestinationLabel:SetText(L("STREAMER_PLANNER_DESTINATION"))
     end
@@ -1778,7 +5113,7 @@ local function RefreshLayoutVisibility()
         if OverlayTimer.Panel then
             OverlayRaidSummary:SetPoint("TOPLEFT", OverlayTimer.Panel, "BOTTOMLEFT", 0, -8)
         else
-            OverlayRaidSummary:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
+            OverlayRaidSummary:SetPoint("TOPLEFT", (showRaid and OverlayInviteRow) or OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
         end
         OverlayRaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
 
@@ -1792,7 +5127,9 @@ local function RefreshLayoutVisibility()
 
     if OverlayTimer.Panel then
         OverlayTimer.Panel:ClearAllPoints()
-        if OverlayFrame and OverlayFrame.ModeRow then
+        if showRaid and OverlayInviteRow then
+            OverlayTimer.Panel:SetPoint("TOPLEFT", OverlayInviteRow, "BOTTOMLEFT", 0, -8)
+        elseif OverlayFrame and OverlayFrame.ModeRow then
             OverlayTimer.Panel:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
         else
             OverlayTimer.Panel:SetPoint("TOPLEFT", OverlayTitle, "BOTTOMLEFT", 0, -10)
@@ -1824,11 +5161,21 @@ local function RefreshLayoutVisibility()
         OverlayDestinationValue:SetWordWrap(showRaid)
     end
 
+    if OverlayDungeonContainer and OverlayDestinationButton then
+        OverlayDungeonContainer:ClearAllPoints()
+        OverlayDungeonContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
+    end
+
+    if OverlayRaidContainer and OverlayDestinationButton then
+        OverlayRaidContainer:ClearAllPoints()
+        OverlayRaidContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
+    end
+
     if OverlayFrame then
         if showRaid then
-            OverlayFrame:SetSize(458, 612)
+            OverlayFrame:SetSize(458, 736)
         else
-            OverlayFrame:SetSize(334, 482)
+            OverlayFrame:SetSize(334, 540)
         end
     end
 
@@ -1861,6 +5208,10 @@ end
 
 function StreamerPlannerModule.SetOverlayEnabled(enabled)
     GetStreamerPlannerSettings().overlayEnabled = enabled == true
+    if enabled == true then
+        PlannerPrivate.lastDungeonSyncSignature = nil
+        PlannerPrivate.SyncDynamicPlannerState(true)
+    end
     StreamerPlannerModule.RefreshOverlayWindow()
 end
 
@@ -1893,7 +5244,8 @@ end
 
 function StreamerPlannerModule.SetMode(mode)
     SetCurrentMode(mode)
-    StreamerPlannerModule.RefreshAllDisplays()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
 end
 
 function StreamerPlannerModule.GetDestinationText()
@@ -1908,21 +5260,29 @@ end
 function StreamerPlannerModule.ClearCurrentLayout()
     ClearLayout(GetCurrentMode())
     HideEditDialog()
-    StreamerPlannerModule.RefreshAllDisplays()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
 end
 
 function StreamerPlannerModule.ClearAllLayouts()
     ClearAllLayouts()
     HideEditDialog()
-    StreamerPlannerModule.RefreshAllDisplays()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
 end
 
 function StreamerPlannerModule.RefreshAllDisplays()
-    RefreshButtonList(PreviewDungeonButtons)
-    RefreshButtonList(PreviewRaidButtons)
+    RefreshButtonList(PreviewUI.DungeonButtons)
+    RefreshButtonList(PreviewUI.RaidButtons)
     RefreshButtonList(OverlayDungeonButtons)
     RefreshButtonList(OverlayRaidButtons)
     RefreshModeButtons()
+    if PlannerPrivate.RefreshApplicantPanel then
+        PlannerPrivate.RefreshApplicantPanel()
+    end
+    if PlannerPrivate.RefreshWhisperSpecPrompt then
+        PlannerPrivate.RefreshWhisperSpecPrompt()
+    end
     RefreshLayoutVisibility()
     StreamerPlannerModule.RefreshOverlayWindow()
 
@@ -1944,10 +5304,12 @@ PageContentFrame = CreateFrame("Frame", nil, PageScrollFrame)
 PageContentFrame:SetSize(1, 1)
 PageScrollFrame:SetScrollChild(PageContentFrame)
 
+do
 local IntroPanel = CreateFrame("Frame", nil, PageContentFrame)
 IntroPanel:SetPoint("TOPLEFT", PageContentFrame, "TOPLEFT", 20, -20)
 IntroPanel:SetPoint("TOPRIGHT", PageContentFrame, "TOPRIGHT", -20, -20)
 IntroPanel:SetHeight(132)
+PageStreamerPlanner.IntroPanel = IntroPanel
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
@@ -1963,6 +5325,7 @@ local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.82, 0, 1)
+PageStreamerPlanner.IntroTitle = IntroTitle
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -1971,6 +5334,7 @@ IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
+PageStreamerPlanner.IntroText = IntroText
 
 local UsageHint = IntroPanel:CreateFontString(nil, "OVERLAY")
 UsageHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -10)
@@ -1979,10 +5343,12 @@ UsageHint:SetJustifyH("LEFT")
 UsageHint:SetJustifyV("TOP")
 UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 UsageHint:SetTextColor(0.84, 0.84, 0.86, 1)
+PageStreamerPlanner.UsageHint = UsageHint
 
 local PreviewPanel = CreateFrame("Frame", nil, PageContentFrame)
 PreviewPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 PreviewPanel:SetSize(430, 424)
+PageStreamerPlanner.PreviewPanel = PreviewPanel
 
 local PreviewPanelBg = PreviewPanel:CreateTexture(nil, "BACKGROUND")
 PreviewPanelBg:SetAllPoints()
@@ -1994,33 +5360,37 @@ PreviewPanelBorder:SetPoint("BOTTOMRIGHT", PreviewPanel, "BOTTOMRIGHT", 0, 0)
 PreviewPanelBorder:SetHeight(1)
 PreviewPanelBorder:SetColorTexture(1, 0.82, 0, 0.9)
 
-PreviewTitle = PreviewPanel:CreateFontString(nil, "OVERLAY")
-PreviewTitle:SetPoint("TOPLEFT", PreviewPanel, "TOPLEFT", 18, -14)
-PreviewTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-PreviewTitle:SetTextColor(1, 0.82, 0, 1)
+PreviewUI.Title = PreviewPanel:CreateFontString(nil, "OVERLAY")
+PreviewUI.Title:SetPoint("TOPLEFT", PreviewPanel, "TOPLEFT", 18, -14)
+PreviewUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+PreviewUI.Title:SetTextColor(1, 0.82, 0, 1)
 
-PreviewHint = PreviewPanel:CreateFontString(nil, "OVERLAY")
-PreviewHint:SetPoint("TOPLEFT", PreviewTitle, "BOTTOMLEFT", 0, -8)
-PreviewHint:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
-PreviewHint:SetJustifyH("LEFT")
-PreviewHint:SetJustifyV("TOP")
-PreviewHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PreviewHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PreviewUI.Hint = PreviewPanel:CreateFontString(nil, "OVERLAY")
+PreviewUI.Hint:SetPoint("TOPLEFT", PreviewUI.Title, "BOTTOMLEFT", 0, -8)
+PreviewUI.Hint:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
+PreviewUI.Hint:SetJustifyH("LEFT")
+PreviewUI.Hint:SetJustifyV("TOP")
+PreviewUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+PreviewUI.Hint:SetTextColor(0.80, 0.80, 0.80, 1)
 
-PreviewDungeonContainer = CreateFrame("Frame", nil, PreviewPanel)
-PreviewDungeonContainer:SetPoint("TOPLEFT", PreviewHint, "BOTTOMLEFT", 0, -18)
-PreviewDungeonContainer:SetSize(392, 280)
-CreateDungeonLayout(PreviewDungeonContainer, PreviewDungeonButtons, 392)
+PreviewUI.DungeonContainer = CreateFrame("Frame", nil, PreviewPanel)
+PreviewUI.DungeonContainer:SetPoint("TOPLEFT", PreviewUI.Hint, "BOTTOMLEFT", 0, -18)
+PreviewUI.DungeonContainer:SetSize(392, 280)
+PreviewUI.DungeonContainer:SetClipsChildren(true)
+CreateDungeonLayout(PreviewUI.DungeonContainer, PreviewUI.DungeonButtons, 392)
 
-PreviewRaidContainer = CreateFrame("Frame", nil, PreviewPanel)
-PreviewRaidContainer:SetPoint("TOPLEFT", PreviewHint, "BOTTOMLEFT", 0, -18)
-PreviewRaidContainer:SetSize(372, 338)
-CreateRaidLayout(PreviewRaidContainer, PreviewRaidButtons, 178, 24)
+PreviewUI.RaidContainer = CreateFrame("Frame", nil, PreviewPanel)
+PreviewUI.RaidContainer:SetPoint("TOPLEFT", PreviewUI.Hint, "BOTTOMLEFT", 0, -18)
+PreviewUI.RaidContainer:SetSize(372, 346)
+PreviewUI.RaidContainer:SetClipsChildren(true)
+CreateRaidLayout(PreviewUI.RaidContainer, PreviewUI.RaidButtons, 178, 24)
 
+PreviewPanel:SetClipsChildren(true)
 local SettingsPanel = CreateFrame("Frame", nil, PageContentFrame)
 SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "TOPRIGHT", 18, 0)
 SettingsPanel:SetPoint("TOPRIGHT", PageContentFrame, "TOPRIGHT", -20, 0)
 SettingsPanel:SetHeight(PreviewPanel:GetHeight())
+PageStreamerPlanner.SettingsPanel = SettingsPanel
 
 local SettingsPanelBg = SettingsPanel:CreateTexture(nil, "BACKGROUND")
 SettingsPanelBg:SetAllPoints()
@@ -2098,7 +5468,7 @@ RaidModeButton:SetPoint("LEFT", DungeonModeButton, "RIGHT", 12, 0)
 ScaleSlider, ScaleSliderText = CreateScaleSlider(SettingsPanel, "Scale")
 ScaleSlider:SetPoint("TOPLEFT", DungeonModeButton, "BOTTOMLEFT", 18, -28)
 ScaleSlider:SetScript("OnValueChanged", function(self, value)
-    if isRefreshingPage then
+    if PlannerPrivate.isRefreshingPage then
         return
     end
 
@@ -2122,7 +5492,7 @@ if timerHighLabel then
 end
 
 TimerDurationSlider:SetScript("OnValueChanged", function(self, value)
-    if isRefreshingPage then
+    if PlannerPrivate.isRefreshingPage then
         return
     end
 
@@ -2193,6 +5563,193 @@ SettingsPanel.EditHint:SetJustifyH("LEFT")
 SettingsPanel.EditHint:SetJustifyV("TOP")
 SettingsPanel.EditHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 SettingsPanel.EditHint:SetTextColor(0.84, 0.84, 0.86, 1)
+end
+
+ApplicantPanel = CreateFrame("Frame", nil, PageContentFrame)
+ApplicantPanel:SetPoint("TOPLEFT", PageStreamerPlanner.PreviewPanel, "BOTTOMLEFT", 0, -18)
+ApplicantPanel:SetPoint("TOPRIGHT", PageStreamerPlanner.SettingsPanel, "BOTTOMRIGHT", 0, -18)
+ApplicantPanel:SetHeight(116)
+
+do
+    local background = ApplicantPanel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+    local border = ApplicantPanel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", ApplicantPanel, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", ApplicantPanel, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(1, 0.82, 0, 0.9)
+end
+
+ApplicantPanelTitle = ApplicantPanel:CreateFontString(nil, "OVERLAY")
+ApplicantPanelTitle:SetPoint("TOPLEFT", ApplicantPanel, "TOPLEFT", 18, -14)
+ApplicantPanelTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+ApplicantPanelTitle:SetTextColor(1, 0.82, 0, 1)
+
+ApplicantPanel.FullInviteButton = CreateActionButton(ApplicantPanel, 92, "", function()
+    PlannerPrivate.InviteAllApplicantRows(PlannerPrivate.BuildApplicantPanelRowData(), GetCurrentMode())
+end)
+ApplicantPanel.FullInviteButton:SetPoint("TOPRIGHT", ApplicantPanel, "TOPRIGHT", -18, -12)
+
+ApplicantPanelTitle:SetPoint("RIGHT", ApplicantPanel.FullInviteButton, "LEFT", -12, 0)
+
+ApplicantPanelHint = ApplicantPanel:CreateFontString(nil, "OVERLAY")
+ApplicantPanelHint:SetPoint("TOPLEFT", ApplicantPanelTitle, "BOTTOMLEFT", 0, -8)
+ApplicantPanelHint:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
+ApplicantPanelHint:SetJustifyH("LEFT")
+ApplicantPanelHint:SetJustifyV("TOP")
+ApplicantPanelHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+ApplicantPanelHint:SetTextColor(0.80, 0.80, 0.80, 1)
+
+ApplicantPanel.AutoInviteCheckbox = CreateCheckbox(ApplicantPanel, "", function(self)
+    GetStreamerPlannerSettings().whisperCommandAutoInvite = self:GetChecked() == true
+end)
+ApplicantPanel.AutoInviteCheckbox:SetPoint("TOPLEFT", ApplicantPanelHint, "BOTTOMLEFT", 0, -10)
+ApplicantPanel.AutoInviteCheckbox.Label:ClearAllPoints()
+ApplicantPanel.AutoInviteCheckbox.Label:SetPoint("LEFT", ApplicantPanel.AutoInviteCheckbox, "RIGHT", 4, 0)
+ApplicantPanel.AutoInviteCheckbox.Label:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
+ApplicantPanel.AutoInviteCheckbox.Label:SetJustifyH("LEFT")
+
+ApplicantPanel.RowAnchor = CreateFrame("Frame", nil, ApplicantPanel)
+ApplicantPanel.RowAnchor:SetPoint("TOPLEFT", ApplicantPanel.AutoInviteCheckbox, "BOTTOMLEFT", 0, -10)
+ApplicantPanel.RowAnchor:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -14, 0)
+ApplicantPanel.RowAnchor:SetHeight(1)
+
+ApplicantPanelEmptyText = ApplicantPanel:CreateFontString(nil, "OVERLAY")
+ApplicantPanelEmptyText:SetPoint("TOPLEFT", ApplicantPanel.RowAnchor, "TOPLEFT", 0, 0)
+ApplicantPanelEmptyText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
+ApplicantPanelEmptyText:SetJustifyH("LEFT")
+ApplicantPanelEmptyText:SetJustifyV("TOP")
+ApplicantPanelEmptyText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+ApplicantPanelEmptyText:SetTextColor(0.82, 0.82, 0.84, 1)
+
+ApplicantPanel.MoreText = ApplicantPanel:CreateFontString(nil, "OVERLAY")
+ApplicantPanel.MoreText:SetPoint("BOTTOMLEFT", ApplicantPanel, "BOTTOMLEFT", 18, 10)
+ApplicantPanel.MoreText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
+ApplicantPanel.MoreText:SetJustifyH("LEFT")
+ApplicantPanel.MoreText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+ApplicantPanel.MoreText:SetTextColor(0.78, 0.78, 0.80, 1)
+ApplicantPanel.MoreText:Hide()
+
+WhisperSpecPromptUI.Frame = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
+WhisperSpecPromptUI.Frame:SetSize(WHISPER_SPEC_PROMPT_WIDTH, WHISPER_SPEC_PROMPT_MIN_HEIGHT)
+WhisperSpecPromptUI.Frame:SetPoint("CENTER", UIParent, "CENTER", -440, 0)
+WhisperSpecPromptUI.Frame:SetFrameStrata("DIALOG")
+WhisperSpecPromptUI.Frame:SetClampedToScreen(true)
+WhisperSpecPromptUI.Frame:EnableMouse(true)
+WhisperSpecPromptUI.Frame:Hide()
+
+do
+    local background = WhisperSpecPromptUI.Frame:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.06, 0.06, 0.07, 0.96)
+
+    local borderTop = WhisperSpecPromptUI.Frame:CreateTexture(nil, "ARTWORK")
+    borderTop:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 0, 0)
+    borderTop:SetPoint("TOPRIGHT", WhisperSpecPromptUI.Frame, "TOPRIGHT", 0, 0)
+    borderTop:SetHeight(1)
+    borderTop:SetColorTexture(1, 0.82, 0, 0.36)
+
+    local borderBottom = WhisperSpecPromptUI.Frame:CreateTexture(nil, "ARTWORK")
+    borderBottom:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 0, 0)
+    borderBottom:SetPoint("BOTTOMRIGHT", WhisperSpecPromptUI.Frame, "BOTTOMRIGHT", 0, 0)
+    borderBottom:SetHeight(1)
+    borderBottom:SetColorTexture(1, 0.82, 0, 0.86)
+end
+
+WhisperSpecPromptUI.Title = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Title:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 14, -12)
+WhisperSpecPromptUI.Title:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+WhisperSpecPromptUI.Title:SetTextColor(1, 0.82, 0, 1)
+
+WhisperSpecPromptUI.Hint = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Hint:SetPoint("TOPLEFT", WhisperSpecPromptUI.Title, "BOTTOMLEFT", 0, -2)
+WhisperSpecPromptUI.Hint:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Hint:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Hint:SetJustifyV("TOP")
+WhisperSpecPromptUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+WhisperSpecPromptUI.Hint:SetTextColor(0.82, 0.82, 0.84, 1)
+
+WhisperSpecPromptUI.Name = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Name:SetPoint("TOPLEFT", WhisperSpecPromptUI.Hint, "BOTTOMLEFT", 0, -6)
+WhisperSpecPromptUI.Name:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Name:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Name:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+
+WhisperSpecPromptUI.Class = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Class:SetPoint("TOPLEFT", WhisperSpecPromptUI.Name, "BOTTOMLEFT", 0, -2)
+WhisperSpecPromptUI.Class:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Class:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Class:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+WhisperSpecPromptUI.Class:SetTextColor(1, 0.82, 0, 0.92)
+
+WhisperSpecPromptUI.ClassTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.ClassTitle:SetJustifyH("LEFT")
+WhisperSpecPromptUI.ClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+WhisperSpecPromptUI.ClassTitle:SetTextColor(1, 0.82, 0, 1)
+WhisperSpecPromptUI.ClassTitle:Hide()
+
+WhisperSpecPromptUI.Frame.ClassButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
+WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.Name, "BOTTOMLEFT", 0, -10)
+WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetHeight(1)
+
+WhisperSpecPromptUI.RoleTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.RoleTitle:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -14)
+WhisperSpecPromptUI.RoleTitle:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.RoleTitle:SetJustifyH("LEFT")
+WhisperSpecPromptUI.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+WhisperSpecPromptUI.RoleTitle:SetTextColor(1, 0.82, 0, 1)
+
+WhisperSpecPromptUI.Frame.RoleButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
+WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -10)
+WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetHeight(1)
+
+WhisperSpecPromptUI.SpecTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.SpecTitle:SetJustifyH("LEFT")
+WhisperSpecPromptUI.SpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+WhisperSpecPromptUI.SpecTitle:SetTextColor(1, 0.82, 0, 1)
+
+WhisperSpecPromptUI.Frame.SpecButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
+WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.SpecTitle, "BOTTOMLEFT", 0, -8)
+WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetHeight(1)
+
+WhisperSpecPromptUI.Frame.ApplyButton = CreateActionButton(WhisperSpecPromptUI.Frame, 92, "", function()
+    local targetName = WhisperSpecPromptUI.Frame.ActiveName
+    if PlannerPrivate.IsUsablePlainString(targetName) then
+        PlannerPrivate.ApplyWhisperPromptSelection(
+            targetName,
+            WhisperSpecPromptUI.SelectedClassFile,
+            WhisperSpecPromptUI.SelectedRoleKey,
+            WhisperSpecPromptUI.SelectedSpecID
+        )
+    end
+end)
+WhisperSpecPromptUI.Frame.ApplyButton:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 16, 14)
+WhisperSpecPromptUI.Frame.ApplyButton:Hide()
+
+WhisperSpecPromptUI.Frame.LaterButton = CreateActionButton(WhisperSpecPromptUI.Frame, 92, "", function()
+    PlannerPrivate.DismissActiveWhisperSpecPrompt()
+    PlannerPrivate.RefreshWhisperSpecPrompt()
+end)
+WhisperSpecPromptUI.Frame.LaterButton:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 16, 14)
+WhisperSpecPromptUI.Frame.LaterButton:Hide()
+
+WhisperSpecPromptUI.Frame.RemoveButton = CreateOverlayHeaderButton(WhisperSpecPromptUI.Frame, 20, "X", function()
+    local targetName = WhisperSpecPromptUI.Frame.ActiveName
+    if PlannerPrivate.IsUsablePlainString(targetName) then
+        PlannerPrivate.DismissActiveWhisperSpecPrompt()
+        PlannerPrivate.RemoveWhisperApplicantByName(targetName)
+    end
+end, L("EASY_LFG_DECLINE"), nil)
+WhisperSpecPromptUI.Frame.RemoveButton:SetSize(20, 20)
+WhisperSpecPromptUI.Frame.RemoveButton:SetPoint("TOPRIGHT", WhisperSpecPromptUI.Frame, "TOPRIGHT", -12, -11)
+
+WhisperSpecPromptUI.Title:SetPoint("RIGHT", WhisperSpecPromptUI.Frame.RemoveButton, "LEFT", -8, 0)
 
 OverlayFrame = CreateFrame("Frame", "BeavisQoLStreamerPlannerOverlay", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 OverlayFrame:SetClampedToScreen(true)
@@ -2284,8 +5841,28 @@ OverlayRaidModeButton:SetParent(OverlayFrame.ModeRow)
 OverlayRaidModeButton:SetSize(78, 22)
 OverlayRaidModeButton:SetPoint("RIGHT", OverlayDungeonModeButton, "LEFT", -6, 0)
 
+OverlayInviteRow = CreateFrame("Frame", nil, OverlayFrame)
+OverlayInviteRow:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -6)
+OverlayInviteRow:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
+OverlayInviteRow:SetHeight(24)
+
+OverlayFullInviteButton = CreateActionButton(OverlayInviteRow, 88, "", function()
+    PlannerPrivate.InviteAllApplicantRows(PlannerPrivate.BuildApplicantPanelRowData(), GetCurrentMode())
+end)
+OverlayFullInviteButton:SetPoint("RIGHT", OverlayInviteRow, "RIGHT", 0, 0)
+
+OverlayAutoInviteCheckbox = CreateCheckbox(OverlayInviteRow, "", function(self)
+    GetStreamerPlannerSettings().whisperCommandAutoInvite = self:GetChecked() == true
+    PlannerPrivate.RefreshApplicantPanel()
+end)
+OverlayAutoInviteCheckbox:SetPoint("LEFT", OverlayInviteRow, "LEFT", -4, 0)
+OverlayAutoInviteCheckbox.Label:ClearAllPoints()
+OverlayAutoInviteCheckbox.Label:SetPoint("LEFT", OverlayAutoInviteCheckbox, "RIGHT", 4, 0)
+OverlayAutoInviteCheckbox.Label:SetPoint("RIGHT", OverlayFullInviteButton, "LEFT", -8, 0)
+OverlayAutoInviteCheckbox.Label:SetJustifyH("LEFT")
+
 OverlayRaidSummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
-OverlayRaidSummary:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
+OverlayRaidSummary:SetPoint("TOPLEFT", OverlayInviteRow, "BOTTOMLEFT", 0, -8)
 OverlayRaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
 OverlayRaidSummary:SetJustifyH("LEFT")
 OverlayRaidSummary:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
@@ -2343,14 +5920,14 @@ OverlayDestinationButton:SetScript("OnClick", function(_, mouseButton)
 end)
 
 OverlayDungeonContainer = CreateFrame("Frame", nil, OverlayFrame)
-OverlayDungeonContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -16)
+OverlayDungeonContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
 OverlayDungeonContainer:SetSize(294, 260)
 OverlayDungeonContainer:SetClipsChildren(true)
 CreateDungeonLayout(OverlayDungeonContainer, OverlayDungeonButtons, 294)
 
 OverlayRaidContainer = CreateFrame("Frame", nil, OverlayFrame)
-OverlayRaidContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -16)
-OverlayRaidContainer:SetSize(414, 396)
+OverlayRaidContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
+OverlayRaidContainer:SetSize(414, 444)
 OverlayRaidContainer:SetClipsChildren(true)
 CreateRaidLayout(OverlayRaidContainer, OverlayRaidButtons, 200, 30)
 
@@ -2417,16 +5994,16 @@ OverlayFrame:SetScript("OnUpdate", function(_, elapsed)
 
     local settings = GetStreamerPlannerSettings()
     if settings.timerRunning ~= true then
-        timerRefreshElapsed = 0
+        PlannerPrivate.timerRefreshElapsed = 0
         return
     end
 
-    timerRefreshElapsed = timerRefreshElapsed + (elapsed or 0)
-    if timerRefreshElapsed < 0.2 then
+    PlannerPrivate.timerRefreshElapsed = PlannerPrivate.timerRefreshElapsed + (elapsed or 0)
+    if PlannerPrivate.timerRefreshElapsed < 0.2 then
         return
     end
 
-    timerRefreshElapsed = 0
+    PlannerPrivate.timerRefreshElapsed = 0
     RefreshTimerDisplay()
 end)
 
@@ -2480,6 +6057,35 @@ EditDialogTargetLabel:SetJustifyH("LEFT")
 EditDialogTargetLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 EditDialogTargetLabel:SetTextColor(0.78, 0.78, 0.82, 1)
 
+EditDialog.RoleTitle = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDialog.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+EditDialog.RoleTitle:SetTextColor(1, 0.82, 0, 1)
+EditDialog.RoleTitle:Hide()
+
+do
+    local roleButtons = {
+        { key = false, label = L("STREAMER_PLANNER_ROLE_AUTO") },
+        { key = "tank", label = L("STREAMER_PLANNER_ROLE_TANK") },
+        { key = "healer", label = L("STREAMER_PLANNER_ROLE_HEALER") },
+        { key = "dps", label = "DPS" },
+    }
+
+    for _, roleInfo in ipairs(roleButtons) do
+        local button = CreateActionButton(EditDialog, 124, roleInfo.label, function(self)
+            PlannerPrivate.editingRoleKey = PlannerPrivate.NormalizePlannerRoleKey(self.RoleKey)
+            RefreshClassSpecButtons()
+        end)
+        button.RoleKey = roleInfo.key
+        button.Label = button:GetFontString()
+        button.Selected = button:CreateTexture(nil, "BORDER")
+        button.Selected:SetAllPoints()
+        button.Selected:SetColorTexture(1, 0.82, 0, 0.18)
+        button.Selected:Hide()
+        button:Hide()
+        PlannerPrivate.editRoleButtons[#PlannerPrivate.editRoleButtons + 1] = button
+    end
+end
+
 EditDestinationCategoryLabel = EditDialog:CreateFontString(nil, "OVERLAY")
 EditDestinationCategoryLabel:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -16)
 EditDestinationCategoryLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
@@ -2524,7 +6130,7 @@ end)
 
 UIDropDownMenu_Initialize(DestinationSuggestionDropdown, function(_, level)
     local categoryKey = GetDestinationCategory()
-    local currentSuggestion = FindDestinationSuggestion(categoryKey, GetDestinationText())
+    local currentSuggestion = PlannerPrivate.FindDestinationSuggestion(categoryKey, GetDestinationBaseText())
 
     local manualInfo = UIDropDownMenu_CreateInfo()
     manualInfo.text = L("STREAMER_PLANNER_DESTINATION_MANUAL")
@@ -2555,22 +6161,41 @@ UIDropDownMenu_Initialize(DestinationSuggestionDropdown, function(_, level)
 end)
 
 UIDropDownMenu_Initialize(DestinationKeystoneDropdown, function(_, level)
+    local categoryKey = GetDestinationCategory()
     local currentLevel = GetDestinationKeystoneLevel()
     if type(currentLevel) ~= "number" then
-        currentLevel = 0
+        currentLevel = categoryKey == "delves" and 1 or 0
+    end
+
+    if categoryKey == "delves" then
+        for delveLevel = 1, 11 do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = PlannerPrivate.GetDestinationLevelLabel(categoryKey, delveLevel)
+            info.value = delveLevel
+            info.checked = currentLevel == delveLevel
+            info.func = function()
+                SetDestinationKeystoneLevel(delveLevel)
+                RefreshDestinationKeystoneDropdown()
+                StreamerPlannerModule.RefreshAllDisplays()
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+        return
     end
 
     for keystoneLevel = 0, 20 do
-        local info = UIDropDownMenu_CreateInfo()
-        info.text = GetKeystoneLabel(keystoneLevel)
-        info.value = keystoneLevel
-        info.checked = currentLevel == keystoneLevel
-        info.func = function()
-            SetDestinationKeystoneLevel(keystoneLevel)
-            RefreshDestinationKeystoneDropdown()
-            StreamerPlannerModule.RefreshAllDisplays()
+        if keystoneLevel ~= 1 then
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = GetKeystoneLabel(keystoneLevel)
+            info.value = keystoneLevel
+            info.checked = currentLevel == keystoneLevel
+            info.func = function()
+                SetDestinationKeystoneLevel(keystoneLevel)
+                RefreshDestinationKeystoneDropdown()
+                StreamerPlannerModule.RefreshAllDisplays()
+            end
+            UIDropDownMenu_AddButton(info, level)
         end
-        UIDropDownMenu_AddButton(info, level)
     end
 end)
 
@@ -2580,7 +6205,7 @@ DestinationInput:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "BOTTOMLEFT
 DestinationInput:SetAutoFocus(false)
 DestinationInput:SetMaxLetters(64)
 DestinationInput:SetScript("OnTextChanged", function()
-    if editingField ~= "destination" then
+    if PlannerPrivate.editingField ~= "destination" then
         return
     end
 
@@ -2588,12 +6213,12 @@ DestinationInput:SetScript("OnTextChanged", function()
     RefreshDestinationKeystoneDropdown()
 end)
 DestinationInput:SetScript("OnEnterPressed", function()
-    if SaveSlotButton then
-        SaveSlotButton:Click()
+    if PlannerPrivate.saveSlotButton then
+        PlannerPrivate.saveSlotButton:Click()
     end
 end)
 DestinationInput:SetScript("OnEscapePressed", function(self)
-    self:SetText(StreamerPlannerModule.GetDestinationText())
+    self:SetText(GetDestinationBaseText())
     HideEditDialog()
 end)
 
@@ -2611,11 +6236,11 @@ for index, classInfo in ipairs(BuildClassOptions()) do
         button.Icon:SetTexCoord(GetClassIconCoords(classInfo.file))
         button.Label:SetText(classInfo.name)
         button:SetScript("OnClick", function(self)
-            editingClassFile = self.ClassFile
-            editingSpecID = nil
+            PlannerPrivate.editingClassFile = self.ClassFile
+            PlannerPrivate.editingSpecID = nil
             RefreshClassSpecButtons()
         end)
-        EditClassButtons[#EditClassButtons + 1] = button
+        PlannerPrivate.editClassButtons[#PlannerPrivate.editClassButtons + 1] = button
     end
 end
 
@@ -2627,61 +6252,89 @@ for index = 1, 4 do
     local button = CreateIconPickerButton(EditDialog, EDIT_SPEC_BUTTON_SIZE, false)
     button.DisplayName = ""
     button:SetScript("OnClick", function(self)
-        editingSpecID = self.SpecID
+        PlannerPrivate.editingSpecID = self.SpecID
         RefreshClassSpecButtons()
     end)
-    EditSpecButtons[#EditSpecButtons + 1] = button
+    PlannerPrivate.editSpecButtons[#PlannerPrivate.editSpecButtons + 1] = button
 end
 
 LayoutEditDialogOptionButtons()
 
-SaveSlotButton = CreateActionButton(EditDialog, 92, "", function()
-    if editingField == "destination" then
+PlannerPrivate.saveSlotButton = CreateActionButton(EditDialog, 92, "", function()
+    if PlannerPrivate.editingField == "destination" then
         SetDestinationText(DestinationInput:GetText())
         HideEditDialog()
         StreamerPlannerModule.RefreshAllDisplays()
         return
     end
 
-    if not editingLayout or not editingSlotIndex then
+    if PlannerPrivate.editingUsesSelfRoleOverride == true then
+        GetStreamerPlannerSettings().selfRoleOverride = PlannerPrivate.NormalizePlannerRoleKey(PlannerPrivate.editingRoleKey)
+        HideEditDialog()
+        PlannerPrivate.lastDungeonSyncSignature = nil
+        PlannerPrivate.SyncDynamicPlannerState(true)
+        return
+    end
+
+    if not PlannerPrivate.editingLayout or not PlannerPrivate.editingSlotIndex then
         HideEditDialog()
         return
     end
 
-    SetSlotEntry(editingLayout, editingSlotIndex, {
+    local currentEntry = GetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
+    if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
+        PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
+    end
+
+    SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, {
         name = EditDialogInput:GetText(),
-        classFile = editingClassFile,
-        specID = editingSpecID,
+        classFile = PlannerPrivate.editingClassFile,
+        specID = PlannerPrivate.editingSpecID,
     })
     HideEditDialog()
-    StreamerPlannerModule.RefreshAllDisplays()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
 end)
-SaveSlotButton:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 16, 20)
+PlannerPrivate.saveSlotButton:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 16, 20)
 
-ClearSlotButton = CreateActionButton(EditDialog, 92, "", function()
-    if editingField == "destination" then
+PlannerPrivate.clearSlotButton = CreateActionButton(EditDialog, 92, "", function()
+    if PlannerPrivate.editingField == "destination" then
         SetDestinationText("")
         HideEditDialog()
         StreamerPlannerModule.RefreshAllDisplays()
         return
     end
 
-    if editingLayout and editingSlotIndex then
-        SetSlotEntry(editingLayout, editingSlotIndex, NormalizeSlotEntry(nil))
+    if PlannerPrivate.editingUsesSelfRoleOverride == true then
+        GetStreamerPlannerSettings().selfRoleOverride = nil
+        HideEditDialog()
+        PlannerPrivate.lastDungeonSyncSignature = nil
+        PlannerPrivate.SyncDynamicPlannerState(true)
+        return
+    end
+
+    if PlannerPrivate.editingLayout and PlannerPrivate.editingSlotIndex then
+        local currentEntry = GetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
+        if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
+            PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
+        end
+
+        SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, PlannerPrivate.NormalizeSlotEntry(nil))
     end
 
     HideEditDialog()
-    StreamerPlannerModule.RefreshAllDisplays()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
 end)
-ClearSlotButton:SetPoint("LEFT", SaveSlotButton, "RIGHT", 10, 0)
+PlannerPrivate.clearSlotButton:SetPoint("LEFT", PlannerPrivate.saveSlotButton, "RIGHT", 10, 0)
 
-CancelSlotButton = CreateActionButton(EditDialog, 92, L("CANCEL"), function()
+PlannerPrivate.cancelSlotButton = CreateActionButton(EditDialog, 92, L("CANCEL"), function()
     HideEditDialog()
 end)
-CancelSlotButton:SetPoint("LEFT", ClearSlotButton, "RIGHT", 10, 0)
+PlannerPrivate.cancelSlotButton:SetPoint("LEFT", PlannerPrivate.clearSlotButton, "RIGHT", 10, 0)
 
 EditDialogInput:SetScript("OnEnterPressed", function()
-    SaveSlotButton:Click()
+    PlannerPrivate.saveSlotButton:Click()
 end)
 EditDialogInput:SetScript("OnEscapePressed", function()
     HideEditDialog()
@@ -2689,38 +6342,49 @@ end)
 
 function PageStreamerPlanner:RefreshState()
     local settings = GetStreamerPlannerSettings()
+    local introTitle = self.IntroTitle
+    local introText = self.IntroText
+    local usageHint = self.UsageHint
+    local settingsPanel = self.SettingsPanel
 
-    IntroTitle:SetText(L("STREAMER_PLANNER_TITLE"))
-    IntroText:SetText(L("STREAMER_PLANNER_DESC"))
-    UsageHint:SetText(L("STREAMER_PLANNER_USAGE_HINT"))
-    PreviewTitle:SetText(L("LIVE_PREVIEW"))
-    PreviewHint:SetText(L("STREAMER_PLANNER_PREVIEW_HINT"))
-    SettingsPanel.Title:SetText(L("STREAMER_TOOLS"))
-    SettingsPanel.Hint:SetText(L("STREAMER_PLANNER_SETTINGS_HINT"))
+    introTitle:SetText(L("STREAMER_PLANNER_TITLE"))
+    introText:SetText(L("STREAMER_PLANNER_DESC"))
+    usageHint:SetText(L("STREAMER_PLANNER_USAGE_HINT"))
+    PreviewUI.Title:SetText(L("LIVE_PREVIEW"))
+    PreviewUI.Hint:SetText(L("STREAMER_PLANNER_PREVIEW_HINT"))
+    settingsPanel.Title:SetText(L("STREAMER_TOOLS"))
+    settingsPanel.Hint:SetText(L("STREAMER_PLANNER_SETTINGS_HINT"))
     ShowOverlayCheckbox.Label:SetText(L("STREAMER_PLANNER_SHOW_OVERLAY"))
-    SettingsPanel.ShowOverlayHint:SetText(L("STREAMER_PLANNER_SHOW_OVERLAY_HINT"))
+    settingsPanel.ShowOverlayHint:SetText(L("STREAMER_PLANNER_SHOW_OVERLAY_HINT"))
     LockOverlayCheckbox.Label:SetText(L("STREAMER_PLANNER_LOCK_OVERLAY"))
-    SettingsPanel.LockOverlayHint:SetText(L("STREAMER_PLANNER_LOCK_OVERLAY_HINT"))
-    SettingsPanel.ModeTitle:SetText(L("STREAMER_PLANNER_MODE"))
-    SettingsPanel.ModeHint:SetText(L("STREAMER_PLANNER_MODE_HINT"))
+    settingsPanel.LockOverlayHint:SetText(L("STREAMER_PLANNER_LOCK_OVERLAY_HINT"))
+    settingsPanel.ModeTitle:SetText(L("STREAMER_PLANNER_MODE"))
+    settingsPanel.ModeHint:SetText(L("STREAMER_PLANNER_MODE_HINT"))
     DungeonModeButton:SetText(L("STREAMER_PLANNER_MODE_DUNGEON"))
     RaidModeButton:SetText(L("STREAMER_PLANNER_MODE_RAID"))
     EditDestinationCategoryLabel:SetText(L("STREAMER_PLANNER_DESTINATION_CATEGORY"))
     EditDestinationSuggestionLabel:SetText(L("STREAMER_PLANNER_DESTINATION_SUGGESTION"))
     EditDestinationKeystoneLabel:SetText(L("STREAMER_PLANNER_DESTINATION_KEYSTONE"))
-    SettingsPanel.ScaleHint:SetText(L("STREAMER_PLANNER_SCALE_HINT"))
-    SettingsPanel.TimerDurationHint:SetText(L("STREAMER_PLANNER_TIMER_DURATION_HINT"))
-    SettingsPanel.ResetPositionButton:SetText(L("RESET_POSITION"))
-    SettingsPanel.ResetPositionHint:SetText(L("STREAMER_PLANNER_RESET_POSITION_HINT"))
-    SettingsPanel.ClearLayoutButton:SetText(L("STREAMER_PLANNER_CLEAR_LAYOUT"))
-    SettingsPanel.ClearLayoutHint:SetText(L("STREAMER_PLANNER_CLEAR_LAYOUT_HINT"))
-    SettingsPanel.ClearAllButton:SetText(L("STREAMER_PLANNER_CLEAR_ALL"))
-    SettingsPanel.ClearAllHint:SetText(L("STREAMER_PLANNER_CLEAR_ALL_HINT"))
-    SettingsPanel.EditHint:SetText(L("STREAMER_PLANNER_EDIT_HINT"))
+    settingsPanel.ScaleHint:SetText(L("STREAMER_PLANNER_SCALE_HINT"))
+    settingsPanel.TimerDurationHint:SetText(L("STREAMER_PLANNER_TIMER_DURATION_HINT"))
+    settingsPanel.ResetPositionButton:SetText(L("RESET_POSITION"))
+    settingsPanel.ResetPositionHint:SetText(L("STREAMER_PLANNER_RESET_POSITION_HINT"))
+    settingsPanel.ClearLayoutButton:SetText(L("STREAMER_PLANNER_CLEAR_LAYOUT"))
+    settingsPanel.ClearLayoutHint:SetText(L("STREAMER_PLANNER_CLEAR_LAYOUT_HINT"))
+    settingsPanel.ClearAllButton:SetText(L("STREAMER_PLANNER_CLEAR_ALL"))
+    settingsPanel.ClearAllHint:SetText(L("STREAMER_PLANNER_CLEAR_ALL_HINT"))
+    settingsPanel.EditHint:SetText(L("STREAMER_PLANNER_EDIT_HINT"))
     OverlayTitle:SetText(L("STREAMER_PLANNER_OVERLAY_TITLE"))
     OverlayDungeonModeButton:SetText(L("STREAMER_PLANNER_MODE_DUNGEON"))
     OverlayRaidModeButton:SetText(L("STREAMER_PLANNER_MODE_RAID"))
     OverlayFrame.SettingsButton.Label:SetText(L("STREAMER_PLANNER_OVERLAY_SETTINGS_BUTTON"))
+    if OverlayFullInviteButton then
+        OverlayFullInviteButton:SetText(L("STREAMER_PLANNER_FULL_INVITE"))
+    end
+    if OverlayAutoInviteCheckbox then
+        OverlayAutoInviteCheckbox.Label:SetText(L("STREAMER_PLANNER_AUTO_INVITE_WHISPER"))
+        OverlayAutoInviteCheckbox:SetChecked(settings.whisperCommandAutoInvite == true)
+    end
     OverlayTimer.Label:SetText(L("STREAMER_PLANNER_TIMER"))
     OverlayTimer.ClearAllButton:SetText(L("STREAMER_PLANNER_OVERLAY_CLEAR_ALL"))
     OverlayTimer.StartButton:SetText(L("STREAMER_PLANNER_TIMER_START"))
@@ -2728,16 +6392,19 @@ function PageStreamerPlanner:RefreshState()
     OverlayTimer.ResetButton:SetText(L("STREAMER_PLANNER_TIMER_RESET"))
     EditClassTitle:SetText(L("STREAMER_PLANNER_CLASS"))
     EditSpecTitle:SetText(L("STREAMER_PLANNER_SPEC"))
-    SaveSlotButton:SetText(L("STREAMER_PLANNER_SAVE_SLOT"))
-    ClearSlotButton:SetText(L("STREAMER_PLANNER_CLEAR_SLOT"))
-    CancelSlotButton:SetText(L("CANCEL"))
+    if EditDialog and EditDialog.RoleTitle then
+        EditDialog.RoleTitle:SetText(L("STREAMER_PLANNER_ROLE"))
+    end
+    PlannerPrivate.saveSlotButton:SetText(L("STREAMER_PLANNER_SAVE_SLOT"))
+    PlannerPrivate.clearSlotButton:SetText(L("STREAMER_PLANNER_CLEAR_SLOT"))
+    PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
 
-    isRefreshingPage = true
+    PlannerPrivate.isRefreshingPage = true
     ShowOverlayCheckbox:SetChecked(settings.overlayEnabled)
     LockOverlayCheckbox:SetChecked(settings.overlayLocked)
     ScaleSlider:SetValue(settings.overlayScale)
     TimerDurationSlider:SetValue(GetTimerDurationMinutes())
-    if DestinationInput and editingField ~= "destination" then
+    if DestinationInput and PlannerPrivate.editingField ~= "destination" then
         DestinationInput:SetText(settings.destination)
     end
     RefreshDestinationCategoryDropdown()
@@ -2745,41 +6412,44 @@ function PageStreamerPlanner:RefreshState()
     RefreshDestinationKeystoneDropdown()
     RefreshScaleSliderText()
     RefreshTimerDurationSliderText()
-    isRefreshingPage = false
+    PlannerPrivate.isRefreshingPage = false
 
-    RefreshButtonList(PreviewDungeonButtons)
-    RefreshButtonList(PreviewRaidButtons)
+    RefreshButtonList(PreviewUI.DungeonButtons)
+    RefreshButtonList(PreviewUI.RaidButtons)
     RefreshButtonList(OverlayDungeonButtons)
     RefreshButtonList(OverlayRaidButtons)
     RefreshModeButtons()
     RefreshLayoutVisibility()
     RefreshTimerDisplay()
+    PlannerPrivate.RefreshApplicantPanel()
     StreamerPlannerModule.RefreshOverlayWindow()
     self:UpdateScrollLayout()
 end
 
 function PageStreamerPlanner:UpdateScrollLayout()
+    local introPanel = self.IntroPanel
+    local previewPanel = self.PreviewPanel
+    local settingsPanel = self.SettingsPanel
     local contentWidth = math.max(1, PageScrollFrame:GetWidth())
-    local settingsHeight = PreviewPanel:GetHeight()
+    local topRowHeight
 
     PageContentFrame:SetWidth(contentWidth)
 
-    if SettingsPanel
-        and SettingsPanel.EditHint
-        and SettingsPanel:GetTop()
-        and SettingsPanel.EditHint:GetBottom()
-    then
-        settingsHeight = math.max(
-            settingsHeight,
-            math.ceil((SettingsPanel:GetTop() - SettingsPanel.EditHint:GetBottom()) + 24)
-        )
-    end
+    local showRaid = GetCurrentMode() == "raid"
+    local introHeight = GetMeasuredPanelHeight(introPanel, self.UsageHint, 18, 96)
+    local previewContent = showRaid and PreviewUI.RaidContainer or PreviewUI.DungeonContainer
+    local previewHeight = GetMeasuredPanelHeight(previewPanel, previewContent, 18, 0)
+    local settingsHeight = GetMeasuredPanelHeight(settingsPanel, settingsPanel and settingsPanel.EditHint, 24, 0)
 
-    SettingsPanel:SetHeight(settingsHeight)
+    introPanel:SetHeight(introHeight)
+    topRowHeight = math.max(previewHeight, settingsHeight)
+    previewPanel:SetHeight(topRowHeight)
+    settingsPanel:SetHeight(topRowHeight)
 
     local contentHeight = 20
-        + IntroPanel:GetHeight()
-        + 18 + math.max(PreviewPanel:GetHeight(), settingsHeight)
+        + introHeight
+        + 18 + topRowHeight
+        + (ApplicantPanel and ApplicantPanel:IsShown() and (18 + ApplicantPanel:GetHeight()) or 0)
         + 20
 
     PageContentFrame:SetHeight(contentHeight)
@@ -2810,6 +6480,110 @@ PageStreamerPlanner:SetScript("OnShow", function()
     PageScrollFrame:SetVerticalScroll(0)
 end)
 
+PlannerPrivate.watcher = CreateFrame("Frame")
+PlannerPrivate.watcher:RegisterEvent("PLAYER_LOGIN")
+PlannerPrivate.watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+PlannerPrivate.watcher:RegisterEvent("GROUP_ROSTER_UPDATE")
+PlannerPrivate.watcher:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+PlannerPrivate.watcher:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+PlannerPrivate.watcher:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
+PlannerPrivate.watcher:RegisterEvent("LFG_LIST_APPLICANT_LIST_UPDATED")
+PlannerPrivate.watcher:RegisterEvent("LFG_LIST_APPLICANT_UPDATED")
+PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_WHISPER")
+PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_BN_WHISPER")
+PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_ADDON")
+PlannerPrivate.watcher:RegisterEvent("INSPECT_READY")
+PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
+    if event == "PLAYER_LOGIN" and C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
+        C_ChatInfo.RegisterAddonMessagePrefix(STREAMER_PLANNER_ADDON_PREFIX)
+    end
+
+    if event == "CHAT_MSG_ADDON" then
+        if not PlannerPrivate.HandlePlannerAddonMessage(...) then
+            return
+        end
+    end
+
+    if event == "INSPECT_READY" then
+        local inspectedGUID = select(1, ...)
+        if PlannerPrivate.IsUsablePlainString(inspectedGUID) and inspectedGUID == PlannerPrivate.pendingInspectGUID then
+            local inspectedUnit = PlannerPrivate.FindGroupUnitByGUID(inspectedGUID) or PlannerPrivate.pendingInspectUnit
+            local fullName = PlannerPrivate.pendingInspectFullName
+            local classFile = PlannerPrivate.pendingInspectClassFile
+            local specID = nil
+
+            if inspectedUnit and UnitExists and UnitExists(inspectedUnit) then
+                fullName = PlannerPrivate.GetUnitFullName(inspectedUnit) or fullName
+                classFile = classFile or select(2, UnitClass(inspectedUnit))
+
+                local inspectSpecID = GetInspectSpecialization and GetInspectSpecialization(inspectedUnit) or nil
+                if type(inspectSpecID) == "number" and inspectSpecID > 0 then
+                    specID = inspectSpecID
+                end
+            end
+
+            PlannerPrivate.ClearPendingInspectRequest()
+            PlannerPrivate.StoreKnownCharacterInfo(fullName, inspectedGUID, classFile, specID)
+        end
+    end
+
+    if event == "CHAT_MSG_WHISPER" or event == "CHAT_MSG_BN_WHISPER" then
+        local messageText = select(1, ...)
+        local authorName = select(2, ...)
+        local playerGUID = nil
+        if event == "CHAT_MSG_WHISPER" then
+            playerGUID = PlannerPrivate.FindPlayerGUIDInEventArgs(...)
+        end
+        local senderBnetIDAccount = nil
+        if event == "CHAT_MSG_BN_WHISPER" then
+            senderBnetIDAccount = tonumber((select(13, ...)))
+        end
+        local whisperCommand = PlannerPrivate.ResolveWhisperCommand(messageText)
+
+        if whisperCommand then
+            local whisperEntry = PlannerPrivate.UpsertWhisperApplicant(authorName, playerGUID, whisperCommand, senderBnetIDAccount, messageText)
+            PlannerPrivate.RequestWhisperApplicantSpec(whisperEntry)
+            if whisperEntry and whisperCommand == "enter" then
+                PlannerPrivate.EnqueueWhisperSpecPrompt(whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName)
+            end
+            if whisperEntry
+                and whisperCommand == "inv"
+                and GetStreamerPlannerSettings().mode == "raid"
+                and GetStreamerPlannerSettings().whisperCommandAutoInvite == true then
+                local applicantData = PlannerPrivate.FindApplicantByName(whisperEntry.inviteName or whisperEntry.fullName or whisperEntry.displayName)
+                local inviteTarget = PlannerPrivate.ResolveInviteTarget({
+                    name = whisperEntry.displayName,
+                    fullName = whisperEntry.fullName,
+                    inviteName = whisperEntry.inviteName,
+                    applicantID = applicantData and applicantData.applicantID or nil,
+                    applicationStatus = applicantData and applicantData.applicationStatus or nil,
+                })
+
+                if inviteTarget then
+                    PlannerPrivate.InviteResolvedTarget(inviteTarget)
+                else
+                    PlannerPrivate.InvitePlayerByName(whisperEntry.inviteName or whisperEntry.fullName or whisperEntry.displayName)
+                end
+            end
+        else
+            return
+        end
+    end
+
+    PlannerPrivate.periodicSyncElapsed = 0
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
+end)
+PlannerPrivate.watcher:SetScript("OnUpdate", function(_, elapsed)
+    PlannerPrivate.periodicSyncElapsed = PlannerPrivate.periodicSyncElapsed + elapsed
+    if PlannerPrivate.periodicSyncElapsed < 1 then
+        return
+    end
+
+    PlannerPrivate.periodicSyncElapsed = 0
+    PlannerPrivate.SyncDynamicPlannerState(false)
+end)
+
 BeavisQoL.UpdateStreamerPlanner = function()
     if PageStreamerPlanner and PageStreamerPlanner.RefreshState then
         PageStreamerPlanner:RefreshState()
@@ -2818,6 +6592,7 @@ BeavisQoL.UpdateStreamerPlanner = function()
     end
 end
 
+PlannerPrivate.SyncDynamicPlannerState(true)
 PageStreamerPlanner:RefreshState()
 PageStreamerPlanner:UpdateScrollLayout()
 

@@ -25,7 +25,7 @@ local WORLD_TEXT_CVARS = {
 }
 
 -- Diese FontObjects können bereits live verwendet werden.
--- Wenn wir den Combat Text sichtbar aendern wollen, reicht DAMAGE_TEXT_FONT
+-- Wenn wir den Combat Text sichtbar ändern wollen, reicht DAMAGE_TEXT_FONT
 -- allein oft nicht aus; die laufenden FontObjects müssen mitgezogen werden.
 local RUNTIME_FONT_OBJECT_NAMES = {
     "CombatTextFont",
@@ -65,7 +65,7 @@ local function CaptureRuntimeFontObjectOriginals()
     end
 end
 
--- Bevor wir Fonts oder CVars aendern, halten wir den Originalzustand fest.
+-- Bevor wir Fonts oder CVars ändern, halten wir den Originalzustand fest.
 -- Das ist die Sicherheitsleine für ein sauberes RestoreDefaults().
 local function CaptureOriginals()
     CaptureRuntimeFontObjectOriginals()

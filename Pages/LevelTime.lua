@@ -20,6 +20,14 @@ local PageLevelTime = CreateFrame("Frame", nil, Content)
 PageLevelTime:SetAllPoints()
 PageLevelTime:Hide()
 
+local PageTitle = PageLevelTime:CreateFontString(nil, "OVERLAY")
+PageTitle:SetPoint("TOPLEFT", PageLevelTime, "TOPLEFT", 22, -16)
+PageTitle:SetPoint("RIGHT", PageLevelTime, "RIGHT", -22, 0)
+PageTitle:SetJustifyH("LEFT")
+PageTitle:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
+PageTitle:SetTextColor(1, 0.82, 0, 1)
+PageTitle:SetText(L("LEVEL_TIME"))
+
 -- Datenbank sauber anlegen
 if not BeavisQoLCharDB then BeavisQoLCharDB = {} end
 if not BeavisQoLCharDB.LevelTime then BeavisQoLCharDB.LevelTime = {} end
@@ -174,9 +182,9 @@ end
 -- ========================================
 
 local OverviewPanel = CreateFrame("Frame", nil, PageLevelTime)
-OverviewPanel:SetPoint("TOPLEFT", PageLevelTime, "TOPLEFT", 20, -20)
-OverviewPanel:SetPoint("TOPRIGHT", PageLevelTime, "TOPRIGHT", -20, -20)
-OverviewPanel:SetHeight(92)
+OverviewPanel:SetPoint("TOPLEFT", PageLevelTime, "TOPLEFT", 20, -52)
+OverviewPanel:SetPoint("TOPRIGHT", PageLevelTime, "TOPRIGHT", -20, -52)
+OverviewPanel:SetHeight(138)
 
 local OverviewBg = OverviewPanel:CreateTexture(nil, "BACKGROUND")
 OverviewBg:SetAllPoints()
@@ -282,6 +290,30 @@ TotalTimeValue:SetPoint("TOPLEFT", TotalTimeLabel, "BOTTOMLEFT", 0, -6)
 TotalTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
 TotalTimeValue:SetTextColor(1, 1, 1, 1)
 TotalTimeValue:SetText("0s")
+
+local LevelTimeMinimapContextCheckbox = CreateFrame("CheckButton", nil, OverviewPanel, "UICheckButtonTemplate")
+LevelTimeMinimapContextCheckbox:SetPoint("TOPLEFT", CurrentLevelCard, "BOTTOMLEFT", -4, -12)
+LevelTimeMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("levelTime") or true)
+LevelTimeMinimapContextCheckbox:SetScript("OnClick", function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("levelTime", self:GetChecked())
+    end
+end)
+
+local LevelTimeMinimapContextLabel = OverviewPanel:CreateFontString(nil, "OVERLAY")
+LevelTimeMinimapContextLabel:SetPoint("LEFT", LevelTimeMinimapContextCheckbox, "RIGHT", 6, 0)
+LevelTimeMinimapContextLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+LevelTimeMinimapContextLabel:SetTextColor(1, 1, 1, 1)
+LevelTimeMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+
+local LevelTimeMinimapContextHint = OverviewPanel:CreateFontString(nil, "OVERLAY")
+LevelTimeMinimapContextHint:SetPoint("TOPLEFT", LevelTimeMinimapContextCheckbox, "BOTTOMLEFT", 34, -2)
+LevelTimeMinimapContextHint:SetPoint("RIGHT", OverviewPanel, "RIGHT", -18, 0)
+LevelTimeMinimapContextHint:SetJustifyH("LEFT")
+LevelTimeMinimapContextHint:SetJustifyV("TOP")
+LevelTimeMinimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+LevelTimeMinimapContextHint:SetTextColor(0.75, 0.75, 0.75, 1)
+LevelTimeMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
 
 -- ========================================
 -- Fortschrittsbereich
@@ -490,10 +522,14 @@ local function RefreshLevelList()
 end
 
 BeavisQoL.UpdateLevelTime = function()
+    PageTitle:SetText(L("LEVEL_TIME"))
     CurrentLevelLabel:SetText(L("CURRENT_LEVEL"))
     CurrentLevelTimeLabel:SetText(L("TIME_ON_CURRENT_LEVEL"))
     TotalTimeLabel:SetText(L("TOTAL_TIME"))
     LevelListTitle:SetText(L("TRACKED_LEVEL_TIMES"))
+    LevelTimeMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    LevelTimeMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
+    LevelTimeMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("levelTime") or true)
 
     for level = 1, MAX_LEVEL do
         local row = LevelRows[level]
@@ -576,5 +612,10 @@ else
 end
 
 C_Timer.After(0.2, RefreshLevelList)
+
+PageLevelTime:SetScript("OnShow", function()
+    LevelTimeMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("levelTime") or true)
+    RefreshLevelList()
+end)
 
 BeavisQoL.Pages.LevelTime = PageLevelTime

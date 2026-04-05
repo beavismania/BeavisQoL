@@ -16,12 +16,32 @@ local localeAliases = {
     enGB = "enUS",
 }
 
-local function NormalizeLocale(code)
-    if not code or code == "" then
-        return defaultLocale
+local function IsAvailableLocale(code)
+    for _, availableCode in ipairs(availableLocales) do
+        if availableCode == code then
+            return true
+        end
     end
 
-    return localeAliases[code] or code
+    return false
+end
+
+local function NormalizeLocale(code)
+    if not code or code == "" then
+        code = clientLocale
+    end
+
+    local normalizedCode = localeAliases[code] or code
+    if IsAvailableLocale(normalizedCode) then
+        return normalizedCode
+    end
+
+    local normalizedClientLocale = localeAliases[clientLocale] or clientLocale
+    if IsAvailableLocale(normalizedClientLocale) then
+        return normalizedClientLocale
+    end
+
+    return defaultLocale
 end
 
 local function LoadLocale(code)
@@ -31,7 +51,13 @@ end
 
 local function GetCurrentLocale()
     local selectedLocale = BeavisQoLDB and BeavisQoLDB.language or clientLocale
-    return NormalizeLocale(selectedLocale)
+    local normalizedLocale = NormalizeLocale(selectedLocale)
+
+    if BeavisQoLDB and BeavisQoLDB.language ~= nil and BeavisQoLDB.language ~= normalizedLocale then
+        BeavisQoLDB.language = normalizedLocale
+    end
+
+    return normalizedLocale
 end
 
 local function SetCurrentLocale(code)

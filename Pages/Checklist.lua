@@ -94,6 +94,7 @@ local TrackerEnabledCheckbox
 local TrackerShowBuiltInCheckbox
 local TrackerShowManualCheckbox
 local TrackerHideCompletedCheckbox
+local TrackerMinimapContextCheckbox
 
 local FontSizeSlider
 local BackgroundAlphaSlider
@@ -511,15 +512,15 @@ local function GetChecklistCounts()
 end
 
 local function ResetTodosForCadence(cadence)
-    -- Nur Daily und Weekly werden automatisch zurueckgesetzt.
+    -- Nur Daily und Weekly werden automatisch zurückgesetzt.
     -- "Im Blick halten" bleibt immer unangetastet.
     local targetCadence = NormalizeCadence(cadence)
     local db = GetChecklistCharacterData()
 
-    -- Der Reset arbeitet absichtlich auf den gespeicherten Check-Zustaenden.
-    -- Dynamische Aufgaben wie Berufs-Wochenaufgaben koennen beim Login kurz
+    -- Der Reset arbeitet absichtlich auf den gespeicherten Check-Zuständen.
+    -- Dynamische Aufgaben wie Berufs-Wochenaufgaben können beim Login kurz
     -- fehlen, wenn der Client die Berufsdaten noch nicht geliefert hat.
-    -- Ueber die gespeicherten IDs gehen diese Aufgaben trotzdem sicher durch
+    -- Über die gespeicherten IDs gehen diese Aufgaben trotzdem sicher durch
     -- denselben Weekly-Reset wie alle anderen Built-ins.
     for todoID in pairs(db.builtInState) do
         if GetTodoCadence(todoID) == targetCadence then
@@ -719,6 +720,34 @@ local function CreatePageTodoRow(parent, includeDeleteButton)
     end
 
     return row
+end
+
+local function GetMeasuredPanelHeight(panel, bottomObject, minimumHeight, bottomPadding)
+    local panelTop = panel and panel.GetTop and panel:GetTop()
+    local objectBottom = bottomObject and bottomObject.GetBottom and bottomObject:GetBottom()
+
+    if panelTop and objectBottom then
+        local measuredHeight = math.ceil(panelTop - objectBottom + (bottomPadding or 0))
+        if measuredHeight > 0 then
+            return math.max(minimumHeight or 1, measuredHeight)
+        end
+    end
+
+    return minimumHeight or 1
+end
+
+local function GetChecklistPanelContentStartOffset(panel, anchorObject, fallbackOffset, extraGap)
+    local panelTop = panel and panel.GetTop and panel:GetTop()
+    local anchorBottom = anchorObject and anchorObject.GetBottom and anchorObject:GetBottom()
+
+    if panelTop and anchorBottom then
+        local measuredOffset = math.ceil((panelTop - anchorBottom) + (extraGap or 0))
+        if measuredOffset > 0 then
+            return -measuredOffset
+        end
+    end
+
+    return fallbackOffset or -72
 end
 
 local function CreateTrackerTodoRow(parent)
@@ -1117,7 +1146,7 @@ function Checklist.ResetAllTodoChecks()
 end
 
 function Checklist.ResetTrackerWindow()
-    -- Setzt nur trackerbezogene Einstellungen zurueck, nicht die Aufgaben selbst.
+    -- Setzt nur trackerbezogene Einstellungen zurück, nicht die Aufgaben selbst.
     local settings = GetChecklistSettings()
     settings.trackerWidth = DEFAULT_TRACKER_WIDTH
     settings.trackerHeight = DEFAULT_TRACKER_HEIGHT
@@ -1957,6 +1986,7 @@ WatchHint:SetJustifyV("TOP")
 WatchHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 WatchHint:SetTextColor(0.80, 0.80, 0.80, 1)
 WatchHint:SetText(L("CHECKLIST_WATCH_HINT"))
+WatchPanel.ContentAnchor = WatchHint
 
 WatchEmptyText = WatchPanel:CreateFontString(nil, "OVERLAY")
 WatchEmptyText:SetJustifyH("LEFT")
@@ -1994,6 +2024,7 @@ DailyHint:SetJustifyV("TOP")
 DailyHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 DailyHint:SetTextColor(0.80, 0.80, 0.80, 1)
 DailyHint:SetText(L("CHECKLIST_DAILY_HINT"))
+DailyPanel.ContentAnchor = DailyHint
 
 DailyEmptyText = DailyPanel:CreateFontString(nil, "OVERLAY")
 DailyEmptyText:SetJustifyH("LEFT")
@@ -2031,6 +2062,7 @@ WeeklyHint:SetJustifyV("TOP")
 WeeklyHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 WeeklyHint:SetTextColor(0.80, 0.80, 0.80, 1)
 WeeklyHint:SetText(L("CHECKLIST_WEEKLY_HINT"))
+WeeklyPanel.ContentAnchor = WeeklyHint
 
 WeeklyEmptyText = WeeklyPanel:CreateFontString(nil, "OVERLAY")
 WeeklyEmptyText:SetJustifyH("LEFT")
@@ -2178,9 +2210,11 @@ TrackerShowManualCheckbox, showManualLabel, showManualHint = CreateSectionCheckb
     L("CHECKLIST_SHOW_MANUAL"),
     L("CHECKLIST_SHOW_MANUAL_HINT")
 )
+TrackerShowManualCheckbox:ClearAllPoints()
+TrackerShowManualCheckbox:SetPoint("TOPLEFT", showBuiltInHint, "BOTTOMLEFT", -34, -14)
 
 TrackerHideCompletedCheckbox = CreateFrame("CheckButton", nil, SettingsPanel, "UICheckButtonTemplate")
-TrackerHideCompletedCheckbox:SetPoint("TOPLEFT", showManualHint, "BOTTOMLEFT", -4, -14)
+TrackerHideCompletedCheckbox:SetPoint("TOPLEFT", showManualHint, "BOTTOMLEFT", -34, -14)
 
 local TrackerHideCompletedLabel = SettingsPanel:CreateFontString(nil, "OVERLAY")
 TrackerHideCompletedLabel:SetPoint("LEFT", TrackerHideCompletedCheckbox, "RIGHT", 6, 0)
@@ -2197,8 +2231,18 @@ TrackerHideCompletedHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 TrackerHideCompletedHint:SetTextColor(0.80, 0.80, 0.80, 1)
 TrackerHideCompletedHint:SetText(L("CHECKLIST_HIDE_COMPLETED_HINT"))
 
+local trackerMinimapContextLabel, trackerMinimapContextHint
+TrackerMinimapContextCheckbox, trackerMinimapContextLabel, trackerMinimapContextHint = CreateSectionCheckbox(
+    SettingsPanel,
+    TrackerHideCompletedHint,
+    L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"),
+    L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT")
+)
+TrackerMinimapContextCheckbox:ClearAllPoints()
+TrackerMinimapContextCheckbox:SetPoint("TOPLEFT", TrackerHideCompletedHint, "BOTTOMLEFT", -64, -14)
+
 FontSizeSlider = CreateValueSlider(SettingsPanel, L("CHECKLIST_TRACKER_FONT_SIZE"), 10, 16, 1, "font")
-FontSizeSlider:SetPoint("TOPLEFT", TrackerHideCompletedHint, "BOTTOMLEFT", 18, -34)
+FontSizeSlider:SetPoint("TOPLEFT", trackerMinimapContextHint, "BOTTOMLEFT", 18, -34)
 
 BackgroundAlphaSlider = CreateValueSlider(SettingsPanel, L("BACKGROUND_ALPHA"), 0.15, 0.70, 0.05, "alpha")
 BackgroundAlphaSlider:SetPoint("TOPLEFT", FontSizeSlider, "BOTTOMLEFT", 0, -44)
@@ -2227,6 +2271,14 @@ ResetTrackerButton:SetScript("OnClick", function()
     Checklist.ResetTrackerWindow()
 end)
 
+local function UpdateManualControlPanelHeight()
+    ManualControlPanel:SetHeight(GetMeasuredPanelHeight(ManualControlPanel, ManualCategoryHint, 168, 22))
+end
+
+local function UpdateChecklistSettingsPanelHeight()
+    SettingsPanel:SetHeight(GetMeasuredPanelHeight(SettingsPanel, ResetTrackerButton, 540, 22))
+end
+
 FontSizeSlider.ApplyValue = function(_, value)
     Checklist.SetTrackerFontSize(value)
 end
@@ -2250,6 +2302,12 @@ end)
 
 TrackerHideCompletedCheckbox:SetScript("OnClick", function(self)
     Checklist.SetHideCompletedInTracker(self:GetChecked())
+end)
+
+TrackerMinimapContextCheckbox:SetScript("OnClick", function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("checklist", self:GetChecked())
+    end
 end)
 
 local function UpdateManualCadenceSelectionButtons()
@@ -2308,7 +2366,7 @@ end
 
 local function LayoutChecklistPanel(panel, rowTable, emptyText, cadence)
     -- Baut einen kompletten Kategorienblock der Hauptseite neu auf.
-    local currentY = -72
+    local currentY = GetChecklistPanelContentStartOffset(panel, panel.ContentAnchor, -72, 18)
     local rowSpacing = 8
     local panelWidth = math.max(220, panel:GetWidth())
     local visibleCount = 0
@@ -2416,7 +2474,7 @@ local function LayoutChecklistPanel(panel, rowTable, emptyText, cadence)
 
     if visibleCount == 0 then
         emptyText:ClearAllPoints()
-        emptyText:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -76)
+        emptyText:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, currentY)
         emptyText:SetPoint("RIGHT", panel, "RIGHT", -18, 0)
         emptyText:Show()
         currentY = currentY - 34
@@ -2465,6 +2523,8 @@ function PageChecklist:RefreshState()
     showManualHint:SetText(L("CHECKLIST_SHOW_MANUAL_HINT"))
     TrackerHideCompletedLabel:SetText(L("CHECKLIST_HIDE_COMPLETED"))
     TrackerHideCompletedHint:SetText(L("CHECKLIST_HIDE_COMPLETED_HINT"))
+    trackerMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    trackerMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
     ResetChecksButton:SetText(L("CHECKLIST_RESET_CHECKS"))
     ResetBuiltInButton:SetText(L("CHECKLIST_RESET_BUILTIN"))
     ResetTrackerButton:SetText(L("CHECKLIST_RESET_TRACKER"))
@@ -2472,6 +2532,8 @@ function PageChecklist:RefreshState()
     LayoutChecklistPanel(WatchPanel, WatchRows, WatchEmptyText, "watch")
     LayoutChecklistPanel(DailyPanel, DailyRows, DailyEmptyText, "daily")
     LayoutChecklistPanel(WeeklyPanel, WeeklyRows, WeeklyEmptyText, "weekly")
+    UpdateManualControlPanelHeight()
+    UpdateChecklistSettingsPanelHeight()
     UpdateManualCadenceSelectionButtons()
 
     isRefreshing = true
@@ -2479,6 +2541,7 @@ function PageChecklist:RefreshState()
     TrackerShowBuiltInCheckbox:SetChecked(Checklist.GetShowBuiltInInTracker())
     TrackerShowManualCheckbox:SetChecked(Checklist.GetShowManualInTracker())
     TrackerHideCompletedCheckbox:SetChecked(Checklist.GetHideCompletedInTracker())
+    TrackerMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("checklist") or true)
     FontSizeSlider:SetValue(Checklist.GetTrackerFontSize())
     BackgroundAlphaSlider:SetValue(Checklist.GetTrackerBackgroundAlpha())
     FontSizeSlider.Text:SetText(L("CHECKLIST_TRACKER_FONT_SIZE"))

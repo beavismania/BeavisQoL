@@ -506,7 +506,7 @@ end
 local RefreshTicker = CreateFrame("Frame")
 RefreshTicker.elapsed = 0
 RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
-    -- Der Ticker laeuft nur dann sinnvoll weiter, wenn wenigstens Vorschau oder
+    -- Der Ticker läuft nur dann sinnvoll weiter, wenn wenigstens Vorschau oder
     -- Overlay gerade sichtbar sind. Sonst setzen wir ihn direkt wieder ruhig.
     local needsRefresh = (PageStats and PageStats:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
     if not needsRefresh then
@@ -674,8 +674,19 @@ LockOverlayCheckbox, lockOverlayLabel, lockOverlayHint = CreateSectionCheckbox(
     L("STATS_LOCK_OVERLAY_HINT")
 )
 
+local minimapContextLabel, minimapContextHint
+local MinimapContextCheckbox
+MinimapContextCheckbox, minimapContextLabel, minimapContextHint = CreateSectionCheckbox(
+    SettingsPanel,
+    lockOverlayHint,
+    L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"),
+    L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT")
+)
+MinimapContextCheckbox:ClearAllPoints()
+MinimapContextCheckbox:SetPoint("TOPLEFT", lockOverlayHint, "BOTTOMLEFT", -64, -14)
+
 FontSizeSlider = CreateValueSlider(SettingsPanel, L("STATS_FONT_SIZE"), MIN_FONT_SIZE, MAX_FONT_SIZE, 1, "font")
-FontSizeSlider:SetPoint("TOPLEFT", lockOverlayHint, "BOTTOMLEFT", 18, -34)
+FontSizeSlider:SetPoint("TOPLEFT", minimapContextHint, "BOTTOMLEFT", 18, -34)
 
 ScaleSlider = CreateValueSlider(SettingsPanel, L("WINDOW_SCALE"), MIN_OVERLAY_SCALE, MAX_OVERLAY_SCALE, 0.05, "scale")
 ScaleSlider:SetPoint("TOPLEFT", FontSizeSlider, "BOTTOMLEFT", 0, -44)
@@ -753,6 +764,12 @@ LockOverlayCheckbox:SetScript("OnClick", function(self)
     StatsModule.SetOverlayLocked(self:GetChecked())
 end)
 
+MinimapContextCheckbox:SetScript("OnClick", function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("stats", self:GetChecked())
+    end
+end)
+
 ResetPositionButton:SetScript("OnClick", function()
     StatsModule.ResetOverlayPosition()
 end)
@@ -773,6 +790,8 @@ function PageStats:RefreshState()
     showOverlayHint:SetText(L("STATS_SHOW_OVERLAY_HINT"))
     lockOverlayLabel:SetText(L("STATS_LOCK_OVERLAY"))
     lockOverlayHint:SetText(L("STATS_LOCK_OVERLAY_HINT"))
+    minimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    minimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
     FontSizeSlider.Text:SetText(L("STATS_FONT_SIZE"))
     ScaleSlider.Text:SetText(L("WINDOW_SCALE"))
     BackgroundAlphaSlider.Text:SetText(L("BACKGROUND_ALPHA"))
@@ -782,6 +801,7 @@ function PageStats:RefreshState()
     isRefreshing = true
     ShowOverlayCheckbox:SetChecked(settings.overlayEnabled)
     LockOverlayCheckbox:SetChecked(settings.overlayLocked)
+    MinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("stats") or true)
     FontSizeSlider:SetValue(settings.fontSize)
     ScaleSlider:SetValue(settings.overlayScale)
     BackgroundAlphaSlider:SetValue(settings.backgroundAlpha)

@@ -111,6 +111,63 @@ function BeavisQoL.GetGlobalSettings()
     return settings
 end
 
+local DEFAULT_MINIMAP_CONTEXT_MENU_ENTRY_VISIBILITY = {
+    levelTime = true,
+    questCheck = true,
+    questAbandon = true,
+    logging = true,
+    checklist = true,
+    weeklyKeys = true,
+    stats = true,
+    markerBar = true,
+    streamerPlanner = true,
+    easyLFG = true,
+    portalViewer = true,
+    quickHideOverlays = true,
+}
+
+function BeavisQoL.GetMinimapContextMenuSettings()
+    local settings = BeavisQoL.GetGlobalSettings()
+
+    if type(settings.minimapContextMenuEntries) ~= "table" then
+        settings.minimapContextMenuEntries = {}
+    end
+
+    local entries = settings.minimapContextMenuEntries
+    local legacyPortalViewerSettings = BeavisQoLDB and BeavisQoLDB.portalViewer
+
+    if entries.portalViewer == nil
+        and legacyPortalViewerSettings
+        and legacyPortalViewerSettings.showMinimapContextMenuEntry ~= nil
+    then
+        entries.portalViewer = legacyPortalViewerSettings.showMinimapContextMenuEntry ~= false
+    end
+
+    for entryKey, defaultVisible in pairs(DEFAULT_MINIMAP_CONTEXT_MENU_ENTRY_VISIBILITY) do
+        if entries[entryKey] == nil then
+            entries[entryKey] = defaultVisible
+        end
+    end
+
+    return entries
+end
+
+function BeavisQoL.IsMinimapContextMenuEntryVisible(entryKey)
+    if DEFAULT_MINIMAP_CONTEXT_MENU_ENTRY_VISIBILITY[entryKey] == nil then
+        return true
+    end
+
+    return BeavisQoL.GetMinimapContextMenuSettings()[entryKey] ~= false
+end
+
+function BeavisQoL.SetMinimapContextMenuEntryVisible(entryKey, visible)
+    if DEFAULT_MINIMAP_CONTEXT_MENU_ENTRY_VISIBILITY[entryKey] == nil then
+        return
+    end
+
+    BeavisQoL.GetMinimapContextMenuSettings()[entryKey] = visible ~= false
+end
+
 local function RefreshOverlayQuickHideState()
     if BeavisQoL.UpdateSettings then
         BeavisQoL.UpdateSettings()
@@ -304,7 +361,6 @@ function BeavisQoL.RefreshLocale()
         BeavisQoL.Pages.Fishing,
         BeavisQoL.Pages.StreamerPlanner,
         BeavisQoL.Pages.LFG,
-        BeavisQoL.Pages.PetStuff,
         BeavisQoL.Pages.DamageText,
         BeavisQoL.Pages.Stats,
         BeavisQoL.Pages.MarkerBar,

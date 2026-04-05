@@ -46,6 +46,7 @@ local ResultStateValue
 local ResultText
 local ResultListText
 local WowheadButton
+local RefreshQuestCheckLayout
 
 local currentWowheadTitle = nil
 local currentWowheadURL = nil
@@ -259,11 +260,29 @@ end
 local function SetResultState(stateText, red, green, blue)
     ResultStateValue:SetText(stateText or "")
     ResultStateValue:SetTextColor(red or 1, green or 1, blue or 1, 1)
+
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
 end
 
 local function SetSearchProgress(progressText, red, green, blue)
     SearchProgressText:SetText(progressText or "")
     SearchProgressText:SetTextColor(red or 0.80, green or 0.80, blue or 0.80, 1)
+
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
+end
+
+local function ShowIdleQuestCheckState()
+    SetResultState(L("QUESTCHECK_READY_TO_SEARCH"), 1, 0.82, 0)
+    ResultText:SetText("")
+    ResultListText:SetText("")
+
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
 end
 
 local function BuildQuestResult(questID)
@@ -376,6 +395,10 @@ local function RenderSingleResult(result, searchSourceLabel, skipPrint)
     SetWowheadTarget(L("QUEST_WOWHEAD_TITLE"), BuildWowheadQuestURL(result.questID), L("WOWHEAD_LINK"))
     SetSearchProgress("")
 
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
+
     if not skipPrint then
         local chatText = L("QUEST_SINGLE_CHAT"):format(questName, result.questID, result.isCompleted and L("QUEST_DONE_PLAIN") or L("QUEST_NOT_DONE_PLAIN"))
 
@@ -399,6 +422,10 @@ local function RenderMultipleResults(searchText, results, skipPrint)
     SetWowheadTarget(L("WOWHEAD_SEARCH"), BuildWowheadSearchURL(searchText), L("WOWHEAD_SEARCH"))
     SetSearchProgress("")
 
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
+
     if not skipPrint then
         PrintQuestCheckMessage(L("QUEST_MULTIPLE_CHAT"):format(#results, tostring(searchText)))
     end
@@ -410,6 +437,10 @@ local function RenderUnresolvedNameSearch(searchText, skipPrint)
     ResultListText:SetText(L("QUEST_UNRESOLVED_TIPS"))
     SetWowheadTarget(L("WOWHEAD_SEARCH"), BuildWowheadSearchURL(searchText), L("WOWHEAD_SEARCH"))
     SetSearchProgress("")
+
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
 
     if not skipPrint then
         PrintQuestCheckMessage(L("QUEST_UNRESOLVED_CHAT"):format(tostring(searchText)))
@@ -520,6 +551,11 @@ local function StartQuestNameScan(searchText)
     ResultListText:SetText("")
     SetWowheadTarget(L("WOWHEAD_SEARCH"), BuildWowheadSearchURL(searchText), L("WOWHEAD_SEARCH"))
     UpdateScanProgressText()
+
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
+
     QuestNameScanWorker:Show()
 end
 
@@ -559,6 +595,11 @@ local function RunQuestSearch()
         ResultListText:SetText("")
         SetWowheadTarget(nil, nil, L("WOWHEAD_LINK"))
         SetSearchProgress("")
+
+        if RefreshQuestCheckLayout then
+            RefreshQuestCheckLayout()
+        end
+
         return
     end
 
@@ -632,6 +673,30 @@ IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
 IntroText:SetText(L("QUESTCHECK_DESC"))
 
+local QuestCheckMinimapContextCheckbox = CreateFrame("CheckButton", nil, IntroPanel, "UICheckButtonTemplate")
+QuestCheckMinimapContextCheckbox:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", -4, -12)
+QuestCheckMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questCheck") or true)
+QuestCheckMinimapContextCheckbox:SetScript("OnClick", function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("questCheck", self:GetChecked())
+    end
+end)
+
+local QuestCheckMinimapContextLabel = IntroPanel:CreateFontString(nil, "OVERLAY")
+QuestCheckMinimapContextLabel:SetPoint("LEFT", QuestCheckMinimapContextCheckbox, "RIGHT", 6, 0)
+QuestCheckMinimapContextLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+QuestCheckMinimapContextLabel:SetTextColor(1, 1, 1, 1)
+QuestCheckMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+
+local QuestCheckMinimapContextHint = IntroPanel:CreateFontString(nil, "OVERLAY")
+QuestCheckMinimapContextHint:SetPoint("TOPLEFT", QuestCheckMinimapContextCheckbox, "BOTTOMLEFT", 34, -2)
+QuestCheckMinimapContextHint:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+QuestCheckMinimapContextHint:SetJustifyH("LEFT")
+QuestCheckMinimapContextHint:SetJustifyV("TOP")
+QuestCheckMinimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+QuestCheckMinimapContextHint:SetTextColor(0.75, 0.75, 0.75, 1)
+QuestCheckMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
+
 -- ========================================
 -- Suchbereich
 -- ========================================
@@ -688,6 +753,22 @@ SearchProgressText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 SearchProgressText:SetTextColor(0.80, 0.80, 0.80, 1)
 SearchProgressText:SetText("")
 
+WowheadButton = CreateFrame("Button", nil, SearchPanel, "UIPanelButtonTemplate")
+WowheadButton:SetSize(140, 28)
+WowheadButton:SetPoint("TOPLEFT", SearchProgressText, "BOTTOMLEFT", 0, -12)
+WowheadButton:SetText(L("WOWHEAD_LINK"))
+WowheadButton:SetEnabled(false)
+WowheadButton:SetScript("OnClick", ShowCurrentWowheadLink)
+
+local SearchLinkHint = SearchPanel:CreateFontString(nil, "OVERLAY")
+SearchLinkHint:SetPoint("TOPLEFT", WowheadButton, "TOPRIGHT", 14, -2)
+SearchLinkHint:SetPoint("RIGHT", SearchPanel, "RIGHT", -18, 0)
+SearchLinkHint:SetJustifyH("LEFT")
+SearchLinkHint:SetJustifyV("TOP")
+SearchLinkHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SearchLinkHint:SetTextColor(0.75, 0.75, 0.75, 1)
+SearchLinkHint:SetText(L("LINKS_COPY_DIALOG"))
+
 SearchEditBox:SetScript("OnEnterPressed", function(self)
     self:ClearFocus()
     RunQuestSearch()
@@ -704,7 +785,7 @@ end)
 local ResultPanel = CreateFrame("Frame", nil, PageQuestCheck)
 ResultPanel:SetPoint("TOPLEFT", SearchPanel, "BOTTOMLEFT", 0, -18)
 ResultPanel:SetPoint("TOPRIGHT", SearchPanel, "BOTTOMRIGHT", 0, -18)
-ResultPanel:SetPoint("BOTTOMRIGHT", PageQuestCheck, "BOTTOMRIGHT", -20, 8)
+ResultPanel:SetHeight(160)
 
 local ResultBg = ResultPanel:CreateTexture(nil, "BACKGROUND")
 ResultBg:SetAllPoints()
@@ -721,12 +802,15 @@ ResultTitle:SetPoint("TOPLEFT", ResultPanel, "TOPLEFT", 18, -14)
 ResultTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 ResultTitle:SetTextColor(1, 0.82, 0, 1)
 ResultTitle:SetText(L("RESULT"))
+ResultTitle:Hide()
 
 ResultStateValue = ResultPanel:CreateFontString(nil, "OVERLAY")
-ResultStateValue:SetPoint("TOPLEFT", ResultTitle, "BOTTOMLEFT", 0, -12)
+ResultStateValue:SetPoint("TOPLEFT", ResultPanel, "TOPLEFT", 18, -18)
+ResultStateValue:SetPoint("RIGHT", ResultPanel, "RIGHT", -18, 0)
+ResultStateValue:SetJustifyH("LEFT")
 ResultStateValue:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
 ResultStateValue:SetTextColor(1, 0.82, 0, 1)
-ResultStateValue:SetText(L("READY"))
+ResultStateValue:SetText(L("QUESTCHECK_READY_TO_SEARCH"))
 
 ResultText = ResultPanel:CreateFontString(nil, "OVERLAY")
 ResultText:SetPoint("TOPLEFT", ResultStateValue, "BOTTOMLEFT", 0, -10)
@@ -735,49 +819,107 @@ ResultText:SetJustifyH("LEFT")
 ResultText:SetJustifyV("TOP")
 ResultText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 ResultText:SetTextColor(1, 1, 1, 1)
-ResultText:SetText(L("QUESTCHECK_RESULT_HINT"))
+ResultText:SetText("")
 
 ResultListText = ResultPanel:CreateFontString(nil, "OVERLAY")
 ResultListText:SetPoint("TOPLEFT", ResultText, "BOTTOMLEFT", 0, -14)
-ResultListText:SetPoint("BOTTOMRIGHT", ResultPanel, "BOTTOMRIGHT", -18, 54)
+ResultListText:SetPoint("RIGHT", ResultPanel, "RIGHT", -18, 0)
 ResultListText:SetJustifyH("LEFT")
 ResultListText:SetJustifyV("TOP")
 ResultListText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 ResultListText:SetTextColor(0.88, 0.88, 0.88, 1)
-ResultListText:SetText(L("QUESTCHECK_NO_SEARCH"))
+ResultListText:SetText("")
 
-WowheadButton = CreateFrame("Button", nil, ResultPanel, "UIPanelButtonTemplate")
-WowheadButton:SetSize(140, 28)
-WowheadButton:SetPoint("BOTTOMLEFT", ResultPanel, "BOTTOMLEFT", 18, 16)
-WowheadButton:SetText(L("WOWHEAD_LINK"))
-WowheadButton:SetEnabled(false)
-WowheadButton:SetScript("OnClick", ShowCurrentWowheadLink)
+local function GetTextBlockHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
 
-local ResultHint = ResultPanel:CreateFontString(nil, "OVERLAY")
-ResultHint:SetPoint("LEFT", WowheadButton, "RIGHT", 14, 0)
-ResultHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-ResultHint:SetTextColor(0.75, 0.75, 0.75, 1)
-ResultHint:SetText(L("LINKS_COPY_DIALOG"))
+    return math.max(minimumHeight or 0, math.ceil(textHeight))
+end
+
+local function GetVisibleTextHeight(fontString, minimumHeight)
+    local text = fontString and fontString.GetText and fontString:GetText() or ""
+    if text == "" then
+        return 0
+    end
+
+    return GetTextBlockHeight(fontString, minimumHeight)
+end
+
+RefreshQuestCheckLayout = function()
+    local introHeight = 16
+        + GetTextBlockHeight(IntroTitle, 24)
+        + 10
+        + GetTextBlockHeight(IntroText, 16)
+        + 12
+        + 24
+        + 2
+        + GetTextBlockHeight(QuestCheckMinimapContextHint, 11)
+        + 16
+    IntroPanel:SetHeight(math.max(82, introHeight))
+
+    local searchProgressHeight = 0
+    if SearchProgressText:GetText() and SearchProgressText:GetText() ~= "" then
+        searchProgressHeight = GetTextBlockHeight(SearchProgressText, 11)
+    end
+
+    local searchHeight = 14
+        + GetTextBlockHeight(SearchTitle, 16)
+        + 10
+        + GetTextBlockHeight(SearchHint, 14)
+        + 16
+        + math.max(SearchEditBox:GetHeight() or 0, SearchButton:GetHeight() or 0)
+        + 12
+        + searchProgressHeight
+        + 12
+        + math.max(
+            WowheadButton:GetHeight() or 0,
+            GetTextBlockHeight(SearchLinkHint, 11) + 2
+        )
+        + 16
+    SearchPanel:SetHeight(math.max(112, searchHeight))
+
+    local resultTextHeight = GetVisibleTextHeight(ResultText, 12)
+    local resultListHeight = GetVisibleTextHeight(ResultListText, 12)
+
+    local resultHeight = 18
+        + GetTextBlockHeight(ResultStateValue, 20)
+        + (resultTextHeight > 0 and (10 + resultTextHeight) or 0)
+        + (resultListHeight > 0 and (14 + resultListHeight) or 0)
+        + 18
+    ResultPanel:SetHeight(math.max(72, resultHeight))
+end
 
 BeavisQoL.UpdateQuestCheck = function()
     IntroTitle:SetText(L("QUESTCHECK_TITLE"))
     IntroText:SetText(L("QUESTCHECK_DESC"))
+    QuestCheckMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    QuestCheckMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
+    QuestCheckMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questCheck") or true)
     SearchTitle:SetText(L("QUEST_SEARCH"))
     SearchHint:SetText(L("QUEST_SEARCH_HINT"))
     SearchButton:SetText(L("CHECK_QUEST"))
     ResultTitle:SetText(L("RESULT"))
     WowheadButton:SetText(L("WOWHEAD_LINK"))
-    ResultHint:SetText(L("LINKS_COPY_DIALOG"))
+    SearchLinkHint:SetText(L("LINKS_COPY_DIALOG"))
 
     if not currentWowheadURL then
-        ResultStateValue:SetText(L("READY"))
-        ResultText:SetText(L("QUESTCHECK_RESULT_HINT"))
-        ResultListText:SetText(L("QUESTCHECK_NO_SEARCH"))
+        ShowIdleQuestCheckState()
     end
+
+    RefreshQuestCheckLayout()
 end
 
 PageQuestCheck:SetScript("OnShow", function()
     CacheQuestLogQuestNames()
+    QuestCheckMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questCheck") or true)
+
+    RefreshQuestCheckLayout()
+end)
+
+PageQuestCheck:SetScript("OnSizeChanged", function()
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
 end)
 
 local QuestCheckWatcher = CreateFrame("Frame")
@@ -813,3 +955,6 @@ QuestCheckWatcher:SetScript("OnEvent", function(_, eventName, ...)
 end)
 
 BeavisQoL.Pages.QuestCheck = PageQuestCheck
+
+ShowIdleQuestCheckState()
+RefreshQuestCheckLayout()

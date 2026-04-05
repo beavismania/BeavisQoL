@@ -16,20 +16,37 @@ local DEFAULT_WINDOW_RELATIVE_POINT = "TOPLEFT"
 local DEFAULT_WINDOW_OFFSET_X = 8
 local DEFAULT_WINDOW_OFFSET_Y = -42
 
+local GUIDE_WINDOW_ATTACH_POINT = "TOPLEFT"
+local GUIDE_WINDOW_ATTACH_RELATIVE_POINT = "BOTTOMLEFT"
+local GUIDE_WINDOW_ATTACH_OFFSET_X = 0
+local GUIDE_WINDOW_ATTACH_OFFSET_Y = -2
+
 local DEFAULT_SCALE = 1.00
 local MIN_SCALE = 0.80
 local MAX_SCALE = 1.40
 
-local DEFAULT_WINDOW_WIDTH  = 450
-local DEFAULT_WINDOW_HEIGHT = 500
-local MIN_WINDOW_WIDTH      = 450
+local DEFAULT_WINDOW_WIDTH  = 560
+local DEFAULT_WINDOW_HEIGHT = 320
+local MIN_WINDOW_WIDTH      = 500
 local MIN_WINDOW_HEIGHT     = 180
 
 local DEFAULT_FONT_SIZE = 10
 local MIN_FONT_SIZE = 8
 local MAX_FONT_SIZE = 18
 
+local GUIDE_TILE_HEIGHT = 116
+local GUIDE_TILE_MIN_WIDTH = 176
+local GUIDE_WINDOW_HOME_CHROME_HEIGHT = 52
+local GUIDE_WINDOW_GUIDE_CHROME_HEIGHT = 60
+local GUIDE_WINDOW_ATTACH_MARGIN = 12
+local GUIDE_WINDOW_ATTACH_OFFSET_Y_ABOVE = 2
+
 local FONT_PATH = "Interface\\AddOns\\BeavisQoL\\Media\\Fonts\\Expressway.ttf"
+
+local HOME_CATEGORY_ORDER = {
+    { type = "raid", titleKey = "BOSS_GUIDES_HOME_CATEGORY_RAIDS" },
+    { type = "dungeon", titleKey = "BOSS_GUIDES_HOME_CATEGORY_DUNGEONS" },
+}
 
 local GUIDE_DATA = {
     voidspire = {
@@ -78,6 +95,7 @@ local GUIDE_DATA = {
 
 local OverlayButton
 local GuideWindow
+local GuideHomePanel
 local BossMenuPanel
 local LegendBar
 local ContentScrollFrame
@@ -104,11 +122,29 @@ local ScaleSliderText
 local FontSizeSlider
 local FontSizeSliderText
 local CurrentInstanceText
+local GuideWindowTitleText
 local LegendFontStrings = {}
 local PinBtn
 local GuideTextSegments = {}
 local GuideSpellButtons = {}
+local GuideHomeTitleText
+local GuideHomeBodyText
+local GuideHomeSectionTitle
+local GuideHomeEmptyText
+local GuideHomeTiles = {}
+local GuideHomeSections = {}
 local GetBossGuidesSettings
+local GuideJournalInfoCache = {}
+local activeGuideSource = nil
+local UpdateGuideUi
+local AutoSizeGuideWindow
+local GetGuideTitle
+local GetGuideTileTexture
+local GetSortedGuideKeys
+local SetActiveGuide
+local CurrentGuideContentHeight = 220
+local GuideHomeContentHeight = 0
+local isAutoSizingGuideWindow = false
 
 local function Clamp(value, minValue, maxValue)
     if value < minValue then
@@ -120,6 +156,109 @@ local function Clamp(value, minValue, maxValue)
     end
 
     return value
+end
+
+local function GetFrameBoundsInUiParent(frame)
+    if not frame or not UIParent then
+        return nil
+    end
+
+    local left, right = frame:GetLeft(), frame:GetRight()
+    local top, bottom = frame:GetTop(), frame:GetBottom()
+    if not left or not right or not top or not bottom then
+        return nil
+    end
+
+    local uiScale = math.max(UIParent:GetEffectiveScale() or 1, 0.01)
+    local frameScale = frame:GetEffectiveScale() or uiScale
+    local scaleFactor = frameScale / uiScale
+
+    return left * scaleFactor, right * scaleFactor, top * scaleFactor, bottom * scaleFactor
+end
+
+local function GetGuideWindowMaxWidth()
+    if not UIParent then
+        return DEFAULT_WINDOW_WIDTH
+    end
+
+    local scale = GuideWindow and GuideWindow:GetScale() or DEFAULT_SCALE
+    scale = math.max(scale, 0.01)
+
+    return math.max(MIN_WINDOW_WIDTH, math.floor(((UIParent:GetWidth() - (GUIDE_WINDOW_ATTACH_MARGIN * 2)) / scale) + 0.5))
+end
+
+local function GetGuideWindowAttachment(targetWidth, targetHeight)
+    local scale = GuideWindow and GuideWindow:GetScale() or DEFAULT_SCALE
+    scale = math.max(scale, 0.01)
+    local defaultMaxHeight = math.max(MIN_WINDOW_HEIGHT, math.floor((((UIParent and UIParent:GetHeight()) or DEFAULT_WINDOW_HEIGHT) - (GUIDE_WINDOW_ATTACH_MARGIN * 2)) / scale))
+    if not UIParent or not OverlayButton then
+        return {
+            point = DEFAULT_WINDOW_POINT,
+            relativePoint = DEFAULT_WINDOW_RELATIVE_POINT,
+            offsetX = DEFAULT_WINDOW_OFFSET_X,
+            offsetY = DEFAULT_WINDOW_OFFSET_Y,
+            maxHeight = defaultMaxHeight,
+        }
+    end
+
+    local left, right, top, bottom = GetFrameBoundsInUiParent(OverlayButton)
+    if not left or not right or not top or not bottom then
+        return {
+            point = DEFAULT_WINDOW_POINT,
+            relativePoint = DEFAULT_WINDOW_RELATIVE_POINT,
+            offsetX = DEFAULT_WINDOW_OFFSET_X,
+            offsetY = DEFAULT_WINDOW_OFFSET_Y,
+            maxHeight = defaultMaxHeight,
+        }
+    end
+
+    local desiredWidth = math.max(targetWidth or DEFAULT_WINDOW_WIDTH, MIN_WINDOW_WIDTH)
+    local desiredHeight = math.max(targetHeight or DEFAULT_WINDOW_HEIGHT, MIN_WINDOW_HEIGHT)
+    local uiWidth = UIParent:GetWidth() or desiredWidth
+    local uiHeight = UIParent:GetHeight() or desiredHeight
+
+    local spaceToRight = math.max(0, uiWidth - left - GUIDE_WINDOW_ATTACH_MARGIN) / scale
+    local spaceToLeft = math.max(0, right - GUIDE_WINDOW_ATTACH_MARGIN) / scale
+    local alignLeft = spaceToRight >= desiredWidth or spaceToRight >= spaceToLeft
+
+    local spaceBelow = math.max(0, bottom - GUIDE_WINDOW_ATTACH_MARGIN - math.abs(GUIDE_WINDOW_ATTACH_OFFSET_Y)) / scale
+    local spaceAbove = math.max(0, uiHeight - top - GUIDE_WINDOW_ATTACH_MARGIN - GUIDE_WINDOW_ATTACH_OFFSET_Y_ABOVE) / scale
+    local anchorBelow = spaceBelow >= desiredHeight or spaceBelow >= spaceAbove
+
+    if anchorBelow then
+        return {
+            point = alignLeft and "TOPLEFT" or "TOPRIGHT",
+            relativePoint = alignLeft and "BOTTOMLEFT" or "BOTTOMRIGHT",
+            offsetX = 0,
+            offsetY = GUIDE_WINDOW_ATTACH_OFFSET_Y,
+            maxHeight = math.max(MIN_WINDOW_HEIGHT, math.floor(spaceBelow + 0.5)),
+        }
+    end
+
+    return {
+        point = alignLeft and "BOTTOMLEFT" or "BOTTOMRIGHT",
+        relativePoint = alignLeft and "TOPLEFT" or "TOPRIGHT",
+        offsetX = 0,
+        offsetY = GUIDE_WINDOW_ATTACH_OFFSET_Y_ABOVE,
+        maxHeight = math.max(MIN_WINDOW_HEIGHT, math.floor(spaceAbove + 0.5)),
+    }
+end
+
+local function AttachGuideWindowToOverlayButton(targetWidth, targetHeight)
+    if not GuideWindow then
+        return nil
+    end
+
+    local attachment = GetGuideWindowAttachment(targetWidth or GuideWindow:GetWidth(), targetHeight or GuideWindow:GetHeight())
+    GuideWindow:ClearAllPoints()
+
+    if OverlayButton then
+        GuideWindow:SetPoint(attachment.point, OverlayButton, attachment.relativePoint, attachment.offsetX, attachment.offsetY)
+    else
+        GuideWindow:SetPoint(attachment.point, UIParent, attachment.relativePoint, attachment.offsetX, attachment.offsetY)
+    end
+
+    return attachment
 end
 
 local function GetSliderPercentText(value)
@@ -270,6 +409,7 @@ local function GetSpellSearchEntries()
     local entries = {}
     local seenAliases = {}
     local centralMap = GetCentralSpellNameMap()
+    local processedSpellNames = {}
 
     local function AddAlias(aliasText, englishSpellName)
         if type(aliasText) ~= "string" or aliasText == "" then
@@ -288,18 +428,76 @@ local function GetSpellSearchEntries()
         }
     end
 
-    for _, englishSpellName in ipairs(KNOWN_SPELL_NAMES) do
-        AddAlias(englishSpellName, englishSpellName)
+    local function AddMapEntryAliases(canonicalSpellName, mapEntry)
+        AddAlias(canonicalSpellName, canonicalSpellName)
 
-        local mapEntry = centralMap[englishSpellName]
         if type(mapEntry) == "table" then
-            AddAlias(mapEntry.localizedName or mapEntry.name, englishSpellName)
+            AddAlias(mapEntry.localizedName or mapEntry.name, canonicalSpellName)
+            AddAlias(mapEntry.englishName, canonicalSpellName)
+
+            if type(mapEntry.aliases) == "table" then
+                for _, aliasText in ipairs(mapEntry.aliases) do
+                    AddAlias(aliasText, canonicalSpellName)
+                end
+            end
         elseif type(mapEntry) == "string" then
-            AddAlias(mapEntry, englishSpellName)
+            AddAlias(mapEntry, canonicalSpellName)
         end
     end
 
+    local function GetMapEntryPriority(canonicalSpellName)
+        local mapEntry = centralMap[canonicalSpellName]
+        if type(mapEntry) == "table" then
+            if tonumber(mapEntry.spellID or mapEntry.id) then
+                return 1
+            end
+
+            return 2
+        end
+
+        return 3
+    end
+
+    local function AddCanonicalSpellEntry(canonicalSpellName)
+        if processedSpellNames[canonicalSpellName] then
+            return
+        end
+
+        processedSpellNames[canonicalSpellName] = true
+        AddMapEntryAliases(canonicalSpellName, centralMap[canonicalSpellName])
+    end
+
+    for _, englishSpellName in ipairs(KNOWN_SPELL_NAMES) do
+        AddCanonicalSpellEntry(englishSpellName)
+    end
+
+    local remainingSpellNames = {}
+    for canonicalSpellName in pairs(centralMap) do
+        if not processedSpellNames[canonicalSpellName] then
+            remainingSpellNames[#remainingSpellNames + 1] = canonicalSpellName
+        end
+    end
+
+    table.sort(remainingSpellNames, function(a, b)
+        local priorityA = GetMapEntryPriority(a)
+        local priorityB = GetMapEntryPriority(b)
+
+        if priorityA ~= priorityB then
+            return priorityA < priorityB
+        end
+
+        return a < b
+    end)
+
+    for _, canonicalSpellName in ipairs(remainingSpellNames) do
+        AddCanonicalSpellEntry(canonicalSpellName)
+    end
+
     table.sort(entries, function(a, b)
+        if #a.alias == #b.alias then
+            return a.alias < b.alias
+        end
+
         return #a.alias > #b.alias
     end)
 
@@ -330,13 +528,41 @@ local function GetSpellRenderInfo(englishSpellName)
     local mapEntry = centralMap[englishSpellName]
     local localizedSpellName = englishSpellName
     local mappedSpellID
+    local spellNameCandidates = {}
+    local seenSpellNameCandidates = {}
+    local fallbackTooltipText
+    local fallbackTooltipKind = "Guide-Begriff"
+
+    local function AddSpellNameCandidate(candidate)
+        if type(candidate) ~= "string" or candidate == "" or seenSpellNameCandidates[candidate] then
+            return
+        end
+
+        seenSpellNameCandidates[candidate] = true
+        spellNameCandidates[#spellNameCandidates + 1] = candidate
+    end
 
     if type(mapEntry) == "table" then
         mappedSpellID = tonumber(mapEntry.spellID or mapEntry.id)
         localizedSpellName = mapEntry.localizedName or mapEntry.name or englishSpellName
+        fallbackTooltipText = mapEntry.tooltipText
+        fallbackTooltipKind = mapEntry.tooltipKind or mapEntry.kind or fallbackTooltipKind
+        AddSpellNameCandidate(mapEntry.localizedName)
+        AddSpellNameCandidate(mapEntry.name)
+        AddSpellNameCandidate(mapEntry.englishName)
+
+        if type(mapEntry.aliases) == "table" then
+            for _, aliasText in ipairs(mapEntry.aliases) do
+                AddSpellNameCandidate(aliasText)
+            end
+        end
     elseif type(mapEntry) == "string" then
         localizedSpellName = mapEntry
+        AddSpellNameCandidate(mapEntry)
     end
+
+    AddSpellNameCandidate(localizedSpellName)
+    AddSpellNameCandidate(englishSpellName)
 
     local info
     local spellLink
@@ -350,11 +576,21 @@ local function GetSpellRenderInfo(englishSpellName)
     end
 
     if C_Spell and C_Spell.GetSpellInfo then
-        info = info or C_Spell.GetSpellInfo(localizedSpellName) or C_Spell.GetSpellInfo(englishSpellName)
+        for _, candidate in ipairs(spellNameCandidates) do
+            info = info or C_Spell.GetSpellInfo(candidate)
+            if info then
+                break
+            end
+        end
     end
 
     if C_Spell and C_Spell.GetSpellLink then
-        spellLink = spellLink or C_Spell.GetSpellLink(localizedSpellName) or C_Spell.GetSpellLink(englishSpellName)
+        for _, candidate in ipairs(spellNameCandidates) do
+            spellLink = spellLink or C_Spell.GetSpellLink(candidate)
+            if spellLink then
+                break
+            end
+        end
     end
 
     local spellID = mappedSpellID or (info and info.spellID) or ParseSpellIDFromLink(spellLink)
@@ -372,6 +608,10 @@ local function GetSpellRenderInfo(englishSpellName)
         spellID = spellID,
         iconID = info and info.iconID or nil,
         spellLink = spellLink,
+        isResolved = spellID ~= nil or (type(spellLink) == "string" and spellLink ~= ""),
+        hasFallbackTooltip = type(fallbackTooltipText) == "string" and fallbackTooltipText ~= "",
+        fallbackTooltipKind = fallbackTooltipKind,
+        fallbackTooltipText = fallbackTooltipText,
     }
 
     SPELL_RENDER_CACHE[englishSpellName] = renderInfo
@@ -432,7 +672,19 @@ local function SplitGuideLineSegments(line)
             end
         end
 
-        table.insert(segments, { kind = "spell", spell = GetSpellRenderInfo(bestSpell) })
+        local renderInfo = GetSpellRenderInfo(bestSpell)
+        local matchedText = line:sub(bestStart, bestEnd)
+
+        if renderInfo.isResolved or renderInfo.hasFallbackTooltip then
+            table.insert(segments, {
+                kind = "spell",
+                spell = renderInfo,
+                matchedText = matchedText,
+            })
+        else
+            AddPlainTextSegments(segments, matchedText)
+        end
+
         cursor = bestEnd + 1
     end
 
@@ -449,7 +701,7 @@ local function AcquireGuideTextSegment(index)
         return widget
     end
 
-    widget = ContentScrollChild:CreateFontString(nil, "OVERLAY")
+    widget = (ContentText or ContentScrollChild):CreateFontString(nil, "OVERLAY")
     widget:SetJustifyH("LEFT")
     widget:SetJustifyV("TOP")
     widget:SetWordWrap(false)
@@ -463,12 +715,12 @@ local function AcquireGuideSpellButton(index)
         return button
     end
 
-    button = CreateFrame("Button", nil, ContentScrollChild)
+    button = CreateFrame("Button", nil, ContentText or ContentScrollChild)
     button:EnableMouse(true)
     button:RegisterForClicks("AnyUp")
     button:SetFrameStrata(GuideWindow and GuideWindow:GetFrameStrata() or "DIALOG")
     button:SetFrameLevel((GuideWindow and GuideWindow:GetFrameLevel() or 1) + 20)
-    button:SetHitRectInsets(-4, -4, -3, -3)
+    button:SetHitRectInsets(-8, -8, -5, -5)
 
     local text = button:CreateFontString(nil, "OVERLAY")
     text:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
@@ -478,16 +730,77 @@ local function AcquireGuideSpellButton(index)
     text:SetWordWrap(false)
     button.Text = text
 
-    local function ShowSpellTooltip(self)
-        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-        if self.spellLink then
+    local function GetTooltipLineCount()
+        if not GameTooltip or not GameTooltip.NumLines then
+            return 0
+        end
+
+        return GameTooltip:NumLines() or 0
+    end
+
+    local function TryPopulateSpellTooltip(self)
+        if not GameTooltip then
+            return false
+        end
+
+        local function TryPopulate(populator)
+            GameTooltip:ClearLines()
+            populator()
+            return GetTooltipLineCount() > 0
+        end
+
+        if self.spellLink and TryPopulate(function()
             GameTooltip:SetHyperlink(self.spellLink)
-        elseif self.spellID and GameTooltip.SetSpellByID then
+        end) then
+            return true
+        end
+
+        if self.spellID and GameTooltip.SetSpellByID and TryPopulate(function()
             GameTooltip:SetSpellByID(self.spellID)
-        elseif self.spellID then
+        end) then
+            return true
+        end
+
+        if self.spellID and TryPopulate(function()
             GameTooltip:SetHyperlink("spell:" .. self.spellID)
-        elseif self.spellName then
+        end) then
+            return true
+        end
+
+        return false
+    end
+
+    local function ShowSpellTooltip(self)
+        if not GameTooltip then
+            return
+        end
+
+        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:ClearLines()
+
+        local hasTooltipContent = TryPopulateSpellTooltip(self)
+
+        if not hasTooltipContent and self.spellName then
             GameTooltip:SetText(self.spellName, 1, 0.82, 0, 1, true)
+            hasTooltipContent = true
+
+            if self.englishName and self.englishName ~= self.spellName then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine("EN: " .. self.englishName, 0.78, 0.82, 0.90, true)
+            end
+        end
+
+        if self.fallbackTooltipText and self.fallbackTooltipText ~= "" then
+            if hasTooltipContent then
+                GameTooltip:AddLine(" ")
+            end
+
+            if self.fallbackTooltipKind and self.fallbackTooltipKind ~= "" then
+                GameTooltip:AddLine(self.fallbackTooltipKind, 0.65, 0.78, 1, true)
+            end
+
+            GameTooltip:AddLine(self.fallbackTooltipText, 0.90, 0.90, 0.90, true)
+            hasTooltipContent = true
         end
 
         local description
@@ -495,12 +808,17 @@ local function AcquireGuideSpellButton(index)
             description = C_Spell.GetSpellDescription(self.spellID or self.spellName)
         end
 
-        if type(description) == "string" and description ~= "" then
+        if type(description) == "string" and description ~= "" and description ~= self.fallbackTooltipText then
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine(description, 0.90, 0.90, 0.90, true)
+            hasTooltipContent = true
         end
 
-        GameTooltip:Show()
+        if hasTooltipContent then
+            GameTooltip:Show()
+        else
+            GameTooltip:Hide()
+        end
     end
 
     button:SetScript("OnEnter", function(self)
@@ -508,8 +826,8 @@ local function AcquireGuideSpellButton(index)
         ShowSpellTooltip(self)
     end)
 
-    button:SetScript("OnLeave", function()
-        button.Text:SetTextColor(1.00, 0.82, 0.20, 1)
+    button:SetScript("OnLeave", function(self)
+        self.Text:SetTextColor(1.00, 0.82, 0.20, 1)
         GameTooltip:Hide()
     end)
 
@@ -542,6 +860,269 @@ local function HideGuideContentWidgets()
     end
 end
 
+local function RefreshGuideHomeTileVisual(tile)
+    if not tile then
+        return
+    end
+
+    local isHovered = tile.isHovered == true
+
+    tile.Glow:SetShown(isHovered)
+
+    if isHovered then
+        tile.Shade:SetColorTexture(0.02, 0.03, 0.04, 0.16)
+        tile.BorderTop:SetColorTexture(0.26, 0.75, 0.63, 0.95)
+        tile.BorderBottom:SetColorTexture(0.26, 0.75, 0.63, 0.78)
+        tile.Accent:SetColorTexture(0.26, 0.75, 0.63, 1)
+        tile.Title:SetTextColor(1.00, 0.96, 0.84, 1)
+        tile.Subtitle:SetTextColor(0.90, 0.98, 0.94, 1)
+    else
+        tile.Shade:SetColorTexture(0.02, 0.03, 0.04, 0.42)
+        tile.BorderTop:SetColorTexture(0.26, 0.75, 0.63, 0.58)
+        tile.BorderBottom:SetColorTexture(0.26, 0.75, 0.63, 0.28)
+        tile.Accent:SetColorTexture(0.26, 0.75, 0.63, 0.74)
+        tile.Title:SetTextColor(0.96, 0.92, 0.70, 1)
+        tile.Subtitle:SetTextColor(0.74, 0.86, 0.84, 1)
+    end
+end
+
+local function AcquireGuideHomeTile(index)
+    local tile = GuideHomeTiles[index]
+    if tile then
+        return tile
+    end
+
+    tile = CreateFrame("Button", nil, GuideHomePanel)
+    tile:SetHeight(GUIDE_TILE_HEIGHT)
+    tile:EnableMouse(true)
+
+    local art = tile:CreateTexture(nil, "BACKGROUND")
+    art:SetAllPoints()
+    art:SetTexCoord(0.04, 0.96, 0.05, 0.90)
+    tile.Art = art
+
+    local shade = tile:CreateTexture(nil, "ARTWORK")
+    shade:SetAllPoints()
+    tile.Shade = shade
+
+    local topGlow = tile:CreateTexture(nil, "BORDER")
+    topGlow:SetPoint("TOPLEFT", tile, "TOPLEFT", 0, 0)
+    topGlow:SetPoint("TOPRIGHT", tile, "TOPRIGHT", 0, 0)
+    topGlow:SetHeight(28)
+    topGlow:SetColorTexture(1, 1, 1, 0.04)
+
+    local glow = tile:CreateTexture(nil, "BORDER")
+    glow:SetAllPoints()
+    glow:SetColorTexture(0.26, 0.75, 0.63, 0.14)
+    glow:Hide()
+    tile.Glow = glow
+
+    local borderTop = tile:CreateTexture(nil, "ARTWORK")
+    borderTop:SetPoint("TOPLEFT", tile, "TOPLEFT", 0, 0)
+    borderTop:SetPoint("TOPRIGHT", tile, "TOPRIGHT", 0, 0)
+    borderTop:SetHeight(1)
+    tile.BorderTop = borderTop
+
+    local borderBottom = tile:CreateTexture(nil, "ARTWORK")
+    borderBottom:SetPoint("BOTTOMLEFT", tile, "BOTTOMLEFT", 0, 0)
+    borderBottom:SetPoint("BOTTOMRIGHT", tile, "BOTTOMRIGHT", 0, 0)
+    borderBottom:SetHeight(1)
+    tile.BorderBottom = borderBottom
+
+    local accent = tile:CreateTexture(nil, "ARTWORK")
+    accent:SetPoint("TOPLEFT", tile, "TOPLEFT", 0, 0)
+    accent:SetPoint("BOTTOMLEFT", tile, "BOTTOMLEFT", 0, 0)
+    accent:SetWidth(2)
+    tile.Accent = accent
+
+    local footer = tile:CreateTexture(nil, "OVERLAY")
+    footer:SetPoint("BOTTOMLEFT", tile, "BOTTOMLEFT", 0, 0)
+    footer:SetPoint("BOTTOMRIGHT", tile, "BOTTOMRIGHT", 0, 0)
+    footer:SetHeight(36)
+    footer:SetColorTexture(0.02, 0.03, 0.04, 0.56)
+
+    local title = tile:CreateFontString(nil, "OVERLAY")
+    title:SetPoint("BOTTOMLEFT", tile, "BOTTOMLEFT", 12, 16)
+    title:SetPoint("RIGHT", tile, "RIGHT", -12, 0)
+    title:SetJustifyH("LEFT")
+    title:SetJustifyV("BOTTOM")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+    tile.Title = title
+
+    local subtitle = tile:CreateFontString(nil, "OVERLAY")
+    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -2)
+    subtitle:SetPoint("RIGHT", tile, "RIGHT", -12, 0)
+    subtitle:SetJustifyH("LEFT")
+    subtitle:SetJustifyV("TOP")
+    subtitle:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    tile.Subtitle = subtitle
+
+    tile:SetScript("OnEnter", function(self)
+        self.isHovered = true
+        RefreshGuideHomeTileVisual(self)
+    end)
+
+    tile:SetScript("OnLeave", function(self)
+        self.isHovered = false
+        RefreshGuideHomeTileVisual(self)
+    end)
+
+    tile:SetScript("OnClick", function(self)
+        SetActiveGuide(self.GuideKey, "manual", true)
+        UpdateGuideUi()
+    end)
+
+    GuideHomeTiles[index] = tile
+    return tile
+end
+
+local function HideGuideHomeTiles()
+    for _, tile in ipairs(GuideHomeTiles) do
+        tile:Hide()
+        tile.Subtitle:Hide()
+    end
+end
+
+local function AcquireGuideHomeSection(index)
+    local section = GuideHomeSections[index]
+    if section then
+        return section
+    end
+
+    section = {}
+
+    local title = GuideHomePanel:CreateFontString(nil, "OVERLAY")
+    title:SetJustifyH("LEFT")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    title:SetTextColor(0.96, 0.92, 0.72, 1)
+    section.Title = title
+
+    local emptyText = GuideHomePanel:CreateFontString(nil, "OVERLAY")
+    emptyText:SetJustifyH("LEFT")
+    emptyText:SetJustifyV("TOP")
+    emptyText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    emptyText:SetTextColor(0.74, 0.78, 0.82, 1)
+    emptyText:SetText(L("BOSS_GUIDES_EMPTY_CATEGORY"))
+    emptyText:Hide()
+    section.EmptyText = emptyText
+
+    GuideHomeSections[index] = section
+    return section
+end
+
+local function HideGuideHomeSections()
+    for _, section in ipairs(GuideHomeSections) do
+        section.Title:Hide()
+        if section.EmptyText then
+            section.EmptyText:Hide()
+        end
+    end
+end
+
+local function LayoutGuideHome()
+    if not GuideHomePanel then
+        return
+    end
+
+    local panelWidth = GuideHomePanel:GetWidth()
+    if not panelWidth or panelWidth <= 0 then
+        panelWidth = (GuideWindow and GuideWindow:GetWidth() or DEFAULT_WINDOW_WIDTH) - 24
+    end
+
+    local tileGap = 12
+    local columns = panelWidth >= ((GUIDE_TILE_MIN_WIDTH * 2) + tileGap) and 2 or 1
+    local tileWidth = math.floor((panelWidth - ((columns - 1) * tileGap)) / columns)
+
+    local yOffset = 0
+    local tileIndex = 0
+    local visibleSectionCount = 0
+
+    HideGuideHomeTiles()
+    HideGuideHomeSections()
+    GuideHomeEmptyText:Hide()
+
+    if GuideHomeTitleText then
+        GuideHomeTitleText:Hide()
+    end
+    if GuideHomeBodyText then
+        GuideHomeBodyText:Hide()
+    end
+    if GuideHomeSectionTitle then
+        GuideHomeSectionTitle:Hide()
+    end
+
+    for _, category in ipairs(HOME_CATEGORY_ORDER) do
+        local guideKeys = GetSortedGuideKeys(category.type)
+        visibleSectionCount = visibleSectionCount + 1
+
+        local section = AcquireGuideHomeSection(visibleSectionCount)
+        section.Title:SetText(L(category.titleKey))
+        section.Title:ClearAllPoints()
+        section.Title:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", 0, -yOffset)
+        section.Title:SetPoint("RIGHT", GuideHomePanel, "RIGHT", 0, 0)
+        section.Title:Show()
+        if section.EmptyText then
+            section.EmptyText:Hide()
+        end
+
+        yOffset = yOffset + section.Title:GetStringHeight() + 14
+
+        if #guideKeys > 0 then
+            for index, guideKey in ipairs(guideKeys) do
+                local tile = AcquireGuideHomeTile(tileIndex + index)
+                local guideData = GUIDE_DATA[guideKey]
+                local tileTexture = GetGuideTileTexture(guideKey, guideData)
+
+                tile.GuideKey = guideKey
+                tile.Title:SetText(GetGuideTitle(guideData))
+                tile.Subtitle:SetText("")
+                tile.Subtitle:Hide()
+                tile:SetWidth(tileWidth)
+
+                if tileTexture then
+                    tile.Art:SetTexture(tileTexture)
+                else
+                    tile.Art:SetTexture(nil)
+                    tile.Art:SetColorTexture(0.08, 0.10, 0.12, 1)
+                end
+
+                local columnIndex = (index - 1) % columns
+                local rowIndex = math.floor((index - 1) / columns)
+                tile:ClearAllPoints()
+                tile:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", columnIndex * (tileWidth + tileGap), -(yOffset + (rowIndex * (GUIDE_TILE_HEIGHT + tileGap))))
+                tile:Show()
+                RefreshGuideHomeTileVisual(tile)
+            end
+
+            tileIndex = tileIndex + #guideKeys
+
+            local rowCount = math.ceil(#guideKeys / columns)
+            yOffset = yOffset + (rowCount * GUIDE_TILE_HEIGHT) + ((rowCount - 1) * tileGap) + 24
+        elseif section.EmptyText then
+            section.EmptyText:SetText(L("BOSS_GUIDES_EMPTY_CATEGORY"))
+            section.EmptyText:ClearAllPoints()
+            section.EmptyText:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", 0, -yOffset)
+            section.EmptyText:SetPoint("RIGHT", GuideHomePanel, "RIGHT", 0, 0)
+            section.EmptyText:Show()
+            yOffset = yOffset + section.EmptyText:GetStringHeight() + 20
+        end
+    end
+
+    if visibleSectionCount == 0 then
+        GuideHomeEmptyText:ClearAllPoints()
+        GuideHomeEmptyText:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", 0, 0)
+        GuideHomeEmptyText:SetPoint("RIGHT", GuideHomePanel, "RIGHT", 0, 0)
+        GuideHomeEmptyText:Show()
+        GuideHomeContentHeight = math.max(GuideHomeEmptyText:GetStringHeight(), 24)
+    else
+        GuideHomeContentHeight = math.max(yOffset - 24, 24)
+    end
+
+    if AutoSizeGuideWindow then
+        AutoSizeGuideWindow()
+    end
+end
+
 local function RenderGuideBody(body)
     if not ContentText or not ContentScrollFrame then
         return 220
@@ -550,11 +1131,11 @@ local function RenderGuideBody(body)
     HideGuideContentWidgets()
 
     local db = GetBossGuidesSettings()
-    local baseX = 6
+    local baseX = 4
     local x = baseX
     local y = -4
     local lineGap = 3
-    local availableWidth = math.max(ContentScrollFrame:GetWidth() - 12, 40)
+    local availableWidth = math.max(ContentScrollFrame:GetWidth() - 8, 40)
     local textIndex = 0
     local spellIndex = 0
 
@@ -579,11 +1160,17 @@ local function RenderGuideBody(body)
                 end
 
                 widget.Text:SetText(spellText)
-                segmentWidth = widget.Text:GetStringWidth() + 2
-                segmentHeight = math.max(widget.Text:GetStringHeight(), db.fontSize + 4)
+                segmentWidth = math.max(
+                    widget.Text:GetStringWidth(),
+                    widget.Text.GetUnboundedStringWidth and widget.Text:GetUnboundedStringWidth() or 0
+                ) + 8
+                segmentHeight = math.max(widget.Text:GetStringHeight(), db.fontSize + 6) + 2
                 widget.spellID = segment.spell.spellID
                 widget.spellLink = segment.spell.spellLink
                 widget.spellName = segment.spell.localizedName
+                widget.englishName = segment.spell.englishName
+                widget.fallbackTooltipKind = segment.spell.fallbackTooltipKind
+                widget.fallbackTooltipText = segment.spell.fallbackTooltipText
                 widget:SetSize(segmentWidth, segmentHeight)
             else
                 textIndex = textIndex + 1
@@ -616,7 +1203,7 @@ local function RenderGuideBody(body)
 
             if segmentWidth > 0 then
                 widget:ClearAllPoints()
-                widget:SetPoint("TOPLEFT", ContentScrollChild, "TOPLEFT", x, y)
+                widget:SetPoint("TOPLEFT", ContentText or ContentScrollChild, "TOPLEFT", x, y)
                 widget:Show()
             end
 
@@ -653,7 +1240,7 @@ local function GetLocalizedGuideTokens(guideData)
     return {}
 end
 
-local function GetGuideTitle(guideData)
+GetGuideTitle = function(guideData)
     if guideData and guideData.titleKey then
         return L(guideData.titleKey)
     end
@@ -675,6 +1262,117 @@ local function GetBossBody(bossData)
     end
 
     return bossData and bossData.body or ""
+end
+
+local function EnsureEncounterJournalApi()
+    if EJ_GetNumTiers and EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetInstanceInfo then
+        return true
+    end
+
+    if C_AddOns and C_AddOns.LoadAddOn then
+        C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
+    elseif UIParentLoadAddOn then
+        UIParentLoadAddOn("Blizzard_EncounterJournal")
+    end
+
+    return EJ_GetNumTiers and EJ_SelectTier and EJ_GetInstanceByIndex and EJ_GetInstanceInfo
+end
+
+local function GuideMatchesInstanceName(guideData, instanceName)
+    local normalizedInstanceName = NormalizeText(instanceName)
+    if normalizedInstanceName == "" then
+        return false
+    end
+
+    for _, token in ipairs(GetLocalizedGuideTokens(guideData)) do
+        local normalizedToken = NormalizeText(token)
+        if normalizedToken ~= "" and string.find(normalizedInstanceName, normalizedToken, 1, true) then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function GetGuideJournalInfo(guideKey, guideData)
+    local cachedInfo = GuideJournalInfoCache[guideKey]
+    if cachedInfo ~= nil then
+        return cachedInfo or nil
+    end
+
+    local resolvedInfo
+
+    if EnsureEncounterJournalApi() then
+        local previousTier = EJ_GetCurrentTier and EJ_GetCurrentTier() or nil
+        local numTiers = EJ_GetNumTiers() or 0
+
+        for tierIndex = 1, numTiers do
+            EJ_SelectTier(tierIndex)
+
+            local entryIndex = 1
+            while true do
+                local journalInstanceID, instanceName = EJ_GetInstanceByIndex(entryIndex, guideData.type == "raid")
+                if not journalInstanceID then
+                    break
+                end
+
+                if GuideMatchesInstanceName(guideData, instanceName) then
+                    local resolvedName, description, bgImage, buttonImage1, loreImage, buttonImage2, dungeonAreaMapID, link, shouldDisplayDifficulty, mapID, covenantID, isRaid = EJ_GetInstanceInfo(journalInstanceID)
+                    resolvedInfo = {
+                        journalInstanceID = journalInstanceID,
+                        name = resolvedName or instanceName,
+                        description = description,
+                        bgImage = bgImage,
+                        buttonImage1 = buttonImage1,
+                        buttonImage2 = buttonImage2,
+                        loreImage = loreImage,
+                        mapID = mapID or dungeonAreaMapID,
+                        isRaid = isRaid,
+                        link = link,
+                    }
+                    break
+                end
+
+                entryIndex = entryIndex + 1
+            end
+
+            if resolvedInfo then
+                break
+            end
+        end
+
+        if previousTier and EJ_SelectTier then
+            EJ_SelectTier(previousTier)
+        end
+    end
+
+    GuideJournalInfoCache[guideKey] = resolvedInfo or false
+    return resolvedInfo or nil
+end
+
+GetGuideTileTexture = function(guideKey, guideData)
+    local journalInfo = GetGuideJournalInfo(guideKey, guideData)
+    if not journalInfo then
+        return nil, nil
+    end
+
+    return journalInfo.buttonImage2 or journalInfo.loreImage or journalInfo.buttonImage1 or journalInfo.bgImage, journalInfo
+end
+
+GetSortedGuideKeys = function(filterType)
+    local guideKeys = {}
+
+    for guideKey, guideData in pairs(GUIDE_DATA) do
+        if not filterType or guideData.type == filterType then
+            guideKeys[#guideKeys + 1] = guideKey
+        end
+    end
+
+    table.sort(guideKeys, function(leftKey, rightKey)
+        return GetGuideTitle(GUIDE_DATA[leftKey]) < GetGuideTitle(GUIDE_DATA[rightKey])
+    end)
+
+    return guideKeys
 end
 
 function GetBossGuidesSettings()
@@ -746,6 +1444,15 @@ function GetBossGuidesSettings()
     end
 
     -- Migration alter Standardgröße auf neue kompakte Standardgröße.
+    if db.windowWidth == 450 and db.windowHeight == 500 then
+        db.windowWidth = DEFAULT_WINDOW_WIDTH
+        db.windowHeight = DEFAULT_WINDOW_HEIGHT
+    end
+
+    if db.windowWidth == 404 then
+        db.windowWidth = DEFAULT_WINDOW_WIDTH
+    end
+
     if db.windowWidth == 680 and db.windowHeight == 340 then
         db.windowWidth = DEFAULT_WINDOW_WIDTH
         db.windowHeight = DEFAULT_WINDOW_HEIGHT
@@ -762,6 +1469,8 @@ function GetBossGuidesSettings()
         db.windowOffsetX = DEFAULT_WINDOW_OFFSET_X
         db.windowOffsetY = DEFAULT_WINDOW_OFFSET_Y
     end
+
+    db.windowWidth = Clamp(db.windowWidth, MIN_WINDOW_WIDTH, GetGuideWindowMaxWidth())
 
     if type(db.fontSize) ~= "number" then
         db.fontSize = DEFAULT_FONT_SIZE
@@ -790,15 +1499,8 @@ local function SaveGuideWindowGeometry()
         return
     end
 
-    local point, _, relativePoint, offsetX, offsetY = GuideWindow:GetPoint(1)
     local db = GetBossGuidesSettings()
-
-    db.windowPoint = point or DEFAULT_WINDOW_POINT
-    db.windowRelativePoint = relativePoint or DEFAULT_WINDOW_RELATIVE_POINT
-    db.windowOffsetX = math.floor((offsetX or DEFAULT_WINDOW_OFFSET_X) + 0.5)
-    db.windowOffsetY = math.floor((offsetY or DEFAULT_WINDOW_OFFSET_Y) + 0.5)
-    db.windowWidth   = math.floor(GuideWindow:GetWidth()  + 0.5)
-    db.windowHeight  = math.floor(GuideWindow:GetHeight() + 0.5)
+    db.windowWidth = Clamp(math.floor(GuideWindow:GetWidth() + 0.5), MIN_WINDOW_WIDTH, GetGuideWindowMaxWidth())
 end
 
 local function ApplyOverlayButtonGeometry()
@@ -817,11 +1519,9 @@ local function ApplyGuideWindowGeometry()
     end
 
     local db = GetBossGuidesSettings()
-    db.windowWidth = math.max(db.windowWidth or DEFAULT_WINDOW_WIDTH, MIN_WINDOW_WIDTH)
-    db.windowHeight = math.max(db.windowHeight or DEFAULT_WINDOW_HEIGHT, MIN_WINDOW_HEIGHT)
-    GuideWindow:SetSize(db.windowWidth, db.windowHeight)
-    GuideWindow:ClearAllPoints()
-    GuideWindow:SetPoint(db.windowPoint, UIParent, db.windowRelativePoint, db.windowOffsetX, db.windowOffsetY)
+    db.windowWidth = Clamp(db.windowWidth or DEFAULT_WINDOW_WIDTH, MIN_WINDOW_WIDTH, GetGuideWindowMaxWidth())
+    GuideWindow:SetSize(db.windowWidth, DEFAULT_WINDOW_HEIGHT)
+    AttachGuideWindowToOverlayButton(db.windowWidth, DEFAULT_WINDOW_HEIGHT)
 end
 
 local function GetCurrentInstanceNameAndType()
@@ -870,6 +1570,37 @@ local function GetActiveGuideData()
     return GUIDE_DATA[activeGuideKey]
 end
 
+SetActiveGuide = function(guideKey, source, resetBossIndex)
+    if guideKey and not GUIDE_DATA[guideKey] then
+        guideKey = nil
+    end
+
+    local guideChanged = guideKey ~= activeGuideKey
+    if guideChanged then
+        activeGuideKey = guideKey
+    end
+
+    if guideKey then
+        activeGuideSource = source or activeGuideSource or "manual"
+
+        local guideData = GUIDE_DATA[guideKey]
+        if guideData and guideData.type then
+            selectedCategory = guideData.type
+        end
+
+        if guideChanged or resetBossIndex then
+            activeBossIndex = 1
+        end
+    else
+        activeGuideSource = nil
+        if guideChanged or resetBossIndex then
+            activeBossIndex = 1
+        end
+    end
+
+    return guideChanged
+end
+
 local function ApplyBossButtonVisual(btn, isActive)
     if isActive then
         btn.Bg:SetColorTexture(1, 0.94, 0.47, 0.12)
@@ -881,6 +1612,14 @@ local function ApplyBossButtonVisual(btn, isActive)
     btn.Bg:SetColorTexture(0, 0, 0, 0)
     btn.Accent:Hide()
     btn.Text:SetTextColor(0.26, 0.75, 0.63, 1)
+end
+
+local function ApplyNavigationButtonVisual(btn)
+    local isHovered = btn.isHovered == true
+
+    btn.Bg:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.10 or 0)
+    btn.Accent:Hide()
+    btn.Text:SetTextColor(isHovered and 1.00 or 0.90, isHovered and 0.94 or 0.86, isHovered and 0.47 or 0.78, 1)
 end
 
 local SEP_ROLE = "|cFF2B6B5A" .. string.rep("-", 34) .. "|r"
@@ -963,6 +1702,36 @@ local function GetContentScrollMax()
     return math.max(0, ContentScrollChild:GetHeight() - ContentScrollFrame:GetHeight())
 end
 
+AutoSizeGuideWindow = function()
+    if not GuideWindow or not UIParent then
+        return
+    end
+
+    local scale = GuideWindow:GetScale() or 1
+    scale = math.max(scale, 0.01)
+
+    local targetHeight
+    if activeGuideKey then
+        targetHeight = GUIDE_WINDOW_GUIDE_CHROME_HEIGHT + (BossMenuPanel and BossMenuPanel:GetHeight() or 0) + math.max(CurrentGuideContentHeight or 0, 120)
+    else
+        targetHeight = GUIDE_WINDOW_HOME_CHROME_HEIGHT + math.max(GuideHomeContentHeight or 0, 120)
+    end
+
+    local attachment = GetGuideWindowAttachment(GuideWindow:GetWidth() or DEFAULT_WINDOW_WIDTH, targetHeight)
+    local maxHeight = attachment and attachment.maxHeight or math.max(MIN_WINDOW_HEIGHT, math.floor((UIParent:GetHeight() - 80) / scale))
+    targetHeight = Clamp(math.floor(targetHeight + 0.5), MIN_WINDOW_HEIGHT, maxHeight)
+
+    if math.abs((GuideWindow:GetHeight() or 0) - targetHeight) <= 1 then
+        AttachGuideWindowToOverlayButton(GuideWindow:GetWidth() or DEFAULT_WINDOW_WIDTH, targetHeight)
+        return
+    end
+
+    isAutoSizingGuideWindow = true
+    GuideWindow:SetHeight(targetHeight)
+    AttachGuideWindowToOverlayButton(GuideWindow:GetWidth() or DEFAULT_WINDOW_WIDTH, targetHeight)
+    isAutoSizingGuideWindow = false
+end
+
 local function SyncContentScrollbar()
     if not ContentScrollFrame or not ContentScrollbar then
         return
@@ -1006,6 +1775,10 @@ local function UpdateGuideText()
         local emptyHeight = RenderGuideBody(L("BOSS_GUIDES_NO_GUIDE"))
         ContentText:SetHeight(emptyHeight)
         ContentScrollChild:SetHeight(200)
+        CurrentGuideContentHeight = emptyHeight
+        if AutoSizeGuideWindow then
+            AutoSizeGuideWindow()
+        end
         return
     end
 
@@ -1014,6 +1787,10 @@ local function UpdateGuideText()
         local emptyHeight = RenderGuideBody(L("BOSS_GUIDES_NO_GUIDE"))
         ContentText:SetHeight(emptyHeight)
         ContentScrollChild:SetHeight(200)
+        CurrentGuideContentHeight = emptyHeight
+        if AutoSizeGuideWindow then
+            AutoSizeGuideWindow()
+        end
         return
     end
 
@@ -1022,7 +1799,83 @@ local function UpdateGuideText()
     ContentText:SetHeight(expectedHeight)
     local minHeight = math.max(ContentScrollFrame:GetHeight(), 220)
     ContentScrollChild:SetHeight(math.max(expectedHeight, minHeight))
+    CurrentGuideContentHeight = expectedHeight
     SetContentScrollOffset(0)
+
+    if AutoSizeGuideWindow then
+        AutoSizeGuideWindow()
+    end
+end
+
+local function AcquireBossMenuButton(buttonIndex)
+    local tabButton = TabButtons[buttonIndex]
+    if tabButton then
+        return tabButton
+    end
+
+    tabButton = CreateFrame("Button", nil, BossMenuPanel)
+
+    local bg = tabButton:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(0, 0, 0, 0)
+    tabButton.Bg = bg
+
+    local accent = tabButton:CreateTexture(nil, "ARTWORK")
+    accent:SetPoint("BOTTOMLEFT", tabButton, "BOTTOMLEFT", 0, 0)
+    accent:SetPoint("BOTTOMRIGHT", tabButton, "BOTTOMRIGHT", 0, 0)
+    accent:SetHeight(2)
+    accent:SetColorTexture(1, 0.94, 0.47, 1)
+    accent:Hide()
+    tabButton.Accent = accent
+
+    local text = tabButton:CreateFontString(nil, "OVERLAY")
+    text:SetAllPoints(tabButton)
+    text:SetFont(FONT_PATH, DEFAULT_FONT_SIZE, "OUTLINE")
+    text:SetJustifyH("CENTER")
+    text:SetJustifyV("MIDDLE")
+    text:SetWordWrap(false)
+    tabButton.Text = text
+
+    tabButton:SetScript("OnEnter", function(self)
+        self.isHovered = true
+        if self.IsHomeButton then
+            ApplyNavigationButtonVisual(self)
+        elseif self.BossIndex ~= activeBossIndex then
+            self.Bg:SetColorTexture(0.26, 0.75, 0.63, 0.08)
+        end
+    end)
+
+    tabButton:SetScript("OnLeave", function(self)
+        self.isHovered = false
+        if self.IsHomeButton then
+            ApplyNavigationButtonVisual(self)
+        else
+            ApplyBossButtonVisual(self, self.BossIndex == activeBossIndex)
+        end
+    end)
+
+    tabButton:SetScript("OnClick", function(self)
+        if self.IsHomeButton then
+            SetActiveGuide(nil, nil, true)
+            UpdateGuideUi()
+            return
+        end
+
+        activeBossIndex = self.BossIndex
+        for _, button in ipairs(TabButtons) do
+            if button:IsShown() then
+                if button.IsHomeButton then
+                    ApplyNavigationButtonVisual(button)
+                else
+                    ApplyBossButtonVisual(button, button.BossIndex == activeBossIndex)
+                end
+            end
+        end
+        UpdateGuideText()
+    end)
+
+    TabButtons[buttonIndex] = tabButton
+    return tabButton
 end
 
 local function RebuildBossMenu()
@@ -1056,57 +1909,25 @@ local function RebuildBossMenu()
     local rowX = PAD_L
     local rowY = -PAD_T
 
+    local homeButton = AcquireBossMenuButton(1)
+    homeButton.IsHomeButton = true
+    homeButton.BossIndex = nil
+    homeButton.Text:SetText("<")
+
+    local homeButtonWidth = math.max(homeButton.Text:GetStringWidth() + 18, 28)
+    homeButton:ClearAllPoints()
+    homeButton:SetPoint("TOPLEFT", BossMenuPanel, "TOPLEFT", rowX, rowY)
+    homeButton:SetHeight(BTN_H)
+    homeButton:SetWidth(homeButtonWidth)
+    homeButton:Show()
+    ApplyNavigationButtonVisual(homeButton)
+
+    rowX = rowX + homeButtonWidth + BTN_GAP
+
     for bossIndex, bossData in ipairs(guideData.bosses) do
-        local tabButton = TabButtons[bossIndex]
+        local tabButton = AcquireBossMenuButton(bossIndex + 1)
 
-        if not tabButton then
-            tabButton = CreateFrame("Button", nil, BossMenuPanel)
-
-            local bg = tabButton:CreateTexture(nil, "BACKGROUND")
-            bg:SetAllPoints()
-            bg:SetColorTexture(0, 0, 0, 0)
-            tabButton.Bg = bg
-
-            -- Akzent-Linie am unteren Rand (horizontal)
-            local accent = tabButton:CreateTexture(nil, "ARTWORK")
-            accent:SetPoint("BOTTOMLEFT",  tabButton, "BOTTOMLEFT",  0, 0)
-            accent:SetPoint("BOTTOMRIGHT", tabButton, "BOTTOMRIGHT", 0, 0)
-            accent:SetHeight(2)
-            accent:SetColorTexture(1, 0.94, 0.47, 1)
-            accent:Hide()
-            tabButton.Accent = accent
-
-            local text = tabButton:CreateFontString(nil, "OVERLAY")
-            text:SetAllPoints(tabButton)
-            text:SetFont(FONT_PATH, DEFAULT_FONT_SIZE, "OUTLINE")
-            text:SetJustifyH("CENTER")
-            text:SetJustifyV("MIDDLE")
-            text:SetWordWrap(false)
-            tabButton.Text = text
-
-            tabButton:SetScript("OnEnter", function(self)
-                if self.BossIndex ~= activeBossIndex then
-                    self.Bg:SetColorTexture(0.26, 0.75, 0.63, 0.08)
-                end
-            end)
-
-            tabButton:SetScript("OnLeave", function(self)
-                ApplyBossButtonVisual(self, self.BossIndex == activeBossIndex)
-            end)
-
-            tabButton:SetScript("OnClick", function(self)
-                activeBossIndex = self.BossIndex
-                for _, button in ipairs(TabButtons) do
-                    if button:IsShown() then
-                        ApplyBossButtonVisual(button, button.BossIndex == activeBossIndex)
-                    end
-                end
-                UpdateGuideText()
-            end)
-
-            TabButtons[bossIndex] = tabButton
-        end
-
+        tabButton.IsHomeButton = false
         tabButton.BossIndex = bossIndex
         tabButton.Text:SetText(GetBossName(bossData))
 
@@ -1150,10 +1971,62 @@ local function RefreshWindowDropdowns()
     end
 end
 
-local function UpdateGuideUi()
+UpdateGuideUi = function()
+    local guideData = GetActiveGuideData()
+
+    if GuideWindowTitleText then
+        GuideWindowTitleText:SetText(guideData and GetGuideTitle(guideData) or "")
+    end
+
     RefreshWindowDropdowns()
-    RebuildBossMenu()
-    UpdateGuideText()
+
+    if activeGuideKey then
+        if GuideHomePanel then
+            GuideHomePanel:Hide()
+        end
+
+        if BossMenuPanel then
+            BossMenuPanel:Show()
+        end
+
+        if LegendBar then
+            LegendBar:Show()
+        end
+
+        if ContentScrollFrame then
+            ContentScrollFrame:Show()
+        end
+
+        RebuildBossMenu()
+        UpdateGuideText()
+    else
+        HideGuideContentWidgets()
+
+        if BossMenuPanel then
+            BossMenuPanel:Hide()
+        end
+
+        if LegendBar then
+            LegendBar:Hide()
+        end
+
+        if ContentScrollFrame then
+            ContentScrollFrame:Hide()
+        end
+
+        if ContentScrollbar then
+            ContentScrollbar:Hide()
+        end
+
+        if GuideHomePanel then
+            GuideHomePanel:Show()
+            LayoutGuideHome()
+        end
+    end
+
+    if OverlayButton and OverlayButton.RefreshVisual then
+        OverlayButton:RefreshVisual()
+    end
 end
 
 local function IsGuideAvailableInCurrentInstance()
@@ -1178,19 +2051,27 @@ local function RefreshOverlayVisibility()
     end
 
     if shouldShowButton then
-        if currentGuideKey and currentGuideKey ~= activeGuideKey then
-            activeGuideKey = currentGuideKey
-            activeBossIndex = 1
-            UpdateGuideUi()
-        elseif not currentGuideKey and activeGuideKey then
-            activeGuideKey = nil
+        if currentGuideKey then
+            if currentGuideKey ~= activeGuideKey or activeGuideSource ~= "auto" then
+                SetActiveGuide(currentGuideKey, "auto", true)
+                UpdateGuideUi()
+            end
+        elseif activeGuideSource == "auto" then
+            SetActiveGuide(nil, nil, true)
             UpdateGuideUi()
         end
+
         OverlayButton:Show()
     else
         OverlayButton:Hide()
-        GuideWindow:Hide()
-        activeGuideKey = nil
+
+        if GuideWindow then
+            GuideWindow:Hide()
+        end
+
+        if activeGuideSource == "auto" then
+            SetActiveGuide(nil, nil, true)
+        end
     end
 
     if CurrentInstanceText then
@@ -1210,6 +2091,15 @@ local function ApplyOverlayScale()
     end
     if GuideWindow then
         GuideWindow:SetScale(db.overlayScale)
+        local maxWidth = GetGuideWindowMaxWidth()
+        if GuideWindow:GetWidth() > maxWidth then
+            GuideWindow:SetWidth(maxWidth)
+            SaveGuideWindowGeometry()
+        end
+        AttachGuideWindowToOverlayButton()
+        if GuideWindow:IsShown() and AutoSizeGuideWindow then
+            AutoSizeGuideWindow()
+        end
     end
 end
 
@@ -1241,6 +2131,9 @@ local function ApplyFontSize()
     end
 
     if GuideWindow and GuideWindow:IsShown() then
+        if activeGuideKey then
+            RebuildBossMenu()
+        end
         UpdateGuideText()
     end
 end
@@ -1289,10 +2182,6 @@ function BossGuidesModule.ResetPositions()
     db.offsetX = DEFAULT_OFFSET_X
     db.offsetY = DEFAULT_OFFSET_Y
 
-    db.windowPoint = DEFAULT_WINDOW_POINT
-    db.windowRelativePoint = DEFAULT_WINDOW_RELATIVE_POINT
-    db.windowOffsetX  = DEFAULT_WINDOW_OFFSET_X
-    db.windowOffsetY  = DEFAULT_WINDOW_OFFSET_Y
     db.windowWidth    = DEFAULT_WINDOW_WIDTH
     db.windowHeight   = DEFAULT_WINDOW_HEIGHT
 
@@ -1305,15 +2194,97 @@ local function CreateOverlayFrames()
         return
     end
 
-    -- Toggle-Button (klein, positionierbar)
-    OverlayButton = CreateFrame("Button", "BeavisQoLBossGuidesToggle", UIParent, "UIPanelButtonTemplate")
-    OverlayButton:SetSize(164, 28)
-    OverlayButton:SetText(L("BOSS_GUIDES_BUTTON"))
+    OverlayButton = CreateFrame("Button", "BeavisQoLBossGuidesToggle", UIParent)
+    OverlayButton:SetSize(156, 28)
     OverlayButton:SetClampedToScreen(true)
     OverlayButton:SetMovable(true)
     OverlayButton:EnableMouse(true)
     OverlayButton:RegisterForDrag("LeftButton")
     OverlayButton:SetFrameStrata("HIGH")
+
+    local buttonBg = OverlayButton:CreateTexture(nil, "BACKGROUND")
+    buttonBg:SetAllPoints()
+
+    local buttonGlow = OverlayButton:CreateTexture(nil, "BORDER")
+    buttonGlow:SetPoint("TOPLEFT", OverlayButton, "TOPLEFT", 0, 0)
+    buttonGlow:SetPoint("TOPRIGHT", OverlayButton, "TOPRIGHT", 0, 0)
+    buttonGlow:SetHeight(14)
+
+    local buttonBorderTop = OverlayButton:CreateTexture(nil, "ARTWORK")
+    buttonBorderTop:SetPoint("TOPLEFT", OverlayButton, "TOPLEFT", 0, 0)
+    buttonBorderTop:SetPoint("TOPRIGHT", OverlayButton, "TOPRIGHT", 0, 0)
+    buttonBorderTop:SetHeight(1)
+
+    local buttonBorderBottom = OverlayButton:CreateTexture(nil, "ARTWORK")
+    buttonBorderBottom:SetPoint("BOTTOMLEFT", OverlayButton, "BOTTOMLEFT", 0, 0)
+    buttonBorderBottom:SetPoint("BOTTOMRIGHT", OverlayButton, "BOTTOMRIGHT", 0, 0)
+    buttonBorderBottom:SetHeight(1)
+
+    local buttonAccent = OverlayButton:CreateTexture(nil, "ARTWORK")
+    buttonAccent:SetPoint("TOPLEFT", OverlayButton, "TOPLEFT", 0, 0)
+    buttonAccent:SetPoint("BOTTOMLEFT", OverlayButton, "BOTTOMLEFT", 0, 0)
+    buttonAccent:SetWidth(2)
+
+    local buttonConnector = OverlayButton:CreateTexture(nil, "ARTWORK")
+    buttonConnector:SetPoint("BOTTOMLEFT", OverlayButton, "BOTTOMLEFT", 10, 0)
+    buttonConnector:SetPoint("BOTTOMRIGHT", OverlayButton, "BOTTOMRIGHT", -10, 0)
+    buttonConnector:SetHeight(1)
+    buttonConnector:Hide()
+
+    local buttonLabel = OverlayButton:CreateFontString(nil, "OVERLAY")
+    buttonLabel:SetPoint("LEFT", OverlayButton, "LEFT", 12, 0)
+    buttonLabel:SetPoint("RIGHT", OverlayButton, "RIGHT", -22, 0)
+    buttonLabel:SetJustifyH("LEFT")
+    buttonLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    buttonLabel:SetText(L("BOSS_GUIDES_BUTTON"))
+
+    local buttonIndicator = OverlayButton:CreateFontString(nil, "OVERLAY")
+    buttonIndicator:SetPoint("RIGHT", OverlayButton, "RIGHT", -8, 0)
+    buttonIndicator:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+
+    OverlayButton.RefreshVisual = function(self)
+        local isOpen = GuideWindow and GuideWindow:IsShown()
+        local isHovered = self.isHovered == true
+
+        if isOpen then
+            buttonBg:SetColorTexture(0.04, 0.04, 0.07, 0.84)
+            buttonGlow:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.16 or 0.10)
+            buttonBorderTop:SetColorTexture(0.26, 0.75, 0.63, 0.90)
+            buttonBorderBottom:Hide()
+            buttonAccent:SetColorTexture(0.26, 0.75, 0.63, 0.96)
+            buttonConnector:Show()
+            buttonLabel:SetTextColor(1.00, 0.96, 0.82, 1)
+            buttonIndicator:SetText("v")
+            buttonIndicator:SetTextColor(0.92, 0.98, 0.94, 1)
+            return
+        end
+
+        buttonBg:SetColorTexture(0.04, 0.04, 0.07, isHovered and 0.78 or 0.68)
+        buttonGlow:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.14 or 0.06)
+        buttonBorderTop:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.78 or 0.56)
+        buttonBorderBottom:Show()
+        buttonBorderBottom:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.42 or 0.22)
+        buttonAccent:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.90 or 0.70)
+        buttonConnector:Hide()
+        buttonLabel:SetTextColor(isHovered and 1.00 or 0.94, isHovered and 0.95 or 0.90, isHovered and 0.78 or 0.72, 1)
+        buttonIndicator:SetText(">")
+        buttonIndicator:SetTextColor(isHovered and 0.92 or 0.78, isHovered and 0.98 or 0.90, isHovered and 0.94 or 0.86, 1)
+    end
+
+    OverlayButton:SetScript("OnEnter", function(self)
+        self.isHovered = true
+        if self.RefreshVisual then
+            self:RefreshVisual()
+        end
+    end)
+
+    OverlayButton:SetScript("OnLeave", function(self)
+        self.isHovered = false
+        if self.RefreshVisual then
+            self:RefreshVisual()
+        end
+    end)
+
     OverlayButton:SetScript("OnDragStart", function(self)
         if BossGuidesModule.IsOverlayLocked() then return end
         self:StartMoving()
@@ -1321,9 +2292,9 @@ local function CreateOverlayFrames()
     OverlayButton:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         SaveOverlayButtonGeometry()
+        AttachGuideWindowToOverlayButton()
     end)
 
-    -- Hauptfenster – komplett framelos/transparent wie eine WeakAura
     GuideWindow = CreateFrame("Frame", "BeavisQoLBossGuidesWindow", UIParent)
     GuideWindow:SetSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
     GuideWindow:SetClampedToScreen(true)
@@ -1331,20 +2302,40 @@ local function CreateOverlayFrames()
     GuideWindow:SetResizable(true)
     GuideWindow:SetResizeBounds(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT)
     GuideWindow:EnableMouse(true)
-    GuideWindow:RegisterForDrag("LeftButton")
     GuideWindow:SetFrameStrata("DIALOG")
     GuideWindow:Hide()
 
-    GuideWindow:SetScript("OnDragStart", function(self)
-        if BossGuidesModule.IsOverlayLocked() then return end
-        self:StartMoving()
-    end)
-    GuideWindow:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        SaveGuideWindowGeometry()
+    GuideWindow:SetScript("OnShow", function()
+        AttachGuideWindowToOverlayButton()
+        if OverlayButton and OverlayButton.RefreshVisual then
+            OverlayButton:RefreshVisual()
+        end
     end)
 
-    -- Sehr dezenter transparenter Hintergrund (WeakAura-Stil)
+    GuideWindow:SetScript("OnHide", function()
+        if OverlayButton and OverlayButton.RefreshVisual then
+            OverlayButton:RefreshVisual()
+        end
+    end)
+
+    GuideWindow:SetScript("OnSizeChanged", function(self)
+        if self:IsShown() then
+            local maxWidth = GetGuideWindowMaxWidth()
+            if self:GetWidth() > maxWidth + 1 then
+                self:SetWidth(maxWidth)
+                return
+            end
+
+            SaveGuideWindowGeometry()
+            AttachGuideWindowToOverlayButton(self:GetWidth(), self:GetHeight())
+            if not isAutoSizingGuideWindow then
+                UpdateGuideUi()
+            else
+                SyncContentScrollbar()
+            end
+        end
+    end)
+
     local bg = GuideWindow:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetColorTexture(0.04, 0.04, 0.07, 0.55)
@@ -1363,82 +2354,22 @@ local function CreateOverlayFrames()
     lineBottom:SetHeight(1)
     lineBottom:SetColorTexture(0.26, 0.75, 0.63, 0.40)
 
-    -- Kopfzeile: Dropdowns + minimaler Schließen-Button, kein Hintergrund
+    -- Kopfzeile: kompakt, ohne Dropdowns im Viewer
     local headerRow = CreateFrame("Frame", nil, GuideWindow)
     headerRow:SetPoint("TOPLEFT", GuideWindow, "TOPLEFT", 0, -2)
     headerRow:SetPoint("TOPRIGHT", GuideWindow, "TOPRIGHT", 0, -2)
-    headerRow:SetHeight(32)
+    headerRow:SetHeight(28)
 
-    CategoryDropdown = CreateFrame("Frame", "BeavisQoLBossGuidesCategoryDropdown", headerRow, "UIDropDownMenuTemplate")
-    CategoryDropdown:SetPoint("TOPLEFT", headerRow, "TOPLEFT", 2, -1)
-    UIDropDownMenu_SetWidth(CategoryDropdown, 92)
+    CategoryDropdown = nil
+    InstanceDropdown = nil
 
-    InstanceDropdown = CreateFrame("Frame", "BeavisQoLBossGuidesInstanceDropdown", headerRow, "UIDropDownMenuTemplate")
-    InstanceDropdown:SetPoint("LEFT", CategoryDropdown, "RIGHT", 8, 0)
-    UIDropDownMenu_SetWidth(InstanceDropdown, 182)
-
-    UIDropDownMenu_Initialize(CategoryDropdown, function(_, level)
-        local categories = {
-            { text = L("BOSS_GUIDES_CAT_RAID"),    value = "raid"    },
-            { text = L("BOSS_GUIDES_CAT_DUNGEON"), value = "dungeon" },
-        }
-        for _, cat in ipairs(categories) do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text    = cat.text
-            info.value   = cat.value
-            info.func    = function()
-                selectedCategory = cat.value
-                UIDropDownMenu_SetSelectedValue(CategoryDropdown, cat.value)
-                activeGuideKey = nil
-                activeBossIndex = 1
-                UpdateGuideUi()
-            end
-            info.checked = (selectedCategory == cat.value)
-            UIDropDownMenu_AddButton(info, level)
-        end
-    end)
-
-    UIDropDownMenu_Initialize(InstanceDropdown, function(_, level)
-        local hasEntries = false
-        for guideKey, guideData in pairs(GUIDE_DATA) do
-            if guideData.type == selectedCategory then
-                hasEntries = true
-                local info = UIDropDownMenu_CreateInfo()
-                info.text    = GetGuideTitle(guideData)
-                info.value   = guideKey
-                info.func    = function()
-                    activeGuideKey = guideKey
-                    activeBossIndex = 1
-                    UIDropDownMenu_SetSelectedValue(InstanceDropdown, guideKey)
-                    UpdateGuideUi()
-                end
-                info.checked = (activeGuideKey == guideKey)
-                UIDropDownMenu_AddButton(info, level)
-            end
-        end
-        if not hasEntries then
-            local info = UIDropDownMenu_CreateInfo()
-            info.text         = L("BOSS_GUIDES_NO_INSTANCES")
-            info.disabled     = true
-            info.notCheckable = true
-            UIDropDownMenu_AddButton(info, level)
-        end
-    end)
-
-    -- Klickflächen über die gesamte Dropdown-Breite, nicht nur auf den Pfeil.
-    local categoryClickArea = CreateFrame("Button", nil, headerRow)
-    categoryClickArea:SetPoint("TOPLEFT", CategoryDropdown, "TOPLEFT", 18, -4)
-    categoryClickArea:SetSize(116, 24)
-    categoryClickArea:SetScript("OnClick", function()
-        ToggleDropDownMenu(1, nil, CategoryDropdown, CategoryDropdown, 16, 0)
-    end)
-
-    local instanceClickArea = CreateFrame("Button", nil, headerRow)
-    instanceClickArea:SetPoint("TOPLEFT", InstanceDropdown, "TOPLEFT", 18, -4)
-    instanceClickArea:SetSize(206, 24)
-    instanceClickArea:SetScript("OnClick", function()
-        ToggleDropDownMenu(1, nil, InstanceDropdown, InstanceDropdown, 16, 0)
-    end)
+    GuideWindowTitleText = headerRow:CreateFontString(nil, "OVERLAY")
+    GuideWindowTitleText:SetPoint("LEFT", headerRow, "LEFT", 12, 0)
+    GuideWindowTitleText:SetPoint("RIGHT", headerRow, "RIGHT", -82, 0)
+    GuideWindowTitleText:SetJustifyH("LEFT")
+    GuideWindowTitleText:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    GuideWindowTitleText:SetTextColor(1.00, 0.96, 0.82, 1)
+    GuideWindowTitleText:SetText("")
 
     -- Header-Buttons rechts: Einstellungen | Pin | Schließen
     local function MakeHeaderIconBtn(parent, texturePath, offsetX)
@@ -1562,8 +2493,8 @@ local function CreateOverlayFrames()
 
     -- Content-Bereich unterhalb der Tab-Leiste und oberhalb der Legende
     ContentScrollFrame = CreateFrame("ScrollFrame", nil, GuideWindow)
-    ContentScrollFrame:SetPoint("TOPLEFT",     BossMenuPanel, "BOTTOMLEFT",  8, -4)
-    ContentScrollFrame:SetPoint("BOTTOMRIGHT", LegendBar,     "TOPRIGHT",   -(8 + CONTENT_SCROLLBAR_WIDTH + CONTENT_SCROLLBAR_GAP), 4)
+    ContentScrollFrame:SetPoint("TOPLEFT",     BossMenuPanel, "BOTTOMLEFT",  10, -4)
+    ContentScrollFrame:SetPoint("BOTTOMRIGHT", LegendBar,     "TOPRIGHT",   -(10 + CONTENT_SCROLLBAR_WIDTH + CONTENT_SCROLLBAR_GAP), 4)
     ContentScrollFrame:EnableMouseWheel(true)
     ContentScrollFrame:SetScript("OnMouseWheel", function(self, delta)
         local step    = 38
@@ -1581,7 +2512,7 @@ local function CreateOverlayFrames()
     ContentScrollFrame:SetScript("OnSizeChanged", function(self)
         ContentScrollChild:SetWidth(self:GetWidth())
         if ContentText then
-            ContentText:SetWidth(math.max(self:GetWidth() - 12, 40))
+            ContentText:SetWidth(math.max(self:GetWidth() - 8, 40))
             if GuideWindow and GuideWindow:IsShown() then
                 UpdateGuideText()
             end
@@ -1619,10 +2550,25 @@ local function CreateOverlayFrames()
     end)
 
     ContentText = CreateFrame("Frame", nil, ContentScrollChild)
-    ContentText:SetPoint("TOPLEFT",  ContentScrollChild, "TOPLEFT",  6, -4)
-    ContentText:SetPoint("TOPRIGHT", ContentScrollChild, "TOPRIGHT", -6, -4)
-    ContentText:SetWidth(math.max(ContentScrollFrame:GetWidth() - 12, 40))
+    ContentText:SetPoint("TOPLEFT",  ContentScrollChild, "TOPLEFT",  4, -4)
+    ContentText:SetPoint("TOPRIGHT", ContentScrollChild, "TOPRIGHT", -4, -4)
+    ContentText:SetWidth(math.max(ContentScrollFrame:GetWidth() - 8, 40))
     ContentText:SetHeight(220)
+
+    GuideHomePanel = CreateFrame("Frame", nil, GuideWindow)
+    GuideHomePanel:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 12, -12)
+    GuideHomePanel:SetPoint("BOTTOMRIGHT", GuideWindow, "BOTTOMRIGHT", -12, 10)
+    GuideHomePanel:Hide()
+
+    GuideHomeEmptyText = GuideHomePanel:CreateFontString(nil, "OVERLAY")
+    GuideHomeEmptyText:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", 0, 0)
+    GuideHomeEmptyText:SetPoint("RIGHT", GuideHomePanel, "RIGHT", 0, 0)
+    GuideHomeEmptyText:SetJustifyH("LEFT")
+    GuideHomeEmptyText:SetJustifyV("TOP")
+    GuideHomeEmptyText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    GuideHomeEmptyText:SetTextColor(0.78, 0.80, 0.82, 1)
+    GuideHomeEmptyText:SetText(L("BOSS_GUIDES_HOME_EMPTY"))
+    GuideHomeEmptyText:Hide()
 
     OverlayButton:SetScript("OnClick", function()
         if GuideWindow:IsShown() then
@@ -1641,7 +2587,7 @@ local function CreateOverlayFrames()
     local gripTxt = resizeGrip:CreateFontString(nil, "OVERLAY")
     gripTxt:SetAllPoints()
     gripTxt:SetFont(FONT_PATH, 14, "")
-    gripTxt:SetText("◿")
+    gripTxt:SetText(">")
     gripTxt:SetJustifyH("RIGHT")
     gripTxt:SetJustifyV("BOTTOM")
     gripTxt:SetTextColor(0.26, 0.75, 0.63, 0.45)
@@ -1649,7 +2595,7 @@ local function CreateOverlayFrames()
     resizeGrip:SetScript("OnLeave",    function() gripTxt:SetTextColor(0.26, 0.75, 0.63, 0.45) end)
     resizeGrip:SetScript("OnMouseDown", function()
         if BossGuidesModule.IsOverlayLocked() then return end
-        GuideWindow:StartSizing("BOTTOMRIGHT")
+        GuideWindow:StartSizing("RIGHT")
     end)
     resizeGrip:SetScript("OnMouseUp", function()
         GuideWindow:StopMovingOrSizing()

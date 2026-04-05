@@ -6,14 +6,18 @@ local Misc = BeavisQoL.Misc
 local FLOOR = math.floor
 local MAX = math.max
 local MIN = math.min
+local SQRT = math.sqrt
 
 local GetAchievementInfoValue = rawget(_G, "GetAchievementInfo")
 local GetFactionGroup = rawget(_G, "UnitFactionGroup")
+local GetLocaleValue = rawget(_G, "GetLocale")
+local GetMinimapZoneTextValue = rawget(_G, "GetMinimapZoneText")
 local GetNumRoutesValue = rawget(_G, "GetNumRoutes")
 local PlaySoundFileValue = rawget(_G, "PlaySoundFile")
 local GetTaxiMapIDValue = rawget(_G, "GetTaxiMapID")
 local GetViewedTaxiMapIDValue = rawget(_G, "GetViewedTaxiMapID")
 local GetTimeValue = rawget(_G, "GetTime")
+local HookSecureFuncValue = rawget(_G, "hooksecurefunc")
 local IsSpellKnownValue = rawget(_G, "IsSpellKnown")
 local NumTaxiNodesValue = rawget(_G, "NumTaxiNodes")
 local TaxiGetNodeSlotValue = rawget(_G, "TaxiGetNodeSlot")
@@ -21,6 +25,7 @@ local TaxiNodeGetTypeValue = rawget(_G, "TaxiNodeGetType")
 local TaxiNodeNameValue = rawget(_G, "TaxiNodeName")
 local UnitOnTaxiValue = rawget(_G, "UnitOnTaxi")
 
+local AddOnsAPI = rawget(_G, "C_AddOns")
 local TaxiMapAPI = rawget(_G, "C_TaxiMap")
 local TimerAPI = rawget(_G, "C_Timer")
 
@@ -46,6 +51,11 @@ local CurrentSourceName = nil
 local PendingFlight = nil
 local ActiveFlight = nil
 local KhazAlgarTaxiNodes = nil
+local DurationGraphCache = nil
+local DurationGraphFactionKey = nil
+local DurationGraphAverageEdgeDuration = nil
+local StandardSpecialFlightHookInstalled = false
+local ImmersionSpecialFlightHookInstalled = false
 local BUILTIN_ARRIVAL_SOUND_OPTIONS = {
     {
         key = DEFAULT_ARRIVAL_SOUND_KEY,
@@ -101,6 +111,323 @@ end
 
 local function L(key)
     return BeavisQoL.L and BeavisQoL.L(key) or key
+end
+
+local SPECIAL_FLIGHT_GOSSIP_ROUTES_BY_LOCALE = {
+    deDE = {
+        ["Bernsteinflöz"] = {
+            {
+                match = "Ich möchte Durchgang zum Transitusschild",
+                sourceKey = "Amber Ledge",
+                sourceName = "Bernsteinflöz",
+                destinationKey = "Transitus Shield (Scenic Route)",
+                destinationName = "Transitusschild (Freiflug)",
+            },
+        },
+        ["Argentumturnierplatz"] = {
+            {
+                match = "Schwingt Euch auf den Hippogryphen und macht Euch bereit zum Kampf",
+                sourceKey = "Argent Tournament Grounds",
+                sourceName = "Argentumturnierplatz",
+                destinationKey = "Return",
+                destinationName = "Zurück zum Startpunkt",
+            },
+        },
+        ["Schattenwindlager"] = {
+            {
+                match = "Bringt mich zum Außenposten der Himmelswache",
+                sourceKey = "Blackwind Landing",
+                sourceName = "Schattenwindlager",
+                destinationKey = "Skyguard Outpost",
+                destinationName = "Außenposten der Himmelswache",
+            },
+        },
+        ["Höhlen der Zeit"] = {
+            {
+                match = "Bringt mich bitte zum Hort des Meisters",
+                sourceKey = "Caverns of Time",
+                sourceName = "Höhlen der Zeit",
+                destinationKey = "Nozdormu's Lair",
+                destinationName = "Nozdormus Versteck",
+            },
+        },
+        ["Expeditionsposten"] = {
+            {
+                match = "Schickt mich zum Trümmerposten",
+                sourceKey = "Expedition Point",
+                sourceName = "Expeditionsposten",
+                destinationKey = "Shatter Point",
+                destinationName = "Trümmerposten",
+            },
+        },
+        ["Höllenfeuerhalbinsel"] = {
+            {
+                match = "Schickt mich zum Trümmerposten",
+                sourceKey = "Honor Point",
+                sourceName = "Ehrenposten",
+                destinationKey = "Shatter Point",
+                destinationName = "Trümmerposten",
+            },
+        },
+        ["Nachthafen"] = {
+            {
+                match = "Ich würde gerne nach Rut'theran fliegen",
+                sourceKey = "Nighthaven",
+                sourceName = "Nachthafen",
+                destinationKey = "Rut'theran Village",
+                destinationName = "Rut'theran",
+            },
+            {
+                match = "Ich würde gerne nach Donnerfels fliegen",
+                sourceKey = "Nighthaven",
+                sourceName = "Nachthafen",
+                destinationKey = "Thunder Bluff",
+                destinationName = "Donnerfels",
+            },
+        },
+        ["Vorgebirge des Alten Hügellands"] = {
+            {
+                match = "Ich bin bereit, nach Burg Durnholde zu gehen",
+                sourceKey = "Old Hillsbrad Foothills",
+                sourceName = "Vorgebirge des Alten Hügellands",
+                destinationKey = "Durnholde Keep",
+                destinationName = "Burg Durnholde",
+            },
+        },
+        ["Ring der Übertragung"] = {
+            {
+                match = "Ich muss zurück zur Bastion",
+                sourceKey = "Oribos",
+                sourceName = "Oribos",
+                destinationKey = "Bastion",
+                destinationName = "Bastion",
+            },
+        },
+        ["Trümmerposten"] = {
+            {
+                match = "Schickt mich zum Ehrenposten",
+                sourceKey = "Shatter Point",
+                sourceName = "Trümmerposten",
+                destinationKey = "Honor Point",
+                destinationName = "Ehrenposten",
+            },
+        },
+        ["Außenposten der Himmelswache"] = {
+            {
+                match = "Ja, ich würde gerne zum Schattenwindlager fliegen",
+                sourceKey = "Skyguard Outpost",
+                sourceName = "Außenposten der Himmelswache",
+                destinationKey = "Blackwind Landing",
+                destinationName = "Schattenwindlager",
+            },
+        },
+        ["Sturmwind"] = {
+            {
+                match = "Ich möchte durch den Hafen von Sturmwind fliegen",
+                sourceKey = "Stormwind City",
+                sourceName = "Sturmwind",
+                destinationKey = "Return",
+                destinationName = "Zurück zum Startpunkt",
+            },
+        },
+        ["Hafen der Sonnenweiten"] = {
+            {
+                match = "Wo wir gerade von Kämpfen sprechen, ich habe die Order, einen Luftangriff zu starten",
+                sourceKey = "Shattered Sun Staging Area",
+                sourceName = "Sammelpunkt der Zerschmetterten Sonne",
+                destinationKey = "Return",
+                destinationName = "Zurück zum Startpunkt",
+            },
+            {
+                match = "Ich muss die Verstärkung der Dämmerklingen abfangen",
+                sourceKey = "Shattered Sun Staging Area",
+                sourceName = "Sammelpunkt der Zerschmetterten Sonne",
+                destinationKey = "The Sin'loren",
+                destinationName = "Die Sin'loren",
+            },
+        },
+        ["Die Sin'loren"] = {
+            {
+                match = "Fliegt auf dem Drachenfalken in die Sonnenweiten",
+                sourceKey = "The Sin'loren",
+                sourceName = "Die Sin'loren",
+                destinationKey = "Shattered Sun Staging Area",
+                destinationName = "Sammelpunkt der Zerschmetterten Sonne",
+            },
+        },
+        ["Valgarde"] = {
+            {
+                match = "Bringt mich zum Außenposten der Forscherliga",
+                sourceKey = "Valgarde",
+                sourceName = "Valgarde",
+                destinationKey = "Explorers' League Outpost",
+                destinationName = "Außenposten der Forscherliga",
+            },
+        },
+    },
+    enUS = {
+        ["Amber Ledge"] = {
+            {
+                match = "I'd like passage to the Transitus Shield",
+                sourceKey = "Amber Ledge",
+                sourceName = "Amber Ledge",
+                destinationKey = "Transitus Shield (Scenic Route)",
+                destinationName = "Transitus Shield (Scenic Route)",
+            },
+        },
+        ["Argent Tournament Grounds"] = {
+            {
+                match = "Mount the Hippogryph and prepare for battle",
+                sourceKey = "Argent Tournament Grounds",
+                sourceName = "Argent Tournament Grounds",
+                destinationKey = "Return",
+                destinationName = "Return",
+            },
+        },
+        ["Blackwind Landing"] = {
+            {
+                match = "Send me to the Skyguard Outpost",
+                sourceKey = "Blackwind Landing",
+                sourceName = "Blackwind Landing",
+                destinationKey = "Skyguard Outpost",
+                destinationName = "Skyguard Outpost",
+            },
+        },
+        ["Caverns of Time"] = {
+            {
+                match = "Please take me to the master's lair",
+                sourceKey = "Caverns of Time",
+                sourceName = "Caverns of Time",
+                destinationKey = "Nozdormu's Lair",
+                destinationName = "Nozdormu's Lair",
+            },
+        },
+        ["Expedition Point"] = {
+            {
+                match = "Send me to Shatter Point",
+                sourceKey = "Expedition Point",
+                sourceName = "Expedition Point",
+                destinationKey = "Shatter Point",
+                destinationName = "Shatter Point",
+            },
+        },
+        ["Hellfire Peninsula"] = {
+            {
+                match = "Send me to Shatter Point",
+                sourceKey = "Honor Point",
+                sourceName = "Honor Point",
+                destinationKey = "Shatter Point",
+                destinationName = "Shatter Point",
+            },
+        },
+        ["Nighthaven"] = {
+            {
+                match = "I'd like to fly to Rut'theran Village",
+                sourceKey = "Nighthaven",
+                sourceName = "Nighthaven",
+                destinationKey = "Rut'theran Village",
+                destinationName = "Rut'theran Village",
+            },
+            {
+                match = "I'd like to fly to Thunder Bluff",
+                sourceKey = "Nighthaven",
+                sourceName = "Nighthaven",
+                destinationKey = "Thunder Bluff",
+                destinationName = "Thunder Bluff",
+            },
+        },
+        ["Old Hillsbrad Foothills"] = {
+            {
+                match = "I'm ready to go to Durnholde Keep",
+                sourceKey = "Old Hillsbrad Foothills",
+                sourceName = "Old Hillsbrad Foothills",
+                destinationKey = "Durnholde Keep",
+                destinationName = "Durnholde Keep",
+            },
+        },
+        ["Ring of Transference"] = {
+            {
+                match = "I am ready. Send me to Bastion",
+                sourceKey = "Oribos",
+                sourceName = "Oribos",
+                destinationKey = "Bastion",
+                destinationName = "Bastion",
+            },
+            {
+                match = "I need to get back to Bastion",
+                sourceKey = "Oribos",
+                sourceName = "Oribos",
+                destinationKey = "Bastion",
+                destinationName = "Bastion",
+            },
+        },
+        ["Shatter Point"] = {
+            {
+                match = "Send me to Honor Point",
+                sourceKey = "Shatter Point",
+                sourceName = "Shatter Point",
+                destinationKey = "Honor Point",
+                destinationName = "Honor Point",
+            },
+        },
+        ["Skyguard Outpost"] = {
+            {
+                match = "Yes, I'd love a ride to Blackwind Landing",
+                sourceKey = "Skyguard Outpost",
+                sourceName = "Skyguard Outpost",
+                destinationKey = "Blackwind Landing",
+                destinationName = "Blackwind Landing",
+            },
+        },
+        ["Stormwind City"] = {
+            {
+                match = "I'd like to take a flight around Stormwind Harbor",
+                sourceKey = "Stormwind City",
+                sourceName = "Stormwind City",
+                destinationKey = "Return",
+                destinationName = "Return",
+            },
+        },
+        ["Sun's Reach Harbor"] = {
+            {
+                match = "Speaking of action, I've been ordered to undertake an air strike",
+                sourceKey = "Shattered Sun Staging Area",
+                sourceName = "Shattered Sun Staging Area",
+                destinationKey = "Return",
+                destinationName = "Return",
+            },
+            {
+                match = "I need to intercept the Dawnblade reinforcements",
+                sourceKey = "Shattered Sun Staging Area",
+                sourceName = "Shattered Sun Staging Area",
+                destinationKey = "The Sin'loren",
+                destinationName = "The Sin'loren",
+            },
+        },
+        ["The Sin'loren"] = {
+            {
+                match = "Ride the dragonhawk to Sun's Reach",
+                sourceKey = "The Sin'loren",
+                sourceName = "The Sin'loren",
+                destinationKey = "Shattered Sun Staging Area",
+                destinationName = "Shattered Sun Staging Area",
+            },
+        },
+        ["Valgarde"] = {
+            {
+                match = "Take me to the Explorers' League Outpost",
+                sourceKey = "Valgarde",
+                sourceName = "Valgarde",
+                destinationKey = "Explorers' League Outpost",
+                destinationName = "Explorers' League Outpost",
+            },
+        },
+    },
+}
+
+local function GetSpecialFlightRouteDefinitions()
+    local localeKey = GetLocaleValue and GetLocaleValue() or "enUS"
+    return SPECIAL_FLIGHT_GOSSIP_ROUTES_BY_LOCALE[localeKey] or SPECIAL_FLIGHT_GOSSIP_ROUTES_BY_LOCALE.enUS
 end
 
 local function NormalizeArrivalSoundStorageKey(soundKey)
@@ -462,10 +789,15 @@ local function GetLearnedRouteDuration(sourceNodeID, destinationNodeID)
     return GetRouteDurationFromTable(GetLearnedDurationRoot(false), sourceNodeID, destinationNodeID)
 end
 
-local function GetSeedRouteDuration(sourceNodeID, destinationNodeID)
+local function GetSeedRouteDurationForSource(sourceNodeID, destinationNodeID)
     local seedData = Misc.FlightMasterTimerSeedData
     if type(seedData) ~= "table" then
         return nil
+    end
+
+    local factionslessSeconds = GetRouteDurationFromTable(seedData.FactionslessZones, sourceNodeID, destinationNodeID)
+    if factionslessSeconds then
+        return factionslessSeconds
     end
 
     local factionKey = GetPlayerFactionKey()
@@ -482,6 +814,81 @@ local function GetSeedRouteDuration(sourceNodeID, destinationNodeID)
     end
 
     return GetRouteDurationFromTable(seedData.Horde, sourceNodeID, destinationNodeID)
+end
+
+local function GetSeedRouteDuration(sourceNodeID, destinationNodeID)
+    return GetSeedRouteDurationForSource(sourceNodeID, destinationNodeID)
+end
+
+local function NormalizeDurationGraphNodeKey(nodeKey)
+    local nodeType = type(nodeKey)
+    if nodeType == "number" then
+        return nodeKey
+    end
+
+    if nodeType == "string" and nodeKey ~= "" then
+        return nodeKey
+    end
+
+    return nil
+end
+
+local function AddRouteDurationsToGraph(graph, rootTable, overwriteExisting)
+    if type(graph) ~= "table" or type(rootTable) ~= "table" then
+        return
+    end
+
+    for sourceKey, destinationTable in pairs(rootTable) do
+        local normalizedSourceKey = NormalizeDurationGraphNodeKey(sourceKey)
+        if normalizedSourceKey and type(destinationTable) == "table" then
+            graph[normalizedSourceKey] = graph[normalizedSourceKey] or {}
+
+            for destinationKey, storedSeconds in pairs(destinationTable) do
+                if destinationKey ~= "name" then
+                    local normalizedDestinationKey = NormalizeDurationGraphNodeKey(destinationKey)
+                    if normalizedDestinationKey and type(storedSeconds) == "number" and storedSeconds > 0 then
+                        if overwriteExisting or graph[normalizedSourceKey][normalizedDestinationKey] == nil then
+                            graph[normalizedSourceKey][normalizedDestinationKey] = storedSeconds
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function InvalidateDurationGraphCache()
+    DurationGraphCache = nil
+    DurationGraphFactionKey = nil
+    DurationGraphAverageEdgeDuration = nil
+end
+
+local function GetDurationGraph()
+    local factionKey = GetPlayerFactionKey() or false
+    if type(DurationGraphCache) == "table" and DurationGraphFactionKey == factionKey then
+        return DurationGraphCache
+    end
+
+    local graph = {}
+    local seedData = Misc.FlightMasterTimerSeedData
+
+    if type(seedData) == "table" then
+        AddRouteDurationsToGraph(graph, seedData.FactionslessZones, false)
+
+        if factionKey and type(seedData[factionKey]) == "table" then
+            AddRouteDurationsToGraph(graph, seedData[factionKey], false)
+        end
+
+        AddRouteDurationsToGraph(graph, seedData.Alliance, false)
+        AddRouteDurationsToGraph(graph, seedData.Horde, false)
+    end
+
+    AddRouteDurationsToGraph(graph, GetLearnedDurationRoot(false), true)
+
+    DurationGraphCache = graph
+    DurationGraphFactionKey = factionKey
+    DurationGraphAverageEdgeDuration = nil
+    return DurationGraphCache
 end
 
 local function IsKhazAlgarNode(nodeID)
@@ -539,7 +946,89 @@ local function GetRouteDurationFactor(destinationNodeID)
     return GetKhazAlgarFlightFactor(destinationNodeID) * GetRideLikeTheWindFactor()
 end
 
-local function GetAdjustedRouteDuration(sourceNodeID, destinationNodeID)
+local function GetAverageAdjustedGraphEdgeDuration()
+    if type(DurationGraphAverageEdgeDuration) == "number" and DurationGraphAverageEdgeDuration > 0 then
+        return DurationGraphAverageEdgeDuration
+    end
+
+    local graph = GetDurationGraph()
+    local totalSeconds = 0
+    local edgeCount = 0
+
+    for _, destinationTable in pairs(graph) do
+        if type(destinationTable) == "table" then
+            for destinationKey, storedSeconds in pairs(destinationTable) do
+                if type(storedSeconds) == "number" and storedSeconds > 0 then
+                    totalSeconds = totalSeconds + (storedSeconds * GetRouteDurationFactor(destinationKey))
+                    edgeCount = edgeCount + 1
+                end
+            end
+        end
+    end
+
+    DurationGraphAverageEdgeDuration = edgeCount > 0 and (totalSeconds / edgeCount) or 90
+    return DurationGraphAverageEdgeDuration
+end
+
+local function GetGraphEstimatedRouteDuration(sourceNodeID, destinationNodeID)
+    local normalizedSourceKey = NormalizeDurationGraphNodeKey(sourceNodeID)
+    local normalizedDestinationKey = NormalizeDurationGraphNodeKey(destinationNodeID)
+    if normalizedSourceKey == nil or normalizedDestinationKey == nil or normalizedSourceKey == normalizedDestinationKey then
+        return nil
+    end
+
+    local graph = GetDurationGraph()
+    if type(graph[normalizedSourceKey]) ~= "table" then
+        return nil
+    end
+
+    local frontier = {
+        {
+            nodeKey = normalizedSourceKey,
+            cost = 0,
+        },
+    }
+    local bestCosts = {
+        [normalizedSourceKey] = 0,
+    }
+
+    while #frontier > 0 do
+        local bestIndex = 1
+        local bestCandidate = frontier[1]
+
+        for index = 2, #frontier do
+            if frontier[index].cost < bestCandidate.cost then
+                bestIndex = index
+                bestCandidate = frontier[index]
+            end
+        end
+
+        table.remove(frontier, bestIndex)
+
+        if bestCandidate.nodeKey == normalizedDestinationKey then
+            return bestCandidate.cost
+        end
+
+        if bestCandidate.cost <= (bestCosts[bestCandidate.nodeKey] or math.huge) then
+            for nextNodeKey, storedSeconds in pairs(graph[bestCandidate.nodeKey] or {}) do
+                if type(storedSeconds) == "number" and storedSeconds > 0 then
+                    local nextCost = bestCandidate.cost + (storedSeconds * GetRouteDurationFactor(nextNodeKey))
+                    if bestCosts[nextNodeKey] == nil or nextCost < bestCosts[nextNodeKey] then
+                        bestCosts[nextNodeKey] = nextCost
+                        frontier[#frontier + 1] = {
+                            nodeKey = nextNodeKey,
+                            cost = nextCost,
+                        }
+                    end
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+local function GetAdjustedRouteDuration(sourceNodeID, destinationNodeID, allowGraphFallback)
     local learnedSeconds = GetLearnedRouteDuration(sourceNodeID, destinationNodeID)
     if learnedSeconds then
         return learnedSeconds * GetRouteDurationFactor(destinationNodeID), false
@@ -548,6 +1037,13 @@ local function GetAdjustedRouteDuration(sourceNodeID, destinationNodeID)
     local seedSeconds = GetSeedRouteDuration(sourceNodeID, destinationNodeID)
     if seedSeconds then
         return seedSeconds * GetRouteDurationFactor(destinationNodeID), false
+    end
+
+    if allowGraphFallback ~= false then
+        local graphSeconds = GetGraphEstimatedRouteDuration(sourceNodeID, destinationNodeID)
+        if graphSeconds then
+            return graphSeconds, true
+        end
     end
 
     return nil
@@ -577,6 +1073,7 @@ local function StoreLearnedRouteDuration(sourceNodeID, destinationNodeID, observ
     end
 
     learnedDurations[sourceNodeID][destinationNodeID] = FLOOR((observedSeconds / factor) + 0.5)
+    InvalidateDurationGraphCache()
 end
 
 local function GetTaxiMapNodes()
@@ -619,6 +1116,187 @@ local function GetNodeDataForSlot(slot)
     return nil
 end
 
+local function BuildRouteNodeSequence(slot, sourceNodeID, destinationNodeID)
+    local directRouteNodeIDs = {
+        sourceNodeID,
+        destinationNodeID,
+    }
+
+    if type(GetNumRoutesValue) ~= "function" or type(TaxiGetNodeSlotValue) ~= "function" then
+        return directRouteNodeIDs, 1
+    end
+
+    local routeCount = GetNumRoutesValue(slot)
+    if type(routeCount) ~= "number" or routeCount < 2 then
+        return directRouteNodeIDs, 1
+    end
+
+    local routeNodeIDs = { sourceNodeID }
+    for hopIndex = 2, routeCount do
+        local hopSlot = TaxiGetNodeSlotValue(slot, hopIndex, true)
+        local hopNodeData = GetNodeDataForSlot(hopSlot)
+        local hopNodeID = hopNodeData and hopNodeData.nodeID or nil
+        if type(hopNodeID) ~= "number" then
+            return directRouteNodeIDs, MAX(1, routeCount)
+        end
+
+        routeNodeIDs[#routeNodeIDs + 1] = hopNodeID
+    end
+
+    routeNodeIDs[#routeNodeIDs + 1] = destinationNodeID
+    return routeNodeIDs, MAX(1, #routeNodeIDs - 1)
+end
+
+local function GetTaxiNodeCoordinates(nodeData)
+    if type(nodeData) ~= "table" then
+        return nil, nil
+    end
+
+    local function ReadCoordinates(positionValue)
+        local positionType = type(positionValue)
+        if positionType ~= "table" and positionType ~= "userdata" then
+            return nil, nil
+        end
+
+        if type(positionValue.x) == "number" and type(positionValue.y) == "number" then
+            return positionValue.x, positionValue.y
+        end
+
+        if type(positionValue[1]) == "number" and type(positionValue[2]) == "number" then
+            return positionValue[1], positionValue[2]
+        end
+
+        if type(positionValue.GetXY) == "function" then
+            local ok, x, y = pcall(positionValue.GetXY, positionValue)
+            if ok and type(x) == "number" and type(y) == "number" then
+                return x, y
+            end
+        end
+
+        return nil, nil
+    end
+
+    local x, y = ReadCoordinates(nodeData.position)
+    if type(x) == "number" and type(y) == "number" then
+        return x, y
+    end
+
+    x, y = ReadCoordinates(nodeData.uiMapPosition)
+    if type(x) == "number" and type(y) == "number" then
+        return x, y
+    end
+
+    if type(nodeData.normalizedX) == "number" and type(nodeData.normalizedY) == "number" then
+        return nodeData.normalizedX, nodeData.normalizedY
+    end
+
+    if type(nodeData.x) == "number" and type(nodeData.y) == "number" then
+        return nodeData.x, nodeData.y
+    end
+
+    return nil, nil
+end
+
+local function BuildTaxiNodeCoordinateLookup()
+    local coordinatesByNodeID = {}
+    local taxiNodes = GetTaxiMapNodes()
+    if type(taxiNodes) ~= "table" then
+        return coordinatesByNodeID
+    end
+
+    for _, taxiNodeData in ipairs(taxiNodes) do
+        if type(taxiNodeData) == "table" and type(taxiNodeData.nodeID) == "number" then
+            local x, y = GetTaxiNodeCoordinates(taxiNodeData)
+            if type(x) == "number" and type(y) == "number" then
+                coordinatesByNodeID[taxiNodeData.nodeID] = {
+                    x = x,
+                    y = y,
+                }
+            end
+        end
+    end
+
+    return coordinatesByNodeID
+end
+
+local function GetTaxiMapSecondsPerUnitDistance(coordinatesByNodeID)
+    if type(coordinatesByNodeID) ~= "table" then
+        return nil
+    end
+
+    local totalAdjustedSeconds = 0
+    local totalDistance = 0
+    local graph = GetDurationGraph()
+
+    for sourceNodeID, coordinates in pairs(coordinatesByNodeID) do
+        local destinationTable = graph[sourceNodeID]
+        if type(destinationTable) == "table" then
+            for destinationNodeID, storedSeconds in pairs(destinationTable) do
+                local destinationCoordinates = coordinatesByNodeID[destinationNodeID]
+                if destinationCoordinates and type(storedSeconds) == "number" and storedSeconds > 0 then
+                    local deltaX = destinationCoordinates.x - coordinates.x
+                    local deltaY = destinationCoordinates.y - coordinates.y
+                    local distance = SQRT((deltaX * deltaX) + (deltaY * deltaY))
+                    if distance > 0 then
+                        totalAdjustedSeconds = totalAdjustedSeconds + (storedSeconds * GetRouteDurationFactor(destinationNodeID))
+                        totalDistance = totalDistance + distance
+                    end
+                end
+            end
+        end
+    end
+
+    if totalDistance <= 0 then
+        return nil
+    end
+
+    return totalAdjustedSeconds / totalDistance
+end
+
+local function GetCoordinateEstimatedRouteDuration(routeNodeIDs, fallbackSegmentCount)
+    if type(routeNodeIDs) ~= "table" or #routeNodeIDs < 2 then
+        return nil
+    end
+
+    local coordinatesByNodeID = BuildTaxiNodeCoordinateLookup()
+    local totalDistance = 0
+    local measuredSegmentCount = 0
+
+    for index = 1, (#routeNodeIDs - 1) do
+        local sourceCoordinates = coordinatesByNodeID[routeNodeIDs[index]]
+        local destinationCoordinates = coordinatesByNodeID[routeNodeIDs[index + 1]]
+        if sourceCoordinates and destinationCoordinates then
+            local deltaX = destinationCoordinates.x - sourceCoordinates.x
+            local deltaY = destinationCoordinates.y - sourceCoordinates.y
+            local distance = SQRT((deltaX * deltaX) + (deltaY * deltaY))
+            if distance > 0 then
+                totalDistance = totalDistance + distance
+                measuredSegmentCount = measuredSegmentCount + 1
+            end
+        end
+    end
+
+    local secondsPerUnitDistance = GetTaxiMapSecondsPerUnitDistance(coordinatesByNodeID)
+    if secondsPerUnitDistance and totalDistance > 0 then
+        return MAX(5, FLOOR((totalDistance * secondsPerUnitDistance) + 0.5))
+    end
+
+    if measuredSegmentCount > 0 then
+        return MAX(5, FLOOR((GetAverageAdjustedGraphEdgeDuration() * measuredSegmentCount) + 0.5))
+    end
+
+    if type(fallbackSegmentCount) == "number" and fallbackSegmentCount > 0 then
+        return MAX(5, FLOOR((GetAverageAdjustedGraphEdgeDuration() * fallbackSegmentCount) + 0.5))
+    end
+
+    return nil
+end
+
+local function GetCoarseFallbackRouteDuration(routeSegmentCount)
+    local normalizedSegmentCount = type(routeSegmentCount) == "number" and routeSegmentCount > 0 and routeSegmentCount or 1
+    return MAX(5, FLOOR((GetAverageAdjustedGraphEdgeDuration() * normalizedSegmentCount) + 0.5))
+end
+
 local function UpdateCurrentSourceFromTaxiMap()
     CurrentSourceNodeID = nil
     CurrentSourceName = nil
@@ -638,46 +1316,61 @@ local function UpdateCurrentSourceFromTaxiMap()
 end
 
 local function GetEstimatedRouteDuration(slot, sourceNodeID, destinationNodeID)
-    local directSeconds = GetAdjustedRouteDuration(sourceNodeID, destinationNodeID)
+    local directSeconds = GetAdjustedRouteDuration(sourceNodeID, destinationNodeID, false)
     if directSeconds then
         return directSeconds
     end
 
-    if type(GetNumRoutesValue) ~= "function" or type(TaxiGetNodeSlotValue) ~= "function" then
-        return nil
-    end
+    local routeNodeIDs, routeSegmentCount = BuildRouteNodeSequence(slot, sourceNodeID, destinationNodeID)
 
-    local routeCount = GetNumRoutesValue(slot)
-    if type(routeCount) ~= "number" or routeCount < 2 then
-        return nil
-    end
+    local estimatedSecondsByIndex = {
+        [1] = 0,
+    }
+    local previousSourceIndex = {}
+    local nextDestinationIndex = {}
+    local sourceIndex = 1
+    local destinationIndex = #routeNodeIDs - 1
 
-    local routeNodeIDs = { sourceNodeID }
+    while sourceIndex and sourceIndex < #routeNodeIDs do
+        while destinationIndex and destinationIndex > sourceIndex do
+            local segmentSeconds = GetAdjustedRouteDuration(routeNodeIDs[sourceIndex], routeNodeIDs[destinationIndex], false)
+            if segmentSeconds then
+                if estimatedSecondsByIndex[destinationIndex] == nil then
+                    estimatedSecondsByIndex[destinationIndex] = estimatedSecondsByIndex[sourceIndex] + segmentSeconds
+                end
 
-    for hopIndex = 2, routeCount do
-        local hopSlot = TaxiGetNodeSlotValue(slot, hopIndex, true)
-        local hopNodeData = GetNodeDataForSlot(hopSlot)
-        local hopNodeID = hopNodeData and hopNodeData.nodeID or nil
-        if type(hopNodeID) ~= "number" then
-            return nil
+                nextDestinationIndex[sourceIndex] = destinationIndex - 1
+                previousSourceIndex[destinationIndex] = sourceIndex
+                sourceIndex = destinationIndex
+                destinationIndex = #routeNodeIDs
+            else
+                destinationIndex = destinationIndex - 1
+            end
         end
 
-        routeNodeIDs[#routeNodeIDs + 1] = hopNodeID
-    end
-
-    routeNodeIDs[#routeNodeIDs + 1] = destinationNodeID
-
-    local totalSeconds = 0
-    for nodeIndex = 1, (#routeNodeIDs - 1) do
-        local segmentSeconds = GetAdjustedRouteDuration(routeNodeIDs[nodeIndex], routeNodeIDs[nodeIndex + 1])
-        if not segmentSeconds then
-            return nil
+        if estimatedSecondsByIndex[#routeNodeIDs] then
+            return estimatedSecondsByIndex[#routeNodeIDs], true
         end
 
-        totalSeconds = totalSeconds + segmentSeconds
+        sourceIndex = previousSourceIndex[sourceIndex]
+        if not sourceIndex then
+            break
+        end
+
+        destinationIndex = nextDestinationIndex[sourceIndex]
     end
 
-    return totalSeconds, true
+    local graphSeconds = GetAdjustedRouteDuration(sourceNodeID, destinationNodeID, true)
+    if graphSeconds then
+        return graphSeconds
+    end
+
+    local coordinateSeconds = GetCoordinateEstimatedRouteDuration(routeNodeIDs, routeSegmentCount)
+    if coordinateSeconds then
+        return coordinateSeconds, true
+    end
+
+    return GetCoarseFallbackRouteDuration(routeSegmentCount), true
 end
 
 local function FormatFlightTime(remainingSeconds)
@@ -987,6 +1680,56 @@ local function QueuePendingFlightExpiry(pendingFlight)
     end)
 end
 
+local function FindSpecialFlightRoute(buttonText)
+    if type(buttonText) ~= "string" or buttonText == "" or type(GetMinimapZoneTextValue) ~= "function" then
+        return nil
+    end
+
+    local subzoneText = GetMinimapZoneTextValue()
+    if type(subzoneText) ~= "string" or subzoneText == "" then
+        return nil
+    end
+
+    local routeDefinitions = GetSpecialFlightRouteDefinitions()[subzoneText]
+    if type(routeDefinitions) ~= "table" then
+        return nil
+    end
+
+    for _, routeDefinition in ipairs(routeDefinitions) do
+        if type(routeDefinition.match) == "string" and string.find(buttonText, routeDefinition.match, 1, true) then
+            return routeDefinition
+        end
+    end
+
+    return nil
+end
+
+local function PreparePendingSpecialFlight(buttonText)
+    if not Misc.IsFlightMasterTimerEnabled() then
+        return
+    end
+
+    local routeDefinition = FindSpecialFlightRoute(buttonText)
+    if type(routeDefinition) ~= "table" then
+        return
+    end
+
+    local totalSeconds = GetAdjustedRouteDuration(routeDefinition.sourceKey, routeDefinition.destinationKey, true)
+        or GetCoarseFallbackRouteDuration(1)
+
+    PendingFlight = {
+        sourceNodeID = nil,
+        sourceName = routeDefinition.sourceName or routeDefinition.sourceKey,
+        destinationNodeID = nil,
+        destinationName = routeDefinition.destinationName or routeDefinition.destinationKey,
+        totalSeconds = totalSeconds,
+        queuedAt = GetNow(),
+    }
+
+    QueuePendingFlightStartChecks()
+    QueuePendingFlightExpiry(PendingFlight)
+end
+
 local function PreparePendingFlight(slot)
     if not Misc.IsFlightMasterTimerEnabled() then
         return
@@ -1029,6 +1772,50 @@ local function PreparePendingFlight(slot)
     QueuePendingFlightExpiry(PendingFlight)
 end
 
+local function InstallSpecialFlightHooks()
+    if not StandardSpecialFlightHookInstalled and type(HookSecureFuncValue) == "function" then
+        local gossipOptionButtonMixin = rawget(_G, "GossipOptionButtonMixin")
+        if type(gossipOptionButtonMixin) == "table" then
+            HookSecureFuncValue(gossipOptionButtonMixin, "OnClick", function(button)
+                local elementData = button and button.GetElementData and button:GetElementData() or nil
+                local gossipButtonType = rawget(_G, "GOSSIP_BUTTON_TYPE_OPTION")
+
+                if type(elementData) == "table" and gossipButtonType and elementData.buttonType ~= nil and elementData.buttonType ~= gossipButtonType then
+                    return
+                end
+
+                PreparePendingSpecialFlight(button and button.GetText and button:GetText() or nil)
+            end)
+
+            StandardSpecialFlightHookInstalled = true
+        end
+    end
+
+    if not ImmersionSpecialFlightHookInstalled and AddOnsAPI and type(AddOnsAPI.IsAddOnLoaded) == "function" and AddOnsAPI.IsAddOnLoaded("Immersion") then
+        local immersionHookFrame = CreateFrame("Frame")
+        immersionHookFrame:SetScript("OnEvent", function()
+            local immersionFrame = rawget(_G, "ImmersionFrame")
+            if not immersionFrame or not immersionFrame.TitleButtons then
+                return
+            end
+
+            local children = { immersionFrame.TitleButtons:GetChildren() }
+            for _, child in ipairs(children) do
+                if not child.BeavisQoLFlightTimerSpecialHook then
+                    child:HookScript("OnClick", function(self)
+                        PreparePendingSpecialFlight(self:GetText())
+                    end)
+                    child.BeavisQoLFlightTimerSpecialHook = true
+                end
+            end
+        end)
+        immersionHookFrame:RegisterEvent("GOSSIP_SHOW")
+        immersionHookFrame:RegisterEvent("QUEST_GREETING")
+        immersionHookFrame:RegisterEvent("QUEST_PROGRESS")
+        ImmersionSpecialFlightHookInstalled = true
+    end
+end
+
 local function InstallTakeTaxiNodeHook()
     if TakeTaxiNodeHookInstalled or type(TakeTaxiNode) ~= "function" then
         return
@@ -1066,11 +1853,18 @@ FlightMasterWatcher:RegisterEvent("PLAYER_CONTROL_LOST")
 FlightMasterWatcher:RegisterEvent("PLAYER_CONTROL_GAINED")
 FlightMasterWatcher:RegisterEvent("TAXIMAP_OPENED")
 FlightMasterWatcher:RegisterEvent("TAXIMAP_CLOSED")
+FlightMasterWatcher:RegisterEvent("GOSSIP_SHOW")
 
 FlightMasterWatcher:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_LOGIN" then
         InstallTakeTaxiNodeHook()
+        InstallSpecialFlightHooks()
         EnsureOverlayFrame()
+        return
+    end
+
+    if event == "GOSSIP_SHOW" then
+        InstallSpecialFlightHooks()
         return
     end
 

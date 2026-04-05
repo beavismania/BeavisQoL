@@ -5,6 +5,10 @@ local L = BeavisQoL.L
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 
+local function GetPortalViewerModule()
+    return BeavisQoL.PortalViewerModule
+end
+
 if not rawget(_G, "UIDropDownMenuTemplate") then
     if C_AddOns and C_AddOns.LoadAddOn then
         C_AddOns.LoadAddOn("Blizzard_UIDropDownMenu")
@@ -35,6 +39,9 @@ PageMiscScrollFrame:EnableMouseWheel(true)
 local PageMiscContent = CreateFrame("Frame", nil, PageMiscScrollFrame)
 PageMiscContent:SetSize(1, 1)
 PageMiscScrollFrame:SetScrollChild(PageMiscContent)
+
+local PORTAL_VIEWER_PANEL_MIN_HEIGHT = 150
+local PORTAL_VIEWER_PANEL_BOTTOM_PADDING = 18
 
 -- ========================================
 -- Header
@@ -305,14 +312,57 @@ CutsceneSkipHint:SetTextColor(0.80, 0.80, 0.80, 1)
 CutsceneSkipHint:SetText(L("CUTSCENE_SKIP_HINT"))
 
 -- ========================================
+-- Bereich: Auto Respawn Pet
+-- ========================================
+
+local AutoRespawnPetPanel = CreateFrame("Frame", nil, PageMiscContent)
+AutoRespawnPetPanel:SetPoint("TOPLEFT", CutsceneSkipPanel, "BOTTOMLEFT", 0, -18)
+AutoRespawnPetPanel:SetPoint("TOPRIGHT", CutsceneSkipPanel, "BOTTOMRIGHT", 0, -18)
+AutoRespawnPetPanel:SetHeight(128)
+
+local AutoRespawnPetBg = AutoRespawnPetPanel:CreateTexture(nil, "BACKGROUND")
+AutoRespawnPetBg:SetAllPoints()
+AutoRespawnPetBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local AutoRespawnPetBorder = AutoRespawnPetPanel:CreateTexture(nil, "ARTWORK")
+AutoRespawnPetBorder:SetPoint("BOTTOMLEFT", AutoRespawnPetPanel, "BOTTOMLEFT", 0, 0)
+AutoRespawnPetBorder:SetPoint("BOTTOMRIGHT", AutoRespawnPetPanel, "BOTTOMRIGHT", 0, 0)
+AutoRespawnPetBorder:SetHeight(1)
+AutoRespawnPetBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local AutoRespawnPetTitle = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
+AutoRespawnPetTitle:SetPoint("TOPLEFT", AutoRespawnPetPanel, "TOPLEFT", 18, -14)
+AutoRespawnPetTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+AutoRespawnPetTitle:SetTextColor(1, 0.82, 0, 1)
+AutoRespawnPetTitle:SetText(L("AUTO_RESPAWN_PET_TITLE"))
+
+local AutoRespawnPetCheckbox = CreateFrame("CheckButton", nil, AutoRespawnPetPanel, "UICheckButtonTemplate")
+AutoRespawnPetCheckbox:SetPoint("TOPLEFT", AutoRespawnPetTitle, "BOTTOMLEFT", -4, -12)
+
+local AutoRespawnPetLabel = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
+AutoRespawnPetLabel:SetPoint("LEFT", AutoRespawnPetCheckbox, "RIGHT", 6, 0)
+AutoRespawnPetLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+AutoRespawnPetLabel:SetTextColor(1, 1, 1, 1)
+AutoRespawnPetLabel:SetText(L("ACTIVE"))
+
+local AutoRespawnPetHint = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
+AutoRespawnPetHint:SetPoint("TOPLEFT", AutoRespawnPetCheckbox, "BOTTOMLEFT", 34, -2)
+AutoRespawnPetHint:SetPoint("RIGHT", AutoRespawnPetPanel, "RIGHT", -18, 0)
+AutoRespawnPetHint:SetJustifyH("LEFT")
+AutoRespawnPetHint:SetJustifyV("TOP")
+AutoRespawnPetHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+AutoRespawnPetHint:SetTextColor(0.80, 0.80, 0.80, 1)
+AutoRespawnPetHint:SetText(L("AUTO_RESPAWN_PET_HINT"))
+
+-- ========================================
 -- Bereich: Flight Master Timer
 -- ========================================
 
 local FlightMasterTimerPanel = CreateFrame("Frame", nil, PageMiscContent)
 local FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT = 320
 local FLIGHT_MASTER_TIMER_PANEL_BOTTOM_PADDING = 18
-FlightMasterTimerPanel:SetPoint("TOPLEFT", CutsceneSkipPanel, "BOTTOMLEFT", 0, -18)
-FlightMasterTimerPanel:SetPoint("TOPRIGHT", CutsceneSkipPanel, "BOTTOMRIGHT", 0, -18)
+FlightMasterTimerPanel:SetPoint("TOPLEFT", AutoRespawnPetPanel, "BOTTOMLEFT", 0, -18)
+FlightMasterTimerPanel:SetPoint("TOPRIGHT", AutoRespawnPetPanel, "BOTTOMRIGHT", 0, -18)
 FlightMasterTimerPanel:SetHeight(FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT)
 
 local FlightMasterTimerBg = FlightMasterTimerPanel:CreateTexture(nil, "BACKGROUND")
@@ -709,12 +759,140 @@ KeystoneActionsSecondsHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 KeystoneActionsSecondsHint:SetTextColor(0.80, 0.80, 0.80, 1)
 KeystoneActionsSecondsHint:SetText(L("KEYSTONE_ACTIONS_SECONDS_HINT"))
 
+-- ========================================
+-- Bereich: Portal Viewer
+-- ========================================
+
+local PortalViewerPanel = CreateFrame("Frame", nil, PageMiscContent)
+PortalViewerPanel:SetPoint("TOPLEFT", KeystoneActionsPanel, "BOTTOMLEFT", 0, -18)
+PortalViewerPanel:SetPoint("TOPRIGHT", KeystoneActionsPanel, "BOTTOMRIGHT", 0, -18)
+PortalViewerPanel:SetHeight(PORTAL_VIEWER_PANEL_MIN_HEIGHT)
+
+local PortalViewerBg = PortalViewerPanel:CreateTexture(nil, "BACKGROUND")
+PortalViewerBg:SetAllPoints()
+PortalViewerBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local PortalViewerBorder = PortalViewerPanel:CreateTexture(nil, "ARTWORK")
+PortalViewerBorder:SetPoint("BOTTOMLEFT", PortalViewerPanel, "BOTTOMLEFT", 0, 0)
+PortalViewerBorder:SetPoint("BOTTOMRIGHT", PortalViewerPanel, "BOTTOMRIGHT", 0, 0)
+PortalViewerBorder:SetHeight(1)
+PortalViewerBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local PortalViewerTitle = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerTitle:SetPoint("TOPLEFT", PortalViewerPanel, "TOPLEFT", 18, -14)
+PortalViewerTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+PortalViewerTitle:SetTextColor(1, 0.82, 0, 1)
+PortalViewerTitle:SetText(L("PORTAL_VIEWER_TITLE"))
+
+local PortalViewerHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerHint:SetPoint("TOPLEFT", PortalViewerTitle, "BOTTOMLEFT", 0, -10)
+PortalViewerHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
+PortalViewerHint:SetJustifyH("LEFT")
+PortalViewerHint:SetJustifyV("TOP")
+PortalViewerHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+PortalViewerHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerHint:SetText(L("PORTAL_VIEWER_SETTINGS_HINT"))
+
+local PortalViewerEnableCheckbox = CreateFrame("CheckButton", nil, PortalViewerPanel, "UICheckButtonTemplate")
+PortalViewerEnableCheckbox:SetPoint("TOPLEFT", PortalViewerHint, "BOTTOMLEFT", -4, -12)
+
+local PortalViewerEnableLabel = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerEnableLabel:SetPoint("LEFT", PortalViewerEnableCheckbox, "RIGHT", 6, 0)
+PortalViewerEnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+PortalViewerEnableLabel:SetTextColor(1, 1, 1, 1)
+PortalViewerEnableLabel:SetText(L("PORTAL_VIEWER_ENABLE_WINDOW"))
+
+local PortalViewerEnableHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerEnableHint:SetPoint("TOPLEFT", PortalViewerEnableCheckbox, "BOTTOMLEFT", 34, -2)
+PortalViewerEnableHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
+PortalViewerEnableHint:SetJustifyH("LEFT")
+PortalViewerEnableHint:SetJustifyV("TOP")
+PortalViewerEnableHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+PortalViewerEnableHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerEnableHint:SetText(L("PORTAL_VIEWER_ENABLE_WINDOW_HINT"))
+
+local PortalViewerLockCheckbox = CreateFrame("CheckButton", nil, PortalViewerPanel, "UICheckButtonTemplate")
+PortalViewerLockCheckbox:SetPoint("TOPLEFT", PortalViewerEnableHint, "BOTTOMLEFT", -14, -12)
+PortalViewerLockCheckbox:SetScale(0.85)
+
+local PortalViewerLockLabel = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerLockLabel:SetPoint("LEFT", PortalViewerLockCheckbox, "RIGHT", 4, 0)
+PortalViewerLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+PortalViewerLockLabel:SetTextColor(1, 1, 1, 1)
+PortalViewerLockLabel:SetText(L("PORTAL_VIEWER_LOCK_WINDOW"))
+
+local PortalViewerLockHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerLockHint:SetPoint("TOPLEFT", PortalViewerLockCheckbox, "BOTTOMLEFT", 30, -4)
+PortalViewerLockHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
+PortalViewerLockHint:SetJustifyH("LEFT")
+PortalViewerLockHint:SetJustifyV("TOP")
+PortalViewerLockHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+PortalViewerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerLockHint:SetText(L("PORTAL_VIEWER_LOCK_WINDOW_HINT"))
+
+local PortalViewerMinimapCheckbox = CreateFrame("CheckButton", nil, PortalViewerPanel, "UICheckButtonTemplate")
+PortalViewerMinimapCheckbox:SetPoint("TOPLEFT", PortalViewerLockHint, "BOTTOMLEFT", -50, -14)
+
+local PortalViewerMinimapLabel = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerMinimapLabel:SetPoint("LEFT", PortalViewerMinimapCheckbox, "RIGHT", 6, 0)
+PortalViewerMinimapLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+PortalViewerMinimapLabel:SetTextColor(1, 1, 1, 1)
+PortalViewerMinimapLabel:SetText(L("PORTAL_VIEWER_SHOW_MINIMAP_MENU"))
+
+local PortalViewerMinimapHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
+PortalViewerMinimapHint:SetPoint("TOPLEFT", PortalViewerMinimapCheckbox, "BOTTOMLEFT", 34, -2)
+PortalViewerMinimapHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
+PortalViewerMinimapHint:SetJustifyH("LEFT")
+PortalViewerMinimapHint:SetJustifyV("TOP")
+PortalViewerMinimapHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+PortalViewerMinimapHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerMinimapHint:SetText(L("PORTAL_VIEWER_SHOW_MINIMAP_MENU_HINT"))
+
+local function UpdatePortalViewerPanelLayout()
+    local panelTop = PortalViewerPanel:GetTop()
+    local lowestBottom = nil
+
+    if not panelTop then
+        PortalViewerPanel:SetHeight(PORTAL_VIEWER_PANEL_MIN_HEIGHT)
+        return false
+    end
+
+    for _, region in ipairs({
+        PortalViewerMinimapCheckbox,
+        PortalViewerMinimapLabel,
+        PortalViewerMinimapHint,
+    }) do
+        local bottom = region and region:GetBottom()
+        if bottom and (not lowestBottom or bottom < lowestBottom) then
+            lowestBottom = bottom
+        end
+    end
+
+    if not lowestBottom then
+        PortalViewerPanel:SetHeight(PORTAL_VIEWER_PANEL_MIN_HEIGHT)
+        return false
+    end
+
+    local targetHeight = math.max(
+        PORTAL_VIEWER_PANEL_MIN_HEIGHT,
+        math.ceil((panelTop - lowestBottom) + PORTAL_VIEWER_PANEL_BOTTOM_PADDING)
+    )
+
+    if PortalViewerPanel:GetHeight() ~= targetHeight then
+        PortalViewerPanel:SetHeight(targetHeight)
+        return true
+    end
+
+    return false
+end
+
 local SectionPanels = {
     AutoSell = AutoSellPanel,
     AutoRepair = AutoRepairPanel,
     EasyDelete = EasyDeletePanel,
     FastLoot = FastLootPanel,
     CutsceneSkip = CutsceneSkipPanel,
+    AutoRespawnPet = AutoRespawnPetPanel,
     FlightMasterTimer = FlightMasterTimerPanel,
     -- Der Schlüsselname muss zum Tree-Eintrag passen, damit die Sidebar diese
     -- Karte gezielt ansteuern und sichtbar machen kann.
@@ -722,6 +900,7 @@ local SectionPanels = {
     CameraDistance = CameraDistancePanel,
     PreyHuntProgress = PreyHuntProgressPanel,
     KeystoneActions = KeystoneActionsPanel,
+    PortalViewer = PortalViewerPanel,
 }
 
 PageMisc.Widgets = {
@@ -750,6 +929,10 @@ PageMisc.Widgets = {
     CutsceneSkipLabel = CutsceneSkipLabel,
     CutsceneSkipHint = CutsceneSkipHint,
     CutsceneSkipCheckbox = CutsceneSkipCheckbox,
+    AutoRespawnPetTitle = AutoRespawnPetTitle,
+    AutoRespawnPetLabel = AutoRespawnPetLabel,
+    AutoRespawnPetHint = AutoRespawnPetHint,
+    AutoRespawnPetCheckbox = AutoRespawnPetCheckbox,
     FlightMasterTimerTitle = FlightMasterTimerTitle,
     FlightMasterTimerLabel = FlightMasterTimerLabel,
     FlightMasterTimerHint = FlightMasterTimerHint,
@@ -791,6 +974,17 @@ PageMisc.Widgets = {
     KeystoneActionsSecondsLabel = KeystoneActionsSecondsLabel,
     KeystoneActionsSecondsInput = KeystoneActionsSecondsInput,
     KeystoneActionsSecondsHint = KeystoneActionsSecondsHint,
+    PortalViewerTitle = PortalViewerTitle,
+    PortalViewerHint = PortalViewerHint,
+    PortalViewerEnableCheckbox = PortalViewerEnableCheckbox,
+    PortalViewerEnableLabel = PortalViewerEnableLabel,
+    PortalViewerEnableHint = PortalViewerEnableHint,
+    PortalViewerLockCheckbox = PortalViewerLockCheckbox,
+    PortalViewerLockLabel = PortalViewerLockLabel,
+    PortalViewerLockHint = PortalViewerLockHint,
+    PortalViewerMinimapCheckbox = PortalViewerMinimapCheckbox,
+    PortalViewerMinimapLabel = PortalViewerMinimapLabel,
+    PortalViewerMinimapHint = PortalViewerMinimapHint,
 }
 
 local function RefreshFlightMasterTimerSoundDropdown()
@@ -847,6 +1041,7 @@ function PageMisc:RefreshState()
     local easyDeleteEnabled = false
     local fastLootEnabled = false
     local cutsceneSkipEnabled = false
+    local autoRespawnPetEnabled = false
     local flightMasterTimerEnabled = false
     local flightMasterTimerSoundEnabled = false
     local flightMasterTimerLocked = true
@@ -856,10 +1051,14 @@ function PageMisc:RefreshState()
     local keystoneActionsEnabled = false
     local keystoneActionsGroupLockEnabled = true
     local keystoneActionsSeconds = 10
+    local portalViewerEnabled = false
+    local portalViewerLocked = false
+    local portalViewerMinimapVisible = true
     -- Für die Kamera brauchen wir nicht nur "an/aus", sondern sowohl den
     -- groben Modus als auch den fertigen Text für die Anzeige.
     local cameraDistanceMode = "unknown"
     local cameraDistanceStatusText = L("UNKNOWN")
+    local portalViewerModule = GetPortalViewerModule()
 
     if Misc.IsAutoSellJunkEnabled then
         autoSellEnabled = Misc.IsAutoSellJunkEnabled()
@@ -883,6 +1082,10 @@ function PageMisc:RefreshState()
 
     if Misc.IsCutsceneSkipEnabled then
         cutsceneSkipEnabled = Misc.IsCutsceneSkipEnabled()
+    end
+
+    if Misc.IsAutoRespawnPetEnabled then
+        autoRespawnPetEnabled = Misc.IsAutoRespawnPetEnabled()
     end
 
     if Misc.IsFlightMasterTimerEnabled then
@@ -923,6 +1126,18 @@ function PageMisc:RefreshState()
         keystoneActionsSeconds = Misc.GetKeystoneCountdownSeconds()
     end
 
+    if portalViewerModule and portalViewerModule.IsWindowEnabled then
+        portalViewerEnabled = portalViewerModule.IsWindowEnabled()
+    end
+
+    if portalViewerModule and portalViewerModule.IsWindowLocked then
+        portalViewerLocked = portalViewerModule.IsWindowLocked()
+    end
+
+    if portalViewerModule and portalViewerModule.IsMinimapContextMenuEntryVisible then
+        portalViewerMinimapVisible = portalViewerModule.IsMinimapContextMenuEntryVisible()
+    end
+
     if Misc.GetCurrentCameraDistanceMode then
         cameraDistanceMode = Misc.GetCurrentCameraDistanceMode()
     end
@@ -953,6 +1168,9 @@ function PageMisc:RefreshState()
     widgets.CutsceneSkipTitle:SetText(L("CUTSCENE_SKIP"))
     widgets.CutsceneSkipLabel:SetText(L("ACTIVE"))
     widgets.CutsceneSkipHint:SetText(L("CUTSCENE_SKIP_HINT"))
+    widgets.AutoRespawnPetTitle:SetText(L("AUTO_RESPAWN_PET_TITLE"))
+    widgets.AutoRespawnPetLabel:SetText(L("ACTIVE"))
+    widgets.AutoRespawnPetHint:SetText(L("AUTO_RESPAWN_PET_HINT"))
     widgets.FlightMasterTimerTitle:SetText(L("FLIGHT_MASTER_TIMER"))
     widgets.FlightMasterTimerLabel:SetText(L("ACTIVE"))
     widgets.FlightMasterTimerHint:SetText(L("FLIGHT_MASTER_TIMER_HINT"))
@@ -988,6 +1206,14 @@ function PageMisc:RefreshState()
     widgets.KeystoneActionsGroupLockHint:SetText(L("KEYSTONE_ACTIONS_GROUP_LOCK_HINT"))
     widgets.KeystoneActionsSecondsLabel:SetText(L("KEYSTONE_ACTIONS_SECONDS"))
     widgets.KeystoneActionsSecondsHint:SetText(L("KEYSTONE_ACTIONS_SECONDS_HINT"))
+    widgets.PortalViewerTitle:SetText(L("PORTAL_VIEWER_TITLE"))
+    widgets.PortalViewerHint:SetText(L("PORTAL_VIEWER_SETTINGS_HINT"))
+    widgets.PortalViewerEnableLabel:SetText(L("PORTAL_VIEWER_ENABLE_WINDOW"))
+    widgets.PortalViewerEnableHint:SetText(L("PORTAL_VIEWER_ENABLE_WINDOW_HINT"))
+    widgets.PortalViewerLockLabel:SetText(L("PORTAL_VIEWER_LOCK_WINDOW"))
+    widgets.PortalViewerLockHint:SetText(L("PORTAL_VIEWER_LOCK_WINDOW_HINT"))
+    widgets.PortalViewerMinimapLabel:SetText(L("PORTAL_VIEWER_SHOW_MINIMAP_MENU"))
+    widgets.PortalViewerMinimapHint:SetText(L("PORTAL_VIEWER_SHOW_MINIMAP_MENU_HINT"))
     if not widgets.KeystoneActionsSecondsInput:HasFocus() then
         widgets.KeystoneActionsSecondsInput:SetText(tostring(keystoneActionsSeconds))
     end
@@ -998,6 +1224,7 @@ function PageMisc:RefreshState()
     widgets.EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
     widgets.FastLootCheckbox:SetChecked(fastLootEnabled)
     widgets.CutsceneSkipCheckbox:SetChecked(cutsceneSkipEnabled)
+    widgets.AutoRespawnPetCheckbox:SetChecked(autoRespawnPetEnabled)
     widgets.FlightMasterTimerCheckbox:SetChecked(flightMasterTimerEnabled)
     widgets.FlightMasterTimerSoundCheckbox:SetChecked(flightMasterTimerSoundEnabled)
     widgets.FlightMasterTimerLockCheckbox:SetChecked(flightMasterTimerLocked)
@@ -1005,6 +1232,9 @@ function PageMisc:RefreshState()
     widgets.PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
     widgets.KeystoneActionsCheckbox:SetChecked(keystoneActionsEnabled)
     widgets.KeystoneActionsGroupLockCheckbox:SetChecked(keystoneActionsGroupLockEnabled)
+    widgets.PortalViewerEnableCheckbox:SetChecked(portalViewerEnabled)
+    widgets.PortalViewerLockCheckbox:SetChecked(portalViewerLocked)
+    widgets.PortalViewerMinimapCheckbox:SetChecked(portalViewerMinimapVisible)
     -- Die Kamera-Karte zeigt bewusst den echten Status aus dem Modul an,
     -- nicht bloß den letzten Button-Klick.
     widgets.CameraDistanceStatusValue:SetText(cameraDistanceStatusText)
@@ -1021,6 +1251,7 @@ function PageMisc:RefreshState()
     widgets.FlightMasterTimerPreviewButton:SetEnabled(flightMasterTimerEnabled)
     widgets.FlightMasterTimerResetButton:SetEnabled(flightMasterTimerEnabled)
     widgets.KeystoneActionsGroupLockCheckbox:SetEnabled(keystoneActionsEnabled)
+    widgets.PortalViewerLockCheckbox:SetEnabled(portalViewerEnabled)
     if keystoneActionsEnabled then
         widgets.KeystoneActionsSecondsInput:Enable()
     else
@@ -1082,7 +1313,15 @@ function PageMisc:RefreshState()
         widgets.KeystoneActionsSecondsInput:SetTextColor(0.70, 0.70, 0.70, 1)
     end
 
-    if UpdateFlightMasterTimerPanelLayout() and self.UpdateScrollLayout then
+    if portalViewerEnabled then
+        widgets.PortalViewerLockLabel:SetTextColor(1, 1, 1, 1)
+        widgets.PortalViewerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+    else
+        widgets.PortalViewerLockLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.PortalViewerLockHint:SetTextColor(0.45, 0.45, 0.45, 1)
+    end
+
+    if (UpdateFlightMasterTimerPanelLayout() or UpdatePortalViewerPanelLayout()) and self.UpdateScrollLayout then
         self:UpdateScrollLayout()
     end
 end
@@ -1100,6 +1339,7 @@ function PageMisc:UpdateScrollLayout()
         + 18 + EasyDeletePanel:GetHeight()
         + 18 + FastLootPanel:GetHeight()
         + 18 + CutsceneSkipPanel:GetHeight()
+        + 18 + AutoRespawnPetPanel:GetHeight()
         + 18 + FlightMasterTimerPanel:GetHeight()
         + 18 + TooltipItemLevelPanel:GetHeight()
         -- Die neue Kamera-Karte gehört fest in die Gesamthöhe,
@@ -1107,6 +1347,7 @@ function PageMisc:UpdateScrollLayout()
         + 18 + CameraDistancePanel:GetHeight()
         + 18 + PreyHuntProgressPanel:GetHeight()
         + 18 + KeystoneActionsPanel:GetHeight()
+        + 18 + PortalViewerPanel:GetHeight()
         + 20
 
     PageMiscContent:SetWidth(contentWidth)
@@ -1145,7 +1386,7 @@ end
 PageMiscScrollFrame:SetScript("OnSizeChanged", function()
     PageMisc:UpdateScrollLayout()
 
-    if UpdateFlightMasterTimerPanelLayout() then
+    if UpdateFlightMasterTimerPanelLayout() or UpdatePortalViewerPanelLayout() then
         PageMisc:UpdateScrollLayout()
     end
 end)
@@ -1214,6 +1455,14 @@ end)
 CutsceneSkipCheckbox:SetScript("OnClick", function(self)
     if Misc.SetCutsceneSkipEnabled then
         Misc.SetCutsceneSkipEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+AutoRespawnPetCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetAutoRespawnPetEnabled then
+        Misc.SetAutoRespawnPetEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()
@@ -1338,6 +1587,33 @@ KeystoneActionsSecondsInput:SetScript("OnEscapePressed", function(self)
     PageMisc:RefreshState()
 end)
 
+PortalViewerEnableCheckbox:SetScript("OnClick", function(self)
+    local portalViewerModule = GetPortalViewerModule()
+    if portalViewerModule and portalViewerModule.SetWindowEnabled then
+        portalViewerModule.SetWindowEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+PortalViewerLockCheckbox:SetScript("OnClick", function(self)
+    local portalViewerModule = GetPortalViewerModule()
+    if portalViewerModule and portalViewerModule.SetWindowLocked then
+        portalViewerModule.SetWindowLocked(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+PortalViewerMinimapCheckbox:SetScript("OnClick", function(self)
+    local portalViewerModule = GetPortalViewerModule()
+    if portalViewerModule and portalViewerModule.SetMinimapContextMenuEntryVisible then
+        portalViewerModule.SetMinimapContextMenuEntryVisible(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
 -- Die Kamera-Buttons arbeiten absichtlich genauso schlicht wie die Checkboxen:
 -- Aktion ans Modul weitergeben, danach die Seite sofort neu zeichnen.
 CameraDistanceMaxButton:SetScript("OnClick", function()
@@ -1368,7 +1644,7 @@ PageMisc:SetScript("OnShow", function()
                 return
             end
 
-            if UpdateFlightMasterTimerPanelLayout() then
+            if UpdateFlightMasterTimerPanelLayout() or UpdatePortalViewerPanelLayout() then
                 PageMisc:UpdateScrollLayout()
                 PageMiscScrollFrame:SetVerticalScroll(0)
             end

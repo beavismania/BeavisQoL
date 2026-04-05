@@ -15,9 +15,9 @@ local GetQuestProgressBarPercent = rawget(_G, "GetQuestProgressBarPercent")
 
 local PREY_UPDATE_INTERVAL = 0.25
 local PREY_HUNT_WIDGET_TYPE = (Enum and Enum.UIWidgetVisualizationType and Enum.UIWidgetVisualizationType.PreyHuntProgress) or 31
--- Stand 12.0.1 nutzt Blizzard fuer die Jagd-Widgets dieses Set.
--- Die Suche laeuft trotzdem erst dynamisch ueber registrierte Container
--- und faellt nur im Zweifel auf diese bekannte ID zurueck.
+-- Stand 12.0.1 nutzt Blizzard für die Jagd-Widgets dieses Set.
+-- Die Suche läuft trotzdem erst dynamisch über registrierte Container
+-- und fällt nur im Zweifel auf diese bekannte ID zurück.
 local KNOWN_PREY_WIDGET_SET_ID = 1843
 local PREY_STAGE_PERCENT = {
     [0] = 0,
@@ -248,8 +248,8 @@ local function GetQuestProgressPercent(questID)
             end
 
             if objectiveType ~= "progressbar" and not finished and fulfilled == required then
-                -- Manche Quests liefern direkt bei Annahme 1/1 fuer nicht
-                -- gestartete Teilziele. Das zaehlt noch nicht als echter Fortschritt.
+                -- Manche Quests liefern direkt bei Annahme 1/1 für nicht
+                -- gestartete Teilziele. Das zählt noch nicht als echter Fortschritt.
                 fulfilled = 0
             end
 

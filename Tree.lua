@@ -3,7 +3,7 @@ local ADDON_NAME, BeavisQoL = ...
 --[[
 Tree.lua rendert die linke Navigation.
 Die Seite selbst zeigt keine Inhalte, sondern nur:
-- Hauptgruppen
+- Unterkategorien
 - Modulsektionen
 - Einträge zum Öffnen der Seiten
 ]]
@@ -48,14 +48,13 @@ local Sidebar = CreateFrame("Frame", nil, SidebarScrollFrame)
 Sidebar:SetSize(1, 1)
 SidebarScrollFrame:SetScrollChild(Sidebar)
 
-local GeneralExpanded = true
-local ModuleExpanded = true
 local NavigationSearchQuery = ""
 
 local GeneralEntries = {}
 local ModuleSectionHeaders = {}
 local ModuleEntries = {}
 local AllEntries = {}
+local GeneralSectionHeader
 
 local function NormalizeSearchText(text)
     local normalizedText = tostring(text or "")
@@ -100,6 +99,10 @@ local function GetLocalizedSearchText(textKey)
     return localizedText
 end
 
+local function GetSectionSearchText(section)
+    return section and section.searchText or ""
+end
+
 local function AppendSearchText(searchParts, text)
     local normalizedText = NormalizeSearchText(text)
     if normalizedText == "" then
@@ -142,6 +145,10 @@ local function RefreshSectionSearchText(section)
 end
 
 local function RefreshSearchIndex()
+    if GeneralSectionHeader then
+        RefreshSectionSearchText(GeneralSectionHeader)
+    end
+
     for _, section in ipairs(ModuleSectionHeaders) do
         RefreshSectionSearchText(section)
     end
@@ -337,9 +344,6 @@ local function CreateSectionHeader(labelTextKey)
     return frame, text
 end
 
-local TreeGeneralButton, TreeGeneralIndicator = CreateToggleButton("GENERAL")
-local TreeModuleButton, TreeModuleIndicator = CreateToggleButton("MODULES")
-
 local function RegisterGeneralEntry(pageKey, labelTextKey, options)
     local button, text = CreateEntryButton(labelTextKey)
     local entry = {
@@ -349,11 +353,14 @@ local function RegisterGeneralEntry(pageKey, labelTextKey, options)
         miscSection = nil,
         searchTextKeys = options and options.searchTextKeys or {},
         searchAliases = options and options.searchAliases or nil,
-        section = nil,
+        section = GeneralSectionHeader,
         isActive = false,
     }
 
     GeneralEntries[#GeneralEntries + 1] = entry
+    if GeneralSectionHeader then
+        GeneralSectionHeader.entries[#GeneralSectionHeader.entries + 1] = entry
+    end
     AllEntries[#AllEntries + 1] = entry
     AttachEntryVisual(entry)
     return button, text
@@ -370,6 +377,19 @@ local function RegisterModuleSection(labelTextKey)
 
     ModuleSectionHeaders[#ModuleSectionHeaders + 1] = section
     return section
+end
+
+GeneralSectionHeader = {
+    frame = nil,
+    text = nil,
+    entries = {},
+    searchText = "",
+}
+
+do
+    local frame, text = CreateSectionHeader("NAVIGATION_SECTION_ADDON")
+    GeneralSectionHeader.frame = frame
+    GeneralSectionHeader.text = text
 end
 
 local function RegisterModuleEntry(section, labelTextKey, pageKey, options)
@@ -411,7 +431,6 @@ local ComfortSection = RegisterModuleSection("COMFORT")
 local InterfaceSection = RegisterModuleSection("INTERFACE_COMBAT")
 local GroupSection = RegisterModuleSection("GROUP_SEARCH")
 local StreamerSection = RegisterModuleSection("STREAMER_TOOLS")
-local CompanionSection = RegisterModuleSection("COMPANION")
 
 local LevelTimeEntry = RegisterModuleEntry(ProgressSection, "LEVEL_TIME", "LevelTime", {
     searchTextKeys = { "LEVELTIME_TOOLTIP_TITLE", "LEVELTIME_TOOLTIP_TEXT", "CURRENT_LEVEL", "TIME_ON_CURRENT_LEVEL", "TOTAL_TIME" },
@@ -468,6 +487,11 @@ local CutsceneSkipEntry = RegisterModuleEntry(ComfortSection, "CUTSCENE_SKIP", "
     searchTextKeys = { "CUTSCENE_SKIP_HINT" },
     searchAliases = "cutscene cinematic movie story video skip autoskip",
 })
+local AutoRespawnPetEntry = RegisterModuleEntry(ComfortSection, "AUTO_RESPAWN_PET_TITLE", "Misc", {
+    miscSection = "AutoRespawnPet",
+    searchTextKeys = { "AUTO_RESPAWN_PET_HINT" },
+    searchAliases = "pet companion battle pet respawn summon revive",
+})
 local FlightMasterTimerEntry = RegisterModuleEntry(ComfortSection, "FLIGHT_MASTER_TIMER", "Misc", {
     miscSection = "FlightMasterTimer",
     searchTextKeys = { "FLIGHT_MASTER_TIMER_HINT", "FLIGHT_MASTER_TIMER_UNKNOWN" },
@@ -495,7 +519,8 @@ local KeystoneActionsEntry = RegisterModuleEntry(ComfortSection, "KEYSTONE_ACTIO
     searchTextKeys = { "KEYSTONE_ACTIONS_HINT", "KEYSTONE_ACTIONS_READYCHECK", "KEYSTONE_ACTIONS_PULLTIMER" },
     searchAliases = "mythic plus keystone readycheck pulltimer countdown start",
 })
-local PortalViewerEntry = RegisterModuleEntry(ComfortSection, "PORTAL_VIEWER_TITLE", "PortalViewer", {
+local PortalViewerEntry = RegisterModuleEntry(ComfortSection, "PORTAL_VIEWER_TITLE", "Misc", {
+    miscSection = "PortalViewer",
     searchTextKeys = { "PORTAL_VIEWER_HINT", "PORTAL_VIEWER_SECTION_AVAILABLE", "PORTAL_VIEWER_SECTION_MISSING" },
     searchAliases = "portal viewer portals dungeon teleport midnight mythic plus season",
 })
@@ -555,10 +580,6 @@ local StreamerPlannerEntry = RegisterModuleEntry(StreamerSection, "STREAMER_PLAN
     },
     searchAliases = "stream streamer planner overlay roster lineup raid dungeon group planning slots",
 })
-local PetStuffEntry = RegisterModuleEntry(CompanionSection, "PET_STUFF", "PetStuff", {
-    searchTextKeys = { "PET_STUFF_DESC", "AUTO_RESPAWN_PET_HINT" },
-    searchAliases = "pet companion respawn summon mount",
-})
 
 local function SetActiveTreeItem(activeText)
     for _, entry in ipairs(AllEntries) do
@@ -577,7 +598,7 @@ local function UpdateTreeScrollLayout(contentBottomY)
     end
 end
 
-local function HideModuleSection(section)
+local function HideSection(section)
     section.frame:Hide()
     section.frame:ClearAllPoints()
 
@@ -588,56 +609,45 @@ local function HideModuleSection(section)
 end
 
 local function UpdateTreeLayout()
-    TreeGeneralButton:ClearAllPoints()
-    TreeModuleButton:ClearAllPoints()
-
     for _, entry in ipairs(GeneralEntries) do
         entry.button:Hide()
         entry.button:ClearAllPoints()
     end
 
-    for _, section in ipairs(ModuleSectionHeaders) do
-        HideModuleSection(section)
+    if GeneralSectionHeader then
+        HideSection(GeneralSectionHeader)
     end
 
-    TreeGeneralButton.IsExpanded = GeneralExpanded
-    TreeModuleButton.IsExpanded = ModuleExpanded
-    ApplyToggleVisual(TreeGeneralButton, false)
-    ApplyToggleVisual(TreeModuleButton, false)
+    for _, section in ipairs(ModuleSectionHeaders) do
+        HideSection(section)
+    end
 
-    local groupX = 6
-    local childX = 16
     local sectionX = 16
     local sectionChildX = 24
     local currentY = -4
 
     if IsSearchActive() then
-        local visibleGeneralEntries = BuildVisibleEntriesForSearch(GeneralEntries, NormalizeSearchText(L("GENERAL")))
+        local visibleGeneralEntries = BuildVisibleEntriesForSearch(GeneralEntries, NormalizeSearchText(L("NAVIGATION_SECTION_ADDON")))
         local visibleGeneralCount = #visibleGeneralEntries
         local visibleModuleCount = 0
         local visibleModuleSections = {}
 
         if visibleGeneralCount > 0 then
-            TreeGeneralButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
-            TreeGeneralButton.IsExpanded = true
-            ApplyToggleVisual(TreeGeneralButton, false)
-            TreeGeneralIndicator:SetText("-")
-            TreeGeneralButton:Show()
-            currentY = currentY - 34
+            GeneralSectionHeader.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
+            GeneralSectionHeader.frame:Show()
+            currentY = currentY - 28
 
             for _, entry in ipairs(visibleGeneralEntries) do
-                entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
+                entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionChildX, currentY)
                 entry.button:Show()
-                currentY = currentY - 30
+                currentY = currentY - 28
             end
 
-            currentY = currentY - 4
-        else
-            TreeGeneralButton:Hide()
+            currentY = currentY - 10
         end
 
         for _, section in ipairs(ModuleSectionHeaders) do
-            local visibleEntries = BuildVisibleEntriesForSearch(section.entries, NormalizeSearchText(L("MODULES")))
+            local visibleEntries = BuildVisibleEntriesForSearch(section.entries, GetSectionSearchText(section))
 
             if #visibleEntries > 0 then
                 visibleModuleSections[#visibleModuleSections + 1] = {
@@ -649,13 +659,6 @@ local function UpdateTreeLayout()
         end
 
         if #visibleModuleSections > 0 then
-            TreeModuleButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
-            TreeModuleButton.IsExpanded = true
-            ApplyToggleVisual(TreeModuleButton, false)
-            TreeModuleIndicator:SetText("-")
-            TreeModuleButton:Show()
-            currentY = currentY - 34
-
             for _, sectionState in ipairs(visibleModuleSections) do
                 local section = sectionState.section
 
@@ -671,8 +674,6 @@ local function UpdateTreeLayout()
 
                 currentY = currentY - 10
             end
-        else
-            TreeModuleButton:Hide()
         end
 
         local totalVisibleEntries = visibleGeneralCount + visibleModuleCount
@@ -687,38 +688,19 @@ local function UpdateTreeLayout()
         return
     end
 
-    TreeGeneralButton:Show()
-    TreeModuleButton:Show()
     SetSearchStatusText(L("NAVIGATION_SEARCH_HINT"))
 
-    TreeGeneralButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
+    GeneralSectionHeader.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
+    GeneralSectionHeader.frame:Show()
+    currentY = currentY - 28
 
-    if GeneralExpanded then
-        TreeGeneralIndicator:SetText("-")
-        currentY = currentY - 34
-
-        for _, entry in ipairs(GeneralEntries) do
-            entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", childX, currentY)
-            entry.button:Show()
-            currentY = currentY - 30
-        end
-
-        currentY = currentY - 4
-    else
-        TreeGeneralIndicator:SetText("+")
-        currentY = currentY - 40
+    for _, entry in ipairs(GeneralEntries) do
+        entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionChildX, currentY)
+        entry.button:Show()
+        currentY = currentY - 28
     end
 
-    TreeModuleButton:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", groupX, currentY)
-
-    if not ModuleExpanded then
-        TreeModuleIndicator:SetText("+")
-        UpdateTreeScrollLayout(currentY - 12)
-        return
-    end
-
-    TreeModuleIndicator:SetText("-")
-    currentY = currentY - 34
+    currentY = currentY - 10
 
     for _, section in ipairs(ModuleSectionHeaders) do
         section.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
@@ -761,8 +743,7 @@ BeavisQoL.UpdateTree = function()
     SidebarCaptionHint:SetText(L("NAVIGATION_HINT"))
     SidebarSearchPlaceholder:SetText(L("NAVIGATION_SEARCH_PLACEHOLDER"))
 
-    TreeGeneralButton.Text:SetText(L("GENERAL"))
-    TreeModuleButton.Text:SetText(L("MODULES"))
+    GeneralSectionHeader.text:SetText(L("NAVIGATION_SECTION_ADDON"))
 
     TreeHomeText:SetText(L("HOME"))
     TreeVersionText:SetText(L("VERSION"))
@@ -774,7 +755,6 @@ BeavisQoL.UpdateTree = function()
     InterfaceSection.text:SetText(L("INTERFACE_COMBAT"))
     GroupSection.text:SetText(L("GROUP_SEARCH"))
     StreamerSection.text:SetText(L("STREAMER_TOOLS"))
-    CompanionSection.text:SetText(L("COMPANION"))
 
     LevelTimeEntry.text:SetText(L("LEVEL_TIME"))
     ChecklistEntry.text:SetText(L("CHECKLIST"))
@@ -788,6 +768,7 @@ BeavisQoL.UpdateTree = function()
     FastLootEntry.text:SetText(L("FAST_LOOT"))
     EasyDeleteEntry.text:SetText(L("EASY_DELETE"))
     CutsceneSkipEntry.text:SetText(L("CUTSCENE_SKIP"))
+    AutoRespawnPetEntry.text:SetText(L("AUTO_RESPAWN_PET_TITLE"))
     TooltipItemLevelEntry.text:SetText(L("TOOLTIP_ITEMLEVEL"))
     CameraDistanceEntry.text:SetText(L("CAMERA_DISTANCE"))
     KeystoneActionsEntry.text:SetText(L("KEYSTONE_ACTIONS"))
@@ -800,7 +781,6 @@ BeavisQoL.UpdateTree = function()
     BossGuidesEntry.text:SetText(L("BOSS_GUIDES"))
     LFGEntry.text:SetText(L("LFG"))
     StreamerPlannerEntry.text:SetText(L("STREAMER_PLANNER"))
-    PetStuffEntry.text:SetText(L("PET_STUFF"))
 
     RefreshSearchIndex()
     UpdateSearchPlaceholder()
@@ -827,7 +807,6 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         Fishing = { page = Pages.Fishing, text = FishingEntry.text, group = "module" },
         Stats = { page = Pages.Stats, text = StatsEntry.text, group = "module" },
         MarkerBar = { page = Pages.MarkerBar, text = MarkerBarEntry.text, group = "module" },
-        PetStuff = { page = Pages.PetStuff, text = PetStuffEntry.text, group = "module" },
         LFG = { page = Pages.LFG, text = LFGEntry.text, group = "module" },
         StreamerPlanner = { page = Pages.StreamerPlanner, text = StreamerPlannerEntry.text, group = "module" },
         DamageText = { page = Pages.DamageText, text = CombatTextEntry.text, group = "module" },
@@ -838,12 +817,6 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
     local target = pageMap[pageKey]
     if not target or not target.page then
         return
-    end
-
-    if target.group == "general" then
-        GeneralExpanded = true
-    elseif target.group == "module" then
-        ModuleExpanded = true
     end
 
     UpdateTreeLayout()
@@ -865,24 +838,6 @@ function BeavisQoL.OpenMiscSection(sectionKey, activeTextOverride)
     end
 end
 
-TreeGeneralButton:SetScript("OnClick", function()
-    if IsSearchActive() then
-        return
-    end
-
-    GeneralExpanded = not GeneralExpanded
-    UpdateTreeLayout()
-end)
-
-TreeModuleButton:SetScript("OnClick", function()
-    if IsSearchActive() then
-        return
-    end
-
-    ModuleExpanded = not ModuleExpanded
-    UpdateTreeLayout()
-end)
-
 TreeHomeButton:SetScript("OnClick", function()
     BeavisQoL.OpenPage("Home")
 end)
@@ -899,14 +854,6 @@ for _, entry in ipairs(ModuleEntries) do
     entry.button:SetScript("OnClick", function()
         if entry.miscSection then
             BeavisQoL.OpenMiscSection(entry.miscSection, entry.text)
-            return
-        end
-
-        if entry.pageKey == "PortalViewer" then
-            local portalViewerModule = BeavisQoL.PortalViewerModule
-            if portalViewerModule and portalViewerModule.ToggleWindow then
-                portalViewerModule.ToggleWindow()
-            end
             return
         end
 

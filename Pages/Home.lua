@@ -342,6 +342,22 @@ DiscordCard:SetPoint("TOPRIGHT", ActionRow, "TOPRIGHT", 0, 0)
 DiscordCard:SetPoint("BOTTOMRIGHT", ActionRow, "BOTTOMRIGHT", 0, 0)
 DiscordCard:SetPoint("LEFT", ActionRow, "CENTER", 9, 0)
 
+local WebsiteRow = CreateFrame("Frame", nil, PageHomeContent)
+WebsiteRow:SetPoint("TOPLEFT", ActionRow, "BOTTOMLEFT", 0, -14)
+WebsiteRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -22, 0)
+WebsiteRow:SetHeight(150)
+
+local WebsiteCard = CreateActionCard(
+    WebsiteRow,
+    "Interface\\AddOns\\BeavisQoL\\Media\\logo.tga",
+    L("WEBSITE_CARD_TITLE"),
+    L("WEBSITE_CARD_BODY"),
+    L("WEBSITE_CARD_FOOTER"),
+    L("WEBSITE_CARD_POPUP"),
+    WEBSITE_URL
+)
+WebsiteCard:SetAllPoints(WebsiteRow)
+
 local function LayoutHomePage()
     local contentWidth = math.max(1, PageHomeScrollFrame:GetWidth())
     if contentWidth <= 1 then
@@ -395,6 +411,7 @@ local function LayoutHomePage()
     local contentHeight = 22
         + IntroPanel:GetHeight()
         + 10 + ActionRow:GetHeight()
+        + 14 + WebsiteRow:GetHeight()
         + 20
 
     PageHomeContent:SetHeight(contentHeight)
@@ -422,6 +439,9 @@ BeavisQoL.UpdateHome = function()
     DiscordCard.Title:SetText(L("DISCORD_TITLE"))
     DiscordCard.Body:SetText(L("DISCORD_BODY"))
     DiscordCard.Footer:SetText(L("DISCORD_FOOTER"))
+    WebsiteCard.Title:SetText(L("WEBSITE_CARD_TITLE"))
+    WebsiteCard.Body:SetText(L("WEBSITE_CARD_BODY"))
+    WebsiteCard.Footer:SetText(L("WEBSITE_CARD_FOOTER"))
     LayoutHomePage()
 end
 
