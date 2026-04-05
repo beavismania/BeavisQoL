@@ -5,6 +5,8 @@ local L = BeavisQoL.L
 
 local GetQuestLogInfo = C_QuestLog and C_QuestLog.GetInfo
 local GetNumQuestLogEntries = C_QuestLog and C_QuestLog.GetNumQuestLogEntries
+local GetNumQuestLeaderBoards = rawget(_G, "GetNumQuestLeaderBoards")
+local GetQuestObjectiveInfo = rawget(_G, "GetQuestObjectiveInfo")
 local SetSelectedQuest = C_QuestLog and C_QuestLog.SetSelectedQuest
 local SelectQuestLogEntry = rawget(_G, "SelectQuestLogEntry")
 local SetAbandonQuest = rawget(_G, "SetAbandonQuest") or (C_QuestLog and C_QuestLog["SetAbandonQuest"])
@@ -29,6 +31,7 @@ local AbandonScrollFrame
 local AbandonScrollContent
 
 local ABANDON_SELECTED_QUESTS_POPUP_KEY = "BEAVISQOL_ABANDON_SELECTED_QUESTS"
+local ABANDON_ROW_HEIGHT = 40
 
 local function PrintQuestMessage(messageText)
     if not messageText or messageText == "" then
@@ -58,6 +61,33 @@ local function IsVisibleQuestLogEntry(questInfo)
     return true
 end
 
+local function GetQuestObjectiveSummary(questLogIndex, questID)
+    if not questLogIndex or questLogIndex <= 0 or not questID or not GetNumQuestLeaderBoards or not GetQuestObjectiveInfo then
+        return nil
+    end
+
+    local firstObjectiveText = nil
+    local numObjectives = GetNumQuestLeaderBoards(questLogIndex) or 0
+
+    for objectiveIndex = 1, numObjectives do
+        local objectiveText, _, finished = GetQuestObjectiveInfo(questID, objectiveIndex, false)
+
+        if objectiveText and objectiveText ~= "" then
+            local trimmedObjectiveText = string.match(objectiveText, "^%s*(.-)%s*$")
+
+            if trimmedObjectiveText and trimmedObjectiveText ~= "" then
+                firstObjectiveText = firstObjectiveText or trimmedObjectiveText
+
+                if not finished then
+                    return trimmedObjectiveText
+                end
+            end
+        end
+    end
+
+    return firstObjectiveText
+end
+
 local function GetActiveQuestEntries()
     local questEntries = {}
 
@@ -75,11 +105,13 @@ local function GetActiveQuestEntries()
 
             if questID and questID > 0 then
                 local questTitle = questInfo.title or ""
+                local objectiveText = GetQuestObjectiveSummary(questLogIndex, questID)
 
                 questEntries[#questEntries + 1] = {
                     questID = questID,
                     questLogIndex = questLogIndex,
                     title = questTitle,
+                    objectiveText = objectiveText,
                 }
             end
         end
@@ -231,19 +263,35 @@ local function RefreshAbandonQuestSelectionUI()
 
         if not row then
             row = CreateFrame("Frame", nil, AbandonScrollContent)
-            row:SetHeight(24)
+            row:SetHeight(ABANDON_ROW_HEIGHT)
 
             local checkbox = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
-            checkbox:SetPoint("LEFT", row, "LEFT", 0, 0)
+            checkbox:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -4)
             row.checkbox = checkbox
 
-            local label = row:CreateFontString(nil, "OVERLAY")
-            label:SetPoint("LEFT", checkbox, "RIGHT", 4, 0)
-            label:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            label:SetJustifyH("LEFT")
-            label:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-            label:SetTextColor(0.92, 0.92, 0.92, 1)
-            row.label = label
+            local title = row:CreateFontString(nil, "OVERLAY")
+            title:SetPoint("TOPLEFT", checkbox, "TOPRIGHT", 4, -2)
+            title:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+            title:SetJustifyH("LEFT")
+            title:SetJustifyV("TOP")
+            title:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+            title:SetTextColor(0.92, 0.92, 0.92, 1)
+            if title.SetWordWrap then
+                title:SetWordWrap(false)
+            end
+            row.title = title
+
+            local objective = row:CreateFontString(nil, "OVERLAY")
+            objective:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -3)
+            objective:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+            objective:SetJustifyH("LEFT")
+            objective:SetJustifyV("TOP")
+            objective:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+            objective:SetTextColor(0.74, 0.74, 0.78, 1)
+            if objective.SetWordWrap then
+                objective:SetWordWrap(false)
+            end
+            row.objective = objective
 
             checkbox:SetScript("OnClick", function(self)
                 if self.questID then
@@ -256,11 +304,20 @@ local function RefreshAbandonQuestSelectionUI()
             AbandonQuestRows[index] = row
         end
 
-        row:SetPoint("TOPLEFT", AbandonScrollContent, "TOPLEFT", 0, -((index - 1) * 24))
-        row:SetPoint("TOPRIGHT", AbandonScrollContent, "TOPRIGHT", -6, -((index - 1) * 24))
+        row:SetPoint("TOPLEFT", AbandonScrollContent, "TOPLEFT", 0, -((index - 1) * ABANDON_ROW_HEIGHT))
+        row:SetPoint("TOPRIGHT", AbandonScrollContent, "TOPRIGHT", -6, -((index - 1) * ABANDON_ROW_HEIGHT))
         row.checkbox.questID = questEntry.questID
         row.checkbox:SetChecked(QuestAbandon.selectedQuestIDs[questEntry.questID] == true)
-        row.label:SetText(string.format("[%d] %s", questEntry.questID, questEntry.title or L("QUEST_ID_LABEL"):format(questEntry.questID)))
+        row.title:SetText(string.format("[%d] %s", questEntry.questID, questEntry.title or L("QUEST_ID_LABEL"):format(questEntry.questID)))
+
+        if questEntry.objectiveText and questEntry.objectiveText ~= "" then
+            row.objective:SetText("- " .. questEntry.objectiveText)
+            row.objective:Show()
+        else
+            row.objective:SetText("")
+            row.objective:Hide()
+        end
+
         row:Show()
     end
 
@@ -268,7 +325,7 @@ local function RefreshAbandonQuestSelectionUI()
         AbandonQuestRows[index]:Hide()
     end
 
-    AbandonScrollContent:SetHeight(math.max(1, questCount * 24))
+    AbandonScrollContent:SetHeight(math.max(1, questCount * ABANDON_ROW_HEIGHT))
 end
 
 local PageQuestAbandon = CreateFrame("Frame", nil, Content)
@@ -278,7 +335,7 @@ PageQuestAbandon:Hide()
 local IntroPanel = CreateFrame("Frame", nil, PageQuestAbandon)
 IntroPanel:SetPoint("TOPLEFT", PageQuestAbandon, "TOPLEFT", 20, -20)
 IntroPanel:SetPoint("TOPRIGHT", PageQuestAbandon, "TOPRIGHT", -20, -20)
-IntroPanel:SetHeight(110)
+IntroPanel:SetHeight(154)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
@@ -304,6 +361,30 @@ IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
 IntroText:SetText(L("QUEST_ABANDON_DESC"))
+
+local QuestAbandonMinimapContextCheckbox = CreateFrame("CheckButton", nil, IntroPanel, "UICheckButtonTemplate")
+QuestAbandonMinimapContextCheckbox:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", -4, -12)
+QuestAbandonMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questAbandon") or true)
+QuestAbandonMinimapContextCheckbox:SetScript("OnClick", function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("questAbandon", self:GetChecked())
+    end
+end)
+
+local QuestAbandonMinimapContextLabel = IntroPanel:CreateFontString(nil, "OVERLAY")
+QuestAbandonMinimapContextLabel:SetPoint("LEFT", QuestAbandonMinimapContextCheckbox, "RIGHT", 6, 0)
+QuestAbandonMinimapContextLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+QuestAbandonMinimapContextLabel:SetTextColor(1, 1, 1, 1)
+QuestAbandonMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+
+local QuestAbandonMinimapContextHint = IntroPanel:CreateFontString(nil, "OVERLAY")
+QuestAbandonMinimapContextHint:SetPoint("TOPLEFT", QuestAbandonMinimapContextCheckbox, "BOTTOMLEFT", 34, -2)
+QuestAbandonMinimapContextHint:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+QuestAbandonMinimapContextHint:SetJustifyH("LEFT")
+QuestAbandonMinimapContextHint:SetJustifyV("TOP")
+QuestAbandonMinimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+QuestAbandonMinimapContextHint:SetTextColor(0.75, 0.75, 0.75, 1)
+QuestAbandonMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
 
 local AbandonPanel = CreateFrame("Frame", nil, PageQuestAbandon)
 AbandonPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
@@ -380,7 +461,7 @@ AbandonScrollContent:SetSize(1, 1)
 AbandonScrollFrame:SetScrollChild(AbandonScrollContent)
 
 AbandonScrollFrame:SetScript("OnMouseWheel", function(self, delta)
-    local step = 36
+    local step = ABANDON_ROW_HEIGHT
     local currentScroll = self:GetVerticalScroll()
     local maxScroll = math.max(0, AbandonScrollContent:GetHeight() - self:GetHeight())
     local nextScroll = currentScroll - (delta * step)
@@ -403,6 +484,9 @@ AbandonSelectedButton:SetScript("OnClick", ConfirmAbandonSelectedQuests)
 BeavisQoL.UpdateQuestAbandon = function()
     IntroTitle:SetText(L("QUEST_ABANDON_TITLE"))
     IntroText:SetText(L("QUEST_ABANDON_DESC"))
+    QuestAbandonMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    QuestAbandonMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
+    QuestAbandonMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questAbandon") or true)
     AbandonTitle:SetText(L("QUEST_ABANDON_TITLE"))
     AbandonHint:SetText(L("QUEST_ABANDON_DESC"))
     AbandonSelectAllButton:SetText(L("QUEST_ABANDON_SELECT_ALL"))
@@ -412,6 +496,7 @@ BeavisQoL.UpdateQuestAbandon = function()
 end
 
 PageQuestAbandon:SetScript("OnShow", function()
+    QuestAbandonMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questAbandon") or true)
     RefreshAbandonQuestSelectionUI()
 end)
 

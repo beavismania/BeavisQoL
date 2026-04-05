@@ -73,6 +73,28 @@ local function ApplyPanelSurface(surface, style, highlighted)
     surface.border:SetColorTexture(1, 0.82, 0, borderA)
 end
 
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
+local function GetSectionHeight(section)
+    if not section then
+        return 0
+    end
+
+    return GetTextHeight(section.Title, 15)
+        + 6
+        + GetTextHeight(section.Description, 11)
+        + 8
+        + 1
+end
+
 local function CreateCheckbox(parent, label, checked, onClick)
     local check = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
     check:SetSize(24, 24)
@@ -121,11 +143,19 @@ end
 local PageSettings = CreateFrame("Frame", nil, Content)
 PageSettings:SetAllPoints()
 
-local SettingsPanel = CreateFrame("Frame", nil, PageSettings)
-SettingsPanel:SetPoint("TOPLEFT", PageSettings, "TOPLEFT", 22, -22)
-SettingsPanel:SetPoint("TOPRIGHT", PageSettings, "TOPRIGHT", -22, -22)
-SettingsPanel:SetPoint("BOTTOMLEFT", PageSettings, "BOTTOMLEFT", 22, 22)
-SettingsPanel:SetPoint("BOTTOMRIGHT", PageSettings, "BOTTOMRIGHT", -22, 22)
+local PageSettingsScrollFrame = CreateFrame("ScrollFrame", nil, PageSettings, "UIPanelScrollFrameTemplate")
+PageSettingsScrollFrame:SetPoint("TOPLEFT", PageSettings, "TOPLEFT", 0, 0)
+PageSettingsScrollFrame:SetPoint("BOTTOMRIGHT", PageSettings, "BOTTOMRIGHT", -28, 0)
+PageSettingsScrollFrame:EnableMouseWheel(true)
+
+local PageSettingsContent = CreateFrame("Frame", nil, PageSettingsScrollFrame)
+PageSettingsContent:SetSize(1, 1)
+PageSettingsScrollFrame:SetScrollChild(PageSettingsContent)
+
+local SettingsPanel = CreateFrame("Frame", nil, PageSettingsContent)
+SettingsPanel:SetPoint("TOPLEFT", PageSettingsContent, "TOPLEFT", 22, -22)
+SettingsPanel:SetPoint("TOPRIGHT", PageSettingsContent, "TOPRIGHT", -22, -22)
+SettingsPanel:SetHeight(1)
 
 local SettingsSurface = CreatePanelSurface(SettingsPanel)
 ApplyPanelSurface(SettingsSurface, "hero", false)
@@ -164,6 +194,20 @@ local QuickHideWeeklyOverlayCheckbox
 local QuickHideStatsOverlayCheckbox
 local QuickHideOverlaysInCombatCheckbox
 local GeneralSection
+-- Checkbox für MouseHelper aktivieren/deaktivieren
+local MouseHelperCheckbox = CreateCheckbox(SettingsPanel, L("MOUSE_HELPER_ENABLE"), BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.GetDB().enabled or false, function(self)
+    if BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.SetEnabled then
+        BeavisQoL.MouseHelper.SetEnabled(self:GetChecked())
+    end
+end)
+MouseHelperCheckbox:SetPoint("TOPLEFT", LockCheckbox, "BOTTOMLEFT", 0, -22)
+
+-- Hinweistext für Cursorgröße
+local MouseHelperSizeHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
+MouseHelperSizeHint:SetPoint("TOPLEFT", MouseHelperCheckbox, "BOTTOMLEFT", 4, -6)
+MouseHelperSizeHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+MouseHelperSizeHint:SetTextColor(0.82, 0.82, 0.82, 1)
+MouseHelperSizeHint:SetText(L("MOUSE_HELPER_SIZE_HINT"))
 local MinimapSection
 local QuickHideSection
 local ResetSection
@@ -181,7 +225,6 @@ local function RefreshLanguageDropdown()
     local currentLocale = BeavisQoL.GetLocale()
     UIDropDownMenu_SetWidth(LanguageDropdown, 120)
     UIDropDownMenu_SetText(LanguageDropdown, GetLocaleLabel(currentLocale))
-    UIDropDownMenu_SetSelectedValue(LanguageDropdown, currentLocale)
 end
 
 local function GetSettingsDB()
@@ -206,6 +249,36 @@ local LockCheckbox = CreateCheckbox(SettingsPanel, L("LOCK_WINDOW"), GetSettings
     end
 end)
 LockCheckbox:SetPoint("TOPLEFT", GeneralSection.Divider, "BOTTOMLEFT", 0, -10)
+
+-- Checkbox für MouseHelper aktivieren/deaktivieren
+local MouseHelperCheckbox = CreateCheckbox(SettingsPanel, L("MOUSE_HELPER_ENABLE"), BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.GetDB().enabled or false, function(self)
+    if BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.SetEnabled then
+        BeavisQoL.MouseHelper.SetEnabled(self:GetChecked())
+    end
+end)
+MouseHelperCheckbox:SetPoint("TOPLEFT", LockCheckbox, "BOTTOMLEFT", 0, -22)
+
+-- Hinweistext für Cursorgröße
+local MouseHelperSizeHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
+MouseHelperSizeHint:SetPoint("TOPLEFT", MouseHelperCheckbox, "BOTTOMLEFT", 4, -6)
+MouseHelperSizeHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+MouseHelperSizeHint:SetTextColor(0.82, 0.82, 0.82, 1)
+MouseHelperSizeHint:SetText(L("MOUSE_HELPER_SIZE_HINT"))
+
+-- Checkbox für MouseHelper aktivieren/deaktivieren
+local MouseHelperCheckbox = CreateCheckbox(SettingsPanel, L("MOUSE_HELPER_ENABLE"), BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.GetDB().enabled or false, function(self)
+    if BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.SetEnabled then
+        BeavisQoL.MouseHelper.SetEnabled(self:GetChecked())
+    end
+end)
+MouseHelperCheckbox:SetPoint("TOPLEFT", LockCheckbox, "BOTTOMLEFT", 0, -22)
+
+-- Hinweistext für Cursorgröße
+local MouseHelperSizeHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
+MouseHelperSizeHint:SetPoint("TOPLEFT", MouseHelperCheckbox, "BOTTOMLEFT", 4, -6)
+MouseHelperSizeHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+MouseHelperSizeHint:SetTextColor(0.82, 0.82, 0.82, 1)
+MouseHelperSizeHint:SetText(L("MOUSE_HELPER_SIZE_HINT"))
 
 local function SetLanguage(lang)
     BeavisQoL.SetLocale(lang)
@@ -293,8 +366,15 @@ QuickHideOverlaysInCombatCheckbox = CreateCheckbox(SettingsPanel, L("QUICK_HIDE_
 end)
 QuickHideOverlaysInCombatCheckbox:SetPoint("TOPLEFT", QuickHideStatsOverlayCheckbox, "BOTTOMLEFT", 24, -8)
 
+local QuickHideMinimapContextCheckbox = CreateCheckbox(SettingsPanel, L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"), BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("quickHideOverlays") or true, function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("quickHideOverlays", self:GetChecked())
+    end
+end)
+QuickHideMinimapContextCheckbox:SetPoint("TOPLEFT", QuickHideOverlaysInCombatCheckbox, "BOTTOMLEFT", -24, -16)
+
 ResetSection = CreateSectionHeader(SettingsPanel, L("SETTINGS_SECTION_RESET"), L("SETTINGS_SECTION_RESET_DESC"))
-ResetSection.Title:SetPoint("TOPLEFT", QuickHideOverlaysInCombatCheckbox, "BOTTOMLEFT", -24, -24)
+ResetSection.Title:SetPoint("TOPLEFT", QuickHideMinimapContextCheckbox, "BOTTOMLEFT", 0, -24)
 
 -- Button für Position zurücksetzen
 local ResetButton = CreateFrame("Button", nil, SettingsPanel, "UIPanelButtonTemplate")
@@ -307,6 +387,53 @@ ResetButton:SetScript("OnClick", function()
         BeavisQoL.Frame:SetPoint("CENTER")
     end
 end)
+
+local function LayoutSettingsPage()
+    local contentWidth = math.max(1, PageSettingsScrollFrame:GetWidth())
+
+    if contentWidth <= 1 then
+        return
+    end
+
+    PageSettingsContent:SetWidth(contentWidth)
+
+    local requiredHeight = 18
+        + GetTextHeight(SettingsTitle, 24)
+        + 8
+        + GetTextHeight(SettingsSubtitle, 12)
+        + 18
+        + LanguageRow:GetHeight()
+        + 8
+        + GetSectionHeight(GeneralSection)
+        + 10
+        + LockCheckbox:GetHeight()
+        + 22
+        + GetSectionHeight(MinimapSection)
+        + 10
+        + MinimapCheckbox:GetHeight()
+        + 22
+        + GetSectionHeight(QuickHideSection)
+        + 10
+        + QuickHideOverlaysCheckbox:GetHeight()
+        + 8
+        + QuickHideChecklistOverlayCheckbox:GetHeight()
+        + 8
+        + QuickHideWeeklyOverlayCheckbox:GetHeight()
+        + 8
+        + QuickHideStatsOverlayCheckbox:GetHeight()
+        + 8
+        + QuickHideOverlaysInCombatCheckbox:GetHeight()
+        + 16
+        + QuickHideMinimapContextCheckbox:GetHeight()
+        + 24
+        + GetSectionHeight(ResetSection)
+        + 10
+        + ResetButton:GetHeight()
+        + 22
+
+    SettingsPanel:SetHeight(math.max(1, math.ceil(requiredHeight)))
+    PageSettingsContent:SetHeight(math.max(PageSettingsScrollFrame:GetHeight(), SettingsPanel:GetHeight() + 44))
+end
 
 BeavisQoL.UpdateSettings = function()
     local settings = GetSettingsDB()
@@ -339,6 +466,10 @@ BeavisQoL.UpdateSettings = function()
         QuickHideOverlaysInCombatCheckbox:SetChecked(BeavisQoL.GetQuickHideOverlaysInCombat and BeavisQoL.GetQuickHideOverlaysInCombat() or settings.quickHideOverlaysInCombat or false)
         QuickHideOverlaysInCombatCheckbox.Label:SetText(L("QUICK_HIDE_OVERLAYS_IN_COMBAT"))
     end
+    if QuickHideMinimapContextCheckbox then
+        QuickHideMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("quickHideOverlays") or true)
+        QuickHideMinimapContextCheckbox.Label:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    end
     SettingsTitle:SetText(L("GLOBAL_SETTINGS"))
     SettingsSubtitle:SetText(L("GLOBAL_SETTINGS_DESC"))
     LanguageLabel:SetText(L("LANGUAGE") .. ":")
@@ -360,6 +491,28 @@ BeavisQoL.UpdateSettings = function()
     end
     ResetButton:SetText(L("RESET_POSITION"))
     RefreshLanguageDropdown()
+    LayoutSettingsPage()
 end
+
+PageSettingsScrollFrame:SetScript("OnSizeChanged", LayoutSettingsPage)
+PageSettingsScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageSettingsContent:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
+PageSettings:SetScript("OnShow", function()
+    LayoutSettingsPage()
+    PageSettingsScrollFrame:SetVerticalScroll(0)
+end)
 
 BeavisQoL.Pages.Settings = PageSettings

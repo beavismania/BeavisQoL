@@ -12,6 +12,12 @@ local L = BeavisQoL.L
 -- teils noch unter den älteren globalen Funktionen.
 local GetItemDetails = (C_Item and C_Item.GetItemInfo) or rawget(_G, "GetItemInfo")
 local GetCoinText = (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString) or rawget(_G, "GetCoinTextureString")
+local TimerAfter = C_Timer and C_Timer.After
+
+local AUTOSELL_RETRY_DELAYS = { 0.8, 2.4 }
+
+local autoSellMerchantSessionID = 0
+local autoSellMerchantOpen = false
 
 -- Alle Misc-Module greifen auf dieselbe kleine Unter-DB zu.
 -- Die Defaults bleiben deshalb absichtlich an mehreren Stellen gleich aufgebaut.
@@ -48,6 +54,26 @@ end
 
 function Misc.SetAutoSellJunkEnabled(value)
     Misc.GetMiscDB().autoSellJunk = value and true or false
+end
+
+local function IsAutoSellRetrySessionActive(sessionID)
+    return autoSellMerchantOpen and autoSellMerchantSessionID == sessionID and Misc.IsAutoSellJunkEnabled()
+end
+
+local function ScheduleAutoSellRetryPasses()
+    if not TimerAfter then
+        return
+    end
+
+    local sessionID = autoSellMerchantSessionID
+
+    for _, delaySeconds in ipairs(AUTOSELL_RETRY_DELAYS) do
+        TimerAfter(delaySeconds, function()
+            if IsAutoSellRetrySessionActive(sessionID) then
+                Misc.SellAllJunk()
+            end
+        end)
+    end
 end
 
 -- Wir verkaufen die Items bewusst selbst aus den Bags heraus.
@@ -98,8 +124,8 @@ function Misc.SellAllJunk()
             local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
 
             -- quality == 0 entspricht grauen Items.
-            if itemInfo and itemInfo.hyperlink and itemInfo.quality == 0 then
-                -- GetItemInfo/GetItemDetails liefert sehr viele Werte zurueck.
+            if itemInfo and itemInfo.hyperlink and itemInfo.quality == 0 and not itemInfo.isLocked then
+                -- GetItemInfo/GetItemDetails liefert sehr viele Werte zurück.
                 -- Wir lesen hier Name und Vendor-Preis in einem Schritt aus.
                 local itemName, _, _, _, _, _, _, _, _, _, sellPrice = GetItemDetails(itemInfo.hyperlink)
 
@@ -142,9 +168,19 @@ end
 -- Ein einziges Merchant-Event reicht hier. Alles Weitere entscheidet die Funktion selbst.
 local MerchantWatcher = CreateFrame("Frame")
 MerchantWatcher:RegisterEvent("MERCHANT_SHOW")
+MerchantWatcher:RegisterEvent("MERCHANT_CLOSED")
 
 MerchantWatcher:SetScript("OnEvent", function(_, event)
     if event == "MERCHANT_SHOW" then
+        autoSellMerchantOpen = true
+        autoSellMerchantSessionID = autoSellMerchantSessionID + 1
         Misc.SellAllJunk()
+        ScheduleAutoSellRetryPasses()
+        return
+    end
+
+    if event == "MERCHANT_CLOSED" then
+        autoSellMerchantOpen = false
+        autoSellMerchantSessionID = autoSellMerchantSessionID + 1
     end
 end)

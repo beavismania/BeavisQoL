@@ -22,6 +22,7 @@ BeavisQoL.Localization.deDE = {
 	NAVIGATION_SEARCH_HINT = "Filtert Namen und Seitentexte live.",
 	NAVIGATION_SEARCH_RESULTS = "%d Treffer in der Navigation",
 	NAVIGATION_SEARCH_EMPTY = "Keine Treffer in der Navigation.",
+	NAVIGATION_SECTION_ADDON = "Addon",
 	GENERAL = "Allgemein",
 	MODULES = "Module",
 	HOME = "Startseite",
@@ -41,7 +42,7 @@ BeavisQoL.Localization.deDE = {
 	ITEMLEVEL_GUIDE = "Itemlevel Guide",
 	QUEST_CHECK = "Quest Check",
 	QUEST_ABANDON = "Quest-Abbruch",
-	LOGGING = "Logging",
+	GOLDAUSWERTUNG = "Goldauswertung",
 	AUTOSELL_JUNK = "Auto Sell Junk",
 	AUTOREPAIR = "Auto Repair",
 	FAST_LOOT = "Fast Loot",
@@ -81,39 +82,81 @@ BeavisQoL.Localization.deDE = {
 	RESET_POSITION = "Position zurücksetzen",
 
 	-- Home/Startseite
-	WELCOME_TITLE = "Willkommen bei %s",
+	GOLDAUSWERTUNG_DESC = "Kompakte Übersicht für Einnahmen, Ausgaben, Reparaturen und Währungen. Gesamtverlauf über Verlauf.",
+	LOGGING_CLEANUP = "Zeitraum löschen",
+	GOLDAUSWERTUNG_CLEANUP = "Zeitraum löschen",
 	WELCOME_SUBTITLE = "Zentrale Übersicht für Fortschritt, Komfort und Interface",
+	GOLDAUSWERTUNG_RETENTION_HINT = "Reparaturen 30 Tage, Gold und Währungen 1 Jahr.",
 	WELCOME_BODY = "Beavis Quality of Life bündelt wichtige Alltagsfunktionen in einer Oberfläche: Tracker, Weekly-Ansichten, Komfortmodule und UI-Werkzeuge.",
+	GOLDAUSWERTUNG_CLEANUP_TITLE = "Log-Zeitraum löschen",
 	PROJECT_STATUS = "Projektstatus",
+	GOLDAUSWERTUNG_CLEANUP_HINT = "Entfernt Einträge, die älter sind als der gewählte Zeitraum. Reparaturen bleiben zusätzlich automatisch auf 30 Tage begrenzt.",
 	RELEASE_STATUS_FORMAT = "Status: %s",
+	GOLDAUSWERTUNG_HISTORY_TITLE = "Gesamtverlauf",
 	RELEASE_CHANNEL_ALPHA = "Alpha",
+	GOLDAUSWERTUNG_HISTORY_HINT = "Suche im Verlauf oder wechsle zwischen den Kategorien.",
 	RELEASE_CHANNEL_BETA = "Beta",
+	GOLDAUSWERTUNG_HISTORY_TAB_INCOME = "Einnahmen",
 	RELEASE_CHANNEL_RC = "Release Candidate",
+	GOLDAUSWERTUNG_HISTORY_TAB_EXPENSE = "Ausgaben",
 	RELEASE_CHANNEL_RELEASE = "Release",
+	GOLDAUSWERTUNG_HISTORY_TAB_REPAIRS = "Reparaturen",
 	STATUS_ALPHA = "Status: Alpha, aktiv im Ausbau",
+	GOLDAUSWERTUNG_HISTORY_TAB_CURRENCY = "Währungen",
 	STATUS_FOCUS = "Fokus: stabile Kernmodule, klare Bedienung und ein kompakter Zugriff auf häufig genutzte Funktionen.",
+	GOLDAUSWERTUNG_HISTORY_SEARCH = "Suche",
 
+	GOLDAUSWERTUNG_HISTORY_LOAD_MORE = "Mehr laden",
 	PROGRESS_CARD_TITLE = "Fortschritt im Blick",
+	GOLDAUSWERTUNG_HISTORY_NO_MATCHES = "Keine Treffer im aktiven Verlauf.",
 	PROGRESS_CARD_BODY = "Levelzeit, Checkliste, Weekly Keys, Itemlevel Guide und Quest Check holen die Dinge nach vorne, die man sonst über mehrere Blizzard-Fenster verteilt suchen muss.",
+	GOLDAUSWERTUNG_OVERVIEW_NO_MATCHES = "Keine Treffer für diese Suche.",
 	PROGRESS_CARD_FOOTER = "Levelzeit - Checkliste - Weekly Keys - Itemlevel Guide - Quest Check",
+	GOLDAUSWERTUNG_HISTORY_SHOWING = "%d Einträge sichtbar.",
 
+	GOLDAUSWERTUNG_HISTORY_SHOWING_MORE = "%d Einträge sichtbar. Weitere Einträge können geladen werden.",
 	COMFORT_CARD_TITLE = "Weniger Kleinkram",
+	GOLDAUSWERTUNG_ENTRY = "Eintrag",
 	COMFORT_CARD_BODY = "Komfort-Module decken typische Routineaufgaben ab, darunter Looten, Reparieren, Verkaufen und kleine UI-Erweiterungen für den Alltag.",
+	GOLDAUSWERTUNG_MISC = "Sonstiges",
 	COMFORT_CARD_FOOTER = "Auto Sell - Auto Repair - Fast Loot - Easy Delete - Kameraweite",
+	GOLDAUSWERTUNG_SALE = "Verkauf",
 
+	GOLDAUSWERTUNG_ITEM = "Item",
 	TWITCH_TITLE = "Twitch",
+	GOLDAUSWERTUNG_ITEMS = "Items",
 	TWITCH_BODY = "Wenn du sehen willst, wie das Addon weiter wächst, findest du Streams, Updates und den direkten Draht auf twitch.tv/beavismania.",
+	GOLDAUSWERTUNG_REPAIR = "Reparatur",
 	TWITCH_FOOTER = "Zum Twitch-Kanal",
+	GOLDAUSWERTUNG_REPAIRS = "Reparaturen",
 	TWITCH_POPUP = "Twitch-Kanal öffnen",
+	GOLDAUSWERTUNG_SELF_PAID = "Selbst bezahlt",
 
+	GOLDAUSWERTUNG_GUILD = "Gilde",
 	DISCORD_TITLE = "Discord & Support",
+	GOLDAUSWERTUNG_VENDOR = "Händler",
 	DISCORD_BODY = "Feedback, Ideen und Support laufen über die Website und die Community-Kanäle. So lassen sich Rückmeldungen und offene Punkte gesammelt nachhalten.",
+	GOLDAUSWERTUNG_VENDOR_SALE = "Händler",
 	DISCORD_FOOTER = "Zur Beavismania-Website",
+	GOLDAUSWERTUNG_MAIL = "Post",
 	DISCORD_POPUP = "Beavismania öffnen",
+	GOLDAUSWERTUNG_MAILBOX = "Postfach",
+	WEBSITE_CARD_TITLE = "Beavismania.de",
+	GOLDAUSWERTUNG_AUCTIONHOUSE = "Auktionshaus",
+	WEBSITE_CARD_BODY = "Alle Infos rund um den Stream, Guides, Addons und alle Streams zum Nachschauen findest du gesammelt auf www.beavismania.de.",
+	GOLDAUSWERTUNG_TRADE = "Handel",
+	WEBSITE_CARD_FOOTER = "Zur Website www.beavismania.de",
+	GOLDAUSWERTUNG_QUEST = "Quest",
+	WEBSITE_CARD_POPUP = "Beavismania.de öffnen",
+	GOLDAUSWERTUNG_QUEST_REWARD = "Questbelohnung",
 
+	GOLDAUSWERTUNG_LOOT = "Beute",
 	FOOTER_TEXT = "Die Oberfläche ist auf kurze Wege, klare Bereiche und ausreichend Platz für zusätzliche Module ausgelegt.",
+	GOLDAUSWERTUNG_PICKED_UP = "Aufgesammelt",
 
+	GOLDAUSWERTUNG_FLIGHTMASTER = "Flugmeister",
 	-- Link-Popup
+	GOLDAUSWERTUNG_TRAINER = "Trainer",
 	LINK_OPEN = "Link öffnen",
 	LINK_COPY_DESC = "World of Warcraft erlaubt Addons nicht, Webseiten direkt zu öffnen. Du kannst die Adresse hier markieren und kopieren:",
 	LINK_COPY_HINT = "Tipp: Link markieren und mit Strg+C kopieren.",
@@ -124,6 +167,8 @@ BeavisQoL.Localization.deDE = {
 	MINIMAP_STREAMER_PLANNER_SHOW = "Gruppenplaner anzeigen",
 	MINIMAP_EASY_LFG_SHOW = "Easy LFG anzeigen",
 	MINIMAP_PORTAL_VIEWER_SHOW = "Portal Viewer anzeigen",
+	MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE = "Im Minimap-Schnellmenü anzeigen",
+	MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT = "Steuert, ob dieses Modul im Schnellmenü des Minimap-Buttons erscheint.",
 	MINIMAP_LEFT_CLICK = "Linksklick: Fenster öffnen / schließen",
 	MINIMAP_RIGHT_CLICK = "Rechtsklick: Schnellmenü",
 	MINIMAP_SHIFT_CLICK = "Shift-Klick: UI neu laden",
@@ -151,6 +196,13 @@ BeavisQoL.Localization.deDE = {
 	PORTAL_VIEWER_ACHIEVEMENT_UNKNOWN = "Kein passender Portal-Erfolg gefunden",
 	PORTAL_VIEWER_REQUIREMENT = "Freischaltung: Portal-Belohnung für diesen Dungeon",
 	PORTAL_VIEWER_CLOSE_TOOLTIP = "Fenster ausblenden",
+	PORTAL_VIEWER_SETTINGS_HINT = "Hier steuerst du Sichtbarkeit, Fensterstatus und den Schnellmenü-Eintrag des Portal Viewers.",
+	PORTAL_VIEWER_ENABLE_WINDOW = "Portal Viewer aktivieren",
+	PORTAL_VIEWER_ENABLE_WINDOW_HINT = "Schaltet das Portal-Viewer-Fenster insgesamt ein oder aus.",
+	PORTAL_VIEWER_LOCK_WINDOW = "Fenster fixieren",
+	PORTAL_VIEWER_LOCK_WINDOW_HINT = "Wenn aktiv, bleibt das Portal-Viewer-Fenster an seiner Position und kann nicht verschoben werden.",
+	PORTAL_VIEWER_SHOW_MINIMAP_MENU = "Im Minimap-Schnellmenü anzeigen",
+	PORTAL_VIEWER_SHOW_MINIMAP_MENU_HINT = "Steuert, ob der Portal Viewer im Schnellmenü des Minimap-Buttons erscheint.",
 	PORTAL_VIEWER_DUNGEON_MAGISTERS_TERRACE = "Terrasse der Magister",
 	PORTAL_VIEWER_DUNGEON_MAISARA_CAVERNS = "Maisarakavernen",
 	PORTAL_VIEWER_DUNGEON_NEXUS_POINT_XENAS = "Nexuspunkt Xenas",
@@ -169,7 +221,7 @@ BeavisQoL.Localization.deDE = {
 	EASY_DELETE_HINT = "Entfernt bei Items mit LÖSCHEN-Abfrage die Texteingabe und ersetzt sie durch eine einfache Bestätigung.",
 	FAST_LOOT_HINT = "Lootet Beute direkt beim Öffnen und blendet das Lootfenster dabei aus.",
 	CUTSCENE_SKIP = "Cutscene Skip",
-	CUTSCENE_SKIP_HINT = "Zeigt Cutscenes und Movies beim ersten Ausloesen normal an. Sobald derselbe Event-Schluessel bereits einmal gesehen wurde, wird er beim naechsten Start automatisch uebersprungen.",
+	CUTSCENE_SKIP_HINT = "Zeigt Cutscenes und Movies beim ersten Auslösen normal an. Sobald derselbe Event-Schlüssel bereits einmal gesehen wurde, wird er beim nächsten Start automatisch übersprungen.",
 	FLIGHT_MASTER_TIMER = "Flugmeister-Timer",
 	FLIGHT_MASTER_TIMER_HINT = "Zeigt während Flugmeister-Flügen mittig am Bildschirm einen Countdown bis zur Ankunft an und lernt fehlende Routenzeiten automatisch nach.",
 	FLIGHT_MASTER_TIMER_UNKNOWN = "Ankunft unbekannt",
@@ -272,6 +324,16 @@ BeavisQoL.Localization.deDE = {
 	BOSS_GUIDES_FONT_SIZE = "Schriftgröße",
 	BOSS_GUIDES_RESET_POSITION = "Positionen zurücksetzen",
 	BOSS_GUIDES_BUTTON = "Boss Guides",
+	BOSS_GUIDES_OVERVIEW_TITLE = "Guide-Übersicht",
+	BOSS_GUIDES_OVERVIEW_HINT = "Wähle eine Kategorie oder öffne einen Guide direkt aus der Übersicht.",
+	BOSS_GUIDES_EMPTY_CATEGORY = "Für diese Kategorie ist noch kein Guide hinterlegt.",
+	BOSS_GUIDES_OPEN_GUIDE = "Guide öffnen",
+	BOSS_GUIDES_BOSS_COUNT = "%d Bosse",
+	BOSS_GUIDES_GUIDE_COUNT = "%d Guides",
+	BOSS_GUIDES_STATUS_ALWAYS = "Immer sichtbar",
+	BOSS_GUIDES_STATUS_INSTANCE = "Nur in Instanz",
+	BOSS_GUIDES_STATUS_LOCKED = "Fixiert",
+	BOSS_GUIDES_STATUS_UNLOCKED = "Verschiebbar",
 	BOSS_GUIDES_BOSSES = "Bosse",
 	BOSS_GUIDES_INSTANCE = "Instanz",
 	BOSS_GUIDES_NO_GUIDE = "Für diese Instanz ist aktuell kein Guide hinterlegt.",
@@ -279,13 +341,16 @@ BeavisQoL.Localization.deDE = {
 	BOSS_GUIDES_NONE = "Keine",
 	BOSS_GUIDES_CAT_RAID = "Raid",
 	BOSS_GUIDES_CAT_DUNGEON = "Dungeon",
+	BOSS_GUIDES_HOME_CATEGORY_RAIDS = "Raids",
+	BOSS_GUIDES_HOME_CATEGORY_DUNGEONS = "Dungeons",
+	BOSS_GUIDES_HOME_EMPTY = "Noch keine Bossguides verfügbar.",
 	BOSS_GUIDES_SELECT_INSTANCE = "Instanz wählen...",
 	BOSS_GUIDES_NO_INSTANCES = "Noch keine Einträge",
 	BOSS_GUIDES_SECTION_GENERAL = "Allgemein",
 	BOSS_GUIDES_LABEL_MYTHIC = "Mythisch",
 	BOSS_GUIDES_LEGEND_TANK = "Tank",
 	BOSS_GUIDES_LEGEND_DD = "DD",
-	BOSS_GUIDES_LEGEND_HEAL = "Heal",
+	BOSS_GUIDES_LEGEND_HEAL = "Heiler",
 	BOSS_GUIDES_LEGEND_HC = "HC",
 	BOSS_GUIDES_LEGEND_M = "M",
 	BOSS_GUIDES_INSTANCE_VOIDSPIRE_TITLE = "Leerenspitze",
@@ -301,60 +366,62 @@ Allgemein: Tic Tac Toe spielen. Schattenphalanx überrennt zwischendurch einzeln
 ]=],
 	BOSS_GUIDES_BOSS_VORASIUS_NAME = "Vorasius",
 	BOSS_GUIDES_BOSS_VORASIUS_BODY = [=[
-Allgemein: Leerenatem spawnt links oder rechts und zieht von dort über die Plattform. Der ganze Raid muss ausweichen.
-{TANK} Immer in Nahkampfreichweite bleiben, sonst Überwältigender Puls den Raid trifft. Tanks soaken Schattenklauenhieb 2x alleine im Wechsel. Zwei Flächen soaken - tauschen - wiederholen.
-{DD} Blasenkriecher verfolgen Spieler. Spieler teilen sie auf beide Wände auf. Das Platzen zerstört die Wände. Danach Leerenatem ausweichen.
-{HEAL} CDs für Pustelbersten und Urzeitliches Brüllen einplanen.
-{HC} Wände brauchen mehr Explosionen. Add-Kills vorher ansagen und Platz sparen.
-{M} Pustelbersten hinterlässt Dunklen Schleim. Kill-Zonen strikt planen und Wege nicht doppelt blocken.
+Allgemein: Arena aktiv managen. Wände gezielt brechen und Leerenatem nie durch den Raid ziehen.
+{TANK} Immer in Nahkampfreichweite bleiben, sonst wirkt Überwältigender Puls. Schattenklauenhieb sicher soaken. Nach Zerschmettert oder zwei schweren Treffern tauschen.
+{DD} Blasenkriecher an der geplanten Wand töten. Nach Pustelbersten 8 Meter rausgehen. Leerenatem und Nachbeben ausweichen.
+{HEAL} Pustelbersten und Urzeitliches Brüllen sind die größten Spitzen. Kriecherspritzer mit Slow und Rückstoß einplanen. CDs über den Kampf staffeln.
+{HC} Wände brauchen mehr Explosionen. Add-Kills früh ansagen und Platz sparen.
+{M} Pustelbersten hinterlässt Dunklen Schleim. Kill-Zonen strikt planen und denselben Weg nicht doppelt blockieren.
 ]=],
 	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_NAME = "Gefallener König Salhadaar",
 	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_BODY = [=[
-Allgemein: Kugeln dürfen den Boss nicht erreichen. Jede Kugel erhöht den Raidschaden stark.
-{TANK} Boss von Kugeln & Quälender Extrakt wegziehen. Bei Destabilisierende Schläge tauschen.
-{DD} Kugel vor Bosskontakt zerstören. Abbilder sofort kicken. Entropische Entfesselung ist euer Burn-Fenster (25% mehr DMG am Boss). Mit Zertrümmerndes Zwielicht an den Rand stellen und Fläche ablegen.
-{HEAL} Leereninfusion, Windende Obskurität und Entropische Entfesselung mit CDs decken. Erdrückende Dunkelheit gezielt dispellen. Mit Zertrümmerndes Zwielicht an den Rand stellen und Fläche ablegen.
-{HC} Kugeln platzen und wirken Dunkle Strahlung mit Raidweiten Schaden. Zertrümmerndes Zwielicht springt bei Einschlag auf freundliche Ziele über.
-{M} Kügeln hinterlassen Beständige Leere. Nexusschild auf Abbildern per Kick-Rotation runterspielen.
+Allgemein: Kugeln dürfen den Boss nie erreichen. Jeder Durchlauf erhöht den Raidschaden stark.
+{TANK} Boss aus Kugellinien und Quälender Extrakt ziehen. Zerschmetterndes Zwielicht am Rand ablegen. Bei Destabilisierende Schläge tauschen.
+{DD} Konzentrierte Leere vor Bosskontakt zerstören. Zersplitterte Abbilder sofort kicken. Entropische Auflösung als Burn-Fenster nutzen.
+{HEAL} Leereninfusion, Windende Obskurität und Entropische Auflösung mit CDs decken. Ziele von Despotischer Befehl aus dem Raid halten. Erdrückende Dunkelheit gezielt dispellen.
+{HC} Kugelkills staffeln, weil Dunkle Strahlung den ganzen Raid trifft. Ziele von Despotischer Befehl sauber spreaden.
+{M} Beständige Leere kommt wieder und muss eingeplant werden. Nexusschild auf Abbildern per Kick-Rotation entfernen. Der Kampf steht und fällt mit dem Kugel-Timing.
 ]=],
 	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_NAME = "Vaelgor & Ezzorak",
 	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_BODY = [=[
-Allgemein: Zwei Bosse. HP angleichen und 15 Meter Abstand halten, sonst Zwielichtband. Nie hinter den Drachen stehen. Ablauf immer gleich: Leerenheulen -> Nullstrahl/Nullzone -> Düsterkeit. Markierter Spieler zieht Entsetzlicher Atem raus und wird danach sofort dispellt. Leerenkugeln zusammenziehen, stoppen und töten. Zwischenphase: in die Strahlende Barriere, Kreise raus, Add sofort töten.
-{TANK} Drachen an den Spawnpunkten getrennt halten. Nullstrahl frontal weg vom Raid. Nach jeder Düsterkeit oder spätestens nach Vaelflügel/Rakzahn tauschen. Bosse nicht unnötig durch den Raum ziehen.
-{DD} Bei Leerenheulen eng stacken, damit die Leerenkugeln zusammen spawnen. Nullzone sofort lösen; der Tank löst zuletzt. Düsterkeit mit fester Soak-Gruppe auf Marker spielen. Rest weicht Atem, Kugeln und Pfützen aus.
-{HEAL} CDs für Nullzonen-Explosion, Düsterkeit und Mitternachtsflammen einteilen. Fear von Entsetzlicher Atem sofort dispellen. Kreisziele in der Zwischenphase stabil halten.
-{HC} Nach kompletter Nullzone nimmt der Raid extra Schaden. Düsterkeit-Soaker bekommen eine Soak-Vulnerabilität und können nicht direkt wieder soaken.
-{M} Beim ersten gelösten Nullzone-Band spawnen Bodenkreise. Langsame Klassen können kurz in Nullstrahl gehen, um leichter rauszukommen. Düsterkeit cleaved um Soaker herum und verteilt Düsternisberührt -> Geschwächt. Kosmose-Klone kopieren Bossmechaniken. Ungebundener Schatten in der Zwischenphase sofort fokussieren.
+Allgemein: Drachen getrennt und HP ausgeglichen halten. Sonst eskaliert Zwielichtbund. Entsetzlicher Atem immer aus dem Raid ziehen. In der Zwischenphase rechtzeitig in die Strahlende Barriere laufen.
+{TANK} Mindestens 15 Meter Abstand halten. Nach Vaelflügel und Rakzahn tauschen. Nullstrahl und Entsetzlicher Atem vom Raid wegdrehen.
+{DD} Düsternis mit fester Soak-Gruppe kontrollieren. Nullzone nur gezielt brechen. Kugeln sofort stoppen und töten. Schattenmal auseinander tragen.
+{HEAL} Nullstrahl, Düsternis und Mitternachtsflammen als feste CD-Fenster planen. Fear von Entsetzlicher Atem sofort dispellen. Kreisziele in der Zwischenphase stabil halten.
+{HC} Nach jeder gebrochenen Nullzone steigt der Druck. Soaker sauber rotieren und Doppeltreffer vermeiden.
+{M} Spiegelbilder priorisieren und lange Mitternachtsflammen vorbereiten. Fehler bei Nullzone oder Düsternis bestrafen den Raid sofort.
 ]=],
 
 	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_NAME = "Lichtblinde Vorhut",
 	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_BODY = [=[
-Allgemein: Drei Bosse. HP angleichen und keinen zu früh töten, sonst Vergeltung. Bellamy und Senn sind auf Pull kurz immun; Startziel ist Venel. Der Boss mit der nächsten Aura muss an den Rand. Reihenfolge der Auren: Bellamy -> Venel -> Senn. Nach jeder Aura bleibt Weihe liegen und das Feld wird kleiner.
-{TANK} Venel: Richturteil -> Finales Urteil sofort tauschen. Bellamy: Richturteil -> Schild der Rechtschaffenen sofort tauschen. Senns Exorzismus defensiv nehmen. Immer den Boss mit kommender Aura an den Rand setzen.
-{DD} In Aura der Hingabe und Aura des Friedens keine falschen Ziele cleaven. Todesurteil mit festen Soak-Gruppen spielen; Kreise nie stacken. Danach Göttliche Hämmer und Elekkansturm dodgen. Heiliges Schild sofort brechen, dann Blendendes Licht kicken. Schild des Rächers spreaden und Göttliches Läuten ausweichen.
-{HEAL} Lichtinfundiert tickt permanent und wird mit jeder Aura schlimmer. CDs für Göttliches Läuten, Heiliges Läuten, Sengende Strahlkraft und Todesurteil einteilen. Tyrs Zorn auf die 3 Nächsten rotieren lassen und früh gegenheilen.
+Allgemein: Drei Bosse. HP angleichen und keinen zu früh töten, sonst Vergeltung. Bei 100 Energie kommt jeweils Aura des Zorns, Aura der Hingabe oder Aura des Friedens; der aktive Boss muss sofort an den Rand.
+{TANK} Aura-Bosse vom Rest wegziehen. Nach Richturteil sauber übernehmen. Exorzismus-Ketten defensiv spielen und Tanktreffer früh ansagen.
+{DD} Todesurteil nur mit der festen Soak-Gruppe spielen. Heiliges Schild schnell brechen. Blendendes Licht zuerst kicken und Hämmer bzw. Charges dodgen.
+{HEAL} Lichtinfundiert und Sengende Strahlkraft früh einplanen statt spät zu reagieren. Göttliches Läuten zusammen mit Todesurteil als Kill-Kombo abdecken.
 {HC} Weihe bleibt dauerhaft liegen. Bosse sauber am Rand rotieren, sonst geht euch der Platz aus.
-{M} Eifergeist verstärkt immer einen Boss. Bellamy: Tyrs Zorn mit Göttlichem Läuten und Schild des Rächers auf alle Spieler. Venel: Heiliges Läuten mit Todesurteil und Lichttornados bei Göttlicher Sturm. Senn: Todesurteil mit Tyrs Zorn und Sengende Strahlkraft rampt hoch. Mythische Weihe pacified und erhöht erlittenen Schaden.
+{M} Eifergeist verstärkt die Kernfähigkeiten. Göttliche Weihe macht freie Flächen wertvoll. Defensiv-CDs pro Aura fest durchrotieren.
 ]=],
 
 	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_NAME = "Krone des Kosmos",
 	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_BODY = [=[
-Allgemein: 3 Phasen, 2 Zwischenphasen. Pfeile sind die Kernmechanik: Sie reinigen Leereffekte, resetten Sternenemission und machen Adds/Wächter überhaupt erst killbar. P1: Wächter früh mit Silberschlag-Pfeilen treffen, damit Verderbende Essenz stapelt; denselben Wächter nicht unnötig nochmal treffen, sonst reset. Leerenausstoß außen legen. Griff der Leere weg vom Raid ziehen. Nullkorona meist nur heilen. Zwischenphasen: in der eigenen Scheibe bleiben, früh von Pfeilen treffen lassen, Debuff abfallen lassen, dann erst wieder treffen lassen; Singularitätsausbruch dodgen. In ZP2 wegen Orbiting Matter sauber durchrotieren. P2: Alleria und Riss-Simulakrum teilen HP. Simulakrum von Boss und Adds fern halten, sonst Verstärkende Dunkelheit stapelt. Kosmische Barriere sofort brechen. Jägerhauptmannszeichen muss Leerenbrut treffen, sonst stirbt sie nicht. Leerenfeuerstoß kicken. P3: Stacken, Aspekt des Endes in der Reihenfolge Fernkampf -> Nahkampf -> Tank brechen. Griff der Leere gemeinsam legen. Bei Verschlingender Kosmos mit Feder in die nächste Scheibe wechseln.
-{TANK} P1: Ein Tank hält Morium am Portal und sammelt Leerenkugeln; der andere hält das Hauptziel. Dunkle Hand defensiv. P2: Alleria und Riss-Simulakrum trennen. Risshieb bei 2-3 Stapeln tauschen. Scheibenwechsel nur geplant, weil Flüchtige Risse stapeln. P3: Tank-Fessel zuletzt brechen.
-{DD} P1: Feste Pfeilplanung auf Demair -> Vorelus -> Morium. Tropfen/Leerenkugeln in den Stack ziehen und cleaven. P2: Kosmische Barriere sofort brechen. Leerenbrut mit Markierung freischalten, kicken und vor 100 Energie töten. Leerenpirscherstachel per Pfeil mit reinigen, wenn eure Gruppe es so spielt. P3: Alles in den Boss drücken, Fesseln sauber nacheinander brechen und Feder nicht verpassen.
-{HEAL} Größte Checks sind Widerhallende Dunkelheit, Nullkorona, Sternenemission, Kosmische Barriere, Leerenpirscherstachel, Schwerkraftkollaps und Verschlingender Kosmos. Nullkorona nur dispellen, wenn das Ziel sonst stirbt.
-{HC} Leerenausstoß kommt öfter. Silberschlag-Sperrfeuer bestraft den nächsten Pfeil kurz danach hart. Griff der Leere trifft zwei Spieler gleichzeitig.
-{M} Silberrückstand auf Wächterzielen aktiv nutzen. Pfeil-Linien, Griff der Leere und Plattformwechsel müssen perfekt sitzen. Fehler bei Sperrfeuer oder Scheibenwechsel kippen den Pull sofort.
+Allgemein: Das ist ein Phasenkampf. Silberpfeile reinigen Leereffekte und lösen viele Mechaniken.
+{TANK} Wächter in P1 in Nahkampfreichweite halten, damit Widerhallende Dunkelheit nicht stapelt. In P2 Alleria und das Simulakrum trennen, damit Verstärkende Dunkelheit nicht eskaliert. Risshieb regelmäßig tauschen.
+{DD} Silberschlag gezielt durch Debuffs und Adds ausrichten. Wächter und Tropfen in P1 kontrollieren. Kosmische Barriere in P2 sofort brechen und Leerenbrut vor Koaleszierte Form töten. Zwischenphasen sauber dodgen.
+{HEAL} Nullkorona kontrolliert dispellen. Größte Checks sind Widerhallende Dunkelheit, die Barriere-Aura, Leerenpirscherstachel und Verschlingender Kosmos. CDs für P3 sparen.
+{HC} Leerenausstoß trifft zusätzliche Ziele. Sperrfeuer in beiden Zwischenphasen mit festen Ansagen spielen.
+{M} Silberrückstand auf Wächterzielen aktiv nutzen. Griff der Leere und Sperrfeuer stapeln schnell. Saubere Pfeil-Linien sind Pflicht.
 ]=],
+	BOSS_GUIDES_INSTANCE_DREAMRIFT_TITLE = "Traumriss",
+	BOSS_GUIDES_INSTANCE_DREAMRIFT_TOKENS = { "traumriss", "traum riss", "dreamrift", "dream rift" },
 
 	BOSS_GUIDES_BOSS_CHIMAERUS_NAME = "Chimaerus, der Ungeträumte Gott",
 	BOSS_GUIDES_BOSS_CHIMAERUS_BODY = [=[
-Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer seitlich mit der zugewiesenen Gruppe soaken, damit sie Alnsicht bekommt; Gruppen wegen Rissanfälligkeit abwechseln. Rissgruppe folgt ihrem Tank auf die Manifestationen, normale Gruppe spielt Boss und wechselt auf Adds, sobald sie freigeschaltet sind. Kleine Adds am großen Add stacken. Furchterregenden Schrei und Essenzblitz sofort kicken. Spieler mit Verzehrendes Miasma gehen auf eine Pfütze und lassen dort dispellen. Nie im Raid dispellen. Ziel von Reißendes Schlitzen tritt raus. Adds nie vom Boss fressen lassen. Bei 100 Energie kommt Verzehren, Knockback und Zwischenphase. In der Zwischenphase Verderbte Verwüstung dodgen, Pfützen löschen und alle Adds vor Gefräßiger Sturzflug töten.
-{TANK} Kolossale Schrecken sofort übernehmen und defensiv tanken. Die Aufruhr-Soakgruppe immer sauber mitnehmen und im Riss führen.
-{DD} Im Riss erst Alnschleier brechen, dann große und kleine Adds cleaven. In der Realität den Boss drücken und sofort auf freigeschaltete Adds wechseln. Keine Manifestation durchlassen. Flugphase komplett dodgen.
-{HEAL} Risskrankheit ist ein großer Absorb-Check. CDs für Ätzenden Schleim, Kannibalisierte Essenz, Verzehren und Gefräßiger Sturzflug einteilen. Miasma-Dispels ansagen und nicht doppeln.
-{HC} Verzehrendes Miasma löscht Pfützen beim Dispellen. Platz dauerhaft sauber halten.
-{M} Dissonanz: beide Realm-Gruppen dürfen nicht ineinander stehen. Risswahnsinn hat feste Tauschpartner; ein Spieler aus der Realität stellt sich auf das Ziel im Riss und tauscht die Reiche. Eine Marke ist immer auf einem Heiler. Vor der Zwischenphase kommt noch ein Alnstaub-Aufruhr. In der Flugphase spawnen Adds auch im Riss.
+Allgemein: Realm-Management entscheidet den Kampf. Adds erst freischalten, dann schnell töten und nie vom Boss fressen lassen.
+{TANK} Reißendes Schlitzen vom Raid weg spielen. Aufruhr mit festen Gruppen rotieren. Kolossale Schrecken sofort übernehmen und defensiv tanken.
+{DD} Im Riss zuerst Alnschleier brechen. In der Realität Manifestationen priorisieren. Furchterregender Schrei und Essenzblitz sofort kicken. Flugphase komplett dodgen und Adds vor Gefräßiger Sturzflug töten.
+{HEAL} Risskrankheit als Absorb-Mechanik früh planen. CDs für Ätzenden Schleim und Kannibalisierte Essenz einteilen. Feste Soak-Gruppen machen den Schaden berechenbar.
+{HC} Verzehrendes Miasma bewusst dispellen, um Alnstaubessenz zu löschen. Den Raum den ganzen Kampf über sauber halten.
+{M} Risswahnsinn braucht feste Tauschpartner. Dissonanz mit klarem Abstand spielen. Zusätzliche Adds in der Flugphase sofort priorisieren.
 ]=],
 	BOSS_GUIDES_SPELL_NAMES = {
 		["Oblivion's Wrath"] = "Zorn der Auslöschung",
@@ -376,26 +443,28 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 		["Primordial Roar"] = { spellID = 1260046, localizedName = "Urzeitliches Brüllen" },
 		["Creep Spit"] = { spellID = 1273159, localizedName = "Kriecherspritzer" },
 		["Shadowclaw Slash"] = { spellID = 1244012, localizedName = "Schattenklauenhieb" },
-		["Dark Goo"] = "Dunkler Schleim",
+		["Dark Goo"] = { localizedName = "Dunkler Schleim", aliases = { "Dunklen Schleim" } },
 		["Smashed"] = "Zerschmettert",
 		["Torturous Extract"] = "Quälender Extrakt",
-		["Shattering Twilight"] = "Zerschmetterndes Zwielicht",
+		["Shattering Twilight"] = { localizedName = "Zerschmetterndes Zwielicht", aliases = { "Zertrümmerndes Zwielicht" } },
 		["Destabilizing Strikes"] = "Destabilisierende Schläge",
 		["Concentrated Void"] = "Konzentrierte Leere",
 		["Fractured Images"] = "Zersplitterte Abbilder",
-		["Entropic Unraveling"] = "Entropische Entfesselung",
+		["Void Convergence"] = { spellID = 1247738, localizedName = "Leerenkonvergenz" },
+		["Entropic Unraveling"] = { spellID = 1246175, localizedName = "Entropische Auflösung" },
 		["Twisting Obscurity"] = "Windende Obskurität",
 		["Despotic Command"] = "Despotischer Befehl",
 		["Oppressive Darkness"] = "Erdrückende Dunkelheit",
 		["Dark Radiation"] = "Dunkle Strahlung",
-		["Enduring Void"] = "Anhaltende Leere",
+		["Enduring Void"] = { localizedName = "Beständige Leere", aliases = { "Anhaltende Leere" } },
 		["Nexus Shield"] = "Nexusschild",
-		["Twilight Bond"] = "Zwielichtband",
+		["Twilight Bond"] = { spellID = 1270189, localizedName = "Zwielichtbund" },
 		["Vaelwing"] = "Vaelflügel",
 		["Rakfang"] = "Rakzahn",
-		["Nullbeam"] = "Nullstrahl",
-		["Gloom"] = "Düsterkeit",
-		["Dread Breath"] = "Schreckensatem",
+		["Nullbeam"] = { spellID = 1262623, localizedName = "Nullstrahl" },
+		["Gloom"] = { spellID = 1245391, localizedName = "Düsternis" },
+		["Dread Breath"] = { spellID = 1244221, localizedName = "Entsetzlicher Atem" },
+		["Radiant Barrier"] = { spellID = 1248847, localizedName = "Strahlende Barriere" },
 		["Nullzone"] = "Nullzone",
 		["Shadowmark"] = "Schattenmal",
 		["Nullsnap"] = "Nullbruch",
@@ -405,12 +474,15 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 		["Nullscatter"] = "Nullstreuung",
 		["Cosmosis"] = "Kosmosis",
 		["Retribution"] = "Vergeltung",
-		["Judgment"] = "Richturteil",
+		["Judgment"] = { spellID = 1246736, localizedName = "Richturteil" },
 		["Exorcism"] = "Exorzismus",
-		["Execution Sentence"] = "Todesurteil",
+		["Execution Sentence"] = { spellID = 1248983, localizedName = "Todesurteil" },
+		["Aura of Wrath"] = { spellID = 1248449, localizedName = "Aura des Zorns" },
+		["Aura of Devotion"] = { spellID = 1246162, localizedName = "Aura der Hingabe" },
+		["Aura of Peace"] = { spellID = 1248451, localizedName = "Aura des Friedens" },
 		["Sacred Shield"] = "Heiliges Schild",
 		["Blinding Light"] = "Blendendes Licht",
-		["Divine Hammer"] = "Göttlicher Hammer",
+		["Divine Hammer"] = { localizedName = "Göttlicher Hammer", aliases = { "Göttliche Hämmer" } },
 		["Light Infused"] = "Lichtinfundiert",
 		["Searing Radiance"] = "Sengende Strahlkraft",
 		["Tyr's Wrath"] = "Tyrs Zorn",
@@ -418,27 +490,27 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 		["Consecration"] = "Weihe",
 		["Zealous Spirit"] = "Eifergeist",
 		["Divine Consecration"] = "Göttliche Weihe",
-		["Echoing Darkness"] = "Widerhallende Dunkelheit",
-		["Empowering Darkness"] = "Verstärkende Dunkelheit",
-		["Rift Slash"] = "Risshieb",
-		["Silverstrike"] = "Silberschlag",
-		["Cosmic Barrier"] = "Kosmische Barriere",
-		["Coalesced Form"] = "Koaleszierte Form",
-		["Null Corona"] = "Nullkorona",
-		["Voidstalker Sting"] = "Leerenpirscherstachel",
-		["Devouring Cosmos"] = "Verschlingender Kosmos",
-		["Void Expulsion"] = "Leerenausstoß",
-		["Barrage"] = "Sperrfeuer",
-		["Silver Residue"] = "Silberrückstand",
-		["Grasp of Emptiness"] = "Griff der Leere",
-		["Upheaval"] = "Aufruhr",
+		["Echoing Darkness"] = { localizedName = "Widerhallende Dunkelheit", tooltipKind = "Bossmechanik", tooltipText = "P1-Aura der Wächter. Stapelt hoch, wenn die Wächter nicht sauber im Nahkampf gebunden und kontrolliert werden." },
+		["Empowering Darkness"] = { localizedName = "Verstärkende Dunkelheit", tooltipKind = "Bossmechanik", tooltipText = "Buff in P2. Entsteht, wenn das Riss-Simulakrum zu nah an Boss oder Adds steht, und muss durch saubere Trennung verhindert werden." },
+		["Rift Slash"] = { localizedName = "Risshieb", tooltipKind = "Bossmechanik", tooltipText = "Tanktreffer in P2. Regelmäßig spotten, damit Stapel und eingehender Schaden beherrschbar bleiben." },
+		["Silverstrike"] = { localizedName = "Silberschlag", tooltipKind = "Bossmechanik", tooltipText = "Silberpfeil-Mechanik des Kampfes. Reinigt Leereffekte und aktiviert beziehungsweise unterstützt Ziele und Adds." },
+		["Cosmic Barrier"] = { localizedName = "Kosmische Barriere", tooltipKind = "Bossmechanik", tooltipText = "Schild in P2. Muss sofort gebrochen werden, bevor der Gruppenschaden außer Kontrolle gerät." },
+		["Coalesced Form"] = { localizedName = "Koaleszierte Form", tooltipKind = "Bossmechanik", tooltipText = "Gefährlicher Zustand der Leerenbrut. Adds müssen vorher kontrolliert und rechtzeitig getötet werden." },
+		["Null Corona"] = { localizedName = "Nullkorona", tooltipKind = "Bossmechanik", tooltipText = "Dispellbarer Debuff. Nur kontrolliert entfernen, nicht wahllos, damit der Raid nicht unnötig belastet wird." },
+		["Voidstalker Sting"] = { localizedName = "Leerenpirscherstachel", tooltipKind = "Bossmechanik", tooltipText = "Großer Heilungscheck. Je nach Taktik kann die Mechanik zusätzlich über Silberpfeile bereinigt werden." },
+		["Devouring Cosmos"] = { localizedName = "Verschlingender Kosmos", tooltipKind = "Bossmechanik", tooltipText = "P3-Bewegungsmechanik. Mit Feder rechtzeitig in die nächste Scheibe wechseln und nicht zu spät rotieren." },
+		["Void Expulsion"] = { localizedName = "Leerenausstoß", tooltipKind = "Bossmechanik", tooltipText = "Zielmechanik, die nach außen gelegt wird. Auf höheren Schwierigkeitsgraden trifft sie zusätzliche Spieler." },
+		["Barrage"] = { localizedName = "Sperrfeuer", tooltipKind = "Bossmechanik", tooltipText = "Zwischenphasen-Mechanik mit festen Ansagen. Linien und Pfeilwege müssen sauber gespielt werden." },
+		["Silver Residue"] = { localizedName = "Silberrückstand", tooltipKind = "Bossmechanik", tooltipText = "Effekt auf Wächterzielen, den die Gruppe aktiv mit Silberpfeilen nutzt, um den Phasenablauf zu optimieren." },
+		["Grasp of Emptiness"] = { localizedName = "Griff der Leere", tooltipKind = "Bossmechanik", tooltipText = "Zielmechanik, die weg vom Raid gelegt wird. Fehlerhafte Platzierung bestraft die Gruppe sofort." },
+		["Upheaval"] = { localizedName = "Aufruhr", aliases = { "Alnstaub-Aufruhr" } },
 		["Colossal Horrors"] = "Kolossale Schrecken",
 		["Alnshroud"] = "Alnschleier",
-		["Fearsome Cry"] = "Furchterregender Schrei",
+		["Fearsome Cry"] = { localizedName = "Furchterregender Schrei", aliases = { "Furchterregenden Schrei" } },
 		["Essence Bolt"] = "Essenzblitz",
 		["Ravenous Dive"] = "Gefräßiger Sturzflug",
 		["Rift Sickness"] = "Risskrankheit",
-		["Caustic Phlegm"] = "Ätzender Schleim",
+		["Caustic Phlegm"] = { localizedName = "Ätzender Schleim", aliases = { "Ätzenden Schleim" } },
 		["Cannibalized Essence"] = "Kannibalisierte Essenz",
 		["Consuming Miasma"] = "Verzehrendes Miasma",
 		["Alndust Essence"] = "Alnstaubessenz",
@@ -446,6 +518,31 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 		["Dissonance"] = "Dissonanz",
 		["Umbral Collapse"] = { spellID = 1249262, localizedName = "Umbralkollaps" },
 		["March of the Endless"] = { spellID = 1251583, localizedName = "Marsch der Unendlichen" },
+		["Leerenheulen"] = "Leerenheulen",
+		["Entsetzlicher Atem"] = "Entsetzlicher Atem",
+		["Nullzonen-Explosion"] = "Nullzonen-Explosion",
+		["Strahlende Barriere"] = "Strahlende Barriere",
+		["Finales Urteil"] = "Finales Urteil",
+		["Schild der Rechtschaffenen"] = "Schild der Rechtschaffenen",
+		["Schild des Rächers"] = "Schild des Rächers",
+		["Heiliges Läuten"] = "Heiliges Läuten",
+		["Göttlicher Sturm"] = "Göttlicher Sturm",
+		["Elekkansturm"] = "Elekkansturm",
+		["Mythische Weihe"] = "Mythische Weihe",
+		["Verderbende Essenz"] = "Verderbende Essenz",
+		["Singularitätsausbruch"] = "Singularitätsausbruch",
+		["Schwerkraftkollaps"] = "Schwerkraftkollaps",
+		["Dunkle Hand"] = "Dunkle Hand",
+		["Flüchtige Risse"] = "Flüchtige Risse",
+		["Jägerhauptmannszeichen"] = "Jägerhauptmannszeichen",
+		["Leerenfeuerstoß"] = "Leerenfeuerstoß",
+		["Aspekt des Endes"] = "Aspekt des Endes",
+		["Sternenemission"] = "Sternenemission",
+		["Alnsicht"] = "Alnsicht",
+		["Rissanfälligkeit"] = "Rissanfälligkeit",
+		["Reißendes Schlitzen"] = "Reißendes Schlitzen",
+		["Verzehren"] = "Verzehren",
+		["Verderbte Verwüstung"] = "Verderbte Verwüstung",
 	},
 	STREAMER_PLANNER_TITLE = "Gruppenplaner",
 	STREAMER_PLANNER_DESC = "Ein kleines transparentes Overlay für Stream-Situationen, in dem du Zusagen schnell auf feste Dungeon- oder Raid-Slots verteilen kannst.",
@@ -546,6 +643,23 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 	STREAMER_PLANNER_RAID_SUMMARY = "Tanks: %d   Heiler: %d   DDs: %d",
 	STREAMER_PLANNER_RAID_GROUP = "Gruppe %d",
 	STREAMER_PLANNER_RAID_SLOT = "G%d / %d",
+	STREAMER_PLANNER_QUEUE_TITLE = "Whisper-Queue",
+	STREAMER_PLANNER_QUEUE_HINT = "Nur Whisper mit !enter oder !inv landen hier. Rolle und Spec werden ergänzt, wenn passende Daten verfügbar sind. Rechtsklick entfernt Whisper-Einträge. AutoInv und FullInv greifen nur im Raid-Modus.",
+	STREAMER_PLANNER_AUTO_INVITE_WHISPER = "!inv automatisch einladen",
+	STREAMER_PLANNER_FULL_INVITE = "FullInv",
+	STREAMER_PLANNER_QUEUE_EMPTY = "Noch keine Whisper-Einträge vorhanden.",
+	STREAMER_PLANNER_SPEC_PROMPT_TITLE = "Spec auswählen",
+	STREAMER_PLANNER_SPEC_PROMPT_HINT = "Jemand möchte per !enter in die Planung. Wähle die Spezialisierung aus, damit der passende Slot gesetzt wird.",
+	STREAMER_PLANNER_SPEC_PROMPT_CLASS = "Klasse: %s",
+	STREAMER_PLANNER_SPEC_PROMPT_LATER = "Später",
+	STREAMER_PLANNER_SPEC_PROMPT_REMOVE = "Entfernen",
+	STREAMER_PLANNER_SOURCE_LFG = "LFG",
+	STREAMER_PLANNER_SOURCE_WHISPER_ENTER = "Whisper !enter",
+	STREAMER_PLANNER_SOURCE_WHISPER_INV = "Whisper !inv",
+	STREAMER_PLANNER_STATUS_GROUPED = "In Gruppe",
+	STREAMER_PLANNER_STATUS_INVITED = "Eingeladen",
+	STREAMER_PLANNER_STATUS_WHISPER_ENTER = "Wartet auf Invite",
+	STREAMER_PLANNER_STATUS_WHISPER_INV = "Will Invite",
 	MARKER_BAR_DESC = "Eine kompakte Overlay-Leiste für Zielmarkierungen und Bodenmarker. Normaler Klick markiert dein aktuelles Ziel, Shift-Klick setzt die passende Bodenmarke.",
 	MARKER_BAR_USAGE_HINT = "Normalklick setzt die Zielmarkierung. Shift-Klick aktiviert die passende Bodenmarke. Die Leiste bleibt bewusst klein, transparent und direkt im Blickfeld.",
 	MARKER_BAR_PERMISSION_HINT = "Hinweis: Markierungen funktionieren nur, wenn dir die Gruppe oder der Schlachtzug das Setzen von Markern erlaubt.",
@@ -672,6 +786,10 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 	ITEM_GUIDE_PATH_CHAMPION = "Champion",
 	ITEM_GUIDE_PATH_HERO = "Held",
 	ITEM_GUIDE_PATH_MYTH = "Mythisch",
+	ITEM_GUIDE_SAVE_VETERAN = "auf Veteran sparen",
+	ITEM_GUIDE_SAVE_CHAMPION = "auf Champion sparen",
+	ITEM_GUIDE_SAVE_HERO = "auf Held sparen",
+	ITEM_GUIDE_SAVE_MYTH = "auf Mythisch sparen",
 	ITEM_GUIDE_SAVE_FOR_RUNED = "auf Runenwappen sparen",
 	ITEM_GUIDE_SAVE_FOR_GILDED = "auf Vergoldete sparen",
 	ITEM_GUIDE_HEADER_PATH_RANK = "Pfad / Rang",
@@ -731,6 +849,7 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 	RESULT = "Ergebnis",
 	QUESTCHECK_RESULT_HINT = "Hier erscheint nach der Suche der Abschlussstatus der Quest.",
 	QUESTCHECK_NO_SEARCH = "Noch keine Suche ausgeführt.",
+	QUESTCHECK_READY_TO_SEARCH = "Bereit zur Suche",
 	WOWHEAD_LINK = "WoWHead-Link",
 	WOWHEAD_SEARCH = "WoWHead-Suche",
 	LINKS_COPY_DIALOG = "Links werden im Copy-Dialog angezeigt.",
@@ -816,28 +935,46 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 	DUNGEON_PLURAL = "Dungeons",
 	WEEKLY_KEYS_SUMMARY = "%d/8 Dungeons | Weekly-Loot %s / %s / %s",
 
-	LOGGING_DESC = "Hier findest du Verkaufs-, Reparatur- sowie Gold-Logs für den aktuellen Charakter. Einnahmen und Ausgaben werden automatisch in passende Kategorien einsortiert, wenn WoW dafür einen erkennbaren Kontext liefert.",
+	LOGGING_DESC = "Kompakte Logs für Einnahmen, Ausgaben, Reparaturen und Währungen. Gesamtverlauf über Verlauf.",
 	LOGGING_CLEANUP = "Zeitraum löschen",
-	LOGGING_RETENTION_HINT = "Aufbewahrung: Verkaufslog und Reparaturlog 30 Tage, Gold Einnahmen und Ausgaben 1 Jahr.",
+	LOGGING_RETENTION_HINT = "Reparaturen 30 Tage, Gold und Währungen 1 Jahr.",
 	LOGGING_CLEANUP_TITLE = "Log-Zeitraum löschen",
-	LOGGING_CLEANUP_HINT = "Entfernt Einträge, die älter sind als der gewählte Zeitraum. Verkäufe und Reparaturen bleiben zusätzlich automatisch auf 30 Tage begrenzt.",
+	LOGGING_CLEANUP_HINT = "Entfernt Einträge, die älter sind als der gewählte Zeitraum. Reparaturen bleiben zusätzlich automatisch auf 30 Tage begrenzt.",
 	LOGGING_SALES_TITLE = "Verkaufslog",
 	LOGGING_SALES_HINT = "Zeigt die letzten Händlerverkäufe an, inklusive Auto Sell Junk. Einträge mit Itemdaten lassen sich per Klick aufklappen.",
-	LOGGING_REPAIRS_TITLE = "Reparaturlog",
-	LOGGING_REPAIRS_HINT = "Zeigt Tagessummen für Reparaturen. Tage mit Einzelreparaturen lassen sich per Klick aufklappen.",
-	LOGGING_INCOME_TITLE = "Gold Einnahmen nach Kategorie",
-	LOGGING_INCOME_HINT = "Summiert die gespeicherten Einnahmen nach Kategorien wie Verkauf, Quest oder Beute.",
-	LOGGING_EXPENSE_TITLE = "Gold Ausgaben nach Kategorie",
-	LOGGING_EXPENSE_HINT = "Summiert die gespeicherten Ausgaben nach Kategorien wie Reparatur, Händler oder Flugmeister.",
+	LOGGING_REPAIRS_TITLE = "Reparaturkosten",
+	LOGGING_REPAIRS_HINT = "Letzte 10 Tage. Gesamtverlauf über Verlauf.",
+	LOGGING_INCOME_TITLE = "Einnahmen mit Quelle",
+	LOGGING_INCOME_HINT = "Letzte 10 Einnahmen. Gesamtverlauf über Verlauf.",
+	LOGGING_EXPENSE_TITLE = "Ausgaben mit Ziel",
+	LOGGING_EXPENSE_HINT = "Letzte 10 Ausgaben. Gesamtverlauf über Verlauf.",
+	LOGGING_CURRENCY_TITLE = "Andere Währungen",
+	LOGGING_CURRENCY_HINT = "Letzte 10 Änderungen. Gesamtverlauf über Verlauf.",
+	LOGGING_HISTORY = "Verlauf",
+	LOGGING_HISTORY_TITLE = "Gesamtverlauf",
+	LOGGING_HISTORY_HINT = "Suche im Verlauf oder wechsle zwischen den Kategorien.",
+	LOGGING_HISTORY_EMPTY = "Noch kein Verlauf vorhanden.",
+	LOGGING_HISTORY_TAB_INCOME = "Einnahmen",
+	LOGGING_HISTORY_TAB_EXPENSE = "Ausgaben",
+	LOGGING_HISTORY_TAB_REPAIRS = "Reparaturen",
+	LOGGING_HISTORY_TAB_CURRENCY = "Währungen",
+	LOGGING_HISTORY_SEARCH = "Suche",
+	LOGGING_HISTORY_LOAD_MORE = "Mehr laden",
+	LOGGING_HISTORY_NO_MATCHES = "Keine Treffer im aktiven Verlauf.",
+	LOGGING_OVERVIEW_NO_MATCHES = "Keine Treffer für diese Suche.",
+	LOGGING_HISTORY_SHOWING = "%d Einträge sichtbar.",
+	LOGGING_HISTORY_SHOWING_MORE = "%d Einträge sichtbar. Weitere Einträge können geladen werden.",
 	LOGGING_STORED_SALES = "Gespeicherte Verkäufe: %d",
 	LOGGING_TOTAL_SALES_GOLD = "Gesamtgold aus Verkäufen: %s",
 	LOGGING_STORED_REPAIRS = "Gespeicherte Reparaturen: %d",
+	LOGGING_TOTAL_REPAIRS = "Gesamte Reparaturkosten: %s",
 	LOGGING_DAILY_EXPAND_HINT = "Tagessummen lassen sich aufklappen.",
 	LOGGING_NO_REPAIRS = "Noch keine Reparaturen protokolliert.",
 	LOGGING_STORED_INCOME = "Gespeicherte Einnahmen: %d",
 	LOGGING_TOTAL_INCOME = "Gesamtsumme: %s",
 	LOGGING_STORED_EXPENSES = "Gespeicherte Ausgaben: %d",
 	LOGGING_TOTAL_EXPENSES = "Gesamtsumme: %s",
+	LOGGING_STORED_CURRENCY_CHANGES = "Gespeicherte Währungsänderungen: %d",
 	LOGGING_LATEST_ENTRIES = "Letzte Einträge:",
 	DAYS_7 = "7 Tage",
 	DAYS_30 = "30 Tage",
@@ -850,7 +987,7 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 	NO_ENTRIES = "Noch keine Einträge vorhanden.",
 	UNKNOWN_ITEM = "Unbekanntes Item",
 	LOGGING_SALE = "Verkauf",
-	LOGGING_VENDOR_SALE = "Händlerverkauf",
+	LOGGING_VENDOR_SALE = "Händler",
 	LOGGING_MAIL = "Post",
 	LOGGING_MAILBOX = "Postfach",
 	LOGGING_AUCTIONHOUSE = "Auktionshaus",
@@ -952,4 +1089,13 @@ Allgemein: Raid vor Pull in zwei feste Gruppen teilen. Alnstaub-Aufruhr immer se
 	CHECKLIST_TODO_DAILY_HARANDIR = "Harandir-Tagesquest für täglichen Fortschritt",
 	CHECKLIST_TODO_WATCH_TIER = "4er-Set-Fortschritt",
 	CHECKLIST_TODO_WEEKLY_PROFESSION = "Max. Wöchentliche Berufspunkte farmen (%s)",
+	STREAMER_PLANNER_ROLE = "Rolle",
+	STREAMER_PLANNER_ROLE_AUTO = "Auto",
+	STREAMER_PLANNER_SPEC_PROMPT_TITLE = "Anfrage",
+	STREAMER_PLANNER_SPEC_PROMPT_HINT = "Kurzinfo für die !enter-Anfrage.",
+	STREAMER_PLANNER_SPEC_PROMPT_HINT_CLASS = "Klasse wählen",
+	STREAMER_PLANNER_SPEC_PROMPT_HINT_ROLE = "Rolle wählen",
+	STREAMER_PLANNER_SELF_ROLE_TITLE = "Eigene Rolle auswählen",
+	STREAMER_PLANNER_SELF_ROLE_HINT = "Hier legst du fest, mit welcher Rolle dein Charakter im Dungeon-Planer einsortiert wird. Das ist unabhängig von deinem aktuellen Spec.",
+	STREAMER_PLANNER_APPLY = "Übernehmen",
 }

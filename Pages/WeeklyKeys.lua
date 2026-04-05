@@ -97,6 +97,16 @@ local function Clamp(value, minValue, maxValue)
     return value
 end
 
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
 local function GetDungeonActivityType()
     if Enum and Enum.WeeklyRewardChestThresholdType and Enum.WeeklyRewardChestThresholdType.Activities then
         return Enum.WeeklyRewardChestThresholdType.Activities
@@ -134,7 +144,7 @@ local function IsKeystoneDifficulty(difficultyID, difficultyName)
     local normalizedDifficultyName = string.lower(tostring(difficultyName or ""))
     if normalizedDifficultyName ~= "" then
         if string.find(normalizedDifficultyName, "keystone", 1, true)
-            or string.find(normalizedDifficultyName, "schluessel", 1, true)
+            or string.find(normalizedDifficultyName, "schlüssel", 1, true)
             or string.find(normalizedDifficultyName, "challenge", 1, true)
         then
             return true
@@ -725,7 +735,7 @@ end
 local function ApplyOverlayGeometry()
     -- Diese Funktion setzt die gespeicherte Position nur aktiv auf den Frame.
     -- Sie wird bewusst nicht in jedem Refresh aufgerufen, damit man das
-    -- Overlay ohne "Zurueckspringen" verschieben kann.
+    -- Overlay ohne "Zurückspringen" verschieben kann.
     if not OverlayFrame then
         return
     end
@@ -1093,6 +1103,17 @@ local function GetLayoutMetrics(fontSize, scale)
     }
 end
 
+local function GetPreviewCardSizeFromSettings(settings)
+    local metrics = GetLayoutMetrics(settings.fontSize, settings.overlayScale)
+    local rowCount = #PreviewRows > 0 and #PreviewRows or 8
+    local totalHeight = metrics.topPadding
+        + metrics.bottomPadding
+        + (rowCount * metrics.lineHeight)
+        + ((rowCount - 1) * metrics.rowSpacing)
+
+    return metrics.width, totalHeight
+end
+
 local function UpdateRunRows(parent, targetRows, fontSize, summaryFontSize, scale, titleTextObject, summaryTextObject, backgroundTexture, glowTexture, accentTexture)
     -- Layout und Datenfluss treffen sich genau hier:
     -- Zuerst werden die Zeileninhalte gebaut, danach werden Fonts, Abstaende
@@ -1238,10 +1259,19 @@ PageWeeklyKeys = CreateFrame("Frame", nil, Content)
 PageWeeklyKeys:SetAllPoints()
 PageWeeklyKeys:Hide()
 
-local IntroPanel = CreateFrame("Frame", nil, PageWeeklyKeys)
-IntroPanel:SetPoint("TOPLEFT", PageWeeklyKeys, "TOPLEFT", 20, -20)
-IntroPanel:SetPoint("TOPRIGHT", PageWeeklyKeys, "TOPRIGHT", -20, -20)
-IntroPanel:SetHeight(112)
+local PageWeeklyKeysScrollFrame = CreateFrame("ScrollFrame", nil, PageWeeklyKeys, "UIPanelScrollFrameTemplate")
+PageWeeklyKeysScrollFrame:SetPoint("TOPLEFT", PageWeeklyKeys, "TOPLEFT", 0, 0)
+PageWeeklyKeysScrollFrame:SetPoint("BOTTOMRIGHT", PageWeeklyKeys, "BOTTOMRIGHT", -28, 0)
+PageWeeklyKeysScrollFrame:EnableMouseWheel(true)
+
+local PageWeeklyKeysContent = CreateFrame("Frame", nil, PageWeeklyKeysScrollFrame)
+PageWeeklyKeysContent:SetSize(1, 1)
+PageWeeklyKeysScrollFrame:SetScrollChild(PageWeeklyKeysContent)
+
+local IntroPanel = CreateFrame("Frame", nil, PageWeeklyKeysContent)
+IntroPanel:SetPoint("TOPLEFT", PageWeeklyKeysContent, "TOPLEFT", 20, -20)
+IntroPanel:SetPoint("TOPRIGHT", PageWeeklyKeysContent, "TOPRIGHT", -20, -20)
+IntroPanel:SetHeight(1)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
@@ -1268,9 +1298,9 @@ IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(1, 1, 1, 1)
 IntroText:SetText(L("WEEKLY_KEYS_DESC"))
 
-local PreviewPanel = CreateFrame("Frame", nil, PageWeeklyKeys)
+local PreviewPanel = CreateFrame("Frame", nil, PageWeeklyKeysContent)
 PreviewPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
-PreviewPanel:SetSize(392, 326)
+PreviewPanel:SetSize(1, 1)
 
 local PreviewPanelBg = PreviewPanel:CreateTexture(nil, "BACKGROUND")
 PreviewPanelBg:SetAllPoints()
@@ -1341,12 +1371,9 @@ PreviewFooter:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 PreviewFooter:SetTextColor(0.72, 0.72, 0.72, 1)
 PreviewFooter:SetText(L("WEEKLY_KEYS_PREVIEW_FOOTER"))
 
-local SettingsPanel = CreateFrame("Frame", nil, PageWeeklyKeys)
+local SettingsPanel = CreateFrame("Frame", nil, PageWeeklyKeysContent)
 SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "TOPRIGHT", 18, 0)
-SettingsPanel:SetPoint("TOPRIGHT", PageWeeklyKeys, "TOPRIGHT", -20, -150)
--- Etwas mehr Hoehe, damit der Reset-Bereich sauber innerhalb des Panels bleibt
--- und unten sichtbar Luft zur Abschlusslinie hat.
-SettingsPanel:SetHeight(452)
+SettingsPanel:SetSize(1, 1)
 
 local SettingsBg = SettingsPanel:CreateTexture(nil, "BACKGROUND")
 SettingsBg:SetAllPoints()
@@ -1389,8 +1416,19 @@ LockOverlayCheckbox, lockOverlayLabel, lockOverlayHint = CreateSectionCheckbox(
     L("WEEKLY_KEYS_LOCK_OVERLAY_HINT")
 )
 
+local minimapContextLabel, minimapContextHint
+local MinimapContextCheckbox
+MinimapContextCheckbox, minimapContextLabel, minimapContextHint = CreateSectionCheckbox(
+    SettingsPanel,
+    lockOverlayHint,
+    L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"),
+    L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT")
+)
+MinimapContextCheckbox:ClearAllPoints()
+MinimapContextCheckbox:SetPoint("TOPLEFT", lockOverlayHint, "BOTTOMLEFT", -64, -14)
+
 FontSizeSlider = CreateValueSlider(SettingsPanel, L("FONT_SIZE_OVERLAY"), MIN_FONT_SIZE, MAX_FONT_SIZE, 1, "font")
-FontSizeSlider:SetPoint("TOPLEFT", lockOverlayHint, "BOTTOMLEFT", 18, -34)
+FontSizeSlider:SetPoint("TOPLEFT", minimapContextHint, "BOTTOMLEFT", 18, -34)
 
 ScaleSlider = CreateValueSlider(SettingsPanel, L("WINDOW_SCALE"), MIN_OVERLAY_SCALE, MAX_OVERLAY_SCALE, 0.05, "scale")
 ScaleSlider:SetPoint("TOPLEFT", FontSizeSlider, "BOTTOMLEFT", 0, -44)
@@ -1411,12 +1449,119 @@ ResetHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 ResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
 ResetHint:SetText(L("WEEKLY_KEYS_RESET_HINT"))
 
+function PageWeeklyKeys:UpdateScrollLayout()
+    local contentWidth = math.max(1, PageWeeklyKeysScrollFrame:GetWidth())
+
+    if contentWidth <= 1 then
+        return
+    end
+
+    local settings = GetWeeklyKeysSettings()
+    local previewCardWidth, previewCardHeight = GetPreviewCardSizeFromSettings(settings)
+
+    if PreviewCard and PreviewCard:GetWidth() and PreviewCard:GetWidth() > 0 then
+        previewCardWidth = PreviewCard:GetWidth()
+    end
+
+    if PreviewCard and PreviewCard:GetHeight() and PreviewCard:GetHeight() > 0 then
+        previewCardHeight = PreviewCard:GetHeight()
+    end
+
+    local outerPadding = 20
+    local columnGap = 18
+    local availableWidth = math.max(1, contentWidth - (outerPadding * 2))
+    local previewNeededWidth = math.max(392, previewCardWidth + 36)
+    local settingsMinWidth = 360
+    local useTwoColumns = availableWidth >= (previewNeededWidth + columnGap + settingsMinWidth)
+
+    PageWeeklyKeysContent:SetWidth(contentWidth)
+
+    IntroPanel:SetHeight(math.max(
+        112,
+        math.ceil(
+            16
+            + GetTextHeight(IntroTitle, 24)
+            + 10
+            + GetTextHeight(IntroText, 13)
+            + 18
+        )
+    ))
+
+    PreviewPanel:ClearAllPoints()
+    PreviewPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
+
+    if useTwoColumns then
+        local settingsWidth = availableWidth - previewNeededWidth - columnGap
+
+        PreviewPanel:SetWidth(previewNeededWidth)
+
+        SettingsPanel:ClearAllPoints()
+        SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "TOPRIGHT", columnGap, 0)
+        SettingsPanel:SetWidth(settingsWidth)
+    else
+        PreviewPanel:SetWidth(availableWidth)
+
+        SettingsPanel:ClearAllPoints()
+        SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "BOTTOMLEFT", 0, -18)
+        SettingsPanel:SetWidth(availableWidth)
+    end
+
+    local sliderWidth = math.max(220, math.min(360, SettingsPanel:GetWidth() - 36))
+    FontSizeSlider:SetWidth(sliderWidth)
+    ScaleSlider:SetWidth(sliderWidth)
+    BackgroundAlphaSlider:SetWidth(sliderWidth)
+
+    local previewPanelHeight = math.max(
+        326,
+        math.ceil(
+            14
+            + GetTextHeight(PreviewPanelTitle, 16)
+            + 8
+            + GetTextHeight(PreviewPanelHint, 12)
+            + 18
+            + previewCardHeight
+            + 14
+            + GetTextHeight(PreviewFooter, 11)
+            + 18
+        )
+    )
+    PreviewPanel:SetHeight(previewPanelHeight)
+
+    local settingsPanelHeight = math.max(
+        452,
+        math.ceil(
+            14
+            + GetTextHeight(SettingsTitle, 16)
+            + 8
+            + GetTextHeight(SettingsHint, 12)
+            + 14 + ShowOverlayCheckbox:GetHeight() + 2 + GetTextHeight(showOverlayHint, 12)
+            + 14 + LockOverlayCheckbox:GetHeight() + 2 + GetTextHeight(lockOverlayHint, 12)
+            + 14 + MinimapContextCheckbox:GetHeight() + 2 + GetTextHeight(minimapContextHint, 12)
+            + 34 + FontSizeSlider:GetHeight()
+            + 44 + ScaleSlider:GetHeight()
+            + 44 + BackgroundAlphaSlider:GetHeight()
+            + 28 + math.max(ResetPositionButton:GetHeight(), GetTextHeight(ResetHint, 11))
+            + 18
+        )
+    )
+    SettingsPanel:SetHeight(settingsPanelHeight)
+
+    local contentHeight = 20 + IntroPanel:GetHeight() + 18
+    if useTwoColumns then
+        contentHeight = contentHeight + math.max(PreviewPanel:GetHeight(), SettingsPanel:GetHeight()) + 20
+    else
+        contentHeight = contentHeight + PreviewPanel:GetHeight() + 18 + SettingsPanel:GetHeight() + 20
+    end
+
+    PageWeeklyKeysContent:SetHeight(math.max(PageWeeklyKeysScrollFrame:GetHeight(), math.ceil(contentHeight)))
+end
+
 OverlayFrame = CreateFrame("Frame", "BeavisQoLWeeklyKeysOverlayFrame", UIParent)
 OverlayFrame:SetClampedToScreen(true)
 OverlayFrame:SetMovable(true)
 OverlayFrame:SetToplevel(false)
 -- Weekly Keys soll im normalen Spielbild sichtbar bleiben, aber Blizzard-
--- und Battle.net-Overlays nicht ueberdecken.
+-- und Battle.net-Overlays nicht überdecken.
 OverlayFrame:SetFrameStrata("LOW")
 OverlayFrame:SetFrameLevel(1)
 if OverlayFrame.SetClipsChildren then
@@ -1479,14 +1624,20 @@ CreateRunRows(OverlayFrame, OverlayRows)
 
 FontSizeSlider.ApplyValue = function(_, value)
     WeeklyKeysModule.SetFontSize(value)
+    RefreshPreview()
+    PageWeeklyKeys:UpdateScrollLayout()
 end
 
 ScaleSlider.ApplyValue = function(_, value)
     WeeklyKeysModule.SetOverlayScale(value)
+    RefreshPreview()
+    PageWeeklyKeys:UpdateScrollLayout()
 end
 
 BackgroundAlphaSlider.ApplyValue = function(_, value)
     WeeklyKeysModule.SetBackgroundAlpha(value)
+    RefreshPreview()
+    PageWeeklyKeys:UpdateScrollLayout()
 end
 
 ShowOverlayCheckbox:SetScript("OnClick", function(self)
@@ -1496,6 +1647,12 @@ end)
 
 LockOverlayCheckbox:SetScript("OnClick", function(self)
     WeeklyKeysModule.SetOverlayLocked(self:GetChecked())
+end)
+
+MinimapContextCheckbox:SetScript("OnClick", function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("weeklyKeys", self:GetChecked())
+    end
 end)
 
 ResetPositionButton:SetScript("OnClick", function()
@@ -1519,6 +1676,8 @@ function PageWeeklyKeys:RefreshState()
     showOverlayHint:SetText(L("WEEKLY_KEYS_SHOW_OVERLAY_HINT"))
     lockOverlayLabel:SetText(L("WEEKLY_KEYS_LOCK_OVERLAY"))
     lockOverlayHint:SetText(L("WEEKLY_KEYS_LOCK_OVERLAY_HINT"))
+    minimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    minimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
     FontSizeSlider.Text:SetText(L("FONT_SIZE_OVERLAY"))
     ScaleSlider.Text:SetText(L("WINDOW_SCALE"))
     BackgroundAlphaSlider.Text:SetText(L("BACKGROUND_ALPHA"))
@@ -1529,16 +1688,38 @@ function PageWeeklyKeys:RefreshState()
     isRefreshing = true
     ShowOverlayCheckbox:SetChecked(settings.overlayEnabled)
     LockOverlayCheckbox:SetChecked(settings.overlayLocked)
+    MinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("weeklyKeys") or true)
     FontSizeSlider:SetValue(settings.fontSize)
     ScaleSlider:SetValue(settings.overlayScale)
     BackgroundAlphaSlider:SetValue(settings.backgroundAlpha)
     isRefreshing = false
 
     RefreshAllDisplays()
+    self:UpdateScrollLayout()
 end
+
+PageWeeklyKeysScrollFrame:SetScript("OnSizeChanged", function()
+    PageWeeklyKeys:UpdateScrollLayout()
+end)
+
+PageWeeklyKeysScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageWeeklyKeysContent:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
 
 PageWeeklyKeys:SetScript("OnShow", function()
     PageWeeklyKeys:RefreshState()
+    PageWeeklyKeysScrollFrame:SetVerticalScroll(0)
 end)
 
 local WeeklyKeysEvents = CreateFrame("Frame")
@@ -1556,7 +1737,7 @@ WeeklyKeysEvents:RegisterEvent("UPDATE_INSTANCE_INFO")
 WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_DISABLED")
 WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
 WeeklyKeysEvents:SetScript("OnEvent", function(_, eventName)
-    -- Alle relevanten Weekly-Vault- und Mythic+-Aenderungen laufen hier zusammen.
+    -- Alle relevanten Weekly-Vault- und Mythic+-Änderungen laufen hier zusammen.
     MarkChallengeModeActivityIfNeeded()
 
     if eventName == "PLAYER_ENTERING_WORLD"

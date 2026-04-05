@@ -24,9 +24,9 @@ local PageDamageTextContent = CreateFrame("Frame", nil, PageDamageTextScrollFram
 PageDamageTextContent:SetSize(1, 1)
 PageDamageTextScrollFrame:SetScrollChild(PageDamageTextContent)
 
--- isRefreshing trennt "UI wird aus Daten gefüllt" von "Benutzer aendert Werte".
+-- isRefreshing trennt "UI wird aus Daten gefüllt" von "Benutzer ändert Werte".
 -- Ohne diese Sperre würden Slider-Aktualisierungen beim Refresh sofort wieder
--- ihre Apply-Funktionen ausloesen.
+-- ihre Apply-Funktionen auslösen.
 local isRefreshing = false
 local sliderCounter = 0
 
