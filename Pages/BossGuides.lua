@@ -129,56 +129,184 @@ local GUIDE_DATA = {
         type = "dungeon",
         sortOrder = 4,
         matchTokens = { "windrunner spire", "windlaeuferturm", "windläuferturm" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_DAEMMERGLUT_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_DAEMMERGLUT_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_HERUNTERGEKOMMENES_DUO_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_HERUNTERGEKOMMENES_DUO_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_COMMANDER_KROLUK_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_COMMANDER_KROLUK_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_DAS_RASTLOSE_HERZ_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_DAS_RASTLOSE_HERZ_BODY",
+            },
+        },
     },
     magisters_terrace = {
         titleKey = "BOSS_GUIDES_INSTANCE_MAGISTERS_TERRACE_TITLE",
         type = "dungeon",
         sortOrder = 3,
         matchTokens = { "magisters terrace", "magisterterrasse", "terrasse der magister" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_ARKANOTRONWAECHTER_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_ARKANOTRONWAECHTER_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_SERANEL_SONNENPEITSCHE_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_SERANEL_SONNENPEITSCHE_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_GEMELLUS_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_GEMELLUS_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_DEGENTRIUS_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_DEGENTRIUS_BODY",
+            },
+        },
     },
     algethar_academy = {
         titleKey = "BOSS_GUIDES_INSTANCE_ALGETHAR_ACADEMY_TITLE",
         type = "dungeon",
         sortOrder = 5,
         matchTokens = { "algethar academy", "akademie von algeth'ar", "akademie von algethar", "algethar" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_KRAAS_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_KRAAS_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_VEXAMUS_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_VEXAMUS_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_ECHO_OF_DORAGOSA_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_ECHO_OF_DORAGOSA_BODY",
+            },
+        },
     },
     pit_of_saron = {
         titleKey = "BOSS_GUIDES_INSTANCE_PIT_OF_SARON_TITLE",
         type = "dungeon",
         sortOrder = 6,
         matchTokens = { "pit of saron", "grube von saron" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_ICK_AND_KRICK_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_ICK_AND_KRICK_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_BODY",
+            },
+        },
     },
     maisara_caverns = {
         titleKey = "BOSS_GUIDES_INSTANCE_MAISARA_CAVERNS_TITLE",
         type = "dungeon",
         sortOrder = 1,
         matchTokens = { "maisara caverns", "maisara hoehlen", "maisara höhlen", "maisarakavernen" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_MAISARA_CAVERNS_OVERVIEW_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_MAISARA_CAVERNS_OVERVIEW_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_VORDAZA_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_VORDAZA_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_RAKTUL_VESSEL_OF_SOULS_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_RAKTUL_VESSEL_OF_SOULS_BODY",
+            },
+        },
     },
     skyreach = {
         titleKey = "BOSS_GUIDES_INSTANCE_SKYREACH_TITLE",
         type = "dungeon",
         sortOrder = 7,
         matchTokens = { "skyreach", "himmelsnadel" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_RANJIT_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_RANJIT_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_ARAKNATH_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_ARAKNATH_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_RUKHRAN_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_RUKHRAN_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_HIGH_SAGE_VIRYX_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_HIGH_SAGE_VIRYX_BODY",
+            },
+        },
     },
     seat_of_the_triumvirate = {
         titleKey = "BOSS_GUIDES_INSTANCE_SEAT_OF_THE_TRIUMVIRATE_TITLE",
         type = "dungeon",
         sortOrder = 8,
         matchTokens = { "seat of the triumvirate", "sitz des triumvirats", "triumvirate" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_SARPUSH_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_SARPUSH_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_VICEROY_NEZHAR_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_VICEROY_NEZHAR_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_LURA_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_LURA_BODY",
+            },
+        },
     },
     nexus_point_xenas = {
         titleKey = "BOSS_GUIDES_INSTANCE_NEXUS_POINT_XENAS_TITLE",
         type = "dungeon",
         sortOrder = 2,
         matchTokens = { "nexus point xenas", "nexuspunkt xenas" },
-        bosses = {},
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_KERNWAECHTERIN_NYSARRA_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_KERNWAECHTERIN_NYSARRA_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_LOTHRAXION_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_LOTHRAXION_BODY",
+            },
+        },
     },
 }
 

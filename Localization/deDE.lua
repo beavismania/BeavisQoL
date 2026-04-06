@@ -587,9 +587,295 @@ Allgemein: 2-teiliger Kampf: Phase 1 mit Kristallen und Runen, dann Unterbrechun
 	BOSS_GUIDES_INSTANCE_ALGETHAR_ACADEMY_TITLE = "Akademie von Algeth'ar",
 	BOSS_GUIDES_INSTANCE_PIT_OF_SARON_TITLE = "Grube von Saron",
 	BOSS_GUIDES_INSTANCE_MAISARA_CAVERNS_TITLE = "Maisarakavernen",
+	BOSS_GUIDES_BOSS_VORDAZA_NAME = "Vordaza",
+	BOSS_GUIDES_BOSS_VORDAZA_BODY = [=[
+Allgemein: Withering Miasma tickt permanent und verlangt einen langen Heal-Plan statt Panik-CDs.
+• Drain Soul macht burstigen Tankschaden plus Heilungsabsorb; dafür kurze dichte Heilfenster vorbereiten.
+• Unmake seitlich verlassen und den Pushback nicht gegenheilen.
+• Wrest Phantoms kontrollieren, damit Unstable Phantoms nicht unkontrolliert in Spieler einschlagen.
+• Final Pursuit sauber kiten, damit Phantom-Explosionen nicht in der Gruppe detonieren.
+• Wer Haunting Remains trägt, meidet die nächsten Explosionen noch strikter, weil der Folgeschaden stark skaliert.
+• Soulrot-Pfützen nach Phantom-Toden aus der Kampfzone ziehen und nicht stapeln.
+• Lingering Dread entzerren, damit mehrere Explosionen nicht gleichzeitig hochgehen.
+• Sobald Necrotic Convergence startet, Fokus auf das saubere Beenden der Phase legen und parallel Coalesced Death dodgen.
+• Während Deathshroud sind Unterbrechungen wertlos; Ressourcen auf Überleben und Phasenkontrolle statt auf verpuffte Kicks legen.
+• Coalesced Death ist ein früher Dodge-Check: lieber früh laufen als spät sidesteppen.
+• Veiled Presence-Phantome lösen sich nicht über Burst, sondern über Zeit und sauberes Setup, weil sie fast keinen Schaden nehmen.
+{TANK} Drain Soul mit Defensiv- und aktiver Mitigation abfangen, weil der Heilungsabsorb die Heilerreaktion einschränkt.
+• Unmake nie durch die Gruppe drehen.
+{DD} Wrest Phantoms kontrolliert parken, mit CC, Slow oder Knockback je nach Setup, damit Explosionen geplant passieren.
+• In Necrotic Convergence Priorität auf das saubere Ausspielen der Phase und gleichzeitiges Dodgen von Coalesced Death legen.
+{HEAL} Withering Miasma konstant gegenheilen, damit Phantom-Spikes nicht sofort tödlich werden.
+• Wenn Lingering Dread mehrfach überlappt, Heal-CDs staffeln statt alles auf einmal zu drücken.
+• Den Heilungsabsorb von Drain Soul aktiv callen und dichten HPS durchdrücken, statt nur auf HoTs zu vertrauen.
+{HC} Auf höheren Schwierigkeiten verlieren Veiled Presence-Phantome anscheinend keine HP mehr von selbst; Add-Management und Damage-Plan werden dadurch wichtiger.
+]=],
+	BOSS_GUIDES_BOSS_RAKTUL_VESSEL_OF_SOULS_NAME = "Rak'tul, Gefäß der Seelen",
+	BOSS_GUIDES_BOSS_RAKTUL_VESSEL_OF_SOULS_BODY = [=[
+Allgemein: Deathgorged Vessel ist der konstante Fight-Timer; Heil-CDs auf wiederkehrende Pulsfenster staffeln.
+• Volatile Essence nicht stacken lassen und Einschläge wie Swirlies behandeln.
+• Spiritbreaker ist ein schwerer Hit auf das Primärziel plus Knock-up; der Tank braucht dafür feste Defensives.
+• Spectral Decay-Pfützen meiden, weil sie ticken und erlittenen Schaden erhöhen.
+• Markierte Spieler platzieren Crush Souls so, dass Totems cleavebar sind, aber nicht mitten in der Gruppe liegen.
+• Soulbind-Totems schnell töten, bevor sie weiter kontrollieren oder Schaden drücken.
+• Soulrending Roar startet die Restless-Masses-Sequenz als Sprint- und Survivalteil; so schnell wie möglich zurücklaufen, bevor Withering Soul hochstapelt.
+• Withering Soul stackt alle vier Sekunden und tickt jede Sekunde; Movement-Fehler werden dadurch exponentiell teurer.
+• Cries of the Fallen auf dem Rückweg meiden, weil Root plus Schaden Tempo und Heilfenster zerstört.
+• Eternal Suffering in der Seelenphase zuverlässig kicken oder kontrollieren, um den Aura-Druck zu stoppen und Spectral Residue zu bekommen.
+• Spectral Residue nach erfolgreichem Unterbrechen aktiv nutzen, um mit Movespeed und Output die Phase zu stabilisieren.
+• Nach Soul Expulsion ist der Boss lange betäubt; dieses Fenster für Totem- und Add-Cleanup plus Boss-Schaden nutzen.
+• Vor Soulrending Roar möglichst alle Totems entfernen, weil Shattered Totem sonst pro Totem zusätzlichen Gruppenschaden skaliert.
+{TANK} Spiritbreaker ist der größte Tank-Checkpoint. Defensiv planen und so stehen, dass Knock-up oder Knockback nicht in Pfützen oder Orbs führen.
+• Spectral Decay-Pfützen bewusst mit der Gruppenbewegung ablegen, damit Melees nicht dauerhaft verdrängt werden.
+{DD} Soulbind-Totems priorisieren, damit die Gruppe sauber in die nächste Roar- oder Bridge-Sequenz geht.
+• Für Eternal Suffering eine feste Kick-Rotation legen, damit Spectral Residue verlässlich kommt.
+• In Soulrending Roar nicht blind Adds tunneln; erst sicheren Rückweg herstellen, dann wieder Bossdruck.
+{HEAL} Deathgorged Vessel bestimmt den AoE-Plan des Kampfes; CDs auf den Pulsrhythmus legen, nicht auf Zufallsschaden.
+• In der Bridge-Sequenz bei Withering Soul Überleben und Tempo priorisieren, inklusive Movespeed-Buffs und Externals.
+{HC} Zusätzliche HC-spezifische Änderungen sind in den verfügbaren Quellen derzeit nicht verlässlich bestätigt.
+]=],
 	BOSS_GUIDES_INSTANCE_SKYREACH_TITLE = "Himmelsnadel",
 	BOSS_GUIDES_INSTANCE_SEAT_OF_THE_TRIUMVIRATE_TITLE = "Sitz des Triumvirats",
 	BOSS_GUIDES_INSTANCE_NEXUS_POINT_XENAS_TITLE = "Nexuspunkt Xenas",
+	BOSS_GUIDES_BOSS_MAISARA_CAVERNS_OVERVIEW_NAME = "Überblick",
+	BOSS_GUIDES_BOSS_MAISARA_CAVERNS_OVERVIEW_BODY = [=[
+Allgemein: Die Maisarakavernen sind ein 5-Spieler-Dungeon in Zul'Aman mit einem Duo-Encounter, einer Seelenritualistin und einem Finalboss mit Gauntlet- beziehungsweise Seelenphase.
+• Kernthemen sind sauberes Movement, kontrollierte Adds sowie gezieltes Dispellen und Unterbrechen.
+• Haltet die Spielzone in allen drei Kämpfen so sauber wie möglich, weil fast jede Phase über zugemüllten Boden oder ungeplante Add-Overlaps kippt.
+]=],
+	BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_NAME = "Muro'jin & Nekraxx",
+	BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_BODY = [=[
+Allgemein: Schaden immer auf beide Bosse verteilen, weil Revive Pet und Bestial Wrath sonst die Endphase eskalieren.
+• Die anvisierte Frontale stabil wegdrehen; alle anderen verlassen den Kegel konsequent.
+• Als Gruppe eng zusammen rotieren, weil Freezing Trap unter Spielern entsteht und sonst Wege blockiert.
+• Wenn Icy Slick aktiv ist, die Eisfläche meiden.
+• Infected Pinions ist der Hauptdruck des Kampfes. Defensiv- und Heal-CDs nach DoT-Stacks timen.
+• Nach Fetid Quillstorm sofort aus Flächen und Swirlies laufen, damit kein Dodge-Teppich entsteht.
+• Wer von Carrion Swoop markiert ist, stellt sich so, dass die Charge nicht durch die Gruppe geht.
+• Bei Coordinated Assault steht niemand in der Charge-Linie, damit Knock-up-Ziele keine Extra-Treffer kassieren.
+• Flanking Spear so spielen, dass Knockbacks niemanden in Fallen drücken.
+• Open Wound ist planbarer Tankdruck und wird zusammen mit Speer- oder Knockback-Fenstern defensiv abgefangen.
+• Vilebranch Sting ist vor allem ein Movement-Problem durch stapelnde Verlangsamung.
+• Wenn Muro'jin allein steht, wird Revive Pet zum kurzen Finish-Fenster.
+• Wenn Nekraxx allein steht, skaliert Bestial Wrath stapelnd; Finish priorisieren statt safe zu spielen.
+{TANK} Flanking Spear aktiv defensiv nehmen und den Knockback mit Mobilität abfangen, damit du sofort wieder Positionskontrolle hast.
+• Open Wound mit Mitigation und externen CDs vorplanen.
+• So stehen, dass dich kein Rückstoß in eine Freezing Trap drückt.
+{DD} Schaden immer splitten oder cleaven, damit kein Boss alleine übrig bleibt.
+• Wenn du Ziel von Carrion Swoop bist, kann ein Trap-Intercept Nekraxx stoppen; Timing gruppenintern callen.
+• Wenn du Ziel der Frontale bist, den Kegel stabil vom Raid weg parken.
+{HEAL} Infected Pinions-Dispels rotieren, statt alles gleichzeitig zu lösen, damit der Healdruck geglättet wird.
+• Wer eine Freezing Trap auslöst, ist kurz aus dem Spiel; dafür Spot-Heals und Externals bereithalten, bis die Gruppe wieder stabil ist.
+{HC} Zusätzlich zu Freezing Trap kann Icy Slick als rutschige Frostfläche entstehen und verschärft das Movement.
+]=],
+	BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_NAME = "Oberster Kernbauer Kasreth",
+	BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_BODY = [=[
+Allgemein: Arkanes Schocken (1250553) immer unterbrechen und Leylinienmatrix (1251626) niemals kreuzen. Spieler mit Ladungsrückstoß (1251772) stellen sich an eine Kreuzung von mindestens zwei Leylinien, damit die Strahlen verschwinden. Fluxkollaps (1264040) und Arkanfleck (1262630) konsequent räumen. Bei Kernfunkendetonation (1257509) aus dem Einschlag raus und danach Funkenbrand (1276485) sofort wegheilen.
+• Der Kampf wird deutlich leichter, wenn freie Wege zwischen den Leylinien stehen bleiben und der Kreuzungs-Spot nicht zugemüllt wird.
+{TANK} Stelle den Boss so, dass die Gruppe freie Laufwege zwischen den Leylinien behält und Ladungsrückstoß (1251772) sauber auf einer vorbereiteten Kreuzung gespielt werden kann.
+{DD} Bei Kernfunkendetonation (1257509) sofort raus und danach Schaden drücken, während Funkenbrand (1276485) abgearbeitet wird. Unterbrechungen auf Arkanes Schocken (1250553) haben Priorität.
+{HEAL} Kernfunkendetonation (1257509) plus Funkenbrand (1276485) ist das klare Schadensfenster des Kampfes. CD, Externals und Spotheal dafür einplanen.
+{HC} In der Quelle sind keine explizit neuen HC-Fähigkeiten genannt; zusätzliche Effekte sind nur allgemein als höhere Modi markiert.
+]=],
+	BOSS_GUIDES_BOSS_KERNWAECHTERIN_NYSARRA_NAME = "Kernwächterin Nysarra",
+	BOSS_GUIDES_BOSS_KERNWAECHTERIN_NYSARRA_BODY = [=[
+Allgemein: Bei Verdunkelnder Schritt (1249014) sofort aus dem 14-Meter-Umkreis raus. Nullvorhut (1252703) startet die Add-Phase; Adds sofort priorisieren, Neutralisieren (1282722) kicken und Dämmerschrecken (1282723) ausweichen. Umbralpeitsche (1247937) endet mit Leerenschnitt (1252828) und ist die zentrale Tank-Combo. Lichtgezeichnete Flamme (1247976) ist euer Burstfenster im Lichtkegel, bringt aber konstanten Heiligschaden.
+{TANK} Plane Defensives für Umbralpeitsche (1247937) und vor allem den letzten Treffer Leerenschnitt (1252828). Friss danach keine unnötigen Zusatzhits und nutze bei Bedarf Kiten oder Externals.
+{DD} Nullvorhut (1252703) ist höchste Priorität und Neutralisieren (1282722) muss immer gestoppt werden. Nutzt Lichtgezeichnete Flamme (1247976) bewusst als Schadensfenster.
+{HEAL} Im Lichtkegel von Lichtgezeichnete Flamme (1247976) kommt konstanter Gruppenschaden herein. Hier Gruppenheilung durchdrücken und danach die Gruppe schnell wieder stabilisieren.
+{HC} Ab höheren Modi kommen laut Quelle zusätzliche Adds oder Strafmechaniken hinzu; das Grundgerüst mit Add-Priorität, Kicks und sauberem Lichtfenster bleibt aber gleich.
+]=],
+	BOSS_GUIDES_BOSS_LOTHRAXION_NAME = "Lothraxion",
+	BOSS_GUIDES_BOSS_LOTHRAXION_BODY = [=[
+Allgemein: Sengende Verwundung (1253950) und Strahlende Narbe (1255389) kontrollieren den Boden; den Boss sofort aus Narben ziehen. Bei Strahlende Zerstreuung (1253848) verteilt stehen, weil Abbilder an Spielern erscheinen und mit 8 Metern AoE explodieren. Gespiegeltes Verwunden (1266713) niemals berühren, sonst folgen Knockback, Stapel-DoT und neue Narbe. Bei 100 Energie startet Göttliche List (1257613): den echten Boss am Abbild ohne Hörner erkennen und sofort unterbrechen.
+{TANK} Bewege Lothraxion dauerhaft aus Strahlender Narbe (1255389) heraus und halte eine saubere Kampfzone frei, damit der Raum nicht früh kippt.
+{DD} Bei Göttliche List (1257613) sofort target-swappen und den Kick auf das richtige Ziel sichern. Nach Strahlende Zerstreuung (1253848) nicht in Pfeil- oder Sprungrichtungen stehen bleiben.
+{HEAL} Größte Heilspitzen kommen durch Strahlende Zerstreuung (1253848) und Fehler bei Gespiegeltes Verwunden (1266713). Halte dafür schnelle Gruppenstabilisierung bereit.
+{HC} In höheren Modi wird ein verpasster Unterbruch auf Göttliche List (1257613) zusätzlich mit Kernbelastung (1271511) bestraft.
+]=],
+	BOSS_GUIDES_BOSS_ARKANOTRONWAECHTER_NAME = "Arkanotronwächter",
+	BOSS_GUIDES_BOSS_ARKANOTRONWAECHTER_BODY = [=[
+Allgemein: Während Aufladeprotokoll (474345) zieht der Boss Energiekugeln (474396) an. Diese Kugeln abfangen, damit keine Arkane Ermächtigung (474407) auf dem Boss landet. Jeder Soak gibt Instabile Energie (1243905), also Treffer rotieren. Arkane Überreste (1214089) kommen in höheren Modi als zusätzliche Bodenflächen dazu und dürfen den Raum nicht zumüllen.
+{TANK} Halte den Boss stabil, damit Soaker die Energiekugel (474396) sicher auf der Linie abfangen können und nichts unkontrolliert in den Boss läuft.
+{DD} Nutzt Aufladeprotokoll (474345) als Burstfenster, aber nicht auf Kosten sauberer Kugel-Soaks. Wenn der Boss Arkane Ermächtigung (474407) bekommt, war der Fehler meist schon vorher.
+{HEAL} Instabile Energie (1243905) stapelt und tickt hart. Soaker brauchen schnelle Spotheals und oft auch einen External, wenn mehrere Kugeln kurz nacheinander gefangen werden.
+{HC} Zusätzliche Flächen und höhere Komplexität sind in der Quelle erst ab höheren Modi markiert, vor allem über Arkane Überreste (1214089).
+]=],
+	BOSS_GUIDES_BOSS_SERANEL_SONNENPEITSCHE_NAME = "Seranel Sonnenpeitsche",
+	BOSS_GUIDES_BOSS_SERANEL_SONNENPEITSCHE_BODY = [=[
+Allgemein: Unterdrückungsbereich (1224903) ist Silence- und Pacify-Zone und zugleich Lösung für Runenmal (1225792). Betroffene entfernen den Debuff im Unterdrückungsbereich (1224903), lösen dabei aber Rückkopplung (1225135) aus und müssen die Einschläge dodgen. Für Welle der Stille (1225193) rechtzeitig in den Unterdrückungsbereich stellen, sonst sind 8 Sekunden lang keine Wirkungen möglich. Beschleunigender Zauberschutz (1248689) sofort dispellen oder purgen.
+{TANK} Wenn Beschleunigender Zauberschutz (1248689) durchkommt, defensiv spielen und bei Bedarf kurz kiten, bis der Buff entfernt ist.
+{DD} Rückkopplung (1225135) sauber ausweichen und Beschleunigender Zauberschutz (1248689) sofort entfernen. Betroffene mit Runenmal (1225792) brauchen klare Wege in die Zone.
+{HEAL} Wenn Runenmal (1225792) im Unterdrückungsbereich gereinigt wird, erzeugt Rückkopplung (1225135) oft kurz Chaos. Erst stabilisieren, dann die nächste Mechanik vorbereiten.
+{HC} Ab höheren Modi kommt Nullreaktion (1246446) als zusätzlicher Schaden und Slow beim Entfernen von Runenmal (1225792) dazu.
+]=],
+	BOSS_GUIDES_BOSS_GEMELLUS_NAME = "Gemellus",
+	BOSS_GUIDES_BOSS_GEMELLUS_BODY = [=[
+Allgemein: Verdreifachung (1223847) teilt den Kampf zu Pull und bei etwa 50 Prozent in Klone mit geteilten Lebenspunkten. Astraler Griff (1224299) zwingt euch zum Gegenlaufen; wer stehen bleibt, frisst Kosmische Strahlung (1224401). Kosmischer Stich (1284958) hinterlässt Leerenabsonderung (1224100) und muss sauber aus dem Spielraum herausgelegt werden. In höheren Modi kommt Neurale Verbindung (1253707) dazu: Pfeil lesen und die Verbindung rechtzeitig brechen.
+{TANK} Stelle die Klone so, dass Astraler Griff (1224299) die Gruppe nicht durch Pfützen aus Leerenabsonderung (1224100) zieht und freie Ausweichwege offen bleiben.
+{DD} Bei Astraler Griff (1224299) sofort gegenlaufen und bei Bedarf defensiv spielen. Die Arena kippt hier eher durch schlechte Bewegung als durch fehlenden Bossschaden.
+{HEAL} Heil-CDs für Astraler Griff (1224299) und mögliche Treffer von Kosmische Strahlung (1224401) vorbereiten. DoTs und Pfützenfehler eskalieren sehr schnell.
+{HC} Mehrmechaniken wie Neurale Verbindung (1253707) sind in der Quelle erst ab höheren Modi markiert.
+]=],
+	BOSS_GUIDES_BOSS_DEGENTRIUS_NAME = "Degentrius",
+	BOSS_GUIDES_BOSS_DEGENTRIUS_BODY = [=[
+Allgemein: Leerenströme dürfen nie berührt werden und zwingen zu permanenter Raumkontrolle. Instabile Leerenessenz (1215087) schlägt in mehreren Zonen ein; jede Zone braucht Spieler im Einschlag, sonst folgt Leerenzerstörung (1215161). Verschlingende Entropie (1215897) erzeugt beim Dispel oder Auslaufen Entropiekugeln (1269631), deshalb Debuffs gestaffelt auflösen. Wuchtiges Fragment (1280113) und Umbralsplitter (1284627) sind die zentrale Tank-Combo und gehören aus der Gruppe heraus.
+{TANK} Trage Wuchtiges Fragment (1280113) immer von der Gruppe weg und plane Defensives für Umbralsplitter (1284627) ein. Die Nahgruppe darf nie im 8-Meter-Bereich stehen.
+{DD} Bei Instabile Leerenessenz (1215087) jede Zone zuverlässig besetzen. Wenn ein Einschlag verpasst wird, endet das meist direkt in Leerenzerstörung (1215161).
+{HEAL} Für Verschlingende Entropie (1215897) einen klaren Dispelplan spielen, zum Beispiel einen Debuff sofort und einen verzögert, damit die Entropiekugeln (1269631) nicht gleichzeitig eskalieren.
+{HC} Die Quelle markiert zusätzliche Spitzen eher allgemein als höhere Modi; Kernprinzipien bleiben Soak-Disziplin, kontrollierte Dispels und stabiles Orb-Management.
+]=],
+	BOSS_GUIDES_BOSS_DAEMMERGLUT_NAME = "Dämmerglut",
+	BOSS_GUIDES_BOSS_DAEMMERGLUT_BODY = [=[
+Allgemein: Flammender Aufwind (466556) immer nach außen droppen, damit Fläche und Wirbel die Arena nicht schließen. Flammender Wirbelsturm (469633) sauber ausweichen. Brennende Bö (465904) ist die Energie-Phase mit anhaltendem Gruppenschaden und Knockback. Sengender Schnabel (466064) ist der zentrale Tankbuster.
+{TANK} Sengender Schnabel (466064) defensiv planen, weil der Treffer physischen Schaden plus Feuer-DoT kombiniert.
+{DD} Flammender Aufwind (466556) wirklich konsequent am Rand ablegen. Ein schlechter Drop macht den Rest des Kampfes unnötig eng.
+{HEAL} Brennende Bö (465904) ist das klare Heilfenster. Gruppen-CDs und Spotheal auf Aufwind-Ziele hier bündeln.
+{HC} Ab höheren Modi kommt zusätzlich Feueratem (1217762) während Brennende Bö (465904) dazu.
+]=],
+	BOSS_GUIDES_BOSS_HERUNTERGEKOMMENES_DUO_NAME = "Heruntergekommenes Duo",
+	BOSS_GUIDES_BOSS_HERUNTERGEKOMMENES_DUO_BODY = [=[
+Allgemein: Zerrissenes Band (1219551) macht den Kampf zu einem reinen Health-Check. Stirbt ein Ziel deutlich früher, wird der Überlebende massiv stärker. Entkräftendes Kreischen (472736) ist die gefährlichste Gruppenphase und muss gestoppt oder mit CDs überlebt werden.
+{TANK} Positioniere beide Ziele so, dass die Gruppe nicht zwischen Folge-Mechaniken eingekesselt wird. Wenn Entkräftendes Kreischen (472736) durchgeht, sofort defensiv reagieren.
+{DD} Kicks und Stops auf Entkräftendes Kreischen (472736) priorisieren und die Lebenspunkte beider Ziele eng zusammenhalten, damit Zerrissenes Band (1219551) nicht eskaliert.
+{HEAL} Entkräftendes Kreischen (472736) ist der große Healcheck. Große CDs lieber dafür aufheben als für zufälligen Streuschaden.
+{HC} Ab höheren Modi kommt Fluch der Dunkelheit (474105) mit fixierenden Geistern dazu. Diese werden gekitet oder kontrolliert, nicht aus Versehen mitgetankt.
+]=],
+	BOSS_GUIDES_BOSS_COMMANDER_KROLUK_NAME = "Kommandant Kroluk",
+	BOSS_GUIDES_BOSS_COMMANDER_KROLUK_BODY = [=[
+Allgemein: Versammelndes Gebrüll (472043) ruft den Kriegstrupp. Solange Adds leben, kanalisiert der Boss Klingensturm (470963) und ist zusätzlich durch Schildwall (1250851) geschützt. Toben (467620) ist der Tankbuster. Tollkühner Sprung (472081) geht auf den entferntesten Spieler und wird danach von Fallendes Geröll (1283357) begleitet.
+{TANK} Plane Defensives und Externals für Toben (467620). Stelle den Boss so, dass Add-Phase und Sprung-Bait die Gruppe nicht zerreißen.
+{DD} In der Gebrüll-Phase haben Adds absolute Priorität, sonst läuft Klingensturm (470963) zu lange weiter. Der weiteste Spieler für Tollkühner Sprung (472081) sollte bewusst gewählt sein.
+{HEAL} Größte Gruppenspitze ist Versammelndes Gebrüll (472043) zusammen mit Klingensturm (470963). Heile hier aktiv vor statt hinterher.
+{HC} Ab höheren Modi kommt Drohruf (1253026) hinzu und darf nicht solo genommen werden; die Gruppe muss dafür bewusst stacken.
+]=],
+	BOSS_GUIDES_BOSS_DAS_RASTLOSE_HERZ_NAME = "Das rastlose Herz",
+	BOSS_GUIDES_BOSS_DAS_RASTLOSE_HERZ_BODY = [=[
+Allgemein: Zielscheibenwindstoß (468429) erzeugt Wogender Wind (468442) als expandierenden Ring und darf die Arena nicht ungünstig zerschneiden. Pfeilhagel (472556) spawnt Swirls; daraus entstehen Turbulente Pfeile (1253977) mit Knock-up. Sturmschlitzer (472662) ist ein stapelnder Tankbuster, der laut Mechanik über Turbulente Pfeile (1253977) gelöst wird. Blitzbö (474528) ist ein frontaler Sperrfeuer-Channel auf ein Ziel; das Ziel bleibt stehen, alle anderen weichen aus.
+{TANK} Sturmschlitzer (472662) wird mit jedem Stapel gefährlicher. Defensives einteilen und den Reset über Turbulente Pfeile (1253977) aktiv mitspielen.
+{DD} Zielscheibenwindstoß (468429) so platzieren, dass Wogender Wind (468442) nicht die ganze Arena abschneidet. Böenschuss (1253986) kann in höheren Modi Stürmischer Seelenquell (1282932) entfernen.
+{HEAL} Blitzbö (474528) und Sturmböensprung (1216042) erzeugen die größten Gruppenspitzen. Plane CDs dafür und halte besonders Fehler nach Knock-ups im Blick.
+{HC} Ab höheren Modi wird Stürmischer Seelenquell (1282932) zur Zusatzgefahr und muss mit Böenschuss (1253986) kontrolliert werden.
+]=],
+	BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_NAME = "Überwuchertes Urtum",
+	BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_BODY = [=[
+Allgemein: Kernidee laut den vorliegenden Midnight-S1-Guides ist saubere Add-Kontrolle, ein früh antizipierter Tankbuster und eine große Energie- oder Burstphase als defensives Hauptfenster.
+{TANK} Der Tankbuster Borkenbrecher gilt in der gelieferten Quelle als zentrale Gefahr und sollte bewusst mit Defensives getimt werden.
+{DD} Adds aus Keimen- oder Verästeln-Mechaniken schnell bündeln und töten, bevor der Gruppenschaden eskaliert.
+{HEAL} Die große Energie-Spitze ist hier das primäre Healcheck-Fenster und sollte mit CD-Plan vorbereitet werden.
+{HC} Für diese Dungeonsektion liegen in den verfügbaren Quellen keine vollständig verifizierten DE-Zauber-IDs vor; der Guide stützt sich deshalb bewusst nur auf die Kernmechaniken aus Midnight-S1-Notizen.
+]=],
+	BOSS_GUIDES_BOSS_KRAAS_NAME = "Kraas",
+	BOSS_GUIDES_BOSS_KRAAS_BODY = [=[
+Allgemein: Laut gelieferter Quelle steht der Kampf um eine Ball- oder Goal-Phase mit Wind und Feuer sowie mehrere Frontal- und Unterbrechungsfenster. Mechaniken gehen klar vor DPS-Greed.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte Frontals kontrolliert vom Raid weg und ermögliche klare Laufwege für die Ball-Phase.
+{DD} Priorisiere Mechaniken, Unterbrechungen und saubere Positionswechsel vor rohem Bossschaden. Fehler in der Ball-Phase kosten hier mehr als verlorene Globals.
+{HEAL} Plane CDs für die großen Überlappungen aus Bewegungs- und Frontalphasen, auch wenn die Quelle keine vollständige ID-Liste liefert.
+{HC} In dieser Ausgabe fehlen belastbare DE-Zauber-IDs und ausgearbeitete HC-Zusatzmechaniken; der Guide bleibt deshalb bewusst auf Kernprinzipien reduziert.
+]=],
+	BOSS_GUIDES_BOSS_VEXAMUS_NAME = "Vexamus",
+	BOSS_GUIDES_BOSS_VEXAMUS_BODY = [=[
+Allgemein: Kernprinzip laut Quelle ist Energieverwaltung plus Orb-Kontrolle. Wenn große Energiefähigkeiten anstehen, wird der Kampf schnell zu einem Defensiv- und Heilcheck.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; positioniere den Boss so, dass Orbs kontrolliert werden können und die Gruppe freie Wege behält.
+{DD} Verhindere so viele Orb-Fehler wie möglich und spiele große Energiefenster sauber statt gierig. Priorität hat Kontrolle vor zusätzlichem Schaden.
+{HEAL} Halte CDs für die großen Energiefähigkeiten zurück und rechne damit, dass Orb-Fehler den Kampf sofort deutlich härter machen.
+{HC} Für die verfügbaren Midnight-Notizen fehlen in dieser Ausgabe verifizierte DE-Zauber-IDs und belastbare HC-Zusatzmechaniken.
+]=],
+	BOSS_GUIDES_BOSS_ECHO_OF_DORAGOSA_NAME = "Echo von Doragosa",
+	BOSS_GUIDES_BOSS_ECHO_OF_DORAGOSA_BODY = [=[
+Allgemein: Laut Quelle liegt der Schwerpunkt auf sauberem Positionsspiel und klar geplanten AoE-Fenstern. Große Gruppenschaden-Events sollten früh vorbereitet werden.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte den Boss so, dass die Gruppe AoE-Fenster sicher spielen und Flächen sauber ablegen kann.
+{DD} Gute Positionierung und korrektes Ausnutzen der AoE-Fenster bringen hier mehr als starres Single-Target-Spielen.
+{HEAL} Starke Gruppencooldowns sind laut Quelle ein zentraler Bestandteil des Kampfes und sollten nicht erst reaktiv eingesetzt werden.
+{HC} Für diese Sektion fehlen im verfügbaren Material verifizierte DE-Zauber-IDs und ausformulierte HC-Sondermechaniken.
+]=],
+	BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_NAME = "Schmiedemeister Garfrost",
+	BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_BODY = [=[
+Allgemein: Für diesen Dungeon liegen in den aktuell abrufbaren Quellen keine vollständig verknüpfbaren deutschen Zauber-IDs vor. Der Guide bleibt deshalb absichtlich bei verlässlichen Kernprinzipien statt erfundener Detailmechaniken.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; spiele Frontals, Positionierung und Übergänge sauber und halte der Gruppe Ausweichraum offen.
+{DD} Ohne verifizierte Detaildaten gilt hier besonders: Mechaniken vor Greed, cleare Add- oder Prioritätsziele zuerst und vermeide vermeidbaren Bodenschaden.
+{HEAL} Plane Heil-CDs für die größten bekannten Gruppenfenster und rechne damit, dass Fehler in alten Dungeonkämpfen oft kaskadieren statt einzeln zu töten.
+{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+]=],
+	BOSS_GUIDES_BOSS_ICK_AND_KRICK_NAME = "Ick und Krick",
+	BOSS_GUIDES_BOSS_ICK_AND_KRICK_BODY = [=[
+Allgemein: Für diesen Boss fehlen in den aktuell abrufbaren Quellen verlässlich verknüpfbare deutsche Zauber-IDs. Der Guide bleibt daher bewusst bei allgemeinen Kernprinzipien.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte Boss und gefährliche Effekte kontrolliert vom Raid weg und schaffe freie Bewegungswege.
+{DD} Priorisiere sichere Bewegung, Unterbrechungen und klare Zielwechsel über rohen Bossschaden.
+{HEAL} Reagiere früh auf vermeidbare Fehler, weil fehlende Detaildaten die Kampfspitzen weniger exakt planbar machen.
+{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+]=],
+	BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_NAME = "Geißelfürst Tyrannus",
+	BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_BODY = [=[
+Allgemein: Für diesen Boss fehlen im aktuell abrufbaren Material verifizierte deutsche Zauber-IDs. Entsprechend bleibt der Guide auf robuste Kernprinzipien begrenzt.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; richte Bossfähigkeiten von der Gruppe weg aus und halte Positionen stabil.
+{DD} Spiele Movement und Mechanik-Sauberkeit priorisiert, bis belastbare Detaildaten ergänzt sind.
+{HEAL} Halte CDs eher konservativ zurück und stabilisiere nach Fehlern schnell, weil die verifizierten Schadensfenster in der Quelle nicht sauber ausformuliert sind.
+{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+]=],
+	BOSS_GUIDES_BOSS_RANJIT_NAME = "Ranjit",
+	BOSS_GUIDES_BOSS_RANJIT_BODY = [=[
+Allgemein: Für diese Skyreach-Sektion fehlen im abrufbaren Material verifizierte deutsche Zauber-IDs. Der Guide stützt sich deshalb nur auf allgemeine Kernprinzipien.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte Frontals kontrolliert und gib der Gruppe freie Räume für Bewegungsmechaniken.
+{DD} Sauberes Dodgen und disziplinierte Positionswechsel gehen hier vor zusätzlichen Schadensfenstern.
+{HEAL} Plane CDs konservativ für die größten erkennbaren Gruppenfenster, bis die Zauberdaten genauer vorliegen.
+{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+]=],
+	BOSS_GUIDES_BOSS_ARAKNATH_NAME = "Araknath",
+	BOSS_GUIDES_BOSS_ARAKNATH_BODY = [=[
+Allgemein: Für diesen Boss fehlen in den aktuell vorliegenden Quellen verifizierte deutsche Zauber-IDs. Daher bleiben die Hinweise bewusst allgemein gehalten.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; kontrolliere die Bossposition so, dass AoE- und Bewegungsmechaniken nicht den ganzen Raum schließen.
+{DD} Spiele Zielwechsel, Mechaniken und Positionsspiel priorisiert, statt auf Lücken in der Datenlage mit Greed zu reagieren.
+{HEAL} Halte die Gruppe nach Fehlern schnell stabil, weil ohne vollständige Zauberdaten die exakten Burstfenster nicht sauber belegbar sind.
+{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+]=],
+	BOSS_GUIDES_BOSS_RUKHRAN_NAME = "Rukhran",
+	BOSS_GUIDES_BOSS_RUKHRAN_BODY = [=[
+Allgemein: Für diesen Boss fehlen im aktuell abrufbaren Material verifizierte deutsche Zauber-IDs. Der Guide bleibt deshalb bei grundlegenden Kampfprinzipien.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte Boss und gefährliche Zonen so, dass der Raum nicht unnötig geschlossen wird.
+{DD} Mechanikdisziplin und sauberes Movement sind aktuell wichtiger als nicht belegte Optimierungsrouten.
+{HEAL} Plane Heilung eher defensiv, weil die verlässlichen Hauptschadensfenster in der Quelle nicht detailliert ausformuliert sind.
+{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+]=],
+	BOSS_GUIDES_BOSS_HIGH_SAGE_VIRYX_NAME = "Hochweise Viryx",
+	BOSS_GUIDES_BOSS_HIGH_SAGE_VIRYX_BODY = [=[
+Allgemein: Auch für Hochweise Viryx fehlen in den aktuell abrufbaren Quellen verifizierte deutsche Zauber-IDs. Die Notiz bleibt daher auf Kernprinzipien beschränkt.
+{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; positioniere den Boss kontrolliert und halte Bewegungswege offen.
+{DD} Priorisiere sichere Mechanikausführung und Zielwechsel, bis belastbarere Daten ergänzt werden.
+{HEAL} Große CDs nicht zu früh verschwenden und die Gruppe nach vermeidbaren Treffern zügig wieder in sichere Bereiche bringen.
+{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+]=],
+	BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_NAME = "Zuraal der Aufgestiegene",
+	BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_BODY = [=[
+Allgemein: Zonen sauber rauslegen, Kegel und Frontals dodgen und Add-Objekte priorisieren, bevor der Raum oder Gruppenschaden eskaliert.
+{TANK} Halte Kegel und Frontals konsequent von der Gruppe weg und stelle den Boss so, dass abgelegte Zonen den Raum nicht früh schließen.
+{DD} Adds & Mechanik gehen vor Bossschaden. Gute Positionsdisziplin hält den Raum spielbar.
+{HEAL} Rechne mit Schaden aus Zone-Fehlern und Frontaltreffern; CDs eher für die stabilen Gruppenfenster statt für einzelne kleine Fehler aufheben.
+]=],
+	BOSS_GUIDES_BOSS_SARPUSH_NAME = "Sarpush",
+	BOSS_GUIDES_BOSS_SARPUSH_BODY = [=[
+Allgemein: Kernprinzip laut Quelle: Bomben und Flächen kontrolliert detonieren, für die Phasenmechanik bewusst stacken und den Fear-Cast der Add-Komponente zuverlässig unterbrechen.
+{TANK} Halte Boss und Add-Komponenten so, dass kontrollierte Detonationen möglich bleiben und die Stack-Position nicht mit Bodenflächen kollidiert.
+{DD} Fear-Cast der Add-Komponente ist zentrale Kick-Pflicht. Kontrollierte Bomben-Detonationen gehen vor reiner DPS-Zeit.
+{HEAL} Gestackte Phasenmechaniken und unsaubere Detonationen erzeugen die größten Schadensspitzen. CD-Plan darauf ausrichten.
+{HC} Für diese Sektion fehlen in der gelieferten Quelle verifizierte DE-Zauber-IDs und harte HC-Sondermechaniken.
+]=],
+	BOSS_GUIDES_BOSS_VICEROY_NEZHAR_NAME = "Vizekönig Nezhar",
+	BOSS_GUIDES_BOSS_VICEROY_NEZHAR_BODY = [=[
+Allgemein: Kernprinzip laut Quelle: Gedankenschlag konsequent kicken, die Plattform vor Energiephasen sauber positionieren und Tentakel oder Adds priorisieren.
+{TANK} Stelle Nezhar so, dass Plattformwege für Energiephasen offen bleiben und Tentakel nicht unkontrolliert durch die Gruppe laufen.
+{DD} Gedankenschlag hat Kick-Priorität. Danach Tentakel und andere Prioritätsziele zuerst spielen, bevor wieder freier Bossschaden gedrückt wird.
+{HEAL} Energiephasen und Add-Overlaps sind die Stellen, an denen der Kampf kippt. Heile früh gegen statt erst nach einem Fehler.
+{HC} Für diese Sektion fehlen in der gelieferten Quelle verifizierte DE-Zauber-IDs und ausformulierte HC-Zusätze.
+]=],
+	BOSS_GUIDES_BOSS_LURA_NAME = "L'ura",
+	BOSS_GUIDES_BOSS_LURA_BODY = [=[
+Allgemein: Kernprinzip laut Quelle: Rotierende Strahlen sauber dodgen, die Resonator- oder Beam-Mechanik korrekt spielen und das Damage-Window nach einem Stun konsequent nutzen.
+{TANK} Halte den Boss so, dass rotierende Strahlen den Raid nicht unkontrolliert abschneiden und das Stun-Fenster sauber vorbereitet werden kann.
+{DD} Movement sauber spielen, Resonator- oder Beam-Mechanik korrekt lösen und danach das Stun-Fenster für konzentrierten Schaden nutzen.
+{HEAL} Größte Gefahr entsteht meist aus Strahlenfehlern plus verspäteter Stabilisierung. Bewahre CDs für die planbaren Gruppenschadensfenster nach Übergängen oder Fehltritten auf.
+{HC} Für diese Sektion fehlen in der gelieferten Quelle verifizierte DE-Zauber-IDs und ausgearbeitete HC-Sondermechaniken.
+]=],
 	BOSS_GUIDES_SPELL_NAMES = {
 		["Shadow Phalanx"] = { spellID = 1284786, localizedName = "Schattenphalanx" },
 		["Dark Barrage"] = "Dunkelsalve",
@@ -797,6 +1083,73 @@ Allgemein: 2-teiliger Kampf: Phase 1 mit Kristallen und Runen, dann Unterbrechun
 		["Reißendes Schlitzen"] = { spellID = 1272689, localizedName = "Reißendes Schlitzen" },
 		["Verschlingen"] = { spellID = 1245396, localizedName = "Verschlingen", aliases = { "Verzehren" } },
 		["Verderbte Vernichtung"] = { spellID = 1245452, localizedName = "Verderbte Vernichtung", aliases = { "Verderbte Verwüstung" } },
+		["Arkanes Schocken"] = { spellID = 1250553, localizedName = "Arkanes Schocken" },
+		["Leylinienmatrix"] = { spellID = 1251626, localizedName = "Leylinienmatrix" },
+		["Ladungsrückstoß"] = { spellID = 1251772, localizedName = "Ladungsrückstoß" },
+		["Fluxkollaps"] = { spellID = 1264040, localizedName = "Fluxkollaps" },
+		["Arkanfleck"] = { spellID = 1262630, localizedName = "Arkanfleck" },
+		["Kernfunkendetonation"] = { spellID = 1257509, localizedName = "Kernfunkendetonation" },
+		["Funkenbrand"] = { spellID = 1276485, localizedName = "Funkenbrand" },
+		["Verdunkelnder Schritt"] = { spellID = 1249014, localizedName = "Verdunkelnder Schritt" },
+		["Nullvorhut"] = { spellID = 1252703, localizedName = "Nullvorhut" },
+		["Neutralisieren"] = { spellID = 1282722, localizedName = "Neutralisieren" },
+		["Dämmerschrecken"] = { spellID = 1282723, localizedName = "Dämmerschrecken" },
+		["Umbralpeitsche"] = { spellID = 1247937, localizedName = "Umbralpeitsche" },
+		["Leerenschnitt"] = { spellID = 1252828, localizedName = "Leerenschnitt" },
+		["Lichtgezeichnete Flamme"] = { spellID = 1247976, localizedName = "Lichtgezeichnete Flamme" },
+		["Sengende Verwundung"] = { spellID = 1253950, localizedName = "Sengende Verwundung" },
+		["Strahlende Narbe"] = { spellID = 1255389, localizedName = "Strahlende Narbe" },
+		["Strahlende Zerstreuung"] = { spellID = 1253848, localizedName = "Strahlende Zerstreuung" },
+		["Gespiegeltes Verwunden"] = { spellID = 1266713, localizedName = "Gespiegeltes Verwunden" },
+		["Göttliche List"] = { spellID = 1257613, localizedName = "Göttliche List" },
+		["Kernbelastung"] = { spellID = 1271511, localizedName = "Kernbelastung" },
+		["Aufladeprotokoll"] = { spellID = 474345, localizedName = "Aufladeprotokoll" },
+		["Energiekugeln"] = { spellID = 474396, localizedName = "Energiekugeln", aliases = { "Energiekugel" } },
+		["Arkane Ermächtigung"] = { spellID = 474407, localizedName = "Arkane Ermächtigung" },
+		["Instabile Energie"] = { spellID = 1243905, localizedName = "Instabile Energie" },
+		["Arkane Überreste"] = { spellID = 1214089, localizedName = "Arkane Überreste" },
+		["Unterdrückungsbereich"] = { spellID = 1224903, localizedName = "Unterdrückungsbereich" },
+		["Runenmal"] = { spellID = 1225792, localizedName = "Runenmal" },
+		["Rückkopplung"] = { spellID = 1225135, localizedName = "Rückkopplung" },
+		["Welle der Stille"] = { spellID = 1225193, localizedName = "Welle der Stille" },
+		["Beschleunigender Zauberschutz"] = { spellID = 1248689, localizedName = "Beschleunigender Zauberschutz" },
+		["Nullreaktion"] = { spellID = 1246446, localizedName = "Nullreaktion" },
+		["Verdreifachung"] = { spellID = 1223847, localizedName = "Verdreifachung" },
+		["Astraler Griff"] = { spellID = 1224299, localizedName = "Astraler Griff" },
+		["Kosmische Strahlung"] = { spellID = 1224401, localizedName = "Kosmische Strahlung" },
+		["Kosmischer Stich"] = { spellID = 1284958, localizedName = "Kosmischer Stich" },
+		["Leerenabsonderung"] = { spellID = 1224100, localizedName = "Leerenabsonderung" },
+		["Neurale Verbindung"] = { spellID = 1253707, localizedName = "Neurale Verbindung" },
+		["Instabile Leerenessenz"] = { spellID = 1215087, localizedName = "Instabile Leerenessenz" },
+		["Leerenzerstörung"] = { spellID = 1215161, localizedName = "Leerenzerstörung" },
+		["Verschlingende Entropie"] = { spellID = 1215897, localizedName = "Verschlingende Entropie" },
+		["Entropiekugeln"] = { spellID = 1269631, localizedName = "Entropiekugeln", aliases = { "Entropiekugel" } },
+		["Wuchtiges Fragment"] = { spellID = 1280113, localizedName = "Wuchtiges Fragment" },
+		["Umbralsplitter"] = { spellID = 1284627, localizedName = "Umbralsplitter" },
+		["Flammender Aufwind"] = { spellID = 466556, localizedName = "Flammender Aufwind" },
+		["Flammender Wirbelsturm"] = { spellID = 469633, localizedName = "Flammender Wirbelsturm" },
+		["Brennende Bö"] = { spellID = 465904, localizedName = "Brennende Bö" },
+		["Sengender Schnabel"] = { spellID = 466064, localizedName = "Sengender Schnabel" },
+		["Feueratem"] = { spellID = 1217762, localizedName = "Feueratem" },
+		["Zerrissenes Band"] = { spellID = 1219551, localizedName = "Zerrissenes Band" },
+		["Entkräftendes Kreischen"] = { spellID = 472736, localizedName = "Entkräftendes Kreischen" },
+		["Fluch der Dunkelheit"] = { spellID = 474105, localizedName = "Fluch der Dunkelheit" },
+		["Versammelndes Gebrüll"] = { spellID = 472043, localizedName = "Versammelndes Gebrüll" },
+		["Klingensturm"] = { spellID = 470963, localizedName = "Klingensturm" },
+		["Schildwall"] = { spellID = 1250851, localizedName = "Schildwall" },
+		["Toben"] = { spellID = 467620, localizedName = "Toben" },
+		["Tollkühner Sprung"] = { spellID = 472081, localizedName = "Tollkühner Sprung" },
+		["Fallendes Geröll"] = { spellID = 1283357, localizedName = "Fallendes Geröll" },
+		["Drohruf"] = { spellID = 1253026, localizedName = "Drohruf" },
+		["Zielscheibenwindstoß"] = { spellID = 468429, localizedName = "Zielscheibenwindstoß" },
+		["Wogender Wind"] = { spellID = 468442, localizedName = "Wogender Wind" },
+		["Pfeilhagel"] = { spellID = 472556, localizedName = "Pfeilhagel" },
+		["Turbulente Pfeile"] = { spellID = 1253977, localizedName = "Turbulente Pfeile", aliases = { "Turbulenter Pfeil" } },
+		["Sturmschlitzer"] = { spellID = 472662, localizedName = "Sturmschlitzer" },
+		["Blitzbö"] = { spellID = 474528, localizedName = "Blitzbö" },
+		["Böenschuss"] = { spellID = 1253986, localizedName = "Böenschuss" },
+		["Stürmischer Seelenquell"] = { spellID = 1282932, localizedName = "Stürmischer Seelenquell" },
+		["Sturmböensprung"] = { spellID = 1216042, localizedName = "Sturmböensprung" },
 	},
 	STREAMER_PLANNER_TITLE = "Gruppenplaner",
 	STREAMER_PLANNER_DESC = "Ein kleines transparentes Overlay für Stream-Situationen, in dem du Zusagen schnell auf feste Dungeon- oder Raid-Slots verteilen kannst.",
