@@ -1,4 +1,4 @@
-local ADDON_NAME, BeavisQoL = ...
+﻿local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
 local L = BeavisQoL.L
@@ -26,6 +26,8 @@ local EDIT_SPEC_BUTTON_SIZE = 42
 local EDIT_SPEC_BUTTON_SPACING = 10
 local OVERLAY_DESTINATION_HEIGHT_DUNGEON = 40
 local OVERLAY_DESTINATION_HEIGHT_RAID = 54
+local PREVIEW_PANEL_DUNGEON_WIDTH = 430
+local OVERLAY_FRAME_DUNGEON_WIDTH = 334
 local DEFAULT_TIMER_DURATION_SECONDS = 15 * 60
 local TIMER_WARNING_THRESHOLD_SECONDS = 60
 local MIN_TIMER_DURATION_MINUTES = 1
@@ -142,10 +144,10 @@ StreamerPlannerModule.WHISPER_SPEC_ALIAS_HINTS = {
     [70] = { "retribution", "ret", "retri", "vergeltung" },
     [253] = { "bm", "beast mastery", "beastmastery", "beast", "tierherrschaft" },
     [254] = { "mm", "marksmanship", "marksman", "treffsicherheit" },
-    [255] = { "survival", "sv", "surv", "ueberleben", "uberleben", "überleben" },
+    [255] = { "survival", "sv", "surv", "ueberleben", "uberleben", "Ã¼berleben" },
     [259] = { "assassination", "assa", "meucheln" },
     [260] = { "outlaw", "gesetzlosigkeit" },
-    [261] = { "subtlety", "sub", "taeuschung", "täuschung" },
+    [261] = { "subtlety", "sub", "taeuschung", "tÃ¤uschung" },
     [256] = { "discipline", "disc", "diszi", "disziplin" },
     [257] = { "holy", "heilig" },
     [258] = { "shadow", "schatten" },
@@ -153,26 +155,26 @@ StreamerPlannerModule.WHISPER_SPEC_ALIAS_HINTS = {
     [251] = { "frost" },
     [252] = { "unholy", "unheilig" },
     [262] = { "elemental", "ele", "elementar" },
-    [263] = { "enhancement", "enh", "enha", "enhance", "verstaerkung", "verstarkung", "verstärkung" },
+    [263] = { "enhancement", "enh", "enha", "enhance", "verstaerkung", "verstarkung", "verstÃ¤rkung" },
     [264] = { "restoration", "resto", "wiederherstellung" },
     [62] = { "arcane", "arkan" },
     [63] = { "fire", "feuer" },
     [64] = { "frost" },
     [265] = { "affliction", "affli", "gebrechen" },
-    [266] = { "demonology", "demo", "daemonology", "dämonologie", "daemonologie" },
-    [267] = { "destruction", "destro", "zerstoerung", "zerstörung" },
+    [266] = { "demonology", "demo", "daemonology", "dÃ¤monologie", "daemonologie" },
+    [267] = { "destruction", "destro", "zerstoerung", "zerstÃ¶rung" },
     [268] = { "brewmaster", "brew", "braumeister" },
-    [269] = { "windwalker", "ww", "windlaeufer", "windläufer" },
+    [269] = { "windwalker", "ww", "windlaeufer", "windlÃ¤ufer" },
     [270] = { "mistweaver", "mist", "mw", "nebelwirker", "nebel" },
     [102] = { "balance", "boomkin", "boomy", "owlkin", "moonkin", "eule" },
     [103] = { "feral", "cat", "katze" },
-    [104] = { "guardian", "bear", "baer", "bär" },
+    [104] = { "guardian", "bear", "baer", "bÃ¤r" },
     [105] = { "restoration", "resto", "tree", "baum", "wiederherstellung" },
-    [577] = { "havoc", "verwuestung", "verwüstung" },
+    [577] = { "havoc", "verwuestung", "verwÃ¼stung" },
     [581] = { "vengeance", "rache" },
     [1467] = { "devastation", "dev", "verheerung" },
     [1468] = { "preservation", "prev", "bewahrung" },
-    [1473] = { "augmentation", "aug", "verstaerkung", "verstarkung", "verstärkung" },
+    [1473] = { "augmentation", "aug", "verstaerkung", "verstarkung", "verstÃ¤rkung" },
 }
 
 local DUNGEON_SLOT_ROLE_REQUIREMENTS = {
@@ -243,12 +245,19 @@ StreamerPlannerModule.DUNGEON_LAYOUT = {
     { key = "dps3", labelKey = "STREAMER_PLANNER_ROLE_DPS3" },
 }
 
-local RAID_GROUP_COUNT = 4
+local RAID_GROUP_COUNT = 8
 local RAID_GROUP_SIZE = 5
 local RAID_SLOT_COUNT = RAID_GROUP_COUNT * RAID_GROUP_SIZE
-local RAID_GROUP_COLUMN_SPACING = 14
-local RAID_GROUP_ROW_SPACING = 16
-local RAID_GROUP_TITLE_GAP = 6
+local RAID_GROUP_COLUMNS = 4
+local RAID_GROUP_COLUMN_SPACING = 10
+local RAID_GROUP_ROW_SPACING = 12
+local RAID_GROUP_TITLE_GAP = 5
+local PREVIEW_RAID_SLOT_HEIGHT = 22
+local PREVIEW_RAID_GROUP_WIDTH = 116
+local OVERLAY_RAID_SLOT_HEIGHT = 26
+local OVERLAY_RAID_GROUP_WIDTH = 124
+local MIN_OVERLAY_RAID_GROUP_WIDTH = 92
+local OVERLAY_RAID_FRAME_BASE_HEIGHT = 292
 
 local PageStreamerPlanner
 local PageScrollFrame
@@ -305,6 +314,7 @@ local EditDestinationKeystoneLabel
 
 local OverlayDungeonButtons = {}
 local OverlayRaidButtons = {}
+local OverlayRaidGroupFrames = nil
 local ApplicantRows = {}
 local HideEditDialog
 local GetStreamerPlannerSettings
@@ -602,6 +612,54 @@ local function GetMeasuredPanelHeight(panel, bottomObject, padding, minimumHeigh
     return math.max(fallbackHeight, math.ceil((panel:GetTop() - bottomObject:GetBottom()) + (padding or 0)))
 end
 
+local function GetRaidLayoutRowCount()
+    return math.ceil(RAID_GROUP_COUNT / RAID_GROUP_COLUMNS)
+end
+
+local function GetRaidLayoutContainerWidth(groupWidth)
+    local resolvedGroupWidth = groupWidth or OVERLAY_RAID_GROUP_WIDTH
+    return (RAID_GROUP_COLUMNS * resolvedGroupWidth) + ((math.max(RAID_GROUP_COLUMNS - 1, 0)) * RAID_GROUP_COLUMN_SPACING)
+end
+
+local function GetRaidLayoutGroupHeight(slotHeight)
+    local resolvedSlotHeight = slotHeight or OVERLAY_RAID_SLOT_HEIGHT
+    return 20 + RAID_GROUP_TITLE_GAP + (RAID_GROUP_SIZE * resolvedSlotHeight) + ((RAID_GROUP_SIZE - 1) * 4)
+end
+
+local function GetRaidLayoutContainerHeight(slotHeight, extraPadding)
+    local rowCount = GetRaidLayoutRowCount()
+    local groupHeight = GetRaidLayoutGroupHeight(slotHeight)
+    return (rowCount * groupHeight) + ((math.max(rowCount - 1, 0)) * RAID_GROUP_ROW_SPACING) + (extraPadding or 0)
+end
+
+local function GetOverlayRaidGroupWidth()
+    local parentWidth = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 1024
+    local overlayScale = GetStreamerPlannerSettings and GetStreamerPlannerSettings().overlayScale or DEFAULT_OVERLAY_SCALE
+    local safeFrameWidth = math.max(420, math.floor((parentWidth - 32) / math.max(overlayScale or 1, 0.01)))
+    local safeContainerWidth = math.max(
+        (RAID_GROUP_COLUMNS * MIN_OVERLAY_RAID_GROUP_WIDTH) + ((RAID_GROUP_COLUMNS - 1) * RAID_GROUP_COLUMN_SPACING),
+        safeFrameWidth - 44
+    )
+    local computedWidth = math.floor((safeContainerWidth - ((RAID_GROUP_COLUMNS - 1) * RAID_GROUP_COLUMN_SPACING)) / RAID_GROUP_COLUMNS)
+    return Clamp(computedWidth, MIN_OVERLAY_RAID_GROUP_WIDTH, OVERLAY_RAID_GROUP_WIDTH)
+end
+
+local function GetPreviewPanelWidthForMode(mode)
+    if mode == "raid" then
+        return GetRaidLayoutContainerWidth(PREVIEW_RAID_GROUP_WIDTH) + 38
+    end
+
+    return PREVIEW_PANEL_DUNGEON_WIDTH
+end
+
+local function GetOverlayFrameWidthForMode(mode, raidGroupWidth)
+    if mode == "raid" then
+        return GetRaidLayoutContainerWidth(raidGroupWidth or GetOverlayRaidGroupWidth()) + 44
+    end
+
+    return OVERLAY_FRAME_DUNGEON_WIDTH
+end
+
 local function GetDestinationCategoryOptions()
     return StreamerPlannerModule.DESTINATION_CATEGORIES
 end
@@ -643,7 +701,15 @@ PlannerPrivate.IsSecretValue = function(value)
 end
 
 PlannerPrivate.IsUsablePlainString = function(value)
-    return type(value) == "string" and value ~= "" and not PlannerPrivate.IsSecretValue(value)
+    if type(value) ~= "string" then
+        return false
+    end
+
+    if PlannerPrivate.IsSecretValue(value) then
+        return false
+    end
+
+    return value ~= ""
 end
 
 PlannerPrivate.NormalizePlannerRoleKey = function(roleKey)
@@ -784,6 +850,65 @@ local function PayloadContainsAlias(payloadText, aliasText)
     return (" " .. payloadText .. " "):find(" " .. aliasText .. " ", 1, true) ~= nil
 end
 
+local RAID_DIFFICULTY_OPTIONS = {
+    { key = "normal", labelKey = "ITEM_GUIDE_LABEL_NORMAL", aliases = { "normal", "nhc" } },
+    { key = "heroic", labelKey = "ITEM_GUIDE_LABEL_HEROIC", aliases = { "heroic", "heroisch", "hc" } },
+    { key = "mythic", labelKey = "ITEM_GUIDE_LABEL_MYTHIC", aliases = { "mythic", "mythisch" } },
+}
+
+PlannerPrivate.NormalizeRaidDifficultyKey = function(value)
+    local normalizedValue = PlannerPrivate.NormalizeCompareText(value)
+    if normalizedValue == nil then
+        return nil
+    end
+
+    for _, difficultyInfo in ipairs(RAID_DIFFICULTY_OPTIONS) do
+        if normalizedValue == difficultyInfo.key then
+            return difficultyInfo.key
+        end
+
+        for _, aliasText in ipairs(difficultyInfo.aliases) do
+            if normalizedValue == aliasText then
+                return difficultyInfo.key
+            end
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.GetRaidDifficultyLabel = function(value)
+    local difficultyKey = PlannerPrivate.NormalizeRaidDifficultyKey(value)
+    if difficultyKey == nil then
+        return nil
+    end
+
+    for _, difficultyInfo in ipairs(RAID_DIFFICULTY_OPTIONS) do
+        if difficultyInfo.key == difficultyKey then
+            return L(difficultyInfo.labelKey)
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.ParseRaidDifficultyFromText = function(textCandidates)
+    for _, candidateText in ipairs(textCandidates or {}) do
+        local normalizedCandidate = PlannerPrivate.NormalizeCompareText(candidateText)
+        if normalizedCandidate ~= nil then
+            for _, difficultyInfo in ipairs(RAID_DIFFICULTY_OPTIONS) do
+                for _, aliasText in ipairs(difficultyInfo.aliases) do
+                    if PayloadContainsAlias(normalizedCandidate, aliasText) then
+                        return difficultyInfo.key
+                    end
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
 PlannerPrivate.GetWhisperCommandPayload = function(messageText)
     if type(messageText) ~= "string" then
         return nil
@@ -855,6 +980,27 @@ PlannerPrivate.GetIdentityKey = function(value)
     return PlannerPrivate.NormalizeCompareText(value)
 end
 
+PlannerPrivate.GetIdentityKeys = function(value)
+    local identityKeys = {}
+    local seen = {}
+
+    local function AddCandidate(candidate)
+        local identityKey = PlannerPrivate.GetIdentityKey(candidate)
+        if identityKey ~= nil and not seen[identityKey] then
+            seen[identityKey] = true
+            identityKeys[#identityKeys + 1] = identityKey
+        end
+    end
+
+    AddCandidate(value)
+
+    if PlannerPrivate.IsUsablePlainString(value) then
+        AddCandidate(PlannerPrivate.GetDisplayNameFromFullName(value))
+    end
+
+    return identityKeys
+end
+
 PlannerPrivate.GetDisplayNameFromFullName = function(fullName)
     if not PlannerPrivate.IsUsablePlainString(fullName) then
         return UNKNOWN or "Unknown"
@@ -885,6 +1031,10 @@ PlannerPrivate.AddUniqueCandidate = function(target, seen, value)
 end
 
 PlannerPrivate.NormalizeDestinationLevel = function(categoryKey, level)
+    if categoryKey == "raids" then
+        return PlannerPrivate.NormalizeRaidDifficultyKey(level)
+    end
+
     if type(level) ~= "number" then
         return nil
     end
@@ -907,6 +1057,10 @@ PlannerPrivate.GetDestinationLevelLabel = function(categoryKey, level)
         return nil
     end
 
+    if categoryKey == "raids" then
+        return PlannerPrivate.GetRaidDifficultyLabel(normalizedLevel)
+    end
+
     if categoryKey == "delves" then
         return tostring(normalizedLevel)
     end
@@ -914,13 +1068,18 @@ PlannerPrivate.GetDestinationLevelLabel = function(categoryKey, level)
     return GetKeystoneLabel(normalizedLevel)
 end
 
-PlannerPrivate.RegisterDestinationAlias = function(cache, aliasText, categoryKey, destinationText)
+PlannerPrivate.RegisterDestinationAlias = function(cache, aliasText, categoryKey, destinationText, allowOverride)
     local normalizedAlias = PlannerPrivate.NormalizeCompareText(aliasText)
     if not normalizedAlias or not PlannerPrivate.IsUsablePlainString(destinationText) then
         return
     end
 
-    if cache.byText[normalizedAlias] then
+    local existingEntry = cache.byText[normalizedAlias]
+    if existingEntry then
+        if allowOverride == true then
+            existingEntry.categoryKey = categoryKey
+            existingEntry.destinationText = destinationText
+        end
         return
     end
 
@@ -946,7 +1105,7 @@ PlannerPrivate.BuildDestinationAliasCache = function()
 
     for _, categoryInfo in ipairs(StreamerPlannerModule.DESTINATION_CATEGORIES) do
         for _, suggestionText in ipairs(GetDestinationSuggestions(categoryInfo.key)) do
-            PlannerPrivate.RegisterDestinationAlias(cache, suggestionText, categoryInfo.key, suggestionText)
+            PlannerPrivate.RegisterDestinationAlias(cache, suggestionText, categoryInfo.key, suggestionText, categoryInfo.key == "raids")
         end
     end
 
@@ -954,6 +1113,15 @@ PlannerPrivate.BuildDestinationAliasCache = function()
     PlannerPrivate.RegisterDestinationAlias(cache, "Die Terrasse der Magister", "s1", L("STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE"))
     PlannerPrivate.RegisterDestinationAlias(cache, "Magisters' Terrace", "s1", L("STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE"))
     PlannerPrivate.RegisterDestinationAlias(cache, "Magisters Terrace", "s1", L("STREAMER_PLANNER_DESTINATION_S1_MAGISTERS_TERRACE"))
+    PlannerPrivate.RegisterDestinationAlias(cache, "Voidspire", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_VOIDSPIRE"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "The Voidspire", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_VOIDSPIRE"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "Leerspitze", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_VOIDSPIRE"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "Dreamrift", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_DREAMRIFT"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "The Dreamrift", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_DREAMRIFT"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "Dream Rift", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_DREAMRIFT"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "March on Quel'Danas", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_MARCH_ON_QUEL_DANAS"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "March on Quel Danas", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_MARCH_ON_QUEL_DANAS"), true)
+    PlannerPrivate.RegisterDestinationAlias(cache, "Marsch auf Quel Danas", "raids", L("STREAMER_PLANNER_DESTINATION_RAID_MARCH_ON_QUEL_DANAS"), true)
 
     table.sort(cache.ordered, function(left, right)
         if #left.normalized ~= #right.normalized then
@@ -1083,6 +1251,10 @@ PlannerPrivate.GetEntryCreationTextCandidates = function()
 end
 
 PlannerPrivate.ParseDestinationLevelFromText = function(textCandidates, categoryKey)
+    if categoryKey == "raids" then
+        return PlannerPrivate.ParseRaidDifficultyFromText(textCandidates)
+    end
+
     local minLevel = categoryKey == "delves" and 1 or 0
     local maxLevel = categoryKey == "delves" and 11 or 20
 
@@ -1568,15 +1740,21 @@ end
 
 PlannerPrivate.FindWhisperApplicantByName = function(name)
     local settings = GetStreamerPlannerSettings()
-    local identityKey = PlannerPrivate.GetIdentityKey(name)
-    if not identityKey then
+    local identityKeys = PlannerPrivate.GetIdentityKeys(name)
+    if #identityKeys == 0 then
         return nil, nil
     end
 
+    local identityLookup = {}
+    for _, identityKey in ipairs(identityKeys) do
+        identityLookup[identityKey] = true
+    end
+
     for index, entry in ipairs(settings.whisperApplicants or {}) do
-        local entryIdentityKey = PlannerPrivate.GetIdentityKey(entry.fullName or entry.inviteName or entry.displayName)
-        if entryIdentityKey == identityKey then
-            return entry, index
+        for _, entryIdentityKey in ipairs(PlannerPrivate.GetIdentityKeys(entry.fullName or entry.inviteName or entry.displayName)) do
+            if identityLookup[entryIdentityKey] then
+                return entry, index
+            end
         end
     end
 
@@ -1605,7 +1783,7 @@ PlannerPrivate.IsSelfSlotEntry = function(entry)
     local playerIdentityKey = PlannerPrivate.GetIdentityKey(playerFullName)
     local playerDisplayIdentityKey = PlannerPrivate.GetIdentityKey(playerDisplayName)
 
-    -- Prüfe alle möglichen Namensfelder im Slot-Eintrag
+    -- PrÃ¼fe alle mÃ¶glichen Namensfelder im Slot-Eintrag
     local entryNames = {
         entry.inviteName,
         entry.name,
@@ -1623,6 +1801,43 @@ PlannerPrivate.IsSelfSlotEntry = function(entry)
     end
 
     return false
+end
+
+PlannerPrivate.GetAssignedSelfDungeonSlotKey = function(settings)
+    local resolvedSettings = settings or GetStreamerPlannerSettings()
+    local fallbackSlotKey = nil
+
+    for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+        local currentEntry = PlannerPrivate.NormalizeSlotEntry(resolvedSettings.slots.dungeon[slotInfo.key])
+        if PlannerPrivate.IsSelfSlotEntry(currentEntry) then
+            if PlannerPrivate.IsSelfSourceKey(currentEntry.sourceKey) then
+                return slotInfo.key
+            end
+
+            fallbackSlotKey = fallbackSlotKey or slotInfo.key
+        end
+    end
+
+    return fallbackSlotKey
+end
+
+PlannerPrivate.ShouldOpenSelfRoleEditor = function(layout, index, slotEntry)
+    if layout ~= "dungeon" then
+        return false
+    end
+
+    local currentEntry = type(slotEntry) == "table" and slotEntry or nil
+    if PlannerPrivate.IsSelfSlotEntry(currentEntry) then
+        return true
+    end
+
+    local slotInfo = GetDungeonSlotInfo and GetDungeonSlotInfo(index) or nil
+    if not slotInfo or not slotInfo.key then
+        return false
+    end
+
+    local selfSlotKey = PlannerPrivate.GetAssignedSelfDungeonSlotKey()
+    return selfSlotKey ~= nil and selfSlotKey == slotInfo.key
 end
 
 PlannerPrivate.MarkWhisperApplicantInvited = function(name)
@@ -2714,19 +2929,25 @@ PlannerPrivate.AddParticipant = function(target, seen, blocked, participant)
         return
     end
 
-    local fullNameKey = PlannerPrivate.GetIdentityKey(participant.fullName)
-    local displayNameKey = PlannerPrivate.GetIdentityKey(participant.name)
-    if (fullNameKey and blocked[fullNameKey]) or (displayNameKey and blocked[displayNameKey]) then
-        return
+    local identityLookup = {}
+    for _, candidate in ipairs({
+        participant.fullName,
+        participant.inviteName,
+        participant.name,
+    }) do
+        for _, identityKey in ipairs(PlannerPrivate.GetIdentityKeys(candidate)) do
+            identityLookup[identityKey] = true
+        end
     end
 
-    local dedupeKey = fullNameKey or displayNameKey
-    if dedupeKey and seen[dedupeKey] then
-        return
+    for identityKey in pairs(identityLookup) do
+        if blocked[identityKey] or seen[identityKey] then
+            return
+        end
     end
 
-    if dedupeKey then
-        seen[dedupeKey] = true
+    for identityKey in pairs(identityLookup) do
+        seen[identityKey] = true
     end
 
     target[#target + 1] = participant
@@ -3004,6 +3225,10 @@ PlannerPrivate.GetActiveListingState = function()
         return nil
     end
 
+    if PlannerPrivate.IsRaidDestinationText(destinationText) then
+        categoryKey = "raids"
+    end
+
     local level = categoryKey and PlannerPrivate.ParseDestinationLevelFromText(textCandidates, categoryKey) or nil
     local mode = nil
     if categoryKey == "raids" or PlannerPrivate.IsRaidDestinationText(destinationText) then
@@ -3133,8 +3358,7 @@ PlannerPrivate.BuildCurrentGroupLookup = function()
     local lookup = {}
 
     local function AddName(name)
-        local identityKey = PlannerPrivate.GetIdentityKey(name)
-        if identityKey then
+        for _, identityKey in ipairs(PlannerPrivate.GetIdentityKeys(name)) do
             lookup[identityKey] = true
         end
     end
@@ -3155,13 +3379,19 @@ PlannerPrivate.BuildCurrentGroupLookup = function()
 end
 
 PlannerPrivate.IsNameInCurrentGroup = function(name, groupLookup)
-    local identityKey = PlannerPrivate.GetIdentityKey(name)
-    if not identityKey then
+    local identityKeys = PlannerPrivate.GetIdentityKeys(name)
+    if #identityKeys == 0 then
         return false
     end
 
     local resolvedLookup = type(groupLookup) == "table" and groupLookup or PlannerPrivate.BuildCurrentGroupLookup()
-    return resolvedLookup[identityKey] == true
+    for _, identityKey in ipairs(identityKeys) do
+        if resolvedLookup[identityKey] == true then
+            return true
+        end
+    end
+
+    return false
 end
 
 PlannerPrivate.SendRegularInvite = function(inviteName)
@@ -3589,7 +3819,7 @@ end
 
 local function ShouldShowDestinationKeystoneControls()
     local categoryKey = GetDestinationCategory()
-    if categoryKey ~= "s1" and categoryKey ~= "delves" then
+    if categoryKey ~= "s1" and categoryKey ~= "delves" and categoryKey ~= "raids" then
         return false
     end
 
@@ -3609,19 +3839,29 @@ local function RefreshDestinationKeystoneDropdown()
     local shouldShow = PlannerPrivate.editingField == "destination" and ShouldShowDestinationKeystoneControls()
 
     if EditDestinationKeystoneLabel then
+        if GetDestinationCategory() == "raids" then
+            EditDestinationKeystoneLabel:SetText(L("ITEM_GUIDE_HEADER_DIFFICULTY"))
+        else
+            EditDestinationKeystoneLabel:SetText(L("STREAMER_PLANNER_DESTINATION_KEYSTONE"))
+        end
         EditDestinationKeystoneLabel:SetShown(shouldShow)
     end
 
     if shouldShow then
         local categoryKey = GetDestinationCategory()
         local selectedLevel = GetDestinationKeystoneLevel()
-        if type(selectedLevel) ~= "number" then
+        if categoryKey == "raids" then
+            if type(selectedLevel) ~= "string" then
+                selectedLevel = "normal"
+                SetDestinationKeystoneLevel(selectedLevel)
+            end
+        elseif type(selectedLevel) ~= "number" then
             selectedLevel = categoryKey == "delves" and 1 or 0
             SetDestinationKeystoneLevel(selectedLevel)
         end
 
         DestinationKeystoneDropdown:Show()
-        UIDropDownMenu_SetWidth(DestinationKeystoneDropdown, 88)
+        UIDropDownMenu_SetWidth(DestinationKeystoneDropdown, categoryKey == "raids" and 116 or 88)
         UIDropDownMenu_SetSelectedValue(DestinationKeystoneDropdown, selectedLevel)
         UIDropDownMenu_SetText(DestinationKeystoneDropdown, PlannerPrivate.GetDestinationLevelLabel(categoryKey, selectedLevel) or "")
 
@@ -4798,7 +5038,7 @@ local function CreateSlotButton(parent, width, height, layout, index)
     return button
 end
 
-local function OpenEditor(layout, index)
+local function OpenEditor(layout, index, forceSelfRoleEditor)
     if not EditDialog or not EditDialogInput then
         return
     end
@@ -4809,7 +5049,8 @@ local function OpenEditor(layout, index)
     local slotEntry = GetSlotEntry(layout, index)
     PlannerPrivate.editingClassFile = slotEntry.classFile
     PlannerPrivate.editingSpecID = slotEntry.specID
-    PlannerPrivate.editingUsesSelfRoleOverride = layout == "dungeon" and PlannerPrivate.IsSelfSlotEntry(slotEntry)
+    PlannerPrivate.editingUsesSelfRoleOverride = forceSelfRoleEditor == true
+        or PlannerPrivate.ShouldOpenSelfRoleEditor(layout, index, slotEntry)
     PlannerPrivate.editingRoleKey = PlannerPrivate.NormalizePlannerRoleKey(GetStreamerPlannerSettings().selfRoleOverride)
 
     if PlannerPrivate.editingUsesSelfRoleOverride then
@@ -4876,6 +5117,7 @@ local function RefreshSlotButton(button)
     local slotLabel = GetSlotLabel(button.Layout, button.Index)
     local slotEntry = GetSlotEntry(button.Layout, button.Index)
     local slotValue = slotEntry.name
+    local isSelfSlot = PlannerPrivate.IsSelfSlotEntry(slotEntry)
     local classRed, classGreen, classBlue = GetClassColor(slotEntry.classFile)
     local specName = PlannerPrivate.GetSpecName(slotEntry.classFile, slotEntry.specID)
     local roleLabel = PlannerPrivate.GetPlannerRoleLabel(PlannerPrivate.GetEntryAssignedRole(slotEntry))
@@ -4929,6 +5171,7 @@ local function RefreshSlotButton(button)
     end
 
     button.Label:SetText(slotLabel)
+    button.IsSelfSlot = isSelfSlot == true
     if slotValue ~= "" then
         local assignedRoleKey = PlannerPrivate.GetEntryAssignedRole(slotEntry)
         local specRoleKey = slotEntry.specID and PlannerPrivate.GetRoleKeyFromSpecID(slotEntry.specID) or nil
@@ -4962,7 +5205,17 @@ local function RefreshSlotButton(button)
             return
         end
 
-        OpenEditor(button.Layout, button.Index)
+        local forceSelfRoleEditor = false
+        if button.Layout == "dungeon" then
+            local currentEntry = GetSlotEntry(button.Layout, button.Index)
+            local slotInfo = GetDungeonSlotInfo and GetDungeonSlotInfo(button.Index) or nil
+            local selfSlotKey = PlannerPrivate.GetAssignedSelfDungeonSlotKey()
+            forceSelfRoleEditor = button.IsSelfSlot == true
+                or PlannerPrivate.IsSelfSlotEntry(currentEntry)
+                or (slotInfo and slotInfo.key ~= nil and selfSlotKey ~= nil and slotInfo.key == selfSlotKey)
+        end
+
+        OpenEditor(button.Layout, button.Index, forceSelfRoleEditor)
     end)
 end
 
@@ -4972,7 +5225,7 @@ local function RefreshButtonList(buttons)
     end
 end
 
-local function CreateDungeonLayout(parent, targetButtons, width)
+PlannerPrivate.CreateDungeonLayout = function(parent, targetButtons, width)
     local previousButton
 
     for index = 1, #StreamerPlannerModule.DUNGEON_LAYOUT do
@@ -4989,23 +5242,62 @@ local function CreateDungeonLayout(parent, targetButtons, width)
     end
 end
 
-local function CreateRaidLayout(parent, targetButtons, width, slotHeight)
+PlannerPrivate.LayoutRaidLayout = function(parent, targetButtons, groupFrames, width, slotHeight)
     local groupWidth = width
     local resolvedSlotHeight = slotHeight or 30
-    local groupHeight = 20 + RAID_GROUP_TITLE_GAP + (RAID_GROUP_SIZE * resolvedSlotHeight) + ((RAID_GROUP_SIZE - 1) * 4)
+    local groupHeight = GetRaidLayoutGroupHeight(resolvedSlotHeight)
+
+    for groupIndex = 1, RAID_GROUP_COUNT do
+        local groupFrame = groupFrames[groupIndex]
+        if groupFrame then
+            local rowIndex = math.floor((groupIndex - 1) / RAID_GROUP_COLUMNS)
+            local columnIndex = (groupIndex - 1) % RAID_GROUP_COLUMNS
+
+            groupFrame:SetSize(groupWidth, groupHeight)
+            groupFrame:ClearAllPoints()
+            groupFrame:SetPoint(
+                "TOPLEFT",
+                parent,
+                "TOPLEFT",
+                columnIndex * (groupWidth + RAID_GROUP_COLUMN_SPACING),
+                -(rowIndex * (groupHeight + RAID_GROUP_ROW_SPACING))
+            )
+
+            if groupFrame.Title then
+                groupFrame.Title:ClearAllPoints()
+                groupFrame.Title:SetPoint("TOPLEFT", groupFrame, "TOPLEFT", 0, 0)
+                groupFrame.Title:SetPoint("RIGHT", groupFrame, "RIGHT", 0, 0)
+            end
+
+            local previousButton
+            for positionIndex = 1, RAID_GROUP_SIZE do
+                local slotIndex = ((groupIndex - 1) * RAID_GROUP_SIZE) + positionIndex
+                local button = targetButtons[slotIndex]
+                if button then
+                    button:SetSize(groupWidth, resolvedSlotHeight)
+                    button.SlotHeight = resolvedSlotHeight
+                    button:ClearAllPoints()
+
+                    if previousButton then
+                        button:SetPoint("TOPLEFT", previousButton, "BOTTOMLEFT", 0, -4)
+                    else
+                        button:SetPoint("TOPLEFT", groupFrame.Title, "BOTTOMLEFT", 0, -RAID_GROUP_TITLE_GAP)
+                    end
+
+                    previousButton = button
+                end
+            end
+        end
+    end
+end
+
+PlannerPrivate.CreateRaidLayout = function(parent, targetButtons, width, slotHeight)
     local groupFrames = {}
 
     for groupIndex = 1, RAID_GROUP_COUNT do
         local groupFrame = CreateFrame("Frame", nil, parent)
-        groupFrame:SetSize(groupWidth, groupHeight)
-
-        local rowIndex = math.floor((groupIndex - 1) / 2)
-        local columnIndex = (groupIndex - 1) % 2
-        groupFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", columnIndex * (groupWidth + RAID_GROUP_COLUMN_SPACING), -(rowIndex * (groupHeight + RAID_GROUP_ROW_SPACING)))
 
         local title = groupFrame:CreateFontString(nil, "OVERLAY")
-        title:SetPoint("TOPLEFT", groupFrame, "TOPLEFT", 0, 0)
-        title:SetPoint("RIGHT", groupFrame, "RIGHT", 0, 0)
         title:SetJustifyH("LEFT")
         title:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
         title:SetTextColor(1, 0.82, 0, 1)
@@ -5017,23 +5309,18 @@ local function CreateRaidLayout(parent, targetButtons, width, slotHeight)
         local previousButton
         for positionIndex = 1, RAID_GROUP_SIZE do
             local slotIndex = ((groupIndex - 1) * RAID_GROUP_SIZE) + positionIndex
-            local button = CreateSlotButton(groupFrame, groupWidth, resolvedSlotHeight, "raid", slotIndex)
-
-            if previousButton then
-                button:SetPoint("TOPLEFT", previousButton, "BOTTOMLEFT", 0, -4)
-            else
-                button:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -RAID_GROUP_TITLE_GAP)
-            end
+            local button = CreateSlotButton(groupFrame, width, slotHeight or 30, "raid", slotIndex)
 
             targetButtons[#targetButtons + 1] = button
             previousButton = button
         end
     end
 
+    PlannerPrivate.LayoutRaidLayout(parent, targetButtons, groupFrames, width, slotHeight)
     return groupFrames
 end
 
-local function RefreshModeButtons()
+PlannerPrivate.RefreshModeButtons = function()
     local mode = GetCurrentMode()
     local dungeonActive = mode == "dungeon"
     local raidActive = mode == "raid"
@@ -5063,10 +5350,11 @@ local function RefreshModeButtons()
     end
 end
 
-local function RefreshLayoutVisibility()
+PlannerPrivate.RefreshLayoutVisibility = function()
     local mode = GetCurrentMode()
     local showRaid = mode == "raid"
     local destinationText = GetDestinationText()
+    local overlayRaidGroupWidth = GetOverlayRaidGroupWidth()
 
     if PreviewUI.DungeonContainer then
         if showRaid then
@@ -5169,13 +5457,29 @@ local function RefreshLayoutVisibility()
     if OverlayRaidContainer and OverlayDestinationButton then
         OverlayRaidContainer:ClearAllPoints()
         OverlayRaidContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
+        OverlayRaidContainer:SetSize(
+            GetRaidLayoutContainerWidth(overlayRaidGroupWidth),
+            GetRaidLayoutContainerHeight(OVERLAY_RAID_SLOT_HEIGHT, 8)
+        )
+        if OverlayRaidGroupFrames then
+            PlannerPrivate.LayoutRaidLayout(
+                OverlayRaidContainer,
+                OverlayRaidButtons,
+                OverlayRaidGroupFrames,
+                overlayRaidGroupWidth,
+                OVERLAY_RAID_SLOT_HEIGHT
+            )
+        end
     end
 
     if OverlayFrame then
         if showRaid then
-            OverlayFrame:SetSize(458, 736)
+            OverlayFrame:SetSize(
+                GetOverlayFrameWidthForMode("raid", overlayRaidGroupWidth),
+                GetRaidLayoutContainerHeight(OVERLAY_RAID_SLOT_HEIGHT, 8) + OVERLAY_RAID_FRAME_BASE_HEIGHT
+            )
         else
-            OverlayFrame:SetSize(334, 540)
+            OverlayFrame:SetSize(GetOverlayFrameWidthForMode("dungeon"), 540)
         end
     end
 
@@ -5192,7 +5496,7 @@ function StreamerPlannerModule.RefreshOverlayWindow()
     OverlayFrame:SetMovable(settings.overlayLocked ~= true)
     OverlayFrame:EnableMouse(true)
     ApplyOverlayGeometry()
-    RefreshLayoutVisibility()
+    PlannerPrivate.RefreshLayoutVisibility()
     RefreshTimerDisplay()
 
     if settings.overlayEnabled then
@@ -5276,14 +5580,14 @@ function StreamerPlannerModule.RefreshAllDisplays()
     RefreshButtonList(PreviewUI.RaidButtons)
     RefreshButtonList(OverlayDungeonButtons)
     RefreshButtonList(OverlayRaidButtons)
-    RefreshModeButtons()
+    PlannerPrivate.RefreshModeButtons()
     if PlannerPrivate.RefreshApplicantPanel then
         PlannerPrivate.RefreshApplicantPanel()
     end
     if PlannerPrivate.RefreshWhisperSpecPrompt then
         PlannerPrivate.RefreshWhisperSpecPrompt()
     end
-    RefreshLayoutVisibility()
+    PlannerPrivate.RefreshLayoutVisibility()
     StreamerPlannerModule.RefreshOverlayWindow()
 
     if PageStreamerPlanner and PageStreamerPlanner:IsShown() then
@@ -5291,6 +5595,739 @@ function StreamerPlannerModule.RefreshAllDisplays()
     end
 end
 
+PlannerPrivate.BuildWhisperSpecPromptUi = function()
+WhisperSpecPromptUI.Frame = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
+WhisperSpecPromptUI.Frame:SetSize(WHISPER_SPEC_PROMPT_WIDTH, WHISPER_SPEC_PROMPT_MIN_HEIGHT)
+WhisperSpecPromptUI.Frame:SetPoint("CENTER", UIParent, "CENTER", -440, 0)
+WhisperSpecPromptUI.Frame:SetFrameStrata("DIALOG")
+WhisperSpecPromptUI.Frame:SetClampedToScreen(true)
+WhisperSpecPromptUI.Frame:EnableMouse(true)
+WhisperSpecPromptUI.Frame:Hide()
+
+do
+    local background = WhisperSpecPromptUI.Frame:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.06, 0.06, 0.07, 0.96)
+
+    local borderTop = WhisperSpecPromptUI.Frame:CreateTexture(nil, "ARTWORK")
+    borderTop:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 0, 0)
+    borderTop:SetPoint("TOPRIGHT", WhisperSpecPromptUI.Frame, "TOPRIGHT", 0, 0)
+    borderTop:SetHeight(1)
+    borderTop:SetColorTexture(1, 0.82, 0, 0.36)
+
+    local borderBottom = WhisperSpecPromptUI.Frame:CreateTexture(nil, "ARTWORK")
+    borderBottom:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 0, 0)
+    borderBottom:SetPoint("BOTTOMRIGHT", WhisperSpecPromptUI.Frame, "BOTTOMRIGHT", 0, 0)
+    borderBottom:SetHeight(1)
+    borderBottom:SetColorTexture(1, 0.82, 0, 0.86)
+end
+
+WhisperSpecPromptUI.Title = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Title:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 14, -12)
+WhisperSpecPromptUI.Title:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+WhisperSpecPromptUI.Title:SetTextColor(1, 0.82, 0, 1)
+
+WhisperSpecPromptUI.Hint = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Hint:SetPoint("TOPLEFT", WhisperSpecPromptUI.Title, "BOTTOMLEFT", 0, -2)
+WhisperSpecPromptUI.Hint:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Hint:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Hint:SetJustifyV("TOP")
+WhisperSpecPromptUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+WhisperSpecPromptUI.Hint:SetTextColor(0.82, 0.82, 0.84, 1)
+
+WhisperSpecPromptUI.Name = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Name:SetPoint("TOPLEFT", WhisperSpecPromptUI.Hint, "BOTTOMLEFT", 0, -6)
+WhisperSpecPromptUI.Name:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Name:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Name:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+
+WhisperSpecPromptUI.Class = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.Class:SetPoint("TOPLEFT", WhisperSpecPromptUI.Name, "BOTTOMLEFT", 0, -2)
+WhisperSpecPromptUI.Class:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Class:SetJustifyH("LEFT")
+WhisperSpecPromptUI.Class:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+WhisperSpecPromptUI.Class:SetTextColor(1, 0.82, 0, 0.92)
+
+WhisperSpecPromptUI.ClassTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.ClassTitle:SetJustifyH("LEFT")
+WhisperSpecPromptUI.ClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+WhisperSpecPromptUI.ClassTitle:SetTextColor(1, 0.82, 0, 1)
+WhisperSpecPromptUI.ClassTitle:Hide()
+
+WhisperSpecPromptUI.Frame.ClassButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
+WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.Name, "BOTTOMLEFT", 0, -10)
+WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetHeight(1)
+
+WhisperSpecPromptUI.RoleTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.RoleTitle:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -14)
+WhisperSpecPromptUI.RoleTitle:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.RoleTitle:SetJustifyH("LEFT")
+WhisperSpecPromptUI.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+WhisperSpecPromptUI.RoleTitle:SetTextColor(1, 0.82, 0, 1)
+
+WhisperSpecPromptUI.Frame.RoleButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
+WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -10)
+WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetHeight(1)
+
+WhisperSpecPromptUI.SpecTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
+WhisperSpecPromptUI.SpecTitle:SetJustifyH("LEFT")
+WhisperSpecPromptUI.SpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+WhisperSpecPromptUI.SpecTitle:SetTextColor(1, 0.82, 0, 1)
+
+WhisperSpecPromptUI.Frame.SpecButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
+WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.SpecTitle, "BOTTOMLEFT", 0, -8)
+WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
+WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetHeight(1)
+
+WhisperSpecPromptUI.Frame.ApplyButton = CreateActionButton(WhisperSpecPromptUI.Frame, 92, "", function()
+    local targetName = WhisperSpecPromptUI.Frame.ActiveName
+    if PlannerPrivate.IsUsablePlainString(targetName) then
+        PlannerPrivate.ApplyWhisperPromptSelection(
+            targetName,
+            WhisperSpecPromptUI.SelectedClassFile,
+            WhisperSpecPromptUI.SelectedRoleKey,
+            WhisperSpecPromptUI.SelectedSpecID
+        )
+    end
+end)
+WhisperSpecPromptUI.Frame.ApplyButton:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 16, 14)
+WhisperSpecPromptUI.Frame.ApplyButton:Hide()
+
+WhisperSpecPromptUI.Frame.LaterButton = CreateActionButton(WhisperSpecPromptUI.Frame, 92, "", function()
+    PlannerPrivate.DismissActiveWhisperSpecPrompt()
+    PlannerPrivate.RefreshWhisperSpecPrompt()
+end)
+WhisperSpecPromptUI.Frame.LaterButton:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 16, 14)
+WhisperSpecPromptUI.Frame.LaterButton:Hide()
+
+WhisperSpecPromptUI.Frame.RemoveButton = CreateOverlayHeaderButton(WhisperSpecPromptUI.Frame, 20, "X", function()
+    local targetName = WhisperSpecPromptUI.Frame.ActiveName
+    if PlannerPrivate.IsUsablePlainString(targetName) then
+        PlannerPrivate.DismissActiveWhisperSpecPrompt()
+        PlannerPrivate.RemoveWhisperApplicantByName(targetName)
+    end
+end, L("EASY_LFG_DECLINE"), nil)
+WhisperSpecPromptUI.Frame.RemoveButton:SetSize(20, 20)
+WhisperSpecPromptUI.Frame.RemoveButton:SetPoint("TOPRIGHT", WhisperSpecPromptUI.Frame, "TOPRIGHT", -12, -11)
+
+WhisperSpecPromptUI.Title:SetPoint("RIGHT", WhisperSpecPromptUI.Frame.RemoveButton, "LEFT", -8, 0)
+end
+
+PlannerPrivate.BuildStreamerPlannerOverlayUi = function()
+OverlayFrame = CreateFrame("Frame", "BeavisQoLStreamerPlannerOverlay", UIParent, BackdropTemplateMixin and "BackdropTemplate")
+OverlayFrame:SetClampedToScreen(true)
+OverlayFrame:SetMovable(true)
+OverlayFrame:SetToplevel(true)
+OverlayFrame:SetFrameStrata("MEDIUM")
+OverlayFrame:EnableMouse(true)
+OverlayFrame:SetClipsChildren(true)
+OverlayFrame:RegisterForDrag("LeftButton")
+OverlayFrame:SetScript("OnDragStart", function(self)
+    if StreamerPlannerModule.IsOverlayLocked() then
+        return
+    end
+
+    self:StartMoving()
+end)
+OverlayFrame:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    SaveOverlayGeometry()
+end)
+
+do
+    local background = OverlayFrame:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.02, 0.02, 0.03, 0.62)
+
+    local topLine = OverlayFrame:CreateTexture(nil, "ARTWORK")
+    topLine:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 10, -8)
+    topLine:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", -10, -8)
+    topLine:SetHeight(1)
+    topLine:SetColorTexture(1, 0.82, 0, 0.70)
+
+    local accent = OverlayFrame:CreateTexture(nil, "BACKGROUND")
+    accent:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 9, -10)
+    accent:SetPoint("BOTTOMLEFT", OverlayFrame, "BOTTOMLEFT", 9, 10)
+    accent:SetWidth(2)
+    accent:SetColorTexture(1, 0.82, 0, 0.18)
+end
+
+OverlayTitle = OverlayFrame:CreateFontString(nil, "OVERLAY")
+OverlayTitle:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 18, -18)
+OverlayTitle:SetJustifyH("LEFT")
+OverlayTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+OverlayTitle:SetTextColor(1, 0.82, 0, 1)
+OverlayTitle:SetWordWrap(false)
+
+OverlayFrame.CloseButton = CreateOverlayHeaderButton(
+    OverlayFrame,
+    24,
+    "X",
+    function()
+        StreamerPlannerModule.SetOverlayEnabled(false)
+    end,
+    L("STREAMER_PLANNER_OVERLAY_CLOSE_TOOLTIP"),
+    L("STREAMER_PLANNER_OVERLAY_CLOSE_TOOLTIP_HINT")
+)
+OverlayFrame.CloseButton:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", -12, -13)
+
+OverlayFrame.SettingsButton = CreateOverlayHeaderButton(
+    OverlayFrame,
+    46,
+    L("STREAMER_PLANNER_OVERLAY_SETTINGS_BUTTON"),
+    function()
+        OpenStreamerPlannerSettings()
+    end,
+    L("STREAMER_PLANNER_OVERLAY_SETTINGS_TOOLTIP"),
+    L("STREAMER_PLANNER_OVERLAY_SETTINGS_TOOLTIP_HINT")
+)
+OverlayFrame.SettingsButton:SetPoint("RIGHT", OverlayFrame.CloseButton, "LEFT", -4, 0)
+
+OverlayTitle:SetPoint("RIGHT", OverlayFrame.SettingsButton, "LEFT", -10, 0)
+
+OverlayFrame.ModeRow = CreateFrame("Frame", nil, OverlayFrame)
+OverlayFrame.ModeRow:SetPoint("TOPLEFT", OverlayTitle, "BOTTOMLEFT", 0, -8)
+OverlayFrame.ModeRow:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
+OverlayFrame.ModeRow:SetHeight(22)
+
+OverlayDungeonModeButton = CreateModeButton(OverlayFrame, "", function()
+    StreamerPlannerModule.SetMode("dungeon")
+end)
+OverlayDungeonModeButton:SetParent(OverlayFrame.ModeRow)
+OverlayDungeonModeButton:SetSize(78, 22)
+OverlayDungeonModeButton:SetPoint("TOPRIGHT", OverlayFrame.ModeRow, "TOPRIGHT", 0, 0)
+
+OverlayRaidModeButton = CreateModeButton(OverlayFrame, "", function()
+    StreamerPlannerModule.SetMode("raid")
+end)
+OverlayRaidModeButton:SetParent(OverlayFrame.ModeRow)
+OverlayRaidModeButton:SetSize(78, 22)
+OverlayRaidModeButton:SetPoint("RIGHT", OverlayDungeonModeButton, "LEFT", -6, 0)
+
+OverlayInviteRow = CreateFrame("Frame", nil, OverlayFrame)
+OverlayInviteRow:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -6)
+OverlayInviteRow:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
+OverlayInviteRow:SetHeight(24)
+
+OverlayFullInviteButton = CreateActionButton(OverlayInviteRow, 88, "", function()
+    PlannerPrivate.InviteAllApplicantRows(PlannerPrivate.BuildApplicantPanelRowData(), GetCurrentMode())
+end)
+OverlayFullInviteButton:SetPoint("RIGHT", OverlayInviteRow, "RIGHT", 0, 0)
+
+OverlayAutoInviteCheckbox = CreateCheckbox(OverlayInviteRow, "", function(self)
+    GetStreamerPlannerSettings().whisperCommandAutoInvite = self:GetChecked() == true
+    PlannerPrivate.RefreshApplicantPanel()
+end)
+OverlayAutoInviteCheckbox:SetPoint("LEFT", OverlayInviteRow, "LEFT", -4, 0)
+OverlayAutoInviteCheckbox.Label:ClearAllPoints()
+OverlayAutoInviteCheckbox.Label:SetPoint("LEFT", OverlayAutoInviteCheckbox, "RIGHT", 4, 0)
+OverlayAutoInviteCheckbox.Label:SetPoint("RIGHT", OverlayFullInviteButton, "LEFT", -8, 0)
+OverlayAutoInviteCheckbox.Label:SetJustifyH("LEFT")
+
+OverlayRaidSummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
+OverlayRaidSummary:SetPoint("TOPLEFT", OverlayInviteRow, "BOTTOMLEFT", 0, -8)
+OverlayRaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
+OverlayRaidSummary:SetJustifyH("LEFT")
+OverlayRaidSummary:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+OverlayRaidSummary:SetTextColor(0.92, 0.92, 0.92, 1)
+OverlayRaidSummary:SetWordWrap(false)
+
+OverlayDestinationButton = CreateFrame("Button", nil, OverlayFrame)
+OverlayDestinationButton:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -12)
+OverlayDestinationButton:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
+OverlayDestinationButton:SetHeight(OVERLAY_DESTINATION_HEIGHT_DUNGEON)
+OverlayDestinationButton:RegisterForClicks("AnyUp")
+
+do
+    local background = OverlayDestinationButton:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
+    OverlayDestinationButton.Background = background
+
+    local border = OverlayDestinationButton:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 0, 0)
+    border:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(1, 0.82, 0, 0.34)
+end
+
+OverlayDestinationLabel = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
+OverlayDestinationLabel:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 10, -5)
+OverlayDestinationLabel:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", -10, -5)
+OverlayDestinationLabel:SetJustifyH("LEFT")
+OverlayDestinationLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+OverlayDestinationLabel:SetTextColor(1, 0.82, 0, 1)
+OverlayDestinationLabel:SetWordWrap(false)
+
+OverlayDestinationValue = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
+OverlayDestinationValue:SetPoint("TOPLEFT", OverlayDestinationLabel, "BOTTOMLEFT", 0, -2)
+OverlayDestinationValue:SetPoint("BOTTOMRIGHT", OverlayDestinationButton, "BOTTOMRIGHT", -10, 7)
+OverlayDestinationValue:SetJustifyH("LEFT")
+OverlayDestinationValue:SetJustifyV("TOP")
+OverlayDestinationValue:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+OverlayDestinationValue:SetWordWrap(true)
+
+OverlayDestinationButton:SetScript("OnEnter", function(self)
+    self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
+end)
+OverlayDestinationButton:SetScript("OnLeave", function(self)
+    self.Background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
+end)
+OverlayDestinationButton:SetScript("OnClick", function(_, mouseButton)
+    if mouseButton == "RightButton" then
+        StreamerPlannerModule.SetDestinationText("")
+        return
+    end
+
+    OpenDestinationEditor()
+end)
+
+OverlayDungeonContainer = CreateFrame("Frame", nil, OverlayFrame)
+OverlayDungeonContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
+OverlayDungeonContainer:SetSize(294, 260)
+OverlayDungeonContainer:SetClipsChildren(true)
+PlannerPrivate.CreateDungeonLayout(OverlayDungeonContainer, OverlayDungeonButtons, 294)
+
+OverlayRaidContainer = CreateFrame("Frame", nil, OverlayFrame)
+OverlayRaidContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
+OverlayRaidContainer:SetSize(GetRaidLayoutContainerWidth(GetOverlayRaidGroupWidth()), GetRaidLayoutContainerHeight(OVERLAY_RAID_SLOT_HEIGHT, 8))
+OverlayRaidContainer:SetClipsChildren(true)
+OverlayRaidGroupFrames = PlannerPrivate.CreateRaidLayout(OverlayRaidContainer, OverlayRaidButtons, GetOverlayRaidGroupWidth(), OVERLAY_RAID_SLOT_HEIGHT)
+
+OverlayTimer.Panel = CreateFrame("Frame", nil, OverlayFrame)
+OverlayTimer.Panel:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
+OverlayTimer.Panel:SetSize(298, 74)
+
+do
+    local background = OverlayTimer.Panel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
+
+    local border = OverlayTimer.Panel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("TOPLEFT", OverlayTimer.Panel, "TOPLEFT", 0, 0)
+    border:SetPoint("TOPRIGHT", OverlayTimer.Panel, "TOPRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(1, 0.82, 0, 0.34)
+end
+
+OverlayTimer.Label = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
+OverlayTimer.Label:SetPoint("TOPLEFT", OverlayTimer.Panel, "TOPLEFT", 10, -5)
+OverlayTimer.Label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+OverlayTimer.Label:SetTextColor(1, 0.82, 0, 1)
+
+OverlayTimer.Status = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
+OverlayTimer.Status:SetPoint("RIGHT", OverlayTimer.Panel, "RIGHT", -10, 0)
+OverlayTimer.Status:SetPoint("TOP", OverlayTimer.Panel, "TOP", 0, -5)
+OverlayTimer.Status:SetJustifyH("RIGHT")
+OverlayTimer.Status:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+OverlayTimer.Status:SetTextColor(0.76, 0.76, 0.80, 1)
+
+OverlayTimer.Value = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
+OverlayTimer.Value:SetPoint("TOPLEFT", OverlayTimer.Label, "BOTTOMLEFT", 0, -4)
+OverlayTimer.Value:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+OverlayTimer.Value:SetTextColor(0.92, 0.92, 0.92, 1)
+
+OverlayTimer.ClearAllButton = CreateActionButton(OverlayTimer.Panel, 92, "", function()
+    StreamerPlannerModule.ClearAllLayouts()
+end)
+OverlayTimer.ClearAllButton:SetPoint("BOTTOMLEFT", OverlayTimer.Panel, "BOTTOMLEFT", 10, 8)
+
+OverlayTimer.StartButton = CreateActionButton(OverlayTimer.Panel, 56, "", function()
+    StartPlannerTimer()
+    RefreshTimerDisplay()
+end)
+OverlayTimer.StartButton:SetPoint("LEFT", OverlayTimer.ClearAllButton, "RIGHT", 8, 0)
+
+OverlayTimer.PauseButton = CreateActionButton(OverlayTimer.Panel, 56, "", function()
+    PausePlannerTimer()
+    RefreshTimerDisplay()
+end)
+OverlayTimer.PauseButton:SetPoint("LEFT", OverlayTimer.StartButton, "RIGHT", 6, 0)
+
+OverlayTimer.ResetButton = CreateActionButton(OverlayTimer.Panel, 56, "", function()
+    ResetPlannerTimerState()
+    RefreshTimerDisplay()
+end)
+OverlayTimer.ResetButton:SetPoint("LEFT", OverlayTimer.PauseButton, "RIGHT", 6, 0)
+
+OverlayFrame:SetScript("OnUpdate", function(_, elapsed)
+    if not OverlayFrame:IsShown() then
+        return
+    end
+
+    local settings = GetStreamerPlannerSettings()
+    if settings.timerRunning ~= true then
+        PlannerPrivate.timerRefreshElapsed = 0
+        return
+    end
+
+    PlannerPrivate.timerRefreshElapsed = PlannerPrivate.timerRefreshElapsed + (elapsed or 0)
+    if PlannerPrivate.timerRefreshElapsed < 0.2 then
+        return
+    end
+
+    PlannerPrivate.timerRefreshElapsed = 0
+    RefreshTimerDisplay()
+end)
+
+OverlayFrame:Hide()
+ApplyOverlayGeometry()
+end
+
+PlannerPrivate.BuildStreamerPlannerEditDialogUi = function()
+EditDialog = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
+EditDialog:SetSize(520, 292)
+EditDialog:SetPoint("CENTER")
+EditDialog:SetFrameStrata("DIALOG")
+EditDialog:EnableMouse(true)
+EditDialog:Hide()
+
+do
+    local background = EditDialog:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.07, 0.07, 0.08, 0.96)
+
+    local border = EditDialog:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", EditDialog, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(1, 0.82, 0, 0.9)
+end
+
+EditDialogTitle = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDialogTitle:SetPoint("TOPLEFT", EditDialog, "TOPLEFT", 16, -14)
+EditDialogTitle:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
+EditDialogTitle:SetJustifyH("LEFT")
+EditDialogTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+EditDialogTitle:SetTextColor(1, 0.82, 0, 1)
+
+EditDialogHint = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDialogHint:SetPoint("TOPLEFT", EditDialogTitle, "BOTTOMLEFT", 0, -8)
+EditDialogHint:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
+EditDialogHint:SetJustifyH("LEFT")
+EditDialogHint:SetJustifyV("TOP")
+EditDialogHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+EditDialogHint:SetTextColor(0.82, 0.82, 0.86, 1)
+
+EditDialogInput = CreateFrame("EditBox", nil, EditDialog, "InputBoxTemplate")
+EditDialogInput:SetSize(484, 28)
+EditDialogInput:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -12)
+EditDialogInput:SetAutoFocus(false)
+EditDialogInput:SetMaxLetters(64)
+
+EditDialogTargetLabel = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDialogTargetLabel:SetPoint("BOTTOMLEFT", EditDialogInput, "TOPLEFT", 0, 8)
+EditDialogTargetLabel:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
+EditDialogTargetLabel:SetJustifyH("LEFT")
+EditDialogTargetLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+EditDialogTargetLabel:SetTextColor(0.78, 0.78, 0.82, 1)
+
+EditDialog.RoleTitle = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDialog.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+EditDialog.RoleTitle:SetTextColor(1, 0.82, 0, 1)
+EditDialog.RoleTitle:Hide()
+
+do
+    local roleButtons = {
+        { key = false, label = L("STREAMER_PLANNER_ROLE_AUTO") },
+        { key = "tank", label = L("STREAMER_PLANNER_ROLE_TANK") },
+        { key = "healer", label = L("STREAMER_PLANNER_ROLE_HEALER") },
+        { key = "dps", label = "DPS" },
+    }
+
+    for _, roleInfo in ipairs(roleButtons) do
+        local button = CreateActionButton(EditDialog, 124, roleInfo.label, function(self)
+            PlannerPrivate.editingRoleKey = PlannerPrivate.NormalizePlannerRoleKey(self.RoleKey)
+            RefreshClassSpecButtons()
+        end)
+        button.RoleKey = roleInfo.key
+        button.Label = button:GetFontString()
+        button.Selected = button:CreateTexture(nil, "BORDER")
+        button.Selected:SetAllPoints()
+        button.Selected:SetColorTexture(1, 0.82, 0, 0.18)
+        button.Selected:Hide()
+        button:Hide()
+        PlannerPrivate.editRoleButtons[#PlannerPrivate.editRoleButtons + 1] = button
+    end
+end
+
+EditDestinationCategoryLabel = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDestinationCategoryLabel:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -16)
+EditDestinationCategoryLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+EditDestinationCategoryLabel:SetTextColor(0.92, 0.92, 0.92, 1)
+
+EditDestinationSuggestionLabel = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDestinationSuggestionLabel:SetPoint("TOPLEFT", EditDestinationCategoryLabel, "BOTTOMLEFT", 0, -38)
+EditDestinationSuggestionLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+EditDestinationSuggestionLabel:SetTextColor(0.92, 0.92, 0.92, 1)
+
+EditDestinationKeystoneLabel = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDestinationKeystoneLabel:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "BOTTOMLEFT", 0, -38)
+EditDestinationKeystoneLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+EditDestinationKeystoneLabel:SetTextColor(0.92, 0.92, 0.92, 1)
+
+DestinationCategoryDropdown = CreateFrame("Frame", nil, EditDialog, "UIDropDownMenuTemplate")
+DestinationCategoryDropdown:SetPoint("TOPLEFT", EditDestinationCategoryLabel, "TOPRIGHT", 8, 2)
+
+DestinationSuggestionDropdown = CreateFrame("Frame", nil, EditDialog, "UIDropDownMenuTemplate")
+DestinationSuggestionDropdown:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "TOPRIGHT", 8, 2)
+
+DestinationKeystoneDropdown = CreateFrame("Frame", nil, EditDialog, "UIDropDownMenuTemplate")
+DestinationKeystoneDropdown:SetPoint("TOPLEFT", EditDestinationKeystoneLabel, "TOPRIGHT", 8, 2)
+
+UIDropDownMenu_Initialize(DestinationCategoryDropdown, function(_, level)
+    local currentCategory = GetDestinationCategory()
+    for _, categoryInfo in ipairs(GetDestinationCategoryOptions()) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = L(categoryInfo.labelKey)
+        info.value = categoryInfo.key
+        info.checked = currentCategory == categoryInfo.key
+        info.func = function()
+            SetDestinationCategory(categoryInfo.key)
+            RefreshDestinationCategoryDropdown()
+            RefreshDestinationSuggestionDropdown()
+            RefreshDestinationKeystoneDropdown()
+            StreamerPlannerModule.RefreshAllDisplays()
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end
+end)
+
+UIDropDownMenu_Initialize(DestinationSuggestionDropdown, function(_, level)
+    local categoryKey = GetDestinationCategory()
+    local currentSuggestion = PlannerPrivate.FindDestinationSuggestion(categoryKey, GetDestinationBaseText())
+
+    local manualInfo = UIDropDownMenu_CreateInfo()
+    manualInfo.text = L("STREAMER_PLANNER_DESTINATION_MANUAL")
+    manualInfo.value = "__manual"
+    manualInfo.checked = currentSuggestion == nil
+    manualInfo.func = function()
+        DestinationInput:SetFocus()
+        RefreshDestinationSuggestionDropdown()
+        RefreshDestinationKeystoneDropdown()
+    end
+    UIDropDownMenu_AddButton(manualInfo, level)
+
+    for _, suggestion in ipairs(GetDestinationSuggestions(categoryKey)) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = suggestion
+        info.value = suggestion
+        info.checked = currentSuggestion == suggestion
+        info.func = function()
+            if DestinationInput then
+                DestinationInput:SetText(suggestion)
+                DestinationInput:ClearFocus()
+            end
+            RefreshDestinationSuggestionDropdown()
+            RefreshDestinationKeystoneDropdown()
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end
+end)
+
+UIDropDownMenu_Initialize(DestinationKeystoneDropdown, function(_, level)
+    local categoryKey = GetDestinationCategory()
+    local currentLevel = GetDestinationKeystoneLevel()
+    if categoryKey == "raids" then
+        currentLevel = PlannerPrivate.NormalizeRaidDifficultyKey(currentLevel) or "normal"
+    elseif type(currentLevel) ~= "number" then
+        currentLevel = categoryKey == "delves" and 1 or 0
+    end
+
+    if categoryKey == "raids" then
+        for _, difficultyInfo in ipairs(RAID_DIFFICULTY_OPTIONS) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = L(difficultyInfo.labelKey)
+            info.value = difficultyInfo.key
+            info.checked = currentLevel == difficultyInfo.key
+            info.func = function()
+                SetDestinationKeystoneLevel(difficultyInfo.key)
+                RefreshDestinationKeystoneDropdown()
+                StreamerPlannerModule.RefreshAllDisplays()
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+        return
+    end
+
+    if categoryKey == "delves" then
+        for delveLevel = 1, 11 do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = PlannerPrivate.GetDestinationLevelLabel(categoryKey, delveLevel)
+            info.value = delveLevel
+            info.checked = currentLevel == delveLevel
+            info.func = function()
+                SetDestinationKeystoneLevel(delveLevel)
+                RefreshDestinationKeystoneDropdown()
+                StreamerPlannerModule.RefreshAllDisplays()
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+        return
+    end
+
+    for keystoneLevel = 0, 20 do
+        if keystoneLevel ~= 1 then
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = GetKeystoneLabel(keystoneLevel)
+            info.value = keystoneLevel
+            info.checked = currentLevel == keystoneLevel
+            info.func = function()
+                SetDestinationKeystoneLevel(keystoneLevel)
+                RefreshDestinationKeystoneDropdown()
+                StreamerPlannerModule.RefreshAllDisplays()
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end
+end)
+
+DestinationInput = CreateFrame("EditBox", nil, EditDialog, "InputBoxTemplate")
+DestinationInput:SetSize(484, 28)
+DestinationInput:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "BOTTOMLEFT", 0, -20)
+DestinationInput:SetAutoFocus(false)
+DestinationInput:SetMaxLetters(64)
+DestinationInput:SetScript("OnTextChanged", function()
+    if PlannerPrivate.editingField ~= "destination" then
+        return
+    end
+
+    RefreshDestinationSuggestionDropdown()
+    RefreshDestinationKeystoneDropdown()
+end)
+DestinationInput:SetScript("OnEnterPressed", function()
+    if PlannerPrivate.saveSlotButton then
+        PlannerPrivate.saveSlotButton:Click()
+    end
+end)
+DestinationInput:SetScript("OnEscapePressed", function(self)
+    self:SetText(GetDestinationBaseText())
+    HideEditDialog()
+end)
+
+EditClassTitle = EditDialog:CreateFontString(nil, "OVERLAY")
+EditClassTitle:SetPoint("TOPLEFT", EditDialogInput, "BOTTOMLEFT", 0, -18)
+EditClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+EditClassTitle:SetTextColor(1, 0.82, 0, 1)
+
+for _, classInfo in ipairs(BuildClassOptions()) do
+    if classInfo.file ~= nil then
+        local button = CreateIconPickerButton(EditDialog, EDIT_CLASS_BUTTON_SIZE, false)
+        button.ClassFile = classInfo.file
+        button.DisplayName = classInfo.name
+        button.Icon:SetTexture(CLASS_ICON_TEXTURE)
+        button.Icon:SetTexCoord(GetClassIconCoords(classInfo.file))
+        button.Label:SetText(classInfo.name)
+        button:SetScript("OnClick", function(self)
+            PlannerPrivate.editingClassFile = self.ClassFile
+            PlannerPrivate.editingSpecID = nil
+            RefreshClassSpecButtons()
+        end)
+        PlannerPrivate.editClassButtons[#PlannerPrivate.editClassButtons + 1] = button
+    end
+end
+
+EditSpecTitle = EditDialog:CreateFontString(nil, "OVERLAY")
+EditSpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+EditSpecTitle:SetTextColor(1, 0.82, 0, 1)
+
+for _ = 1, 4 do
+    local button = CreateIconPickerButton(EditDialog, EDIT_SPEC_BUTTON_SIZE, false)
+    button.DisplayName = ""
+    button:SetScript("OnClick", function(self)
+        PlannerPrivate.editingSpecID = self.SpecID
+        RefreshClassSpecButtons()
+    end)
+    PlannerPrivate.editSpecButtons[#PlannerPrivate.editSpecButtons + 1] = button
+end
+
+LayoutEditDialogOptionButtons()
+
+PlannerPrivate.saveSlotButton = CreateActionButton(EditDialog, 92, "", function()
+    if PlannerPrivate.editingField == "destination" then
+        SetDestinationText(DestinationInput:GetText())
+        HideEditDialog()
+        StreamerPlannerModule.RefreshAllDisplays()
+        return
+    end
+
+    if PlannerPrivate.editingUsesSelfRoleOverride == true then
+        GetStreamerPlannerSettings().selfRoleOverride = PlannerPrivate.NormalizePlannerRoleKey(PlannerPrivate.editingRoleKey)
+        HideEditDialog()
+        PlannerPrivate.lastDungeonSyncSignature = nil
+        PlannerPrivate.SyncDynamicPlannerState(true)
+        return
+    end
+
+    if not PlannerPrivate.editingLayout or not PlannerPrivate.editingSlotIndex then
+        HideEditDialog()
+        return
+    end
+
+    local currentEntry = GetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
+    if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
+        PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
+    end
+
+    SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, {
+        name = EditDialogInput:GetText(),
+        classFile = PlannerPrivate.editingClassFile,
+        specID = PlannerPrivate.editingSpecID,
+    })
+    HideEditDialog()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
+end)
+PlannerPrivate.saveSlotButton:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 16, 20)
+
+PlannerPrivate.clearSlotButton = CreateActionButton(EditDialog, 92, "", function()
+    if PlannerPrivate.editingField == "destination" then
+        SetDestinationText("")
+        HideEditDialog()
+        StreamerPlannerModule.RefreshAllDisplays()
+        return
+    end
+
+    if PlannerPrivate.editingUsesSelfRoleOverride == true then
+        GetStreamerPlannerSettings().selfRoleOverride = nil
+        HideEditDialog()
+        PlannerPrivate.lastDungeonSyncSignature = nil
+        PlannerPrivate.SyncDynamicPlannerState(true)
+        return
+    end
+
+    if PlannerPrivate.editingLayout and PlannerPrivate.editingSlotIndex then
+        local currentEntry = GetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
+        if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
+            PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
+        end
+
+        SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, PlannerPrivate.NormalizeSlotEntry(nil))
+    end
+
+    HideEditDialog()
+    PlannerPrivate.lastDungeonSyncSignature = nil
+    PlannerPrivate.SyncDynamicPlannerState(true)
+end)
+PlannerPrivate.clearSlotButton:SetPoint("LEFT", PlannerPrivate.saveSlotButton, "RIGHT", 10, 0)
+
+PlannerPrivate.cancelSlotButton = CreateActionButton(EditDialog, 92, L("CANCEL"), function()
+    HideEditDialog()
+end)
+PlannerPrivate.cancelSlotButton:SetPoint("LEFT", PlannerPrivate.clearSlotButton, "RIGHT", 10, 0)
+
+EditDialogInput:SetScript("OnEnterPressed", function()
+    PlannerPrivate.saveSlotButton:Click()
+end)
+EditDialogInput:SetScript("OnEscapePressed", function()
+    HideEditDialog()
+end)
+end
+
+PlannerPrivate.BuildStreamerPlannerUi = function()
 PageStreamerPlanner = CreateFrame("Frame", nil, Content)
 PageStreamerPlanner:SetAllPoints()
 PageStreamerPlanner:Hide()
@@ -5347,7 +6384,7 @@ PageStreamerPlanner.UsageHint = UsageHint
 
 local PreviewPanel = CreateFrame("Frame", nil, PageContentFrame)
 PreviewPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
-PreviewPanel:SetSize(430, 424)
+PreviewPanel:SetSize(GetPreviewPanelWidthForMode("raid"), 424)
 PageStreamerPlanner.PreviewPanel = PreviewPanel
 
 local PreviewPanelBg = PreviewPanel:CreateTexture(nil, "BACKGROUND")
@@ -5377,13 +6414,13 @@ PreviewUI.DungeonContainer = CreateFrame("Frame", nil, PreviewPanel)
 PreviewUI.DungeonContainer:SetPoint("TOPLEFT", PreviewUI.Hint, "BOTTOMLEFT", 0, -18)
 PreviewUI.DungeonContainer:SetSize(392, 280)
 PreviewUI.DungeonContainer:SetClipsChildren(true)
-CreateDungeonLayout(PreviewUI.DungeonContainer, PreviewUI.DungeonButtons, 392)
+PlannerPrivate.CreateDungeonLayout(PreviewUI.DungeonContainer, PreviewUI.DungeonButtons, 392)
 
 PreviewUI.RaidContainer = CreateFrame("Frame", nil, PreviewPanel)
 PreviewUI.RaidContainer:SetPoint("TOPLEFT", PreviewUI.Hint, "BOTTOMLEFT", 0, -18)
-PreviewUI.RaidContainer:SetSize(372, 346)
+PreviewUI.RaidContainer:SetSize(GetRaidLayoutContainerWidth(PREVIEW_RAID_GROUP_WIDTH), GetRaidLayoutContainerHeight(PREVIEW_RAID_SLOT_HEIGHT, 4))
 PreviewUI.RaidContainer:SetClipsChildren(true)
-CreateRaidLayout(PreviewUI.RaidContainer, PreviewUI.RaidButtons, 178, 24)
+PreviewUI.RaidGroupFrames = PlannerPrivate.CreateRaidLayout(PreviewUI.RaidContainer, PreviewUI.RaidButtons, PREVIEW_RAID_GROUP_WIDTH, PREVIEW_RAID_SLOT_HEIGHT)
 
 PreviewPanel:SetClipsChildren(true)
 local SettingsPanel = CreateFrame("Frame", nil, PageContentFrame)
@@ -5632,713 +6669,12 @@ ApplicantPanel.MoreText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 ApplicantPanel.MoreText:SetTextColor(0.78, 0.78, 0.80, 1)
 ApplicantPanel.MoreText:Hide()
 
-WhisperSpecPromptUI.Frame = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
-WhisperSpecPromptUI.Frame:SetSize(WHISPER_SPEC_PROMPT_WIDTH, WHISPER_SPEC_PROMPT_MIN_HEIGHT)
-WhisperSpecPromptUI.Frame:SetPoint("CENTER", UIParent, "CENTER", -440, 0)
-WhisperSpecPromptUI.Frame:SetFrameStrata("DIALOG")
-WhisperSpecPromptUI.Frame:SetClampedToScreen(true)
-WhisperSpecPromptUI.Frame:EnableMouse(true)
-WhisperSpecPromptUI.Frame:Hide()
-
-do
-    local background = WhisperSpecPromptUI.Frame:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints()
-    background:SetColorTexture(0.06, 0.06, 0.07, 0.96)
-
-    local borderTop = WhisperSpecPromptUI.Frame:CreateTexture(nil, "ARTWORK")
-    borderTop:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 0, 0)
-    borderTop:SetPoint("TOPRIGHT", WhisperSpecPromptUI.Frame, "TOPRIGHT", 0, 0)
-    borderTop:SetHeight(1)
-    borderTop:SetColorTexture(1, 0.82, 0, 0.36)
-
-    local borderBottom = WhisperSpecPromptUI.Frame:CreateTexture(nil, "ARTWORK")
-    borderBottom:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 0, 0)
-    borderBottom:SetPoint("BOTTOMRIGHT", WhisperSpecPromptUI.Frame, "BOTTOMRIGHT", 0, 0)
-    borderBottom:SetHeight(1)
-    borderBottom:SetColorTexture(1, 0.82, 0, 0.86)
+PlannerPrivate.BuildWhisperSpecPromptUi()
+PlannerPrivate.BuildStreamerPlannerOverlayUi()
+PlannerPrivate.BuildStreamerPlannerEditDialogUi()
 end
 
-WhisperSpecPromptUI.Title = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
-WhisperSpecPromptUI.Title:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 14, -12)
-WhisperSpecPromptUI.Title:SetJustifyH("LEFT")
-WhisperSpecPromptUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
-WhisperSpecPromptUI.Title:SetTextColor(1, 0.82, 0, 1)
-
-WhisperSpecPromptUI.Hint = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
-WhisperSpecPromptUI.Hint:SetPoint("TOPLEFT", WhisperSpecPromptUI.Title, "BOTTOMLEFT", 0, -2)
-WhisperSpecPromptUI.Hint:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
-WhisperSpecPromptUI.Hint:SetJustifyH("LEFT")
-WhisperSpecPromptUI.Hint:SetJustifyV("TOP")
-WhisperSpecPromptUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-WhisperSpecPromptUI.Hint:SetTextColor(0.82, 0.82, 0.84, 1)
-
-WhisperSpecPromptUI.Name = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
-WhisperSpecPromptUI.Name:SetPoint("TOPLEFT", WhisperSpecPromptUI.Hint, "BOTTOMLEFT", 0, -6)
-WhisperSpecPromptUI.Name:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
-WhisperSpecPromptUI.Name:SetJustifyH("LEFT")
-WhisperSpecPromptUI.Name:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-
-WhisperSpecPromptUI.Class = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
-WhisperSpecPromptUI.Class:SetPoint("TOPLEFT", WhisperSpecPromptUI.Name, "BOTTOMLEFT", 0, -2)
-WhisperSpecPromptUI.Class:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
-WhisperSpecPromptUI.Class:SetJustifyH("LEFT")
-WhisperSpecPromptUI.Class:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-WhisperSpecPromptUI.Class:SetTextColor(1, 0.82, 0, 0.92)
-
-WhisperSpecPromptUI.ClassTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
-WhisperSpecPromptUI.ClassTitle:SetJustifyH("LEFT")
-WhisperSpecPromptUI.ClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-WhisperSpecPromptUI.ClassTitle:SetTextColor(1, 0.82, 0, 1)
-WhisperSpecPromptUI.ClassTitle:Hide()
-
-WhisperSpecPromptUI.Frame.ClassButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
-WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.Name, "BOTTOMLEFT", 0, -10)
-WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
-WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetHeight(1)
-
-WhisperSpecPromptUI.RoleTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
-WhisperSpecPromptUI.RoleTitle:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -14)
-WhisperSpecPromptUI.RoleTitle:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
-WhisperSpecPromptUI.RoleTitle:SetJustifyH("LEFT")
-WhisperSpecPromptUI.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-WhisperSpecPromptUI.RoleTitle:SetTextColor(1, 0.82, 0, 1)
-
-WhisperSpecPromptUI.Frame.RoleButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
-WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -10)
-WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
-WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetHeight(1)
-
-WhisperSpecPromptUI.SpecTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
-WhisperSpecPromptUI.SpecTitle:SetJustifyH("LEFT")
-WhisperSpecPromptUI.SpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-WhisperSpecPromptUI.SpecTitle:SetTextColor(1, 0.82, 0, 1)
-
-WhisperSpecPromptUI.Frame.SpecButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
-WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.SpecTitle, "BOTTOMLEFT", 0, -8)
-WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
-WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetHeight(1)
-
-WhisperSpecPromptUI.Frame.ApplyButton = CreateActionButton(WhisperSpecPromptUI.Frame, 92, "", function()
-    local targetName = WhisperSpecPromptUI.Frame.ActiveName
-    if PlannerPrivate.IsUsablePlainString(targetName) then
-        PlannerPrivate.ApplyWhisperPromptSelection(
-            targetName,
-            WhisperSpecPromptUI.SelectedClassFile,
-            WhisperSpecPromptUI.SelectedRoleKey,
-            WhisperSpecPromptUI.SelectedSpecID
-        )
-    end
-end)
-WhisperSpecPromptUI.Frame.ApplyButton:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 16, 14)
-WhisperSpecPromptUI.Frame.ApplyButton:Hide()
-
-WhisperSpecPromptUI.Frame.LaterButton = CreateActionButton(WhisperSpecPromptUI.Frame, 92, "", function()
-    PlannerPrivate.DismissActiveWhisperSpecPrompt()
-    PlannerPrivate.RefreshWhisperSpecPrompt()
-end)
-WhisperSpecPromptUI.Frame.LaterButton:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 16, 14)
-WhisperSpecPromptUI.Frame.LaterButton:Hide()
-
-WhisperSpecPromptUI.Frame.RemoveButton = CreateOverlayHeaderButton(WhisperSpecPromptUI.Frame, 20, "X", function()
-    local targetName = WhisperSpecPromptUI.Frame.ActiveName
-    if PlannerPrivate.IsUsablePlainString(targetName) then
-        PlannerPrivate.DismissActiveWhisperSpecPrompt()
-        PlannerPrivate.RemoveWhisperApplicantByName(targetName)
-    end
-end, L("EASY_LFG_DECLINE"), nil)
-WhisperSpecPromptUI.Frame.RemoveButton:SetSize(20, 20)
-WhisperSpecPromptUI.Frame.RemoveButton:SetPoint("TOPRIGHT", WhisperSpecPromptUI.Frame, "TOPRIGHT", -12, -11)
-
-WhisperSpecPromptUI.Title:SetPoint("RIGHT", WhisperSpecPromptUI.Frame.RemoveButton, "LEFT", -8, 0)
-
-OverlayFrame = CreateFrame("Frame", "BeavisQoLStreamerPlannerOverlay", UIParent, BackdropTemplateMixin and "BackdropTemplate")
-OverlayFrame:SetClampedToScreen(true)
-OverlayFrame:SetMovable(true)
-OverlayFrame:SetToplevel(true)
-OverlayFrame:SetFrameStrata("MEDIUM")
-OverlayFrame:EnableMouse(true)
-OverlayFrame:SetClipsChildren(true)
-OverlayFrame:RegisterForDrag("LeftButton")
-OverlayFrame:SetScript("OnDragStart", function(self)
-    if StreamerPlannerModule.IsOverlayLocked() then
-        return
-    end
-
-    self:StartMoving()
-end)
-OverlayFrame:SetScript("OnDragStop", function(self)
-    self:StopMovingOrSizing()
-    SaveOverlayGeometry()
-end)
-
-do
-    local background = OverlayFrame:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints()
-    background:SetColorTexture(0.02, 0.02, 0.03, 0.62)
-
-    local topLine = OverlayFrame:CreateTexture(nil, "ARTWORK")
-    topLine:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 10, -8)
-    topLine:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", -10, -8)
-    topLine:SetHeight(1)
-    topLine:SetColorTexture(1, 0.82, 0, 0.70)
-
-    local accent = OverlayFrame:CreateTexture(nil, "BACKGROUND")
-    accent:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 9, -10)
-    accent:SetPoint("BOTTOMLEFT", OverlayFrame, "BOTTOMLEFT", 9, 10)
-    accent:SetWidth(2)
-    accent:SetColorTexture(1, 0.82, 0, 0.18)
-end
-
-OverlayTitle = OverlayFrame:CreateFontString(nil, "OVERLAY")
-OverlayTitle:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 18, -18)
-OverlayTitle:SetJustifyH("LEFT")
-OverlayTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-OverlayTitle:SetTextColor(1, 0.82, 0, 1)
-OverlayTitle:SetWordWrap(false)
-
-OverlayFrame.CloseButton = CreateOverlayHeaderButton(
-    OverlayFrame,
-    24,
-    "X",
-    function()
-        StreamerPlannerModule.SetOverlayEnabled(false)
-    end,
-    L("STREAMER_PLANNER_OVERLAY_CLOSE_TOOLTIP"),
-    L("STREAMER_PLANNER_OVERLAY_CLOSE_TOOLTIP_HINT")
-)
-OverlayFrame.CloseButton:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", -12, -13)
-
-OverlayFrame.SettingsButton = CreateOverlayHeaderButton(
-    OverlayFrame,
-    46,
-    L("STREAMER_PLANNER_OVERLAY_SETTINGS_BUTTON"),
-    function()
-        OpenStreamerPlannerSettings()
-    end,
-    L("STREAMER_PLANNER_OVERLAY_SETTINGS_TOOLTIP"),
-    L("STREAMER_PLANNER_OVERLAY_SETTINGS_TOOLTIP_HINT")
-)
-OverlayFrame.SettingsButton:SetPoint("RIGHT", OverlayFrame.CloseButton, "LEFT", -4, 0)
-
-OverlayTitle:SetPoint("RIGHT", OverlayFrame.SettingsButton, "LEFT", -10, 0)
-
-OverlayFrame.ModeRow = CreateFrame("Frame", nil, OverlayFrame)
-OverlayFrame.ModeRow:SetPoint("TOPLEFT", OverlayTitle, "BOTTOMLEFT", 0, -8)
-OverlayFrame.ModeRow:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
-OverlayFrame.ModeRow:SetHeight(22)
-
-OverlayDungeonModeButton = CreateModeButton(OverlayFrame, "", function()
-    StreamerPlannerModule.SetMode("dungeon")
-end)
-OverlayDungeonModeButton:SetParent(OverlayFrame.ModeRow)
-OverlayDungeonModeButton:SetSize(78, 22)
-OverlayDungeonModeButton:SetPoint("TOPRIGHT", OverlayFrame.ModeRow, "TOPRIGHT", 0, 0)
-
-OverlayRaidModeButton = CreateModeButton(OverlayFrame, "", function()
-    StreamerPlannerModule.SetMode("raid")
-end)
-OverlayRaidModeButton:SetParent(OverlayFrame.ModeRow)
-OverlayRaidModeButton:SetSize(78, 22)
-OverlayRaidModeButton:SetPoint("RIGHT", OverlayDungeonModeButton, "LEFT", -6, 0)
-
-OverlayInviteRow = CreateFrame("Frame", nil, OverlayFrame)
-OverlayInviteRow:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -6)
-OverlayInviteRow:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
-OverlayInviteRow:SetHeight(24)
-
-OverlayFullInviteButton = CreateActionButton(OverlayInviteRow, 88, "", function()
-    PlannerPrivate.InviteAllApplicantRows(PlannerPrivate.BuildApplicantPanelRowData(), GetCurrentMode())
-end)
-OverlayFullInviteButton:SetPoint("RIGHT", OverlayInviteRow, "RIGHT", 0, 0)
-
-OverlayAutoInviteCheckbox = CreateCheckbox(OverlayInviteRow, "", function(self)
-    GetStreamerPlannerSettings().whisperCommandAutoInvite = self:GetChecked() == true
-    PlannerPrivate.RefreshApplicantPanel()
-end)
-OverlayAutoInviteCheckbox:SetPoint("LEFT", OverlayInviteRow, "LEFT", -4, 0)
-OverlayAutoInviteCheckbox.Label:ClearAllPoints()
-OverlayAutoInviteCheckbox.Label:SetPoint("LEFT", OverlayAutoInviteCheckbox, "RIGHT", 4, 0)
-OverlayAutoInviteCheckbox.Label:SetPoint("RIGHT", OverlayFullInviteButton, "LEFT", -8, 0)
-OverlayAutoInviteCheckbox.Label:SetJustifyH("LEFT")
-
-OverlayRaidSummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
-OverlayRaidSummary:SetPoint("TOPLEFT", OverlayInviteRow, "BOTTOMLEFT", 0, -8)
-OverlayRaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
-OverlayRaidSummary:SetJustifyH("LEFT")
-OverlayRaidSummary:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
-OverlayRaidSummary:SetTextColor(0.92, 0.92, 0.92, 1)
-OverlayRaidSummary:SetWordWrap(false)
-
-OverlayDestinationButton = CreateFrame("Button", nil, OverlayFrame)
-OverlayDestinationButton:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -12)
-OverlayDestinationButton:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
-OverlayDestinationButton:SetHeight(OVERLAY_DESTINATION_HEIGHT_DUNGEON)
-OverlayDestinationButton:RegisterForClicks("AnyUp")
-
-do
-    local background = OverlayDestinationButton:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints()
-    background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
-    OverlayDestinationButton.Background = background
-
-    local border = OverlayDestinationButton:CreateTexture(nil, "ARTWORK")
-    border:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 0, 0)
-    border:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", 0, 0)
-    border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
-end
-
-OverlayDestinationLabel = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
-OverlayDestinationLabel:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 10, -5)
-OverlayDestinationLabel:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", -10, -5)
-OverlayDestinationLabel:SetJustifyH("LEFT")
-OverlayDestinationLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-OverlayDestinationLabel:SetTextColor(1, 0.82, 0, 1)
-OverlayDestinationLabel:SetWordWrap(false)
-
-OverlayDestinationValue = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
-OverlayDestinationValue:SetPoint("TOPLEFT", OverlayDestinationLabel, "BOTTOMLEFT", 0, -2)
-OverlayDestinationValue:SetPoint("BOTTOMRIGHT", OverlayDestinationButton, "BOTTOMRIGHT", -10, 7)
-OverlayDestinationValue:SetJustifyH("LEFT")
-OverlayDestinationValue:SetJustifyV("TOP")
-OverlayDestinationValue:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
-OverlayDestinationValue:SetWordWrap(true)
-
-OverlayDestinationButton:SetScript("OnEnter", function(self)
-    self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
-end)
-OverlayDestinationButton:SetScript("OnLeave", function(self)
-    self.Background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
-end)
-OverlayDestinationButton:SetScript("OnClick", function(_, mouseButton)
-    if mouseButton == "RightButton" then
-        StreamerPlannerModule.SetDestinationText("")
-        return
-    end
-
-    OpenDestinationEditor()
-end)
-
-OverlayDungeonContainer = CreateFrame("Frame", nil, OverlayFrame)
-OverlayDungeonContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
-OverlayDungeonContainer:SetSize(294, 260)
-OverlayDungeonContainer:SetClipsChildren(true)
-CreateDungeonLayout(OverlayDungeonContainer, OverlayDungeonButtons, 294)
-
-OverlayRaidContainer = CreateFrame("Frame", nil, OverlayFrame)
-OverlayRaidContainer:SetPoint("TOPLEFT", OverlayDestinationButton, "BOTTOMLEFT", 0, -12)
-OverlayRaidContainer:SetSize(414, 444)
-OverlayRaidContainer:SetClipsChildren(true)
-CreateRaidLayout(OverlayRaidContainer, OverlayRaidButtons, 200, 30)
-
-OverlayTimer.Panel = CreateFrame("Frame", nil, OverlayFrame)
-OverlayTimer.Panel:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
-OverlayTimer.Panel:SetSize(298, 74)
-
-do
-    local background = OverlayTimer.Panel:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints()
-    background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
-
-    local border = OverlayTimer.Panel:CreateTexture(nil, "ARTWORK")
-    border:SetPoint("TOPLEFT", OverlayTimer.Panel, "TOPLEFT", 0, 0)
-    border:SetPoint("TOPRIGHT", OverlayTimer.Panel, "TOPRIGHT", 0, 0)
-    border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
-end
-
-OverlayTimer.Label = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
-OverlayTimer.Label:SetPoint("TOPLEFT", OverlayTimer.Panel, "TOPLEFT", 10, -5)
-OverlayTimer.Label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-OverlayTimer.Label:SetTextColor(1, 0.82, 0, 1)
-
-OverlayTimer.Status = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
-OverlayTimer.Status:SetPoint("RIGHT", OverlayTimer.Panel, "RIGHT", -10, 0)
-OverlayTimer.Status:SetPoint("TOP", OverlayTimer.Panel, "TOP", 0, -5)
-OverlayTimer.Status:SetJustifyH("RIGHT")
-OverlayTimer.Status:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-OverlayTimer.Status:SetTextColor(0.76, 0.76, 0.80, 1)
-
-OverlayTimer.Value = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
-OverlayTimer.Value:SetPoint("TOPLEFT", OverlayTimer.Label, "BOTTOMLEFT", 0, -4)
-OverlayTimer.Value:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-OverlayTimer.Value:SetTextColor(0.92, 0.92, 0.92, 1)
-
-OverlayTimer.ClearAllButton = CreateActionButton(OverlayTimer.Panel, 92, "", function()
-    StreamerPlannerModule.ClearAllLayouts()
-end)
-OverlayTimer.ClearAllButton:SetPoint("BOTTOMLEFT", OverlayTimer.Panel, "BOTTOMLEFT", 10, 8)
-
-OverlayTimer.StartButton = CreateActionButton(OverlayTimer.Panel, 56, "", function()
-    StartPlannerTimer()
-    RefreshTimerDisplay()
-end)
-OverlayTimer.StartButton:SetPoint("LEFT", OverlayTimer.ClearAllButton, "RIGHT", 8, 0)
-
-OverlayTimer.PauseButton = CreateActionButton(OverlayTimer.Panel, 56, "", function()
-    PausePlannerTimer()
-    RefreshTimerDisplay()
-end)
-OverlayTimer.PauseButton:SetPoint("LEFT", OverlayTimer.StartButton, "RIGHT", 6, 0)
-
-OverlayTimer.ResetButton = CreateActionButton(OverlayTimer.Panel, 56, "", function()
-    ResetPlannerTimerState()
-    RefreshTimerDisplay()
-end)
-OverlayTimer.ResetButton:SetPoint("LEFT", OverlayTimer.PauseButton, "RIGHT", 6, 0)
-
-OverlayFrame:SetScript("OnUpdate", function(_, elapsed)
-    if not OverlayFrame:IsShown() then
-        return
-    end
-
-    local settings = GetStreamerPlannerSettings()
-    if settings.timerRunning ~= true then
-        PlannerPrivate.timerRefreshElapsed = 0
-        return
-    end
-
-    PlannerPrivate.timerRefreshElapsed = PlannerPrivate.timerRefreshElapsed + (elapsed or 0)
-    if PlannerPrivate.timerRefreshElapsed < 0.2 then
-        return
-    end
-
-    PlannerPrivate.timerRefreshElapsed = 0
-    RefreshTimerDisplay()
-end)
-
-OverlayFrame:Hide()
-ApplyOverlayGeometry()
-
-EditDialog = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
-EditDialog:SetSize(520, 292)
-EditDialog:SetPoint("CENTER")
-EditDialog:SetFrameStrata("DIALOG")
-EditDialog:EnableMouse(true)
-EditDialog:Hide()
-
-do
-    local background = EditDialog:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints()
-    background:SetColorTexture(0.07, 0.07, 0.08, 0.96)
-
-    local border = EditDialog:CreateTexture(nil, "ARTWORK")
-    border:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 0, 0)
-    border:SetPoint("BOTTOMRIGHT", EditDialog, "BOTTOMRIGHT", 0, 0)
-    border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.9)
-end
-
-EditDialogTitle = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDialogTitle:SetPoint("TOPLEFT", EditDialog, "TOPLEFT", 16, -14)
-EditDialogTitle:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
-EditDialogTitle:SetJustifyH("LEFT")
-EditDialogTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-EditDialogTitle:SetTextColor(1, 0.82, 0, 1)
-
-EditDialogHint = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDialogHint:SetPoint("TOPLEFT", EditDialogTitle, "BOTTOMLEFT", 0, -8)
-EditDialogHint:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
-EditDialogHint:SetJustifyH("LEFT")
-EditDialogHint:SetJustifyV("TOP")
-EditDialogHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-EditDialogHint:SetTextColor(0.82, 0.82, 0.86, 1)
-
-EditDialogInput = CreateFrame("EditBox", nil, EditDialog, "InputBoxTemplate")
-EditDialogInput:SetSize(484, 28)
-EditDialogInput:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -12)
-EditDialogInput:SetAutoFocus(false)
-EditDialogInput:SetMaxLetters(64)
-
-EditDialogTargetLabel = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDialogTargetLabel:SetPoint("BOTTOMLEFT", EditDialogInput, "TOPLEFT", 0, 8)
-EditDialogTargetLabel:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
-EditDialogTargetLabel:SetJustifyH("LEFT")
-EditDialogTargetLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-EditDialogTargetLabel:SetTextColor(0.78, 0.78, 0.82, 1)
-
-EditDialog.RoleTitle = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDialog.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-EditDialog.RoleTitle:SetTextColor(1, 0.82, 0, 1)
-EditDialog.RoleTitle:Hide()
-
-do
-    local roleButtons = {
-        { key = false, label = L("STREAMER_PLANNER_ROLE_AUTO") },
-        { key = "tank", label = L("STREAMER_PLANNER_ROLE_TANK") },
-        { key = "healer", label = L("STREAMER_PLANNER_ROLE_HEALER") },
-        { key = "dps", label = "DPS" },
-    }
-
-    for _, roleInfo in ipairs(roleButtons) do
-        local button = CreateActionButton(EditDialog, 124, roleInfo.label, function(self)
-            PlannerPrivate.editingRoleKey = PlannerPrivate.NormalizePlannerRoleKey(self.RoleKey)
-            RefreshClassSpecButtons()
-        end)
-        button.RoleKey = roleInfo.key
-        button.Label = button:GetFontString()
-        button.Selected = button:CreateTexture(nil, "BORDER")
-        button.Selected:SetAllPoints()
-        button.Selected:SetColorTexture(1, 0.82, 0, 0.18)
-        button.Selected:Hide()
-        button:Hide()
-        PlannerPrivate.editRoleButtons[#PlannerPrivate.editRoleButtons + 1] = button
-    end
-end
-
-EditDestinationCategoryLabel = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDestinationCategoryLabel:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -16)
-EditDestinationCategoryLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-EditDestinationCategoryLabel:SetTextColor(0.92, 0.92, 0.92, 1)
-
-EditDestinationSuggestionLabel = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDestinationSuggestionLabel:SetPoint("TOPLEFT", EditDestinationCategoryLabel, "BOTTOMLEFT", 0, -38)
-EditDestinationSuggestionLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-EditDestinationSuggestionLabel:SetTextColor(0.92, 0.92, 0.92, 1)
-
-EditDestinationKeystoneLabel = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDestinationKeystoneLabel:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "BOTTOMLEFT", 0, -38)
-EditDestinationKeystoneLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-EditDestinationKeystoneLabel:SetTextColor(0.92, 0.92, 0.92, 1)
-
-DestinationCategoryDropdown = CreateFrame("Frame", nil, EditDialog, "UIDropDownMenuTemplate")
-DestinationCategoryDropdown:SetPoint("TOPLEFT", EditDestinationCategoryLabel, "TOPRIGHT", 8, 2)
-
-DestinationSuggestionDropdown = CreateFrame("Frame", nil, EditDialog, "UIDropDownMenuTemplate")
-DestinationSuggestionDropdown:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "TOPRIGHT", 8, 2)
-
-DestinationKeystoneDropdown = CreateFrame("Frame", nil, EditDialog, "UIDropDownMenuTemplate")
-DestinationKeystoneDropdown:SetPoint("TOPLEFT", EditDestinationKeystoneLabel, "TOPRIGHT", 8, 2)
-
-UIDropDownMenu_Initialize(DestinationCategoryDropdown, function(_, level)
-    local currentCategory = GetDestinationCategory()
-    for _, categoryInfo in ipairs(GetDestinationCategoryOptions()) do
-        local info = UIDropDownMenu_CreateInfo()
-        info.text = L(categoryInfo.labelKey)
-        info.value = categoryInfo.key
-        info.checked = currentCategory == categoryInfo.key
-        info.func = function()
-            SetDestinationCategory(categoryInfo.key)
-            RefreshDestinationCategoryDropdown()
-            RefreshDestinationSuggestionDropdown()
-            RefreshDestinationKeystoneDropdown()
-            StreamerPlannerModule.RefreshAllDisplays()
-        end
-        UIDropDownMenu_AddButton(info, level)
-    end
-end)
-
-UIDropDownMenu_Initialize(DestinationSuggestionDropdown, function(_, level)
-    local categoryKey = GetDestinationCategory()
-    local currentSuggestion = PlannerPrivate.FindDestinationSuggestion(categoryKey, GetDestinationBaseText())
-
-    local manualInfo = UIDropDownMenu_CreateInfo()
-    manualInfo.text = L("STREAMER_PLANNER_DESTINATION_MANUAL")
-    manualInfo.value = "__manual"
-    manualInfo.checked = currentSuggestion == nil
-    manualInfo.func = function()
-        DestinationInput:SetFocus()
-        RefreshDestinationSuggestionDropdown()
-        RefreshDestinationKeystoneDropdown()
-    end
-    UIDropDownMenu_AddButton(manualInfo, level)
-
-    for _, suggestion in ipairs(GetDestinationSuggestions(categoryKey)) do
-        local info = UIDropDownMenu_CreateInfo()
-        info.text = suggestion
-        info.value = suggestion
-        info.checked = currentSuggestion == suggestion
-        info.func = function()
-            if DestinationInput then
-                DestinationInput:SetText(suggestion)
-                DestinationInput:ClearFocus()
-            end
-            RefreshDestinationSuggestionDropdown()
-            RefreshDestinationKeystoneDropdown()
-        end
-        UIDropDownMenu_AddButton(info, level)
-    end
-end)
-
-UIDropDownMenu_Initialize(DestinationKeystoneDropdown, function(_, level)
-    local categoryKey = GetDestinationCategory()
-    local currentLevel = GetDestinationKeystoneLevel()
-    if type(currentLevel) ~= "number" then
-        currentLevel = categoryKey == "delves" and 1 or 0
-    end
-
-    if categoryKey == "delves" then
-        for delveLevel = 1, 11 do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = PlannerPrivate.GetDestinationLevelLabel(categoryKey, delveLevel)
-            info.value = delveLevel
-            info.checked = currentLevel == delveLevel
-            info.func = function()
-                SetDestinationKeystoneLevel(delveLevel)
-                RefreshDestinationKeystoneDropdown()
-                StreamerPlannerModule.RefreshAllDisplays()
-            end
-            UIDropDownMenu_AddButton(info, level)
-        end
-        return
-    end
-
-    for keystoneLevel = 0, 20 do
-        if keystoneLevel ~= 1 then
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = GetKeystoneLabel(keystoneLevel)
-            info.value = keystoneLevel
-            info.checked = currentLevel == keystoneLevel
-            info.func = function()
-                SetDestinationKeystoneLevel(keystoneLevel)
-                RefreshDestinationKeystoneDropdown()
-                StreamerPlannerModule.RefreshAllDisplays()
-            end
-            UIDropDownMenu_AddButton(info, level)
-        end
-    end
-end)
-
-DestinationInput = CreateFrame("EditBox", nil, EditDialog, "InputBoxTemplate")
-DestinationInput:SetSize(484, 28)
-DestinationInput:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "BOTTOMLEFT", 0, -20)
-DestinationInput:SetAutoFocus(false)
-DestinationInput:SetMaxLetters(64)
-DestinationInput:SetScript("OnTextChanged", function()
-    if PlannerPrivate.editingField ~= "destination" then
-        return
-    end
-
-    RefreshDestinationSuggestionDropdown()
-    RefreshDestinationKeystoneDropdown()
-end)
-DestinationInput:SetScript("OnEnterPressed", function()
-    if PlannerPrivate.saveSlotButton then
-        PlannerPrivate.saveSlotButton:Click()
-    end
-end)
-DestinationInput:SetScript("OnEscapePressed", function(self)
-    self:SetText(GetDestinationBaseText())
-    HideEditDialog()
-end)
-
-EditClassTitle = EditDialog:CreateFontString(nil, "OVERLAY")
-EditClassTitle:SetPoint("TOPLEFT", EditDialogInput, "BOTTOMLEFT", 0, -18)
-EditClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-EditClassTitle:SetTextColor(1, 0.82, 0, 1)
-
-for index, classInfo in ipairs(BuildClassOptions()) do
-    if classInfo.file ~= nil then
-        local button = CreateIconPickerButton(EditDialog, EDIT_CLASS_BUTTON_SIZE, false)
-        button.ClassFile = classInfo.file
-        button.DisplayName = classInfo.name
-        button.Icon:SetTexture(CLASS_ICON_TEXTURE)
-        button.Icon:SetTexCoord(GetClassIconCoords(classInfo.file))
-        button.Label:SetText(classInfo.name)
-        button:SetScript("OnClick", function(self)
-            PlannerPrivate.editingClassFile = self.ClassFile
-            PlannerPrivate.editingSpecID = nil
-            RefreshClassSpecButtons()
-        end)
-        PlannerPrivate.editClassButtons[#PlannerPrivate.editClassButtons + 1] = button
-    end
-end
-
-EditSpecTitle = EditDialog:CreateFontString(nil, "OVERLAY")
-EditSpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-EditSpecTitle:SetTextColor(1, 0.82, 0, 1)
-
-for index = 1, 4 do
-    local button = CreateIconPickerButton(EditDialog, EDIT_SPEC_BUTTON_SIZE, false)
-    button.DisplayName = ""
-    button:SetScript("OnClick", function(self)
-        PlannerPrivate.editingSpecID = self.SpecID
-        RefreshClassSpecButtons()
-    end)
-    PlannerPrivate.editSpecButtons[#PlannerPrivate.editSpecButtons + 1] = button
-end
-
-LayoutEditDialogOptionButtons()
-
-PlannerPrivate.saveSlotButton = CreateActionButton(EditDialog, 92, "", function()
-    if PlannerPrivate.editingField == "destination" then
-        SetDestinationText(DestinationInput:GetText())
-        HideEditDialog()
-        StreamerPlannerModule.RefreshAllDisplays()
-        return
-    end
-
-    if PlannerPrivate.editingUsesSelfRoleOverride == true then
-        GetStreamerPlannerSettings().selfRoleOverride = PlannerPrivate.NormalizePlannerRoleKey(PlannerPrivate.editingRoleKey)
-        HideEditDialog()
-        PlannerPrivate.lastDungeonSyncSignature = nil
-        PlannerPrivate.SyncDynamicPlannerState(true)
-        return
-    end
-
-    if not PlannerPrivate.editingLayout or not PlannerPrivate.editingSlotIndex then
-        HideEditDialog()
-        return
-    end
-
-    local currentEntry = GetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
-    if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
-        PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
-    end
-
-    SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, {
-        name = EditDialogInput:GetText(),
-        classFile = PlannerPrivate.editingClassFile,
-        specID = PlannerPrivate.editingSpecID,
-    })
-    HideEditDialog()
-    PlannerPrivate.lastDungeonSyncSignature = nil
-    PlannerPrivate.SyncDynamicPlannerState(true)
-end)
-PlannerPrivate.saveSlotButton:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 16, 20)
-
-PlannerPrivate.clearSlotButton = CreateActionButton(EditDialog, 92, "", function()
-    if PlannerPrivate.editingField == "destination" then
-        SetDestinationText("")
-        HideEditDialog()
-        StreamerPlannerModule.RefreshAllDisplays()
-        return
-    end
-
-    if PlannerPrivate.editingUsesSelfRoleOverride == true then
-        GetStreamerPlannerSettings().selfRoleOverride = nil
-        HideEditDialog()
-        PlannerPrivate.lastDungeonSyncSignature = nil
-        PlannerPrivate.SyncDynamicPlannerState(true)
-        return
-    end
-
-    if PlannerPrivate.editingLayout and PlannerPrivate.editingSlotIndex then
-        local currentEntry = GetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
-        if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
-            PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
-        end
-
-        SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, PlannerPrivate.NormalizeSlotEntry(nil))
-    end
-
-    HideEditDialog()
-    PlannerPrivate.lastDungeonSyncSignature = nil
-    PlannerPrivate.SyncDynamicPlannerState(true)
-end)
-PlannerPrivate.clearSlotButton:SetPoint("LEFT", PlannerPrivate.saveSlotButton, "RIGHT", 10, 0)
-
-PlannerPrivate.cancelSlotButton = CreateActionButton(EditDialog, 92, L("CANCEL"), function()
-    HideEditDialog()
-end)
-PlannerPrivate.cancelSlotButton:SetPoint("LEFT", PlannerPrivate.clearSlotButton, "RIGHT", 10, 0)
-
-EditDialogInput:SetScript("OnEnterPressed", function()
-    PlannerPrivate.saveSlotButton:Click()
-end)
-EditDialogInput:SetScript("OnEscapePressed", function()
-    HideEditDialog()
-end)
+PlannerPrivate.BuildStreamerPlannerUi()
 
 function PageStreamerPlanner:RefreshState()
     local settings = GetStreamerPlannerSettings()
@@ -6418,8 +6754,8 @@ function PageStreamerPlanner:RefreshState()
     RefreshButtonList(PreviewUI.RaidButtons)
     RefreshButtonList(OverlayDungeonButtons)
     RefreshButtonList(OverlayRaidButtons)
-    RefreshModeButtons()
-    RefreshLayoutVisibility()
+    PlannerPrivate.RefreshModeButtons()
+    PlannerPrivate.RefreshLayoutVisibility()
     RefreshTimerDisplay()
     PlannerPrivate.RefreshApplicantPanel()
     StreamerPlannerModule.RefreshOverlayWindow()
@@ -6436,6 +6772,20 @@ function PageStreamerPlanner:UpdateScrollLayout()
     PageContentFrame:SetWidth(contentWidth)
 
     local showRaid = GetCurrentMode() == "raid"
+    previewPanel:SetWidth(GetPreviewPanelWidthForMode(showRaid and "raid" or "dungeon"))
+    if PreviewUI.RaidContainer and PreviewUI.RaidGroupFrames then
+        PreviewUI.RaidContainer:SetSize(
+            GetRaidLayoutContainerWidth(PREVIEW_RAID_GROUP_WIDTH),
+            GetRaidLayoutContainerHeight(PREVIEW_RAID_SLOT_HEIGHT, 4)
+        )
+        PlannerPrivate.LayoutRaidLayout(
+            PreviewUI.RaidContainer,
+            PreviewUI.RaidButtons,
+            PreviewUI.RaidGroupFrames,
+            PREVIEW_RAID_GROUP_WIDTH,
+            PREVIEW_RAID_SLOT_HEIGHT
+        )
+    end
     local introHeight = GetMeasuredPanelHeight(introPanel, self.UsageHint, 18, 96)
     local previewContent = showRaid and PreviewUI.RaidContainer or PreviewUI.DungeonContainer
     local previewHeight = GetMeasuredPanelHeight(previewPanel, previewContent, 18, 0)
