@@ -4,15 +4,14 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.27.1`
+- Version: `0.27.2`
 - Release-Datum: `2026-04-06`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Boss Guides` decken jetzt deutlich mehr Midnight-S1-Dungeons ab und wurden in mehreren Instanzen inhaltlich komplett ausgebaut
-  - `Boss Guides` unterstützen einklappbare Rollenabschnitte für `Tank`, `DD`, `Heal`, `HC` und `Mythisch`, während `Allgemein` offen bleibt
-  - `Gruppenplaner` unterstützt jetzt 40-Spieler-Raids mit breiterem Layout und verbesserter Ziel- und Schwierigkeits-Erkennung
-  - Whisper- und Invite-Logik im `Gruppenplaner` wurde robuster, inklusive sauberer Realm-Normalisierung und verlässlicherem `!inv`-Flow
-  - `!inv`-AutoInvite greift jetzt in Dungeon und Raid, aber nur wenn derselbe Spieler bereits per `!enter` im Planner bekannt ist
+  - `Boss Guides` zeigen in weiteren Midnight-S1-Dungeons jetzt deutsche, hoverbare Bosszauber mit passenden Icons
+  - sichtbare Spell-IDs wurden aus den Guide-Texten entfernt, während Hover-Infos über die Spell-Map erhalten bleiben
+  - Bossguide-Texte und Lokalisierungen wurden auf fehlerhafte Umlaute und Darstellungsprobleme bereinigt
+  - `Gruppenplaner`- und Guide-Verbesserungen aus `0.27.1` bleiben vollständig enthalten
 
 ## Download
 
@@ -55,9 +54,9 @@ Regeln:
 Beispiele:
 
 - `0.27.0` → letzter veröffentlichter Feature-/Modulstand
-- `0.27.1` → aktueller Hotfix-Stand mit Verbesserungen an bestehenden Modulen
-- Hotfix nach veröffentlichtem `0.27.1` → `0.27.2`
-- nächstes neues Modul nach `0.27.1` → `0.28.0`
+- `0.27.2` → aktueller Hotfix-Stand mit Verbesserungen an bestehenden Modulen
+- Hotfix nach veröffentlichtem `0.27.2` → `0.27.3`
+- nächstes neues Modul nach `0.27.2` → `0.28.0`
 - großer Hauptrelease → `1.0.0`
 
 ## Module im Addon
