@@ -382,6 +382,30 @@ General: Realm management is everything. Free the adds first, then kill them fas
 {HC} Dispel Consuming Miasma deliberately to clear Alndust Essence. Keep space clean for the whole fight.
 {M} Rift Madness needs fixed realm-swap partners. Handle Dissonance with strict spacing. Prioritize the extra flight-phase adds immediately.
 ]=],
+	BOSS_GUIDES_INSTANCE_MARCH_ON_QUEL_DANAS_TITLE = "March on Quel'Danas",
+	BOSS_GUIDES_INSTANCE_MARCH_ON_QUEL_DANAS_TOKENS = { "march on quel danas", "march on queldanas", "march on quel'danas", "quel danas", "quel'danas" },
+	BOSS_GUIDES_BOSS_BELOREN_CHILD_OF_ALAR_NAME = "Belo'ren, Child of Al'ar",
+	BOSS_GUIDES_BOSS_BELOREN_CHILD_OF_ALAR_BODY = [=[
+General: A void-twisted phoenix guards the path to the Sunwell. This boss is already listed in the guide, but the detailed tactic notes are still being prepared.
+{TANK} No finalized tactic note is stored yet.
+{DD} No finalized tactic note is stored yet.
+{HEAL} No finalized tactic note is stored yet.
+]=],
+	BOSS_GUIDES_BOSS_MIDNIGHT_FALLS_NAME = "Midnight Falls",
+	BOSS_GUIDES_BOSS_MIDNIGHT_FALLS_BODY = [=[
+General: L'ura's unleashed void energy now threatens the Sunwell itself. This boss is already listed in the guide, but the detailed tactic notes are still being prepared.
+{TANK} No finalized tactic note is stored yet.
+{DD} No finalized tactic note is stored yet.
+{HEAL} No finalized tactic note is stored yet.
+]=],
+	BOSS_GUIDES_INSTANCE_WINDRUNNER_SPIRE_TITLE = "Windrunner Spire",
+	BOSS_GUIDES_INSTANCE_MAGISTERS_TERRACE_TITLE = "Magisters' Terrace",
+	BOSS_GUIDES_INSTANCE_ALGETHAR_ACADEMY_TITLE = "Algeth'ar Academy",
+	BOSS_GUIDES_INSTANCE_PIT_OF_SARON_TITLE = "Pit of Saron",
+	BOSS_GUIDES_INSTANCE_MAISARA_CAVERNS_TITLE = "Maisara Caverns",
+	BOSS_GUIDES_INSTANCE_SKYREACH_TITLE = "Skyreach",
+	BOSS_GUIDES_INSTANCE_SEAT_OF_THE_TRIUMVIRATE_TITLE = "Seat of the Triumvirate",
+	BOSS_GUIDES_INSTANCE_NEXUS_POINT_XENAS_TITLE = "Nexus-Point Xenas",
 	BOSS_GUIDES_SPELL_NAMES = {
 		["Shadow Phalanx"] = { spellID = 1284786, localizedName = "Shadow Phalanx" },
 		["Dark Uproar"] = { spellID = 1249251, localizedName = "Dark Uproar" },

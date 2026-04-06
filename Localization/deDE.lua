@@ -357,121 +357,310 @@ BeavisQoL.Localization.deDE = {
 	BOSS_GUIDES_INSTANCE_VOIDSPIRE_TOKENS = { "leerenspitze", "leeren", "voidspire", "void spire" },
 	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_NAME = "Imperator Averzian",
 	BOSS_GUIDES_BOSS_IMPERATOR_AVERZIAN_BODY = [=[
-Allgemein: Tic Tac Toe spielen. Schattenphalanx überrennt zwischendurch einzelne Linien - Ausweichen!. Drei verlorene Felder in einer Reihe lösen Marsch der Unendlichen aus und wipen das Feld.
-{TANK} Boss nie auf beanspruchte Felder vom Leerenportal stellen. Bei ca 10 Stapeln Schwärzende Wunden tauschen. Add-Wellen übernimmt der freie Tank.
-{DD} Umbralkollaps mit der ganzen Gruppe beim Tank soaken. Adds haben Priorität.
-{HEAL} Umbralkollaps und Dunkle Verwerfung gegenheilen.
-{HC} Leerenformer sofort fokussen. Bollwerk errichten kicken. Aufziehende Dunkelheit nie durchlassen, sonst steht ein zusätzlicher Obskurionendwandler. Leerenschlund bei 35% hard focussen: Dunkle Resilienz ist nicht kickbar - also stunnen und töten - bevor er das Feld erreicht und sich heilt.
-{M} Schwarzes Miasma priorisiert dispellen. Kosmischer Panzer vor Umbralkollaps entfernen. Leerenmarkiert sauber rausziehen.
+Allgemein: Ziel ist, niemals eine Dreier-Linie aus beanspruchten Feldern zu erzeugen, damit Marsch der Unendlichen nicht ausgelöst wird.
+• Schattenvorstoß bringt drei Leerenformer. Die Wellen werden über Umbralkollaps kontrolliert, indem der Split-Soak gezielt auf Leerenformer und gefährdete Felder gelegt wird.
+• Boss und Adds niemals auf beanspruchten Feldern parken, sonst verstärkt Ruhm des Imperators den Druck unnötig.
+• Leerenformer haben immer Priorität und Bollwerk errichten muss sofort gekickt werden.
+• Zorn der Vergessenheit und Leerenfall dürfen niemanden unnötig treffen. Sauber laufen ist hier wichtiger als gieriger Schaden.
+{TANK} Umbralkollaps aktiv führen. Der Raid stackt bei dir und du setzt den Einschlag so, dass der Leerenformer getroffen und das Feld gerettet wird.
+• Schwärzende Wunden stapeln. Bei hohen Stapeln sauber wechseln und den freien Tank die Adds übernehmen lassen.
+• Boss immer von beanspruchten Feldern wegziehen und Adds nicht unnötig mit Ruhm des Imperators buffen.
+{DD} Fokusziel sind die Abyssischen Leerenformer. Sie müssen fallen, bevor Leerenruptur weitere Felder verliert.
+• Bollwerk errichten ist absolute Kick-Pflicht.
+• Leerenschlund vor seiner Portal-Heilung finishen. Knirschende Leere im Blick behalten und bei Bedarf Defensives oder Offheal benutzen.
+{HEAL} Dauerhafter Grunddruck kommt durch Dunkle Verwerfung. Heil-CDs so staffeln, dass Umbralkollaps-Spitzen mit abgedeckt sind.
+• Leerenfall zwingt zu Bewegung. Repositionieren früh mit einplanen und AoE-Heilfenster vorbereiten.
+• Ziele von Dunkles Sperrfeuer stabilisieren und bei Bedarf extern absichern.
+{HC} Leerenformer bekommen zusätzlichen Druck durch Aufziehende Dunkelheit und müssen noch härter priorisiert oder gestoppt werden.
+• Der Lauf von Leerenschlund Richtung beanspruchtes Feld ist auf HC relevant und Humpelnd markiert die Bewegung zusätzlich.
+• Adds separiert tanken, damit keine unnötigen Synergien oder Boss-Buffs entstehen.
+{M} Ein zusätzlicher Abyssischer Malus erhöht den Gesamtdruck deutlich.
+• Kosmischer Panzer erschwert das Lösen über Umbralkollaps. Leerenmarkiert muss gezielt entfernt werden, damit Lauernde Dunkelheit entsteht und Kosmischer Panzer in der Nähe verbraucht wird.
+• Schwarzes Miasma und Folgeeffekte wie Geschwächt sauber managen, sonst kippt der Heil- und Debuffdruck schnell.
 ]=],
 	BOSS_GUIDES_BOSS_VORASIUS_NAME = "Vorasius",
 	BOSS_GUIDES_BOSS_VORASIUS_BODY = [=[
-Allgemein: Arena aktiv managen. Wände gezielt brechen und Leerenatem nie durch den Raid ziehen.
-{TANK} Immer in Nahkampfreichweite bleiben, sonst wirkt Überwältigender Puls. Schattenklauenhieb sicher soaken. Nach Zerschmettert oder zwei schweren Treffern tauschen.
-{DD} Blasenkriecher an der geplanten Wand töten. Nach Pustelbersten 8 Meter rausgehen. Leerenatem und Nachbeben ausweichen.
-{HEAL} Pustelbersten und Urzeitliches Brüllen sind die größten Spitzen. Kriecherspritzer mit Slow und Rückstoß einplanen. CDs über den Kampf staffeln.
-{HC} Wände brauchen mehr Explosionen. Add-Kills früh ansagen und Platz sparen.
-{M} Pustelbersten hinterlässt Dunklen Schleim. Kill-Zonen strikt planen und denselben Weg nicht doppelt blockieren.
+Allgemein: Loop: Zerschmettert -> Adds und Wände -> Strahl -> Reset.
+• In der Mitte und vorne spielen, nicht hinten herum, sonst blockieren Wände die Laufwege.
+• Urzeitliches Brüllen ist Pull, Knockback und hoher Raid-Schaden zugleich. Heil-CDs planen und so stehen, dass niemand herunterfällt.
+• Urzeitliche Macht stapelt über den ganzen Kampf und lässt den Schaden immer weiter ansteigen.
+{TANK} Immer mit einem Tank in Nahkampfreichweite bleiben, sonst wirkt Überwältigender Puls.
+• Jeden Schattenklauenhieb sicher soaken. Wenn kein Treffer genommen wird, kassiert der ganze Raid.
+• Die ersten ein bis zwei Soaks von Zerschmettert stapeln stark. Danach sauber wechseln und Defensivs ziehen.
+• Nachbeben ist der Ring direkt danach. Sauber herauslaufen oder durchgehen.
+{DD} Blasenkriecher fixieren Spieler. Adds zur gewünschten Wand kiten und dort töten, damit Pustelbersten die Wand beschädigt oder öffnet.
+• Nie im Explosionsradius von Pustelbersten stehen und Add-Kills staffeln, weil der Raid-Schaden sonst überlappt.
+• Beim Leerenatem die Startseite sofort erkennen und direkt auf die gegenüberliegende Kante laufen.
+• Während Parasitenausstoß und Dunkle Energie immer mit zusätzlichen Bodenflächen rechnen. Swirls meiden und nicht gierig stehen bleiben.
+{HEAL} Urzeitliches Brüllen zusammen mit den späteren Stapeln von Urzeitliche Macht ist das große Rotationsfenster für Raid-CDs.
+• Kriecherspritzer ist ein Magieeffekt mit Slow und soll schnell dispellt werden, damit Fixate-Kiting sauber bleibt.
+• Add-Kills durch Pustelbersten verursachen spürbare Heilspitzen. Kills ansagen lassen und nicht alles gleichzeitig detonieren.
+{HC} Kristallwände brauchen zwei Explosions-Kills durch Pustelbersten pro Wand.
+{M} Kristallwände brauchen drei Explosions-Kills durch Pustelbersten und die Adds müssen noch genauer verteilt werden.
+• Unter explodierten Adds entstehen Pfützen aus Dunkler Schleim. Kill-Spots vorher planen, sonst wird der Raum unspielbar.
 ]=],
 	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_NAME = "Gefallener König Salhadaar",
 	BOSS_GUIDES_BOSS_FALLEN_KING_SALHADAAR_BODY = [=[
-Allgemein: Kugeln dürfen den Boss nie erreichen. Jeder Durchlauf erhöht den Raidschaden stark.
-{TANK} Boss aus Kugellinien und Quälender Extrakt ziehen. Zerschmetterndes Zwielicht am Rand ablegen. Bei Destabilisierende Schläge tauschen.
-{DD} Konzentrierte Leere vor Bosskontakt zerstören. Zersplitterte Abbilder sofort kicken. Entropische Auflösung als Burn-Fenster nutzen.
-{HEAL} Leereninfusion, Windende Obskurität und Entropische Auflösung mit CDs decken. Ziele von Despotischer Befehl aus dem Raid halten. Erdrückende Dunkelheit gezielt dispellen.
-{HC} Kugelkills staffeln, weil Dunkle Strahlung den ganzen Raid trifft. Ziele von Despotischer Befehl sauber spreaden.
-{M} Beständige Leere kommt wieder und muss eingeplant werden. Nexusschild auf Abbildern per Kick-Rotation entfernen. Der Kampf steht und fällt mit dem Kugel-Timing.
+Allgemein: Kugeln haben absolute Priorität. Leerenkonvergenz schickt zwei Kugeln zum Boss und jeder Bosskontakt gibt Leereninfusion.
+• Kugeln niemals berühren, sonst gibt es Leerenaussetzung.
+• Kugeln versetzt töten, besonders auf HC, weil jede Kugel Dunkle Strahlung auslöst.
+• Gebrochene Projektion beschwört Abbilder. Deren Schattenfraktur sofort unterbrechen oder kontrollieren, sonst kommen massiver Raid-Schaden und weitere Flächen.
+• Quälendes Extrakt immer außen parken. Die Flächen bleiben dauerhaft liegen und kommen auch nach Phasen wieder.
+• Despotischer Befehl aus dem Raid tragen und am Rand auslaufen oder dispellen. Danach Drückende Finsternis sofort hochheilen und die neue Fläche einplanen.
+• Bei 100 Energie startet Entropische Auflösung als Burn- und Heilfenster. Vorher den Boss an den nächsten Rand ziehen und währenddessen Umbrastrahlen dodgen.
+• Windende Obskurität ist permanenter Raid-Schaden mit langem DoT und muss über den ganzen Kampf mitgeheilt werden.
+{TANK} Boss konstant am Rand führen, damit Quälendes Extrakt den Raum nicht verbaut. Vor Entropische Auflösung schon den nächsten Randpunkt vorbereiten.
+• Destabilisierende Stöße bei hohen Stapeln sauber tauschen.
+• Zertrümmerndes Zwielicht immer weg vom Raid spielen und die Pfeile von der Gruppe wegdrehen. Nach dem Einschlag sofort Zwielichtstacheln ausweichen.
+• In Entropische Auflösung mit dem Boss mitlaufen und Umbrastrahlen niemals durch den Raid schneiden.
+{DD} Priorität ist Kugeln vor Abbildern vor Boss.
+• Leerenkonvergenz sofort zerstören und auf HC den Kill-Timer wegen Dunkle Strahlung ansagen.
+• Gebrochene Projektion und deren Abbilder sofort kontrollieren. Schattenfraktur ist Kick-Pflicht, solange Kugeln noch leben.
+• In Entropische Auflösung alle CDs nutzen. Das ist das klare Burn-Fenster, während ihr weiter Umbrastrahlen dodged.
+{HEAL} Dunkle Strahlung nach Kugel-Toden auf HC gezielt gegenheilen und nicht doppelt überlappen lassen.
+• Windende Obskurität ist die konstante DoT-Last des Kampfes und verlangt frühe Throughput-Planung.
+• Entropische Auflösung ist 20 Sekunden dauerhafte Raid-AoE plus Bewegung. Dafür eine klare Raid-CD-Rotation planen.
+• Despotischer Befehl am Rand auflösen und Drückende Finsternis zielpriorisiert wegheilen, damit niemand kippt.
+• Quälendes Extrakt bleibt permanent liegen. Dispel- und Ablaufpositionen müssen deshalb eng geführt werden.
+{HC} Kugel-Kills geben Dunkle Strahlung mit stapelbarem Raid-Schaden. Mindestens einen Debuff auslaufen lassen, bevor die nächste Kugel stirbt.
+• Zertrümmerndes Zwielicht markiert auf HC zusätzliche Spieler und erzeugt mehr Spike-Richtungen.
+{M} In den eingesehenen Kurzguides gibt es keine zusätzlich benannten Mythisch-Mechaniken gegenüber HC.
+• Mythisch ist hier vor allem ein Zahlen-, Timing- und Raum-Disziplin-Check über Kugeln, Projektionen-Kicks, Flächenmanagement und Entropische Auflösung.
 ]=],
 	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_NAME = "Vaelgor & Ezzorak",
 	BOSS_GUIDES_BOSS_VAELGOR_EZZORAK_BODY = [=[
-Allgemein: Drachen getrennt und HP ausgeglichen halten. Sonst eskaliert Zwielichtbund. Entsetzlicher Atem immer aus dem Raid ziehen. In der Zwischenphase rechtzeitig in die Strahlende Barriere laufen.
-{TANK} Mindestens 15 Meter Abstand halten. Nach Vaelflügel und Rakzahn tauschen. Nullstrahl und Entsetzlicher Atem vom Raid wegdrehen.
-{DD} Düsternis mit fester Soak-Gruppe kontrollieren. Nullzone nur gezielt brechen. Kugeln sofort stoppen und töten. Schattenmal auseinander tragen.
-{HEAL} Nullstrahl, Düsternis und Mitternachtsflammen als feste CD-Fenster planen. Fear von Entsetzlicher Atem sofort dispellen. Kreisziele in der Zwischenphase stabil halten.
-{HC} Nach jeder gebrochenen Nullzone steigt der Druck. Soaker sauber rotieren und Doppeltreffer vermeiden.
-{M} Spiegelbilder priorisieren und lange Mitternachtsflammen vorbereiten. Fehler bei Nullzone oder Düsternis bestrafen den Raid sofort.
+Allgemein: Zwei Ziele ohne geteilte Lebenspunkte. Schaden splitten und beide möglichst gleichzeitig töten, sonst kommt Zwielichtfuror.
+• Der Kampf steht und fällt mit Positionierung: Bosse immer mindestens 15 Meter auseinanderhalten wegen Zwielichtbund und die HP-Differenz möglichst bei maximal 10 Prozent halten.
+• Niemals hinter die Drachen gehen. Schwanzpeitscher und Durchbohren bestrafen das sofort mit Knockback, Stun oder DoT.
+• Kern-Loop des Kampfes: Leerenheulen, danach Nullstrahl oder Nullzone und kurz darauf Düsternis.
+• Bei 100 Energie startet die Zwischenphase Mitternachtsflammen. Sofort in die Strahlende Barriere gehen und das Add priorisieren.
+{TANK} Beide Bosse nahe ihrer Spawn-Seite halten, aber immer mit mindestens 15 Metern Abstand wegen Zwielichtbund. Niemals so drehen, dass Melees hinten stehen.
+• Nach wenigen Stapeln von Vaelschwinge und Rakzahn sauber tauschen, bevor Autos und Absorbs eskalieren.
+• Nullstrahl aktiv für den Raid spielen und nie durch die Raid-Mitte schneiden lassen.
+• Nullzone mit Ansage brechen. Jeder Snap verursacht Nullbruch, der Tank bricht meist zuletzt.
+• Düsternis bewusst an freie Wandkanten und weg von alten Düsternisfeldern legen.
+{DD} HP-Differenz klein halten. Im Zweifel Single-Target bremsen, statt einen Boss zu weit herunterzuspielen.
+• Nach Leerenheulen Kreise nicht stacken und danach Void-Adds sofort fokussieren. Leerenblitz darf nicht frei durchgehen.
+• Düsternis nur mit den zugewiesenen Soakern spielen. Jeder Kontakt gibt Düsternisberührt und darf nicht zufällig passieren.
+• In der Zwischenphase die Manifestation sofort töten, bevor Ungebundener Schatten eskaliert.
+• Auf Mythisch immer Kosmose mitdenken. Klone spielen Kernfähigkeiten nach und machen Platz sowie Bewegung deutlich enger.
+{HEAL} Entsetzlicher Atem sofort dispellen, damit Fear und CC nicht außer Kontrolle geraten. Das Ziel muss raus und der Kegel weg vom Raid.
+• Größte Raid-CD-Fenster sind Serien von Nullzone-Snaps. Jeder Snap macht Nullbruch und auf HC ist besonders der letzte Snap gefährlich.
+• Düsternisberührt stapelt realen Soak-Schaden. Auf HC kommt danach Geschwächt, deshalb ist eine feste Soak-Rotation Pflicht.
+• In der Zwischenphase in der Strahlenden Barriere stacken und Spieler mit Schattenmal an den Rand schicken.
+• Mitternachtsmanifestation ist ein stapelbarer DoT auf Zufallszielen und wird beim Eintritt in die Strahlende Barriere entfernt.
+{HC} Düsternis braucht pro Orb feste Soak-Teams. Geschwächt blockt den nächsten Soak über lange Zeit.
+• In Nullzone verursacht der letzte Snap einen deutlich größeren Raid-Burst durch Nullzonenimplosion.
+• Das Zwischenphasen-Add wirkt Schattenmal. Betroffene strikt an den Rand schicken, sonst cleaven sie den Raid.
+{M} Düsternis braucht bis zu sieben Kontakte für die volle Reduktion. Soaker verursachen zusätzlich Nahbereichsschaden, deshalb vorher sauber positionieren und nicht spontan hineinlaufen.
+• Nullzone bekommt zusätzlich Nullstreu. Schon der erste Snap kann Hagel oder Einschläge auslösen, daher Spread und Bewegung strikt nach Plan.
+• Die Zwischenphase wird durch zusätzliche Overlaps und Kosmose-Klone deutlich enger. Strahlende Barriere sauber halten und Schattenmal diszipliniert rausspielen.
 ]=],
 
 	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_NAME = "Lichtblinde Vorhut",
 	BOSS_GUIDES_BOSS_LIGHTBLINDED_VANGUARD_BODY = [=[
-Allgemein: Drei Bosse. HP angleichen und keinen zu früh töten, sonst Vergeltung. Bei 100 Energie kommt jeweils Aura des Zorns, Aura der Hingabe oder Aura des Friedens; der aktive Boss muss sofort an den Rand.
-{TANK} Aura-Bosse vom Rest wegziehen. Nach Richturteil sauber übernehmen. Exorzismus-Ketten defensiv spielen und Tanktreffer früh ansagen.
-{DD} Todesurteil nur mit der festen Soak-Gruppe spielen. Heiliges Schild schnell brechen. Blendendes Licht zuerst kicken und Hämmer bzw. Charges dodgen.
-{HEAL} Lichtinfundiert und Sengende Strahlkraft früh einplanen statt spät zu reagieren. Göttliches Läuten zusammen mit Todesurteil als Kill-Kombo abdecken.
-{HC} Weihe bleibt dauerhaft liegen. Bosse sauber am Rand rotieren, sonst geht euch der Platz aus.
-{M} Eifergeist verstärkt die Kernfähigkeiten. Göttliche Weihe macht freie Flächen wertvoll. Defensiv-CDs pro Aura fest durchrotieren.
+Allgemein: Council mit drei HP-Balken. Lebenspunkte eng zusammenhalten, sonst rampen die Überlebenden wie ein Enrage.
+• Bei 100 Energie startet eine Aura-Phase mit Aura der Hingabe, Aura des Zorns oder Aura des Friedens. Die anderen Bosse müssen sofort aus dem Kreis und am Rand rotiert werden.
+• Nach Ultimates bleiben große Bodenflächen liegen. Tanks ziehen deshalb immer im Uhrzeigersinn weiter, während der Raid in der Mitte bleibt.
+• Todesurteil verlangt getrennte Kreise mit festen Helfern, pro Spieler nur ein Soak. Danach direkt die rotierenden Hämmer von Göttlicher Hammer dodgen.
+• Bei Schild des Rächers spreaden und den DoT sauber entzaubern.
+• Geheiligter Schild macht Blendendes Licht kurz unkickbar. Schild erst brechen, dann kicken oder alternativ wegdrehen.
+• Lichtdurchdrungen wird nach jeder Aura härter. Heiler-CDs früh staffeln.
+{TANK} Bosse am Rand halten und bei jeder Aura die aktiven Bosse sofort aus dem Kreis ziehen, Raid bleibt in der Mitte.
+• Richturteil verlangt den sofortigen Taunt-Swap, damit Letztes Urteil oder Schild der Rechtschaffenen nicht denselben Tank treffen.
+• Tyrs Zorn trifft die nächsten Spieler. Tanks vermeiden unnötige Nähe, wenn Rotation oder Absorb bereits hoch ist.
+• Defensives für harte Treffer und Überlappungen aufheben, besonders wenn Soak, Raid-Druck und Aura zusammenkommen.
+{DD} Schaden gleichmäßig auf alle drei Bosse verteilen und keinen Boss solo herunterprügeln.
+• Geheiligter Schild hat Mechanik-Priorität. Schild sofort brechen, dann Blendendes Licht kicken.
+• Bei Schild des Rächers spreaden und nach dem Dispel nicht direkt wieder nachstacken.
+• Todesurteil nur mit den zugewiesenen Soakern spielen, danach raus und Hämmer dodgen.
+• Göttlicher Glockenschlag mit den Schild-Salven immer vollständig auslaufen.
+{HEAL} Lichtdurchdrungen plus der Aura-Zyklus ist eine planbare Ramp für eure CD-Rotation.
+• Tyrs Zorn erzeugt Heilabsorbs auf den nächststehenden Zielen. Spieler dafür rotieren lassen und Doppel- oder Dreifachstacks vermeiden.
+• Schild des Rächers schnell dispellen und die Ziele vor der Explosion stabilisieren.
+• Todesurteil erzeugt Peaks plus Nachbewegung durch die Hämmer. Spotheal und Bewegungsheals bereithalten.
+{HC} Der Raumcheck wird deutlich härter: sehr große dauerhaft liegende Bodenflächen nach Ultimates machen die Rotation am Rand zur Pflicht.
+{M} Eifernder Geist verstärkt abwechselnd einen Boss, erhöht Schaden oder ermächtigt eine Fähigkeit und sorgt für gefährliche Overlaps.
+• Schild des Rächers zielt auf Mythisch durch den Hotfix nur noch auf vier Spieler, bleibt aber weiter relevant.
+• Tyrs Zorn hat auf Mythisch per Hotfix etwas weniger Heilabsorption, bleibt aber ein klares CD- und Rotationsfenster.
+• Heiliger Tribut ist per Hotfix etwas entschärft, bleibt aber ein gefährliches Schadensfenster.
 ]=],
 
 	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_NAME = "Krone des Kosmos",
 	BOSS_GUIDES_BOSS_CROWN_OF_COSMOS_BODY = [=[
-Allgemein: Das ist ein Phasenkampf. Silberpfeile reinigen Leereffekte und lösen viele Mechaniken.
-{TANK} Wächter in P1 in Nahkampfreichweite halten, damit Widerhallende Dunkelheit nicht stapelt. In P2 Alleria und das Simulakrum trennen, damit Verstärkende Dunkelheit nicht eskaliert. Risshieb regelmäßig tauschen.
-{DD} Silberschlag gezielt durch Debuffs und Adds ausrichten. Wächter und Tropfen in P1 kontrollieren. Kosmische Barriere in P2 sofort brechen und Leerenbrut vor Koaleszierte Form töten. Zwischenphasen sauber dodgen.
-{HEAL} Nullkorona kontrolliert dispellen. Größte Checks sind Widerhallende Dunkelheit, die Barriere-Aura, Leerenpirscherstachel und Verschlingender Kosmos. CDs für P3 sparen.
-{HC} Leerenausstoß trifft zusätzliche Ziele. Sperrfeuer in beiden Zwischenphasen mit festen Ansagen spielen.
-{M} Silberrückstand auf Wächterzielen aktiv nutzen. Griff der Leere und Sperrfeuer stapeln schnell. Saubere Pfeil-Linien sind Pflicht.
+Allgemein: Phase 1 mit drei Wächtern spielen, Silberschlagpfeil bewusst nutzen, die Immunität herunternehmen und Bodeneffekte eng stapeln.
+• In den Zwischenphasen im Slice bleiben, gegen den Sog aus Stellaremission anlaufen, Silberschlagbeschuss für Resets timen und Singularitätsausbruch sowie Umkreisende Materie meiden.
+• In Phase 2 Boss und Klon getrennt halten, Adds freischalten, Interrupts priorisieren und rotieren, wenn der Platz knapp wird.
+• In Phase 3 stacken, Bindungen nacheinander lösen, danach sofort Tankwechsel und Plattformwechsel sauber ohne Panik spielen.
+{TANK} In Phase 1 hält ein Tank Vorelus und Leerentröpfchen, der andere den Fokus-Wächter. Immer Nahkampfpräsenz an den Wächtern sichern, sonst eskaliert Hallende Dunkelheit.
+• In Phase 2 Boss und Klon auseinanderziehen, damit Ermächtigende Dunkelheit nicht bufft. Nach Debuff-Stapeln tauschen und Crossing über Risse nur kurz und gezielt.
+• In Phase 3 Bindungsbruch als Tank-Swap-Trigger behandeln, weil nach dem Collapse physischer Burst folgt.
+{DD} Als Ranged Bodeneffekte so baiten, dass Laufwege und Segmente frei bleiben.
+• Silberschlagpfeil und Mal des Waldläuferhauptmanns so ausrichten, dass Adds und Wächter getroffen werden, nicht der Raid.
+• In Phase 2 Adds sofort markieren und freischalten, schnell töten und Ruf der Leere oder andere Void-Casts kicken, bevor die Energie eskaliert.
+• In Phase 3 alles in den Boss drücken, aber Mechaniken vor DPS stellen. Ein falscher Bindungsbruch kostet den Pull.
+{HEAL} Nullkorona vorrangig wegheilen. Dispel nur, wenn sonst jemand stirbt, weil der Rest-Absorb weiterspringt.
+• In den Zwischenphasen Ramp-Schaden und Sog mit CDs planen. Silberschlagbeschuss-Resets sind gewollt, kommen aber als Spikes rein.
+• In Phase 2 und 3 DoTs und Plattformwechsel-Spitzen antizipieren und die Heal-Range zum Off-Tank in Phase 1 sichern.
+{HC} In Phase 2 kommen mehr Leerenausstoß-Kugeln, dadurch mehr Bodeneffekte und schneller Platzdruck.
+• Pfeil-Treffer geben einen Debuff, der den nächsten Pfeilschaden stark erhöht. Niemals doppelt getroffen werden und Pfeil-Resets strikt koordinieren.
+• Leerenpirscherstich hält deutlich länger, also Heiler-CDs und Defensives einplanen oder nach Plan über Pfeile entfernen.
+• In Phase 1 wird die Wächter-Aura relevanter. Melee- und Tank-Zuordnung deshalb strikter spielen.
+{M} Griff des Nichts verlangsamt deutlich stärker. Früh ausrichten und früh laufen, spätes Drehen wird gefährlich.
+• Silberschlagbeschuss in den Zwischenphasen bestraft härter und kann den erlittenen Pfeilschaden massiv erhöhen. Trefferplanung extrem konservativ halten.
+• Stellaremission verstärkt die erzwungene Bewegung spürbar. Sog und Drift brauchen mehr Mobility und Speed-CDs.
+• Leerenausstoß trifft auch auf Mythisch zusätzliche Spieler. Das Platzproblem wird dadurch noch schneller zum Soft-Enrage.
 ]=],
 	BOSS_GUIDES_INSTANCE_DREAMRIFT_TITLE = "Traumriss",
 	BOSS_GUIDES_INSTANCE_DREAMRIFT_TOKENS = { "traumriss", "traum riss", "dreamrift", "dream rift" },
 
 	BOSS_GUIDES_BOSS_CHIMAERUS_NAME = "Chimaerus, der Ungeträumte Gott",
 	BOSS_GUIDES_BOSS_CHIMAERUS_BODY = [=[
-Allgemein: Realm-Management entscheidet den Kampf. Adds erst freischalten, dann schnell töten und nie vom Boss fressen lassen.
-{TANK} Reißendes Schlitzen vom Raid weg spielen. Aufruhr mit festen Gruppen rotieren. Kolossale Schrecken sofort übernehmen und defensiv tanken.
-{DD} Im Riss zuerst Alnschleier brechen. In der Realität Manifestationen priorisieren. Furchterregender Schrei und Essenzblitz sofort kicken. Flugphase komplett dodgen und Adds vor Gefräßiger Sturzflug töten.
-{HEAL} Risskrankheit als Absorb-Mechanik früh planen. CDs für Ätzenden Schleim und Kannibalisierte Essenz einteilen. Feste Soak-Gruppen machen den Schaden berechenbar.
-{HC} Verzehrendes Miasma bewusst dispellen, um Alnstaubessenz zu löschen. Den Raum den ganzen Kampf über sauber halten.
-{M} Risswahnsinn braucht feste Tauschpartner. Dissonanz mit klarem Abstand spielen. Zusätzliche Adds in der Flugphase sofort priorisieren.
+Allgemein: Pre-Pull den Raid in zwei feste Teams teilen, pro Team ein Tank, etwa halbe Heiler und halbe DPS. Diese Teams rotieren die gesamte Riss-Arbeit.
+• Alnstaubaufruhr am aktiven Tank soaken, Team A und B strikt abwechselnd. Nach dem Knock-up gibt Alnsicht den Zugang zum Riss.
+• Im Riss haben Adds Alnschleier. Erst den Schild brechen, damit die Adds in die Realität kommen und dort sofort sterben können.
+• In der Realität haben Manifestationen und andere Essenz-Adds absolute Priorität. Wenn sie durchkommen oder verschlungen werden, entstehen Verschlungene Essenz-Stapel und der Kampf kippt sehr schnell.
+• Alnstaubessenz-Pfützen nicht betreten und den Raum aktiv freihalten.
+• In der Flugphase Verderbte Vernichtung und Flugbahnen meiden, neue Adds sofort töten und vor Gefräßiger Sturzflug alles sauber haben.
+{TANK} In der Realität den Boss an den Rand ziehen und wegen Reißendes Schlitzen konsequent vom Raid wegdrehen. Nicht mittig stehen bleiben.
+• Im Riss Adds kontrollieren und zuerst das große Add stabil halten, während kleine Adds mit Cleave mitfallen.
+• Bei Verschlingen auf 100 Energie während der Kanalisierung alle übrigen Adds finishen, damit keine Verschlungene Essenz-Stapel entstehen.
+{DD} Manifestationen und Essenz-Adds sind immer Prio eins. Boss-DPS ist zweitrangig, solange Adds leben.
+• Fürchterlicher Schrei immer unterbrechen. Essenzblitz nach Möglichkeit ebenfalls kicken.
+• Niemals in Alnstaubessenz stehen. In der Intermission Linien sauber dodgen und danach sofort wieder auf Adds gehen.
+{HEAL} Heil-Rotation für Ätzenden Auswurf, Risskrankheit und die gesamte Add-Phase vorbereiten.
+• Zehrendes Miasma gezielt dispellen, nicht im Stack. Explosion und Knockback vorher einplanen.
+• Zum Entzaubern Miasma so positionieren, dass Pfützenflächen von Alnstaubessenz mit entfernt werden und der Raum offen bleibt.
+{HC} Rissvulnerabilität bedeutet, dass niemand zweimal hintereinander Alnstaubaufruhr soaken darf. Teams strikt abwechseln.
+• Zehrendes Miasma ist auf HC das zentrale Werkzeug, um Alnstaubessenz aus dem Raum zu entfernen. Die Fläche muss nur überdeckt werden, man muss nicht in der Pfütze stehen.
+• In der Intermission räumt Gefräßiger Sturzflug Pfützen nicht zuverlässig weg, daher den Raum primär über Miasma-Dispels managen.
+{M} Dissonanz bestraft Nähe zur anderen Realm-Gruppe. Zwei feste Teams und zwei feste Seiten spielen, nicht in oder nahe die andere Gruppe laufen.
+• Risswahn markiert zwei Spieler im Riss. Dafür feste Swap-Spots und feste Tauschpartner definieren, damit die Reiche sauber gewechselt werden.
+• Vor dem Phasenübergang wird zusätzlich Alnstaubaufruhr erzwungen. Adds deshalb vorher sicher vorbereiten und dann kontrolliert in den Übergang gehen.
+• In der Flugphase erzeugt Verderbte Vernichtung auch im Riss Manifestationen. Das Rift-Team muss daher selbst in der Intermission weiterarbeiten.
 ]=],
+	BOSS_GUIDES_INSTANCE_MARCH_ON_QUEL_DANAS_TITLE = "Marsch auf Quel'Danas",
+	BOSS_GUIDES_INSTANCE_MARCH_ON_QUEL_DANAS_TOKENS = { "marsch auf quel danas", "marsch auf queldanas", "marsch auf quel'danas", "march on quel danas", "march on queldanas", "march on quel'danas", "quel danas", "quel'danas" },
+	BOSS_GUIDES_BOSS_BELOREN_CHILD_OF_ALAR_NAME = "Belo'ren, Kind von Al'ar",
+	BOSS_GUIDES_BOSS_BELOREN_CHILD_OF_ALAR_BODY = [=[
+Allgemein: Farben: Leerenlichtkonvergenz -> Lichtfeder oder Leerenfeder. Nur die eigene Farbe spielt die jeweilige Mechanik.
+Soaks: Lichtsturzschlag oder Leerensturzschlag. Das Ziel geht zum Marker, dieselbe Farbe soaked mit.
+Adds: Funken von Belo'ren schnell kontrollieren. Lichteruption und Leereneruption dürfen nur von der passenden Farbe gekickt werden.
+Orbs: Strahlende Echos. Die richtige Farbe öffnet Lücken, die falsche Farbe ist gefährlich.
+Tank-Combo: Edikt des Wächters führt in Lichtedikt oder Leerenedikt.
+Heilercheck: Ewige Verbrennungen ist ein Absorb und muss schnell weggeheilt werden.
+Übergang: Todessturz führt in die Ei-Phase. Wiedergeburt verhindern und Aschener Segen im Blick behalten.
+{TANK} Tanks spielen immer gegensätzlich mit Lichtfeder und Leerenfeder. Edikt des Wächters mit dem passenden Kegel fangen und den Knockback nicht von der Plattform schicken. Boss nur für Soaks leicht bewegen, wenn die Fläche sauber ist. In der Ei-Phase weiter Kegel fangen und Defensives für spätere Stapel von Aschener Segen planen.
+{DD} Beim Soak-Kreis steht das Ziel am Marker und nur dieselbe Farbe geht rein. Funken von Belo'ren haben Priorität, danach das Ei sofort finishen, damit Wiedergeburt nicht durchgeht. Lichteruption und Leereneruption nur mit passender Farbe unterbrechen. Strahlende Echos mit der eigenen Farbe benutzen, um der anderen Gruppe Lücken zu öffnen. CDs und BL/Hero für die Ei-Phase halten.
+{HEAL} Brennendes Herz ist konstanter AoE und wird in der Ei-Phase deutlich härter. Ewige Verbrennungen schnell wegheilen und die Ziele stabilisieren. Nach Todessturz den Raid sofort auffangen und Bewegung absichern. Mit stapelndem Aschener Segen Heil-CDs für spätere Ei-Phasen einteilen.
+{HC} Erfüllte Federkiele müssen abgefangen werden. Die richtige Farbe stellt sich in die Linie.
+{M} Strahlende Echos, die den Boss erreichen, verursachen massiven Raid-Schaden und müssen deutlich konsequenter entfernt werden. Erfüllte Federkiele verursachen nach dem Abfangen zusätzlichen Nahbereichsschaden, daher nicht direkt auf dem Ziel stacken.
+]=],
+	BOSS_GUIDES_BOSS_MIDNIGHT_FALLS_NAME = "Anbruch der Mitternacht",
+	BOSS_GUIDES_BOSS_MIDNIGHT_FALLS_BODY = [=[
+Allgemein: 2-teiliger Kampf: Phase 1 mit Kristallen und Runen, dann Unterbrechung, dann Phase 2 mit Reaktor und Überladung.
+• Zwielichtkristalle bis zum Dämmerkristall hochheilen, damit Licht- und Schutzzone aktiv bleiben.
+• Mitternachtskristalle sofort fokussieren, sonst droht Kosmische Fraktur und hoher Raid-Schaden.
+• Klagelied des Todes sauber über Runen und Noten lösen. Zuordnungen vorher ansagen, kein Chaos im Raid.
+• Totale Finsternis verlangt eine feste Unterbrechungskette plus Defensives. Wenn etwas durchgeht, wird es sofort ein Heil-CD-Fenster.
+• Große Raid-Peaks kommen durch Zerschmetterter Himmel zusammen mit Verdunkelt oder Lichtentzug. Heil-CDs vorher planen.
+{TANK} Boss stabil halten und Frontal- oder Cleave-Effekte vom Raid wegdrehen. Bewegung klein halten, damit Runen und Soaks sauber bleiben.
+• Lanze des Himmels ist der große Tank-Hit und soll aktiv mit Def-CDs genommen werden.
+• Aufgespießt sauber managen und den Tankwechsel vorher absprechen.
+• Im Übergang und in Phase 2 so stehen, dass der Raid Überlastungsladung kontrolliert spielen kann.
+{DD} Mitternachtskristalle haben absolute Priorität, damit Kosmische Fraktur nicht durchgeht.
+• Klagelied des Todes und Dunkelrune sauber spielen: kurz raus, Mechanik lösen, dann wieder rein.
+• Tränen von L'ura aktiv abfangen. Wenn Kugeln durchgehen, kommt Naarutrauer.
+• In Phase 2 diszipliniert stacken oder spreaden, je nach Ansage für Überlastungsladung.
+{HEAL} Zwielichtkristalle auf 100 Prozent hochheilen, damit der Dämmerkristall sicher bleibt.
+• Verdunkelt oder Lichtentzug zusammen mit Zerschmetterter Himmel sind die zentralen Burst-Fenster für eure CD-Rotation.
+• Tränen von L'ura verursachen Soak-Schaden und brauchen Spotheal oder Bewegungsheilung.
+• In Phase 2 Überlastungsladung mit Heil-CDs und Externals abfedern, besonders wenn der Stack unsauber ist.
+{HC} Hotfix: Verdunkelt, Lichtentzug und Donnernder Brunnen skalieren je nach Gruppengröße bis etwa 20 Prozent niedriger auf Normal und HC.
+• Zerschmetterter Himmel ist auf HC für große Gruppen etwas milder, für kleine Gruppen aber deutlich härter.
+• Konsequenz: Große Raids haben mehr Luft, kleine Raidgrößen müssen Defensives und Heil-CDs enger timen.
+{M} Derzeit sind keine verlässlich dokumentierten zusätzlichen Mythisch-Mechaniken aus frei zugänglichen deutschen Quellen bestätigt.
+• Rechnet vor allem mit höheren Zahlen und strengeren Checks in allen Kernmechaniken.
+]=],
+	BOSS_GUIDES_INSTANCE_WINDRUNNER_SPIRE_TITLE = "Windläuferturm",
+	BOSS_GUIDES_INSTANCE_MAGISTERS_TERRACE_TITLE = "Terrasse der Magister",
+	BOSS_GUIDES_INSTANCE_ALGETHAR_ACADEMY_TITLE = "Akademie von Algeth'ar",
+	BOSS_GUIDES_INSTANCE_PIT_OF_SARON_TITLE = "Grube von Saron",
+	BOSS_GUIDES_INSTANCE_MAISARA_CAVERNS_TITLE = "Maisarakavernen",
+	BOSS_GUIDES_INSTANCE_SKYREACH_TITLE = "Himmelsnadel",
+	BOSS_GUIDES_INSTANCE_SEAT_OF_THE_TRIUMVIRATE_TITLE = "Sitz des Triumvirats",
+	BOSS_GUIDES_INSTANCE_NEXUS_POINT_XENAS_TITLE = "Nexuspunkt Xenas",
 	BOSS_GUIDES_SPELL_NAMES = {
-		["Oblivion's Wrath"] = "Zorn der Auslöschung",
 		["Shadow Phalanx"] = { spellID = 1284786, localizedName = "Schattenphalanx" },
 		["Dark Barrage"] = "Dunkelsalve",
-		["Void Infusion"] = "Leereninfusion",
+		["Void Infusion"] = { spellID = 1245960, localizedName = "Leereninfusion" },
 		["Dark Uproar"] = { spellID = 1249251, localizedName = "Dunkle Verwerfung" },
 		["Black Miasma"] = { spellID = 1275059, localizedName = "Schwarzes Miasma" },
 		["Blackening Wounds"] = { spellID = 1265540, localizedName = "Schwärzende Wunden" },
 		["Cosmic Shell"] = { spellID = 1280035, localizedName = "Kosmischer Panzer" },
 		["Void Marked"] = { spellID = 1280015, localizedName = "Leerenmarkiert" },
+		["Schattenvorstoß"] = { spellID = 1251361, localizedName = "Schattenvorstoß" },
+		["Ruhm des Imperators"] = { spellID = 1253918, localizedName = "Ruhm des Imperators" },
 		["Pitch Bulwark"] = { spellID = 1255702, localizedName = "Bollwerk errichten" },
-		["Void Fall"] = "Leerensturz",
+		["Oblivion's Wrath"] = { spellID = 1260712, localizedName = "Zorn der Vergessenheit", aliases = { "Zorn der Auslöschung" } },
+		["Void Fall"] = { spellID = 1258883, localizedName = "Leerenfall", aliases = { "Leerensturz" } },
 		["Rising Darkness"] = { spellID = 1255749, localizedName = "Aufziehende Dunkelheit" },
 		["Dark Resilience"] = { spellID = 1264164, localizedName = "Dunkle Resilienz" },
 		["Overpowering Pulse"] = { spellID = 1244419, localizedName = "Überwältigender Puls" },
-		["Blisterburst"] = { spellID = 1259186, localizedName = "Pustelbersten" },
+		["Blisterburst"] = { spellID = 1259184, localizedName = "Pustelbersten" },
 		["Void Breath"] = { spellID = 1256855, localizedName = "Leerenatem" },
 		["Primordial Roar"] = { spellID = 1260046, localizedName = "Urzeitliches Brüllen" },
 		["Creep Spit"] = { spellID = 1273159, localizedName = "Kriecherspritzer" },
 		["Shadowclaw Slash"] = { spellID = 1244012, localizedName = "Schattenklauenhieb" },
-		["Dark Goo"] = { localizedName = "Dunkler Schleim", aliases = { "Dunklen Schleim" } },
-		["Smashed"] = "Zerschmettert",
-		["Torturous Extract"] = "Quälender Extrakt",
-		["Shattering Twilight"] = { localizedName = "Zerschmetterndes Zwielicht", aliases = { "Zertrümmerndes Zwielicht" } },
-		["Destabilizing Strikes"] = "Destabilisierende Schläge",
+		["Dark Goo"] = { spellID = 1243270, localizedName = "Dunkler Schleim", aliases = { "Dunklen Schleim" } },
+		["Smashed"] = { spellID = 1241844, localizedName = "Zerschmettert" },
+		["Leerenruptur"] = { spellID = 1262036, localizedName = "Leerenruptur" },
+		["Dunkles Sperrfeuer"] = { spellID = 1274846, localizedName = "Dunkles Sperrfeuer" },
+		["Knirschende Leere"] = { spellID = 1255683, localizedName = "Knirschende Leere" },
+		["Humpelnd"] = { spellID = 1267205, localizedName = "Humpelnd" },
+		["Lauernde Dunkelheit"] = { spellID = 1280075, localizedName = "Lauernde Dunkelheit" },
+		["Abyssischer Malus"] = "Abyssischer Malus",
+		["Abyssische Leerenformer"] = "Abyssische Leerenformer",
+		["Leerenschlund"] = "Leerenschlund",
+		["Nachbeben"] = { spellID = 1273067, localizedName = "Nachbeben" },
+		["Blasenkriecher"] = "Blasenkriecher",
+		["Parasitenausstoß"] = { spellID = 1254199, localizedName = "Parasitenausstoß" },
+		["Dunkle Energie"] = { spellID = 1280101, localizedName = "Dunkle Energie" },
+		["Urzeitliche Macht"] = { spellID = 1272937, localizedName = "Urzeitliche Macht" },
+		["Torturous Extract"] = { spellID = 1245592, localizedName = "Quälendes Extrakt", aliases = { "Quälender Extrakt" } },
+		["Shattering Twilight"] = { spellID = 1253032, localizedName = "Zertrümmerndes Zwielicht", aliases = { "Zerschmetterndes Zwielicht" } },
+		["Destabilizing Strikes"] = { spellID = 1271577, localizedName = "Destabilisierende Stöße", aliases = { "Destabilisierende Schläge" } },
 		["Concentrated Void"] = "Konzentrierte Leere",
 		["Fractured Images"] = "Zersplitterte Abbilder",
 		["Void Convergence"] = { spellID = 1247738, localizedName = "Leerenkonvergenz" },
+		["Void Exposure"] = { spellID = 1250832, localizedName = "Leerenaussetzung" },
+		["Broken Projection"] = { spellID = 1254081, localizedName = "Gebrochene Projektion" },
+		["Shadow Fracture"] = { spellID = 1254088, localizedName = "Schattenfraktur" },
 		["Entropic Unraveling"] = { spellID = 1246175, localizedName = "Entropische Auflösung" },
-		["Twisting Obscurity"] = "Windende Obskurität",
-		["Despotic Command"] = "Despotischer Befehl",
-		["Oppressive Darkness"] = "Erdrückende Dunkelheit",
-		["Dark Radiation"] = "Dunkle Strahlung",
+		["Umbra Rays"] = { spellID = 1260015, localizedName = "Umbrastrahlen" },
+		["Twisting Obscurity"] = { spellID = 1250686, localizedName = "Windende Obskurität" },
+		["Despotic Command"] = { spellID = 1248697, localizedName = "Despotischer Befehl" },
+		["Oppressive Darkness"] = { spellID = 1248709, localizedName = "Drückende Finsternis", aliases = { "Erdrückende Dunkelheit" } },
+		["Dark Radiation"] = { spellID = 1250991, localizedName = "Dunkle Strahlung" },
 		["Enduring Void"] = { localizedName = "Beständige Leere", aliases = { "Anhaltende Leere" } },
 		["Nexus Shield"] = "Nexusschild",
 		["Twilight Bond"] = { spellID = 1270189, localizedName = "Zwielichtbund" },
-		["Vaelwing"] = "Vaelflügel",
-		["Rakfang"] = "Rakzahn",
+		["Twilight Fury"] = { spellID = 1270250, localizedName = "Zwielichtfuror" },
+		["Tail Swipe"] = { spellID = 1264467, localizedName = "Schwanzpeitscher" },
+		["Impale"] = { spellID = 1265152, localizedName = "Durchbohren" },
+		["Vaelwing"] = { spellID = 1265131, localizedName = "Vaelschwinge", aliases = { "Vaelflügel" } },
+		["Rakfang"] = { spellID = 1245645, localizedName = "Rakzahn" },
 		["Nullbeam"] = { spellID = 1262623, localizedName = "Nullstrahl" },
 		["Gloom"] = { spellID = 1245391, localizedName = "Düsternis" },
 		["Dread Breath"] = { spellID = 1244221, localizedName = "Entsetzlicher Atem" },
 		["Radiant Barrier"] = { spellID = 1248847, localizedName = "Strahlende Barriere" },
-		["Nullzone"] = "Nullzone",
-		["Shadowmark"] = "Schattenmal",
-		["Nullsnap"] = "Nullbruch",
-		["Midnight Flames"] = "Mitternachtsflammen",
+		["Nullzone"] = { spellID = 1244672, localizedName = "Nullzone" },
+		["Shadowmark"] = { spellID = 1270513, localizedName = "Schattenmal" },
+		["Nullsnap"] = { spellID = 1244413, localizedName = "Nullbruch" },
+		["Midnight Flames"] = { spellID = 1249748, localizedName = "Mitternachtsflammen" },
 		["Gloomtouched"] = "Von Düsterkeit berührt",
 		["Diminish"] = "Schwächung",
-		["Nullscatter"] = "Nullstreuung",
+		["Nullscatter"] = { spellID = 1266570, localizedName = "Nullstreu", aliases = { "Nullstreuung" } },
 		["Cosmosis"] = "Kosmosis",
 		["Retribution"] = "Vergeltung",
 		["Judgment"] = { spellID = 1246736, localizedName = "Richturteil" },
@@ -480,69 +669,134 @@ Allgemein: Realm-Management entscheidet den Kampf. Adds erst freischalten, dann 
 		["Aura of Wrath"] = { spellID = 1248449, localizedName = "Aura des Zorns" },
 		["Aura of Devotion"] = { spellID = 1246162, localizedName = "Aura der Hingabe" },
 		["Aura of Peace"] = { spellID = 1248451, localizedName = "Aura des Friedens" },
-		["Sacred Shield"] = "Heiliges Schild",
-		["Blinding Light"] = "Blendendes Licht",
-		["Divine Hammer"] = { localizedName = "Göttlicher Hammer", aliases = { "Göttliche Hämmer" } },
-		["Light Infused"] = "Lichtinfundiert",
+		["Sacred Shield"] = { spellID = 1248674, localizedName = "Geheiligter Schild", aliases = { "Heiliges Schild" } },
+		["Blinding Light"] = { spellID = 1258514, localizedName = "Blendendes Licht" },
+		["Divine Hammer"] = { spellID = 1249047, localizedName = "Göttlicher Hammer", aliases = { "Göttliche Hämmer" } },
+		["Light Infused"] = { spellID = 1258659, localizedName = "Lichtdurchdrungen", aliases = { "Lichtinfundiert" } },
 		["Searing Radiance"] = "Sengende Strahlkraft",
-		["Tyr's Wrath"] = "Tyrs Zorn",
-		["Divine Toll"] = "Göttliches Läuten",
+		["Tyr's Wrath"] = { spellID = 1248710, localizedName = "Tyrs Zorn" },
+		["Divine Toll"] = { spellID = 1248644, localizedName = "Göttlicher Glockenschlag", aliases = { "Göttliches Läuten", "Heiliges Läuten" } },
 		["Consecration"] = "Weihe",
-		["Zealous Spirit"] = "Eifergeist",
+		["Zealous Spirit"] = { spellID = 1276243, localizedName = "Eifernder Geist", aliases = { "Eifergeist" } },
 		["Divine Consecration"] = "Göttliche Weihe",
-		["Echoing Darkness"] = { localizedName = "Widerhallende Dunkelheit", tooltipKind = "Bossmechanik", tooltipText = "P1-Aura der Wächter. Stapelt hoch, wenn die Wächter nicht sauber im Nahkampf gebunden und kontrolliert werden." },
-		["Empowering Darkness"] = { localizedName = "Verstärkende Dunkelheit", tooltipKind = "Bossmechanik", tooltipText = "Buff in P2. Entsteht, wenn das Riss-Simulakrum zu nah an Boss oder Adds steht, und muss durch saubere Trennung verhindert werden." },
-		["Rift Slash"] = { localizedName = "Risshieb", tooltipKind = "Bossmechanik", tooltipText = "Tanktreffer in P2. Regelmäßig spotten, damit Stapel und eingehender Schaden beherrschbar bleiben." },
-		["Silverstrike"] = { localizedName = "Silberschlag", tooltipKind = "Bossmechanik", tooltipText = "Silberpfeil-Mechanik des Kampfes. Reinigt Leereffekte und aktiviert beziehungsweise unterstützt Ziele und Adds." },
-		["Cosmic Barrier"] = { localizedName = "Kosmische Barriere", tooltipKind = "Bossmechanik", tooltipText = "Schild in P2. Muss sofort gebrochen werden, bevor der Gruppenschaden außer Kontrolle gerät." },
-		["Coalesced Form"] = { localizedName = "Koaleszierte Form", tooltipKind = "Bossmechanik", tooltipText = "Gefährlicher Zustand der Leerenbrut. Adds müssen vorher kontrolliert und rechtzeitig getötet werden." },
-		["Null Corona"] = { localizedName = "Nullkorona", tooltipKind = "Bossmechanik", tooltipText = "Dispellbarer Debuff. Nur kontrolliert entfernen, nicht wahllos, damit der Raid nicht unnötig belastet wird." },
-		["Voidstalker Sting"] = { localizedName = "Leerenpirscherstachel", tooltipKind = "Bossmechanik", tooltipText = "Großer Heilungscheck. Je nach Taktik kann die Mechanik zusätzlich über Silberpfeile bereinigt werden." },
-		["Devouring Cosmos"] = { localizedName = "Verschlingender Kosmos", tooltipKind = "Bossmechanik", tooltipText = "P3-Bewegungsmechanik. Mit Feder rechtzeitig in die nächste Scheibe wechseln und nicht zu spät rotieren." },
-		["Void Expulsion"] = { localizedName = "Leerenausstoß", tooltipKind = "Bossmechanik", tooltipText = "Zielmechanik, die nach außen gelegt wird. Auf höheren Schwierigkeitsgraden trifft sie zusätzliche Spieler." },
-		["Barrage"] = { localizedName = "Sperrfeuer", tooltipKind = "Bossmechanik", tooltipText = "Zwischenphasen-Mechanik mit festen Ansagen. Linien und Pfeilwege müssen sauber gespielt werden." },
-		["Silver Residue"] = { localizedName = "Silberrückstand", tooltipKind = "Bossmechanik", tooltipText = "Effekt auf Wächterzielen, den die Gruppe aktiv mit Silberpfeilen nutzt, um den Phasenablauf zu optimieren." },
-		["Grasp of Emptiness"] = { localizedName = "Griff der Leere", tooltipKind = "Bossmechanik", tooltipText = "Zielmechanik, die weg vom Raid gelegt wird. Fehlerhafte Platzierung bestraft die Gruppe sofort." },
-		["Upheaval"] = { localizedName = "Aufruhr", aliases = { "Alnstaub-Aufruhr" } },
+		["Echoing Darkness"] = { spellID = 1233778, localizedName = "Hallende Dunkelheit", aliases = { "Widerhallende Dunkelheit" }, tooltipKind = "Bossmechanik", tooltipText = "P1-Aura der Wächter. Stapelt hoch, wenn die Wächter nicht sauber im Nahkampf gebunden und kontrolliert werden." },
+		["Empowering Darkness"] = { spellID = 1237251, localizedName = "Ermächtigende Dunkelheit", aliases = { "Verstärkende Dunkelheit" }, tooltipKind = "Bossmechanik", tooltipText = "Buff in P2. Entsteht, wenn Boss und Klon nicht sauber getrennt werden." },
+		["Rift Slash"] = { spellID = 1246461, localizedName = "Risshieb", tooltipKind = "Bossmechanik", tooltipText = "Tanktreffer in P2. Regelmäßig spotten, damit Stapel und eingehender Schaden beherrschbar bleiben." },
+		["Silverstrike"] = { spellID = 1233602, localizedName = "Silberschlagpfeil", aliases = { "Silberschlag" }, tooltipKind = "Bossmechanik", tooltipText = "Silberpfeil-Mechanik des Kampfes. Reinigt Leereffekte, senkt Immunitäten und unterstützt Ziele sowie Adds." },
+		["Cosmic Barrier"] = { spellID = 1246918, localizedName = "Kosmische Barriere", tooltipKind = "Bossmechanik", tooltipText = "Schild in P2. Muss sofort gebrochen werden, bevor der Gruppenschaden außer Kontrolle gerät." },
+		["Coalesced Form"] = { spellID = 1238672, localizedName = "Verschmolzene Form", aliases = { "Koaleszierte Form" }, tooltipKind = "Bossmechanik", tooltipText = "Gefährlicher Zustand der Leerenbrut. Adds müssen vorher kontrolliert und rechtzeitig getötet werden." },
+		["Null Corona"] = { spellID = 1233865, localizedName = "Nullkorona", tooltipKind = "Bossmechanik", tooltipText = "Dispellbarer Debuff. Nur kontrolliert entfernen, nicht wahllos, damit der Raid nicht unnötig belastet wird." },
+		["Voidstalker Sting"] = { spellID = 1237038, localizedName = "Leerenpirscherstich", aliases = { "Leerenpirscherstachel" }, tooltipKind = "Bossmechanik", tooltipText = "Großer Heilungscheck. Kann je nach Plan auch über Pfeil-Mechaniken entfernt werden." },
+		["Devouring Cosmos"] = { spellID = 1238843, localizedName = "Verschlingender Kosmos", tooltipKind = "Bossmechanik", tooltipText = "P3-Bewegungsmechanik. Mit Feder rechtzeitig in die nächste Scheibe wechseln und nicht zu spät rotieren." },
+		["Void Expulsion"] = { spellID = 1255368, localizedName = "Leerenausstoß", tooltipKind = "Bossmechanik", tooltipText = "Zielmechanik, die nach außen gelegt wird. Auf höheren Schwierigkeitsgraden trifft sie zusätzliche Spieler." },
+		["Barrage"] = { spellID = 1260000, localizedName = "Sperrfeuer der Leere", aliases = { "Sperrfeuer" }, tooltipKind = "Bossmechanik", tooltipText = "Zwischenphasen-Mechanik mit festen Ansagen. Linien und Pfeilwege müssen sauber gespielt werden." },
+		["Silver Residue"] = { spellID = 1233689, localizedName = "Silberrückstände", aliases = { "Silberrückstand" }, tooltipKind = "Bossmechanik", tooltipText = "Effekt auf Wächterzielen, den die Gruppe aktiv mit Silberpfeilen nutzt, um den Phasenablauf zu optimieren." },
+		["Grasp of Emptiness"] = { spellID = 1232467, localizedName = "Griff des Nichts", aliases = { "Griff der Leere" }, tooltipKind = "Bossmechanik", tooltipText = "Zielmechanik, die weg vom Raid gelegt wird. Fehlerhafte Platzierung bestraft die Gruppe sofort." },
+		["Berstendes Nichts"] = { spellID = 1255378, localizedName = "Berstendes Nichts" },
+		["Leerenüberreste"] = { spellID = 1242553, localizedName = "Leerenüberreste" },
+		["Unterbrechendes Beben"] = { spellID = 1243743, localizedName = "Unterbrechendes Beben" },
+		["Unersättlicher Abgrund"] = { spellID = 1243753, localizedName = "Unersättlicher Abgrund" },
+		["Umbralverbindung"] = { spellID = 1233470, localizedName = "Umbralverbindung" },
+		["Silberschlagbeschuss"] = { spellID = 1234564, localizedName = "Silberschlagbeschuss" },
+		["Umkreisende Materie"] = { spellID = 1245874, localizedName = "Umkreisende Materie" },
+		["Ruf der Leere"] = { spellID = 1237837, localizedName = "Ruf der Leere" },
+		["Mal des Waldläuferhauptmanns"] = { spellID = 1237614, localizedName = "Mal des Waldläuferhauptmanns", aliases = { "Jägerhauptmannszeichen" } },
+		["Silberschlagquerschläger"] = { spellID = 1237729, localizedName = "Silberschlagquerschläger" },
+		["Upheaval"] = { spellID = 1246827, localizedName = "Alnstaubaufruhr", aliases = { "Aufruhr", "Alnstaub-Aufruhr" } },
 		["Colossal Horrors"] = "Kolossale Schrecken",
-		["Alnshroud"] = "Alnschleier",
-		["Fearsome Cry"] = { localizedName = "Furchterregender Schrei", aliases = { "Furchterregenden Schrei" } },
-		["Essence Bolt"] = "Essenzblitz",
-		["Ravenous Dive"] = "Gefräßiger Sturzflug",
-		["Rift Sickness"] = "Risskrankheit",
-		["Caustic Phlegm"] = { localizedName = "Ätzender Schleim", aliases = { "Ätzenden Schleim" } },
-		["Cannibalized Essence"] = "Kannibalisierte Essenz",
-		["Consuming Miasma"] = "Verzehrendes Miasma",
-		["Alndust Essence"] = "Alnstaubessenz",
-		["Rift Madness"] = "Risswahnsinn",
-		["Dissonance"] = "Dissonanz",
+		["Alnshroud"] = { spellID = 1270820, localizedName = "Alnschleier" },
+		["Fearsome Cry"] = { spellID = 1249017, localizedName = "Furchterregender Schrei", aliases = { "Furchterregenden Schrei", "Fürchterlicher Schrei" } },
+		["Essence Bolt"] = { spellID = 1261997, localizedName = "Essenzblitz" },
+		["Ravenous Dive"] = { spellID = 1245406, localizedName = "Gefräßiger Sturzflug" },
+		["Rift Sickness"] = { spellID = 1250953, localizedName = "Risskrankheit" },
+		["Caustic Phlegm"] = { spellID = 1246621, localizedName = "Ätzender Auswurf", aliases = { "Ätzender Schleim", "Ätzenden Schleim", "Ätzenden Auswurf" } },
+		["Cannibalized Essence"] = { spellID = 1245844, localizedName = "Verschlungene Essenz", aliases = { "Kannibalisierte Essenz" } },
+		["Consuming Miasma"] = { spellID = 1257087, localizedName = "Zehrendes Miasma", aliases = { "Verzehrendes Miasma" } },
+		["Alndust Essence"] = { spellID = 1245919, localizedName = "Alnstaubessenz" },
+		["Rift Madness"] = { spellID = 1264780, localizedName = "Risswahn", aliases = { "Risswahnsinn" } },
+		["Dissonance"] = { spellID = 1267201, localizedName = "Dissonanz" },
+		["Leerenlichtkonvergenz"] = { spellID = 1242515, localizedName = "Leerenlichtkonvergenz" },
+		["Lichtfeder"] = { spellID = 1241162, localizedName = "Lichtfeder" },
+		["Leerenfeder"] = { spellID = 1241163, localizedName = "Leerenfeder" },
+		["Lichtsturzschlag"] = { spellID = 1241292, localizedName = "Lichtsturzschlag" },
+		["Leerensturzschlag"] = { spellID = 1241339, localizedName = "Leerensturzschlag" },
+		["Funken von Belo'ren"] = { spellID = 1241282, localizedName = "Funken von Belo'ren" },
+		["Lichteruption"] = { spellID = 1243852, localizedName = "Lichteruption" },
+		["Leereneruption"] = { spellID = 1243854, localizedName = "Leereneruption" },
+		["Strahlende Echos"] = { spellID = 1242981, localizedName = "Strahlende Echos" },
+		["Edikt des Wächters"] = { spellID = 1260763, localizedName = "Edikt des Wächters" },
+		["Lichtedikt"] = { spellID = 1241646, localizedName = "Lichtedikt" },
+		["Leerenedikt"] = { spellID = 1261218, localizedName = "Leerenedikt" },
+		["Ewige Verbrennungen"] = { spellID = 1244344, localizedName = "Ewige Verbrennungen" },
+		["Todessturz"] = { spellID = 1246709, localizedName = "Todessturz" },
+		["Wiedergeburt"] = { spellID = 1241313, localizedName = "Wiedergeburt" },
+		["Aschener Segen"] = { spellID = 1262573, localizedName = "Aschener Segen" },
+		["Erfüllte Federkiele"] = { spellID = 1242260, localizedName = "Erfüllte Federkiele" },
+		["Brennendes Herz"] = { spellID = 1283067, localizedName = "Brennendes Herz" },
+		["Zwielichtkristalle"] = "Zwielichtkristalle",
+		["Mitternachtskristalle"] = "Mitternachtskristalle",
+		["Dämmerkristall"] = "Dämmerkristall",
+		["Kosmische Fraktur"] = "Kosmische Fraktur",
+		["Klagelied des Todes"] = "Klagelied des Todes",
+		["Totale Finsternis"] = "Totale Finsternis",
+		["Lanze des Himmels"] = "Lanze des Himmels",
+		["Aufgespießt"] = "Aufgespießt",
+		["Dunkelrune"] = "Dunkelrune",
+		["Tränen von L'ura"] = { localizedName = "Tränen von L'ura", aliases = { "Tränen von L’ura" } },
+		["Naarutrauer"] = "Naarutrauer",
+		["Überlastungsladung"] = "Überlastungsladung",
+		["Verdunkelt"] = { spellID = 1262055, localizedName = "Verdunkelt" },
+		["Lichtentzug"] = { spellID = 1266810, localizedName = "Lichtentzug" },
+		["Donnernder Brunnen"] = { spellID = 1254644, localizedName = "Donnernder Brunnen" },
+		["Zerschmetterter Himmel"] = { spellID = 1249796, localizedName = "Zerschmetterter Himmel" },
 		["Umbral Collapse"] = { spellID = 1249262, localizedName = "Umbralkollaps" },
 		["March of the Endless"] = { spellID = 1251583, localizedName = "Marsch der Unendlichen" },
-		["Leerenheulen"] = "Leerenheulen",
+		["Leerenheulen"] = { spellID = 1244917, localizedName = "Leerenheulen" },
+		["Leereninfusion"] = { spellID = 1245960, localizedName = "Leereninfusion" },
+		["Leerenaussetzung"] = { spellID = 1250832, localizedName = "Leerenaussetzung" },
+		["Gebrochene Projektion"] = { spellID = 1254081, localizedName = "Gebrochene Projektion" },
+		["Schattenfraktur"] = { spellID = 1254088, localizedName = "Schattenfraktur" },
+		["Quälendes Extrakt"] = { spellID = 1245592, localizedName = "Quälendes Extrakt", aliases = { "Quälender Extrakt" } },
+		["Destabilisierende Stöße"] = { spellID = 1271577, localizedName = "Destabilisierende Stöße", aliases = { "Destabilisierende Schläge" } },
+		["Zertrümmerndes Zwielicht"] = { spellID = 1253032, localizedName = "Zertrümmerndes Zwielicht", aliases = { "Zerschmetterndes Zwielicht" } },
+		["Zwielichtstacheln"] = { spellID = 1251213, localizedName = "Zwielichtstacheln" },
+		["Umbrastrahlen"] = { spellID = 1260015, localizedName = "Umbrastrahlen" },
 		["Entsetzlicher Atem"] = "Entsetzlicher Atem",
-		["Nullzonen-Explosion"] = "Nullzonen-Explosion",
+		["Nullzonenimplosion"] = { spellID = 1252157, localizedName = "Nullzonenimplosion", aliases = { "Nullzonen-Explosion" } },
 		["Strahlende Barriere"] = "Strahlende Barriere",
-		["Finales Urteil"] = "Finales Urteil",
-		["Schild der Rechtschaffenen"] = "Schild der Rechtschaffenen",
-		["Schild des Rächers"] = "Schild des Rächers",
-		["Heiliges Läuten"] = "Heiliges Läuten",
+		["Leerenblitz"] = { spellID = 1245175, localizedName = "Leerenblitz" },
+		["Ungebundener Schatten"] = { spellID = 1251686, localizedName = "Ungebundener Schatten" },
+		["Düsternisberührt"] = { spellID = 1245554, localizedName = "Düsternisberührt" },
+		["Mitternachtsmanifestation"] = { spellID = 1255763, localizedName = "Mitternachtsmanifestation" },
+		["Geschwächt"] = { spellID = 1270852, localizedName = "Geschwächt" },
+		["Kosmose"] = { spellID = 1263623, localizedName = "Kosmose" },
+		["Windende Obskurität"] = { spellID = 1250686, localizedName = "Windende Obskurität" },
+		["Despotischer Befehl"] = { spellID = 1248697, localizedName = "Despotischer Befehl" },
+		["Drückende Finsternis"] = { spellID = 1248709, localizedName = "Drückende Finsternis", aliases = { "Erdrückende Dunkelheit" } },
+		["Dunkle Strahlung"] = { spellID = 1250991, localizedName = "Dunkle Strahlung" },
+		["Finales Urteil"] = { spellID = 1251812, localizedName = "Letztes Urteil", aliases = { "Finales Urteil" } },
+		["Schild der Rechtschaffenen"] = { spellID = 1251859, localizedName = "Schild der Rechtschaffenen" },
+		["Schild des Rächers"] = { spellID = 1246485, localizedName = "Schild des Rächers" },
+		["Heiliges Läuten"] = { spellID = 1248644, localizedName = "Heiliges Läuten", aliases = { "Göttlicher Glockenschlag", "Göttliches Läuten" } },
+		["Heiliger Tribut"] = { spellID = 1246749, localizedName = "Heiliger Tribut" },
 		["Göttlicher Sturm"] = "Göttlicher Sturm",
 		["Elekkansturm"] = "Elekkansturm",
 		["Mythische Weihe"] = "Mythische Weihe",
-		["Verderbende Essenz"] = "Verderbende Essenz",
-		["Singularitätsausbruch"] = "Singularitätsausbruch",
-		["Schwerkraftkollaps"] = "Schwerkraftkollaps",
-		["Dunkle Hand"] = "Dunkle Hand",
-		["Flüchtige Risse"] = "Flüchtige Risse",
-		["Jägerhauptmannszeichen"] = "Jägerhauptmannszeichen",
+		["Verderbende Essenz"] = { spellID = 1241520, localizedName = "Verderbende Essenz" },
+		["Singularitätsausbruch"] = { spellID = 1235622, localizedName = "Singularitätsausbruch" },
+		["Gravitationskollaps"] = { spellID = 1239089, localizedName = "Gravitationskollaps", aliases = { "Schwerkraftkollaps" } },
+		["Dunkle Hand"] = { spellID = 1233787, localizedName = "Dunkle Hand" },
+		["Flüchtiger Riss"] = { spellID = 1238206, localizedName = "Flüchtiger Riss", aliases = { "Flüchtige Risse" } },
+		["Jägerhauptmannszeichen"] = { spellID = 1237614, localizedName = "Jägerhauptmannszeichen", aliases = { "Mal des Waldläuferhauptmanns" } },
 		["Leerenfeuerstoß"] = "Leerenfeuerstoß",
-		["Aspekt des Endes"] = "Aspekt des Endes",
-		["Sternenemission"] = "Sternenemission",
-		["Alnsicht"] = "Alnsicht",
-		["Rissanfälligkeit"] = "Rissanfälligkeit",
-		["Reißendes Schlitzen"] = "Reißendes Schlitzen",
-		["Verzehren"] = "Verzehren",
-		["Verderbte Verwüstung"] = "Verderbte Verwüstung",
+		["Aspekt des Endes"] = { spellID = 1239080, localizedName = "Aspekt des Endes" },
+		["Stellaremission"] = { spellID = 1234569, localizedName = "Stellaremission", aliases = { "Sternenemission" } },
+		["Dunkler Rausch"] = { spellID = 1238708, localizedName = "Dunkler Rausch" },
+		["Alnsicht"] = { spellID = 1245698, localizedName = "Alnsicht" },
+		["Rissvulnerabilität"] = { spellID = 1253744, localizedName = "Rissvulnerabilität", aliases = { "Rissanfälligkeit" } },
+		["Reißendes Schlitzen"] = { spellID = 1272689, localizedName = "Reißendes Schlitzen" },
+		["Verschlingen"] = { spellID = 1245396, localizedName = "Verschlingen", aliases = { "Verzehren" } },
+		["Verderbte Vernichtung"] = { spellID = 1245452, localizedName = "Verderbte Vernichtung", aliases = { "Verderbte Verwüstung" } },
 	},
 	STREAMER_PLANNER_TITLE = "Gruppenplaner",
 	STREAMER_PLANNER_DESC = "Ein kleines transparentes Overlay für Stream-Situationen, in dem du Zusagen schnell auf feste Dungeon- oder Raid-Slots verteilen kannst.",
