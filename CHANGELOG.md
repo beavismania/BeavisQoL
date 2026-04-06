@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.27.2 - 2026-04-06
+
+### Versionshinweis
+
+- `0.27.2` ist ein weiterer Hotfix-/Verbesserungsstand zum bestehenden Release `0.27.0`, weil weiterhin keine neuen Module hinzugekommen sind
+- der nächste echte Feature-/Modulstand bleibt damit `0.28.0`
+
+### Verbessert
+
+- `Boss Guides` für `Maisarakavernen`, `Akademie von Algeth'ar`, `Himmelsnadel` und `Sitz des Triumvirats` weiter auf deutsche, hoverbare Bosszauber mit Spell-IDs und Icons umgestellt
+- mehrere Dungeon-Guides nutzen jetzt konsistente deutsche Bosszaubernamen statt gemischter englischer Platzhalter
+
+### Behoben
+
+- sichtbare numerische Spell-IDs aus den Bossguide-Fließtexten entfernt, ohne die Hover- und Tooltip-Funktionalität zu verlieren
+- Bossguide-Lokalisierungen in `deDE` auf fehlerhafte Umlaute und Darstellungsprobleme bereinigt
+
 ## 0.27.1 - 2026-04-06
 
 ### Versionshinweis

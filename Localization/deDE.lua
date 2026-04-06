@@ -669,92 +669,92 @@ Allgemein: Schaden immer auf beide Bosse verteilen, weil Tier wiederbeleben und 
 ]=],
 	BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_NAME = "Oberster Kernbauer Kasreth",
 	BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_BODY = [=[
-Allgemein: Arkanes Schocken (1250553) immer unterbrechen und Leylinienmatrix (1251626) niemals kreuzen. Spieler mit Ladungsrückstoß (1251772) stellen sich an eine Kreuzung von mindestens zwei Leylinien, damit die Strahlen verschwinden. Fluxkollaps (1264040) und Arkanfleck (1262630) konsequent räumen. Bei Kernfunkendetonation (1257509) aus dem Einschlag raus und danach Funkenbrand (1276485) sofort wegheilen.
+Allgemein: Arkanes Schocken immer unterbrechen und Leylinienmatrix niemals kreuzen. Spieler mit Ladungsrückstoß stellen sich an eine Kreuzung von mindestens zwei Leylinien, damit die Strahlen verschwinden. Fluxkollaps und Arkanfleck konsequent räumen. Bei Kernfunkendetonation aus dem Einschlag raus und danach Funkenbrand sofort wegheilen.
 • Der Kampf wird deutlich leichter, wenn freie Wege zwischen den Leylinien stehen bleiben und der Kreuzungs-Spot nicht zugemüllt wird.
-{TANK} Stelle den Boss so, dass die Gruppe freie Laufwege zwischen den Leylinien behält und Ladungsrückstoß (1251772) sauber auf einer vorbereiteten Kreuzung gespielt werden kann.
-{DD} Bei Kernfunkendetonation (1257509) sofort raus und danach Schaden drücken, während Funkenbrand (1276485) abgearbeitet wird. Unterbrechungen auf Arkanes Schocken (1250553) haben Priorität.
-{HEAL} Kernfunkendetonation (1257509) plus Funkenbrand (1276485) ist das klare Schadensfenster des Kampfes. CD, Externals und Spotheal dafür einplanen.
+{TANK} Stelle den Boss so, dass die Gruppe freie Laufwege zwischen den Leylinien behält und Ladungsrückstoß sauber auf einer vorbereiteten Kreuzung gespielt werden kann.
+{DD} Bei Kernfunkendetonation sofort raus und danach Schaden drücken, während Funkenbrand abgearbeitet wird. Unterbrechungen auf Arkanes Schocken haben Priorität.
+{HEAL} Kernfunkendetonation plus Funkenbrand ist das klare Schadensfenster des Kampfes. CD, Externals und Spotheal dafür einplanen.
 {HC} In der Quelle sind keine explizit neuen HC-Fähigkeiten genannt; zusätzliche Effekte sind nur allgemein als höhere Modi markiert.
 ]=],
 	BOSS_GUIDES_BOSS_KERNWAECHTERIN_NYSARRA_NAME = "Kernwächterin Nysarra",
 	BOSS_GUIDES_BOSS_KERNWAECHTERIN_NYSARRA_BODY = [=[
-Allgemein: Bei Verdunkelnder Schritt (1249014) sofort aus dem 14-Meter-Umkreis raus. Nullvorhut (1252703) startet die Add-Phase; Adds sofort priorisieren, Neutralisieren (1282722) kicken und Dämmerschrecken (1282723) ausweichen. Umbralpeitsche (1247937) endet mit Leerenschnitt (1252828) und ist die zentrale Tank-Combo. Lichtgezeichnete Flamme (1247976) ist euer Burstfenster im Lichtkegel, bringt aber konstanten Heiligschaden.
-{TANK} Plane Defensives für Umbralpeitsche (1247937) und vor allem den letzten Treffer Leerenschnitt (1252828). Friss danach keine unnötigen Zusatzhits und nutze bei Bedarf Kiten oder Externals.
-{DD} Nullvorhut (1252703) ist höchste Priorität und Neutralisieren (1282722) muss immer gestoppt werden. Nutzt Lichtgezeichnete Flamme (1247976) bewusst als Schadensfenster.
-{HEAL} Im Lichtkegel von Lichtgezeichnete Flamme (1247976) kommt konstanter Gruppenschaden herein. Hier Gruppenheilung durchdrücken und danach die Gruppe schnell wieder stabilisieren.
+Allgemein: Bei Verdunkelnder Schritt sofort aus dem 14-Meter-Umkreis raus. Nullvorhut startet die Add-Phase; Adds sofort priorisieren, Neutralisieren kicken und Dämmerschrecken ausweichen. Umbralpeitsche endet mit Leerenschnitt und ist die zentrale Tank-Combo. Lichtgezeichnete Flamme ist euer Burstfenster im Lichtkegel, bringt aber konstanten Heiligschaden.
+{TANK} Plane Defensives für Umbralpeitsche und vor allem den letzten Treffer Leerenschnitt. Friss danach keine unnötigen Zusatzhits und nutze bei Bedarf Kiten oder Externals.
+{DD} Nullvorhut ist höchste Priorität und Neutralisieren muss immer gestoppt werden. Nutzt Lichtgezeichnete Flamme bewusst als Schadensfenster.
+{HEAL} Im Lichtkegel von Lichtgezeichnete Flamme kommt konstanter Gruppenschaden herein. Hier Gruppenheilung durchdrücken und danach die Gruppe schnell wieder stabilisieren.
 {HC} Ab höheren Modi kommen laut Quelle zusätzliche Adds oder Strafmechaniken hinzu; das Grundgerüst mit Add-Priorität, Kicks und sauberem Lichtfenster bleibt aber gleich.
 ]=],
 	BOSS_GUIDES_BOSS_LOTHRAXION_NAME = "Lothraxion",
 	BOSS_GUIDES_BOSS_LOTHRAXION_BODY = [=[
-Allgemein: Sengende Verwundung (1253950) und Strahlende Narbe (1255389) kontrollieren den Boden; den Boss sofort aus Narben ziehen. Bei Strahlende Zerstreuung (1253848) verteilt stehen, weil Abbilder an Spielern erscheinen und mit 8 Metern AoE explodieren. Gespiegeltes Verwunden (1266713) niemals berühren, sonst folgen Knockback, Stapel-DoT und neue Narbe. Bei 100 Energie startet Göttliche List (1257613): den echten Boss am Abbild ohne Hörner erkennen und sofort unterbrechen.
-{TANK} Bewege Lothraxion dauerhaft aus Strahlender Narbe (1255389) heraus und halte eine saubere Kampfzone frei, damit der Raum nicht früh kippt.
-{DD} Bei Göttliche List (1257613) sofort target-swappen und den Kick auf das richtige Ziel sichern. Nach Strahlende Zerstreuung (1253848) nicht in Pfeil- oder Sprungrichtungen stehen bleiben.
-{HEAL} Größte Heilspitzen kommen durch Strahlende Zerstreuung (1253848) und Fehler bei Gespiegeltes Verwunden (1266713). Halte dafür schnelle Gruppenstabilisierung bereit.
-{HC} In höheren Modi wird ein verpasster Unterbruch auf Göttliche List (1257613) zusätzlich mit Kernbelastung (1271511) bestraft.
+Allgemein: Sengende Verwundung und Strahlende Narbe kontrollieren den Boden; den Boss sofort aus Narben ziehen. Bei Strahlende Zerstreuung verteilt stehen, weil Abbilder an Spielern erscheinen und mit 8 Metern AoE explodieren. Gespiegeltes Verwunden niemals berühren, sonst folgen Knockback, Stapel-DoT und neue Narbe. Bei 100 Energie startet Göttliche List: den echten Boss am Abbild ohne Hörner erkennen und sofort unterbrechen.
+{TANK} Bewege Lothraxion dauerhaft aus Strahlender Narbe heraus und halte eine saubere Kampfzone frei, damit der Raum nicht früh kippt.
+{DD} Bei Göttliche List sofort target-swappen und den Kick auf das richtige Ziel sichern. Nach Strahlende Zerstreuung nicht in Pfeil- oder Sprungrichtungen stehen bleiben.
+{HEAL} Größte Heilspitzen kommen durch Strahlende Zerstreuung und Fehler bei Gespiegeltes Verwunden. Halte dafür schnelle Gruppenstabilisierung bereit.
+{HC} In höheren Modi wird ein verpasster Unterbruch auf Göttliche List zusätzlich mit Kernbelastung bestraft.
 ]=],
 	BOSS_GUIDES_BOSS_ARKANOTRONWAECHTER_NAME = "Arkanotronwächter",
 	BOSS_GUIDES_BOSS_ARKANOTRONWAECHTER_BODY = [=[
-Allgemein: Während Aufladeprotokoll (474345) zieht der Boss Energiekugeln (474396) an. Diese Kugeln abfangen, damit keine Arkane Ermächtigung (474407) auf dem Boss landet. Jeder Soak gibt Instabile Energie (1243905), also Treffer rotieren. Arkane Überreste (1214089) kommen in höheren Modi als zusätzliche Bodenflächen dazu und dürfen den Raum nicht zumüllen.
-{TANK} Halte den Boss stabil, damit Soaker die Energiekugel (474396) sicher auf der Linie abfangen können und nichts unkontrolliert in den Boss läuft.
-{DD} Nutzt Aufladeprotokoll (474345) als Burstfenster, aber nicht auf Kosten sauberer Kugel-Soaks. Wenn der Boss Arkane Ermächtigung (474407) bekommt, war der Fehler meist schon vorher.
-{HEAL} Instabile Energie (1243905) stapelt und tickt hart. Soaker brauchen schnelle Spotheals und oft auch einen External, wenn mehrere Kugeln kurz nacheinander gefangen werden.
-{HC} Zusätzliche Flächen und höhere Komplexität sind in der Quelle erst ab höheren Modi markiert, vor allem über Arkane Überreste (1214089).
+Allgemein: Während Aufladeprotokoll zieht der Boss Energiekugeln an. Diese Kugeln abfangen, damit keine Arkane Ermächtigung auf dem Boss landet. Jeder Soak gibt Instabile Energie, also Treffer rotieren. Arkane Überreste kommen in höheren Modi als zusätzliche Bodenflächen dazu und dürfen den Raum nicht zumüllen.
+{TANK} Halte den Boss stabil, damit Soaker die Energiekugel sicher auf der Linie abfangen können und nichts unkontrolliert in den Boss läuft.
+{DD} Nutzt Aufladeprotokoll als Burstfenster, aber nicht auf Kosten sauberer Kugel-Soaks. Wenn der Boss Arkane Ermächtigung bekommt, war der Fehler meist schon vorher.
+{HEAL} Instabile Energie stapelt und tickt hart. Soaker brauchen schnelle Spotheals und oft auch einen External, wenn mehrere Kugeln kurz nacheinander gefangen werden.
+{HC} Zusätzliche Flächen und höhere Komplexität sind in der Quelle erst ab höheren Modi markiert, vor allem über Arkane Überreste.
 ]=],
 	BOSS_GUIDES_BOSS_SERANEL_SONNENPEITSCHE_NAME = "Seranel Sonnenpeitsche",
 	BOSS_GUIDES_BOSS_SERANEL_SONNENPEITSCHE_BODY = [=[
-Allgemein: Unterdrückungsbereich (1224903) ist Silence- und Pacify-Zone und zugleich Lösung für Runenmal (1225792). Betroffene entfernen den Debuff im Unterdrückungsbereich (1224903), lösen dabei aber Rückkopplung (1225135) aus und müssen die Einschläge dodgen. Für Welle der Stille (1225193) rechtzeitig in den Unterdrückungsbereich stellen, sonst sind 8 Sekunden lang keine Wirkungen möglich. Beschleunigender Zauberschutz (1248689) sofort dispellen oder purgen.
-{TANK} Wenn Beschleunigender Zauberschutz (1248689) durchkommt, defensiv spielen und bei Bedarf kurz kiten, bis der Buff entfernt ist.
-{DD} Rückkopplung (1225135) sauber ausweichen und Beschleunigender Zauberschutz (1248689) sofort entfernen. Betroffene mit Runenmal (1225792) brauchen klare Wege in die Zone.
-{HEAL} Wenn Runenmal (1225792) im Unterdrückungsbereich gereinigt wird, erzeugt Rückkopplung (1225135) oft kurz Chaos. Erst stabilisieren, dann die nächste Mechanik vorbereiten.
-{HC} Ab höheren Modi kommt Nullreaktion (1246446) als zusätzlicher Schaden und Slow beim Entfernen von Runenmal (1225792) dazu.
+Allgemein: Unterdrückungsbereich ist Silence- und Pacify-Zone und zugleich Lösung für Runenmal. Betroffene entfernen den Debuff im Unterdrückungsbereich, lösen dabei aber Rückkopplung aus und müssen die Einschläge dodgen. Für Welle der Stille rechtzeitig in den Unterdrückungsbereich stellen, sonst sind 8 Sekunden lang keine Wirkungen möglich. Beschleunigender Zauberschutz sofort dispellen oder purgen.
+{TANK} Wenn Beschleunigender Zauberschutz durchkommt, defensiv spielen und bei Bedarf kurz kiten, bis der Buff entfernt ist.
+{DD} Rückkopplung sauber ausweichen und Beschleunigender Zauberschutz sofort entfernen. Betroffene mit Runenmal brauchen klare Wege in die Zone.
+{HEAL} Wenn Runenmal im Unterdrückungsbereich gereinigt wird, erzeugt Rückkopplung oft kurz Chaos. Erst stabilisieren, dann die nächste Mechanik vorbereiten.
+{HC} Ab höheren Modi kommt Nullreaktion als zusätzlicher Schaden und Slow beim Entfernen von Runenmal dazu.
 ]=],
 	BOSS_GUIDES_BOSS_GEMELLUS_NAME = "Gemellus",
 	BOSS_GUIDES_BOSS_GEMELLUS_BODY = [=[
-Allgemein: Verdreifachung (1223847) teilt den Kampf zu Pull und bei etwa 50 Prozent in Klone mit geteilten Lebenspunkten. Astraler Griff (1224299) zwingt euch zum Gegenlaufen; wer stehen bleibt, frisst Kosmische Strahlung (1224401). Kosmischer Stich (1284958) hinterlässt Leerenabsonderung (1224100) und muss sauber aus dem Spielraum herausgelegt werden. In höheren Modi kommt Neurale Verbindung (1253707) dazu: Pfeil lesen und die Verbindung rechtzeitig brechen.
-{TANK} Stelle die Klone so, dass Astraler Griff (1224299) die Gruppe nicht durch Pfützen aus Leerenabsonderung (1224100) zieht und freie Ausweichwege offen bleiben.
-{DD} Bei Astraler Griff (1224299) sofort gegenlaufen und bei Bedarf defensiv spielen. Die Arena kippt hier eher durch schlechte Bewegung als durch fehlenden Bossschaden.
-{HEAL} Heil-CDs für Astraler Griff (1224299) und mögliche Treffer von Kosmische Strahlung (1224401) vorbereiten. DoTs und Pfützenfehler eskalieren sehr schnell.
-{HC} Mehrmechaniken wie Neurale Verbindung (1253707) sind in der Quelle erst ab höheren Modi markiert.
+Allgemein: Verdreifachung teilt den Kampf zu Pull und bei etwa 50 Prozent in Klone mit geteilten Lebenspunkten. Astraler Griff zwingt euch zum Gegenlaufen; wer stehen bleibt, frisst Kosmische Strahlung. Kosmischer Stich hinterlässt Leerenabsonderung und muss sauber aus dem Spielraum herausgelegt werden. In höheren Modi kommt Neurale Verbindung dazu: Pfeil lesen und die Verbindung rechtzeitig brechen.
+{TANK} Stelle die Klone so, dass Astraler Griff die Gruppe nicht durch Pfützen aus Leerenabsonderung zieht und freie Ausweichwege offen bleiben.
+{DD} Bei Astraler Griff sofort gegenlaufen und bei Bedarf defensiv spielen. Die Arena kippt hier eher durch schlechte Bewegung als durch fehlenden Bossschaden.
+{HEAL} Heil-CDs für Astraler Griff und mögliche Treffer von Kosmische Strahlung vorbereiten. DoTs und Pfützenfehler eskalieren sehr schnell.
+{HC} Mehrmechaniken wie Neurale Verbindung sind in der Quelle erst ab höheren Modi markiert.
 ]=],
 	BOSS_GUIDES_BOSS_DEGENTRIUS_NAME = "Degentrius",
 	BOSS_GUIDES_BOSS_DEGENTRIUS_BODY = [=[
-Allgemein: Leerenströme dürfen nie berührt werden und zwingen zu permanenter Raumkontrolle. Instabile Leerenessenz (1215087) schlägt in mehreren Zonen ein; jede Zone braucht Spieler im Einschlag, sonst folgt Leerenzerstörung (1215161). Verschlingende Entropie (1215897) erzeugt beim Dispel oder Auslaufen Entropiekugeln (1269631), deshalb Debuffs gestaffelt auflösen. Wuchtiges Fragment (1280113) und Umbralsplitter (1284627) sind die zentrale Tank-Combo und gehören aus der Gruppe heraus.
-{TANK} Trage Wuchtiges Fragment (1280113) immer von der Gruppe weg und plane Defensives für Umbralsplitter (1284627) ein. Die Nahgruppe darf nie im 8-Meter-Bereich stehen.
-{DD} Bei Instabile Leerenessenz (1215087) jede Zone zuverlässig besetzen. Wenn ein Einschlag verpasst wird, endet das meist direkt in Leerenzerstörung (1215161).
-{HEAL} Für Verschlingende Entropie (1215897) einen klaren Dispelplan spielen, zum Beispiel einen Debuff sofort und einen verzögert, damit die Entropiekugeln (1269631) nicht gleichzeitig eskalieren.
+Allgemein: Leerenströme dürfen nie berührt werden und zwingen zu permanenter Raumkontrolle. Instabile Leerenessenz schlägt in mehreren Zonen ein; jede Zone braucht Spieler im Einschlag, sonst folgt Leerenzerstörung. Verschlingende Entropie erzeugt beim Dispel oder Auslaufen Entropiekugeln, deshalb Debuffs gestaffelt auflösen. Wuchtiges Fragment und Umbralsplitter sind die zentrale Tank-Combo und gehören aus der Gruppe heraus.
+{TANK} Trage Wuchtiges Fragment immer von der Gruppe weg und plane Defensives für Umbralsplitter ein. Die Nahgruppe darf nie im 8-Meter-Bereich stehen.
+{DD} Bei Instabile Leerenessenz jede Zone zuverlässig besetzen. Wenn ein Einschlag verpasst wird, endet das meist direkt in Leerenzerstörung.
+{HEAL} Für Verschlingende Entropie einen klaren Dispelplan spielen, zum Beispiel einen Debuff sofort und einen verzögert, damit die Entropiekugeln nicht gleichzeitig eskalieren.
 {HC} Die Quelle markiert zusätzliche Spitzen eher allgemein als höhere Modi; Kernprinzipien bleiben Soak-Disziplin, kontrollierte Dispels und stabiles Orb-Management.
 ]=],
 	BOSS_GUIDES_BOSS_DAEMMERGLUT_NAME = "Dämmerglut",
 	BOSS_GUIDES_BOSS_DAEMMERGLUT_BODY = [=[
-Allgemein: Flammender Aufwind (466556) immer nach außen droppen, damit Fläche und Wirbel die Arena nicht schließen. Flammender Wirbelsturm (469633) sauber ausweichen. Brennende Bö (465904) ist die Energie-Phase mit anhaltendem Gruppenschaden und Knockback. Sengender Schnabel (466064) ist der zentrale Tankbuster.
-{TANK} Sengender Schnabel (466064) defensiv planen, weil der Treffer physischen Schaden plus Feuer-DoT kombiniert.
-{DD} Flammender Aufwind (466556) wirklich konsequent am Rand ablegen. Ein schlechter Drop macht den Rest des Kampfes unnötig eng.
-{HEAL} Brennende Bö (465904) ist das klare Heilfenster. Gruppen-CDs und Spotheal auf Aufwind-Ziele hier bündeln.
-{HC} Ab höheren Modi kommt zusätzlich Feueratem (1217762) während Brennende Bö (465904) dazu.
+Allgemein: Flammender Aufwind immer nach außen droppen, damit Fläche und Wirbel die Arena nicht schließen. Flammender Wirbelsturm sauber ausweichen. Brennende Bö ist die Energie-Phase mit anhaltendem Gruppenschaden und Knockback. Sengender Schnabel ist der zentrale Tankbuster.
+{TANK} Sengender Schnabel defensiv planen, weil der Treffer physischen Schaden plus Feuer-DoT kombiniert.
+{DD} Flammender Aufwind wirklich konsequent am Rand ablegen. Ein schlechter Drop macht den Rest des Kampfes unnötig eng.
+{HEAL} Brennende Bö ist das klare Heilfenster. Gruppen-CDs und Spotheal auf Aufwind-Ziele hier bündeln.
+{HC} Ab höheren Modi kommt zusätzlich Feueratem während Brennende Bö dazu.
 ]=],
 	BOSS_GUIDES_BOSS_HERUNTERGEKOMMENES_DUO_NAME = "Heruntergekommenes Duo",
 	BOSS_GUIDES_BOSS_HERUNTERGEKOMMENES_DUO_BODY = [=[
-Allgemein: Zerrissenes Band (1219551) macht den Kampf zu einem reinen Health-Check. Stirbt ein Ziel deutlich früher, wird der Überlebende massiv stärker. Entkräftendes Kreischen (472736) ist die gefährlichste Gruppenphase und muss gestoppt oder mit CDs überlebt werden.
-{TANK} Positioniere beide Ziele so, dass die Gruppe nicht zwischen Folge-Mechaniken eingekesselt wird. Wenn Entkräftendes Kreischen (472736) durchgeht, sofort defensiv reagieren.
-{DD} Kicks und Stops auf Entkräftendes Kreischen (472736) priorisieren und die Lebenspunkte beider Ziele eng zusammenhalten, damit Zerrissenes Band (1219551) nicht eskaliert.
-{HEAL} Entkräftendes Kreischen (472736) ist der große Healcheck. Große CDs lieber dafür aufheben als für zufälligen Streuschaden.
-{HC} Ab höheren Modi kommt Fluch der Dunkelheit (474105) mit fixierenden Geistern dazu. Diese werden gekitet oder kontrolliert, nicht aus Versehen mitgetankt.
+Allgemein: Zerrissenes Band macht den Kampf zu einem reinen Health-Check. Stirbt ein Ziel deutlich früher, wird der Überlebende massiv stärker. Entkräftendes Kreischen ist die gefährlichste Gruppenphase und muss gestoppt oder mit CDs überlebt werden.
+{TANK} Positioniere beide Ziele so, dass die Gruppe nicht zwischen Folge-Mechaniken eingekesselt wird. Wenn Entkräftendes Kreischen durchgeht, sofort defensiv reagieren.
+{DD} Kicks und Stops auf Entkräftendes Kreischen priorisieren und die Lebenspunkte beider Ziele eng zusammenhalten, damit Zerrissenes Band nicht eskaliert.
+{HEAL} Entkräftendes Kreischen ist der große Healcheck. Große CDs lieber dafür aufheben als für zufälligen Streuschaden.
+{HC} Ab höheren Modi kommt Fluch der Dunkelheit mit fixierenden Geistern dazu. Diese werden gekitet oder kontrolliert, nicht aus Versehen mitgetankt.
 ]=],
 	BOSS_GUIDES_BOSS_COMMANDER_KROLUK_NAME = "Kommandant Kroluk",
 	BOSS_GUIDES_BOSS_COMMANDER_KROLUK_BODY = [=[
-Allgemein: Versammelndes Gebrüll (472043) ruft den Kriegstrupp. Solange Adds leben, kanalisiert der Boss Klingensturm (470963) und ist zusätzlich durch Schildwall (1250851) geschützt. Toben (467620) ist der Tankbuster. Tollkühner Sprung (472081) geht auf den entferntesten Spieler und wird danach von Fallendes Geröll (1283357) begleitet.
-{TANK} Plane Defensives und Externals für Toben (467620). Stelle den Boss so, dass Add-Phase und Sprung-Bait die Gruppe nicht zerreißen.
-{DD} In der Gebrüll-Phase haben Adds absolute Priorität, sonst läuft Klingensturm (470963) zu lange weiter. Der weiteste Spieler für Tollkühner Sprung (472081) sollte bewusst gewählt sein.
-{HEAL} Größte Gruppenspitze ist Versammelndes Gebrüll (472043) zusammen mit Klingensturm (470963). Heile hier aktiv vor statt hinterher.
-{HC} Ab höheren Modi kommt Drohruf (1253026) hinzu und darf nicht solo genommen werden; die Gruppe muss dafür bewusst stacken.
+Allgemein: Versammelndes Gebrüll ruft den Kriegstrupp. Solange Adds leben, kanalisiert der Boss Klingensturm und ist zusätzlich durch Schildwall geschützt. Toben ist der Tankbuster. Tollkühner Sprung geht auf den entferntesten Spieler und wird danach von Fallendes Geröll begleitet.
+{TANK} Plane Defensives und Externals für Toben. Stelle den Boss so, dass Add-Phase und Sprung-Bait die Gruppe nicht zerreißen.
+{DD} In der Gebrüll-Phase haben Adds absolute Priorität, sonst läuft Klingensturm zu lange weiter. Der weiteste Spieler für Tollkühner Sprung sollte bewusst gewählt sein.
+{HEAL} Größte Gruppenspitze ist Versammelndes Gebrüll zusammen mit Klingensturm. Heile hier aktiv vor statt hinterher.
+{HC} Ab höheren Modi kommt Drohruf hinzu und darf nicht solo genommen werden; die Gruppe muss dafür bewusst stacken.
 ]=],
 	BOSS_GUIDES_BOSS_DAS_RASTLOSE_HERZ_NAME = "Das rastlose Herz",
 	BOSS_GUIDES_BOSS_DAS_RASTLOSE_HERZ_BODY = [=[
-Allgemein: Zielscheibenwindstoß (468429) erzeugt Wogender Wind (468442) als expandierenden Ring und darf die Arena nicht ungünstig zerschneiden. Pfeilhagel (472556) spawnt Swirls; daraus entstehen Turbulente Pfeile (1253977) mit Knock-up. Sturmschlitzer (472662) ist ein stapelnder Tankbuster, der laut Mechanik über Turbulente Pfeile (1253977) gelöst wird. Blitzbö (474528) ist ein frontaler Sperrfeuer-Channel auf ein Ziel; das Ziel bleibt stehen, alle anderen weichen aus.
-{TANK} Sturmschlitzer (472662) wird mit jedem Stapel gefährlicher. Defensives einteilen und den Reset über Turbulente Pfeile (1253977) aktiv mitspielen.
-{DD} Zielscheibenwindstoß (468429) so platzieren, dass Wogender Wind (468442) nicht die ganze Arena abschneidet. Böenschuss (1253986) kann in höheren Modi Stürmischer Seelenquell (1282932) entfernen.
-{HEAL} Blitzbö (474528) und Sturmböensprung (1216042) erzeugen die größten Gruppenspitzen. Plane CDs dafür und halte besonders Fehler nach Knock-ups im Blick.
-{HC} Ab höheren Modi wird Stürmischer Seelenquell (1282932) zur Zusatzgefahr und muss mit Böenschuss (1253986) kontrolliert werden.
+Allgemein: Zielscheibenwindstoß erzeugt Wogender Wind als expandierenden Ring und darf die Arena nicht ungünstig zerschneiden. Pfeilhagel spawnt Swirls; daraus entstehen Turbulente Pfeile mit Knock-up. Sturmschlitzer ist ein stapelnder Tankbuster, der laut Mechanik über Turbulente Pfeile gelöst wird. Blitzbö ist ein frontaler Sperrfeuer-Channel auf ein Ziel; das Ziel bleibt stehen, alle anderen weichen aus.
+{TANK} Sturmschlitzer wird mit jedem Stapel gefährlicher. Defensives einteilen und den Reset über Turbulente Pfeile aktiv mitspielen.
+{DD} Zielscheibenwindstoß so platzieren, dass Wogender Wind nicht die ganze Arena abschneidet. Böenschuss kann in höheren Modi Stürmischer Seelenquell entfernen.
+{HEAL} Blitzbö und Sturmböensprung erzeugen die größten Gruppenspitzen. Plane CDs dafür und halte besonders Fehler nach Knock-ups im Blick.
+{HC} Ab höheren Modi wird Stürmischer Seelenquell zur Zusatzgefahr und muss mit Böenschuss kontrolliert werden.
 ]=],
 	BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_NAME = "Überwuchertes Urtum",
 	BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_BODY = [=[
@@ -803,43 +803,43 @@ Astralschock nie unnötig überlappen lassen, weil sonst Stacks und Rift-Dichte 
 ]=],
 	BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_NAME = "Schmiedemeister Garfrost",
 	BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_BODY = [=[
-Allgemein: Throw Saronite (1261299) nicht stacken und die Ore Chunks (1272433) sinnvoll platzieren, damit die Arena nicht zugestellt wird.
-Bei voller Energie folgt Glacial Overload (1262029); dafür hinter einem Ore Chunk (1272433) verstecken, weil der Chunk die Abschirmung liefert.
-Nach Glacial Overload (1262029) kommt Cryostomp (1261847) mit Gruppen-AoE und zwei Magie-Debuffs; diese schnell dispellen, damit sie nicht zusammen mit Siphoning Chill (1261806) unnötig viel Heilung fressen.
-{TANK} Orebreaker (1261546) ist der Tank-Buster. Defensiv timen und den Boss so stellen, dass dabei ein Ore Chunk (1272433) getroffen oder zerstört wird.
-Lasst nicht mehrere ungelöste Ore Chunks (1272433) gleichzeitig stehen, wenn euer Setup sie schlecht kontrolliert bekommt.
-{DD} Ore Chunks (1272433) kontrolliert mit entfernen und nicht wahllos zusätzliche Bodenprobleme erzeugen.
-Während Glacial Overload (1262029) sauber hinter den Chunk gehen und danach sofort wieder heraus, damit Uptime und Wege kurz bleiben.
-{HEAL} Cryostomp (1261847) ist das klare Heil-CD-Fenster, besonders auf höheren Stufen.
-Die Magie-Debuffs nach Cryostomp (1261847) zügig dispellen, idealerweise ein Ziel sofort und das zweite je nach GCD und Gruppenschaden.
-Siphoning Chill (1261806) läuft dauerhaft als Aura-Schaden und bestimmt euren Mana- und CD-Plan.
+Allgemein: Throw Saronite nicht stacken und die Ore Chunks sinnvoll platzieren, damit die Arena nicht zugestellt wird.
+Bei voller Energie folgt Glacial Overload; dafür hinter einem Ore Chunk verstecken, weil der Chunk die Abschirmung liefert.
+Nach Glacial Overload kommt Cryostomp mit Gruppen-AoE und zwei Magie-Debuffs; diese schnell dispellen, damit sie nicht zusammen mit Siphoning Chill unnötig viel Heilung fressen.
+{TANK} Orebreaker ist der Tank-Buster. Defensiv timen und den Boss so stellen, dass dabei ein Ore Chunk getroffen oder zerstört wird.
+Lasst nicht mehrere ungelöste Ore Chunks gleichzeitig stehen, wenn euer Setup sie schlecht kontrolliert bekommt.
+{DD} Ore Chunks kontrolliert mit entfernen und nicht wahllos zusätzliche Bodenprobleme erzeugen.
+Während Glacial Overload sauber hinter den Chunk gehen und danach sofort wieder heraus, damit Uptime und Wege kurz bleiben.
+{HEAL} Cryostomp ist das klare Heil-CD-Fenster, besonders auf höheren Stufen.
+Die Magie-Debuffs nach Cryostomp zügig dispellen, idealerweise ein Ziel sofort und das zweite je nach GCD und Gruppenschaden.
+Siphoning Chill läuft dauerhaft als Aura-Schaden und bestimmt euren Mana- und CD-Plan.
 {HC} In den aktuell verfügbaren Guides werden keine getrennten Mechanik-Unterschiede für Heroic gegenüber Mythic genannt; der Unterschied liegt vor allem im Tuning.
 ]=],
 	BOSS_GUIDES_BOSS_ICK_AND_KRICK_NAME = "Ick und Krick",
 	BOSS_GUIDES_BOSS_ICK_AND_KRICK_BODY = [=[
-Allgemein: Necrolink (1264192) bedeutet geteilte HP; cleaven deshalb immer mit, wenn es sicher geht.
-Blight Smash (1264287) und Plague Explosion (1264336) erzeugen Area-Denial; haltet daher bewusst saubere Zonen offen.
-Shade Shift (1264027) bringt Adds ins Spiel; cleave diese mit Priorität, ohne dabei den wichtigsten Interrupt zu verlieren.
-{TANK} Blight Smash (1264287) defensiv spielen und die entstehende Fläche aus dem Kampfbereich heraus droppen, nicht in Melee- oder Heiler-Positionen.
-Während Get 'em, Ick! (1264363) fixiert der Boss ein Zufallsziel; wenn das bei dir oder in deiner Nähe passiert, so laufen, dass die Gruppe nicht gegrieft wird.
-{DD} Death Bolt (1278893) von Krick ist Top-Priorität für Kicks.
-Bei Shade Shift (1264027) Shades sofort cleaven oder töten; Shadowbind (1264186) unterbrechen oder entfluchen, wenn euer Setup das kann.
-Wenn Get 'em, Ick! (1264363) auf dich geht, sauber kiten; wenn nicht, das Fenster für Cleave und Push nutzen.
-{HEAL} Plague Explosion (1264336) wird schnell spiky, wenn Spieler schlecht stehen; vorher HoTs oder Schilde vorbereiten.
-Shadowbind (1264186) bei verfügbarem Fluch-Dispel zügig lösen, alternativ Kicks und Stops sauber abdecken.
+Allgemein: Necrolink bedeutet geteilte HP; cleaven deshalb immer mit, wenn es sicher geht.
+Blight Smash und Plague Explosion erzeugen Area-Denial; haltet daher bewusst saubere Zonen offen.
+Shade Shift bringt Adds ins Spiel; cleave diese mit Priorität, ohne dabei den wichtigsten Interrupt zu verlieren.
+{TANK} Blight Smash defensiv spielen und die entstehende Fläche aus dem Kampfbereich heraus droppen, nicht in Melee- oder Heiler-Positionen.
+Während Get 'em, Ick! fixiert der Boss ein Zufallsziel; wenn das bei dir oder in deiner Nähe passiert, so laufen, dass die Gruppe nicht gegrieft wird.
+{DD} Death Bolt von Krick ist Top-Priorität für Kicks.
+Bei Shade Shift Shades sofort cleaven oder töten; Shadowbind unterbrechen oder entfluchen, wenn euer Setup das kann.
+Wenn Get 'em, Ick! auf dich geht, sauber kiten; wenn nicht, das Fenster für Cleave und Push nutzen.
+{HEAL} Plague Explosion wird schnell spiky, wenn Spieler schlecht stehen; vorher HoTs oder Schilde vorbereiten.
+Shadowbind bei verfügbarem Fluch-Dispel zügig lösen, alternativ Kicks und Stops sauber abdecken.
 {HC} Öffentlich dokumentiert sind vor allem Mythic- und M+-Mechaniken, die laut Guides weitgehend auch für Normal und Heroic gelten; Unterschiede liegen meist in Zahlen und Tuning.
 ]=],
 	BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_NAME = "Geißelfürst Tyrannus",
 	BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_BODY = [=[
-Allgemein: Bone Piles (1276357) sind das Kernobjektiv des Encounters. Wenn du Rime Blast (1262745) bekommst, so stehen, dass du gezielt ein markiertes Bone Pile cleavest.
-Army Of The Dead (1263406) aktiviert Bone Piles (1276357) und erzeugt Rotlings sowie bei infizierten Piles gefährlichere Scourge Plaguespreaders; diese haben Fokus und Interrupt-Priorität.
-Death's Grasp (1263756) und Ice Barrage (1276948) erzeugen zusätzliche Dodge-Zonen; also in Bewegung bleiben und keine unnötigen Treffer nehmen.
-{TANK} Scourgelord's Brand (1262582) ist ein großer Knockback mit Folge-Sprung. Defensives und Bewegung so einplanen, dass der zweite Treffer nicht gratis durchgeht.
-In den Add-Wellen Rotting Strikes (1262929)-Stacks von Rotlings im Blick behalten und bei Möglichkeit Disease-Dispels oder Externals einfordern.
-{DD} Scourge Plaguespreaders nach Army Of The Dead (1263406) sofort answappen; Plague Bolt (1262941) kicken, weil Festering Pulse (1262997) starken Gruppenschaden erzeugt.
-Bone Piles (1276357) nicht zufällig cleaven, sondern über das Positionsspiel von Rime Blast (1262745) gezielt vorbereiten.
-{HEAL} Die Army-Phase rund um Army Of The Dead (1263406) ist euer großes Druckfenster; Festering Pulse (1262997) plus Flächenfehler eskalieren dort sehr schnell.
-Rotting Strikes (1262929)-Stacks auf dem Tank sind Heil- und Mitigation-Checks; bei hohen Stacks Externals oder Dispels früh einplanen.
+Allgemein: Bone Piles sind das Kernobjektiv des Encounters. Wenn du Rime Blast bekommst, so stehen, dass du gezielt ein markiertes Bone Pile cleavest.
+Army Of The Dead aktiviert Bone Piles und erzeugt Rotlings sowie bei infizierten Piles gefährlichere Scourge Plaguespreaders; diese haben Fokus und Interrupt-Priorität.
+Death's Grasp und Ice Barrage erzeugen zusätzliche Dodge-Zonen; also in Bewegung bleiben und keine unnötigen Treffer nehmen.
+{TANK} Scourgelord's Brand ist ein großer Knockback mit Folge-Sprung. Defensives und Bewegung so einplanen, dass der zweite Treffer nicht gratis durchgeht.
+In den Add-Wellen Rotting Strikes-Stacks von Rotlings im Blick behalten und bei Möglichkeit Disease-Dispels oder Externals einfordern.
+{DD} Scourge Plaguespreaders nach Army Of The Dead sofort answappen; Plague Bolt kicken, weil Festering Pulse starken Gruppenschaden erzeugt.
+Bone Piles nicht zufällig cleaven, sondern über das Positionsspiel von Rime Blast gezielt vorbereiten.
+{HEAL} Die Army-Phase rund um Army Of The Dead ist euer großes Druckfenster; Festering Pulse plus Flächenfehler eskalieren dort sehr schnell.
+Rotting Strikes-Stacks auf dem Tank sind Heil- und Mitigation-Checks; bei hohen Stacks Externals oder Dispels früh einplanen.
 {HC} Auch hier fokussieren die verfügbaren Quellen vor allem Mythic und M+ und beschreiben die Mechaniken als weitgehend auf Normal und Heroic übertragbar; spezifische Heroic-only-Mechaniken sind nicht separat ausgewiesen.
 ]=],
 	BOSS_GUIDES_BOSS_RANJIT_NAME = "Ranjit",
@@ -900,68 +900,68 @@ Allgemein: Solarentladung konsequent unterbrechen; jeder freie Cast erzeugt unn�
 ]=],
 	BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_NAME = "Zuraal der Aufgestiegene",
 	BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_BODY = [=[
-Allgemein: Dezimieren (244579) so platzieren, dass die entstehende Pfütze am Rand oder auf bestehenden Flächen landet und nicht den Kampfbereich schließt.
-Hand der Nichtigkeit (246134) sofort seitlich auslaufen, weil es als Frontal sehr oft tödlich ist.
-Triefendes Schmettern (1263399) fügt der Gruppe einen DoT zu und spawnt Verdichtete Leere (244602), die ihr verlangsamen, kontrollieren und priorisiert töten müsst.
-Hereinbrechende Leere (1263297) zieht Spieler und beschleunigt Verdichtete Leere (244602); diese daher vorher töten oder kontrollieren und beim Knockback nicht in Pfützen fliegen.
-Leerenschlitzer (1263440) ist die Tank-Buster-Combo, daher zählt jeder abgefangene Treffer über Defensives und aktive Mitigation.
+Allgemein: Dezimieren so platzieren, dass die entstehende Pfütze am Rand oder auf bestehenden Flächen landet und nicht den Kampfbereich schließt.
+Hand der Nichtigkeit sofort seitlich auslaufen, weil es als Frontal sehr oft tödlich ist.
+Triefendes Schmettern fügt der Gruppe einen DoT zu und spawnt Verdichtete Leere, die ihr verlangsamen, kontrollieren und priorisiert töten müsst.
+Hereinbrechende Leere zieht Spieler und beschleunigt Verdichtete Leere; diese daher vorher töten oder kontrollieren und beim Knockback nicht in Pfützen fliegen.
+Leerenschlitzer ist die Tank-Buster-Combo, daher zählt jeder abgefangene Treffer über Defensives und aktive Mitigation.
 Quellen: 4Fansites, WoWHead DE, Method, Icy Veins und wow.gg.
-{TANK} Leerenschlitzer (1263440) immer mit aktiver Mitigation oder Defensive abfangen, weil die Combo extrem hoch spikt.
-Bei Dezimieren (244579) den Boss so stellen, dass Verdichtete Leere (244602) nicht geradeaus in ihn hineinläuft.
-{DD} Verdichtete Leere (244602) sofort fokussieren und mit Slows, Stuns oder Knockbacks Zeit kaufen, weil Kontakt mit dem Boss sonst massiven Gruppenschaden verursacht.
-Hand der Nichtigkeit (246134) strikt frontal vermeiden und als Range nicht durch die Melee-Positionen laufen.
-{HEAL} Für Triefendes Schmettern (1263399) früh einen CD-Plan haben, weil Gruppen-DoT und Flächen gleichzeitig Heilstress erzeugen.
-Hereinbrechende Leere (1263297) als großen Gruppentreffer plus Knockback vorbereiten und die Gruppe vor Channel-Ende stabilisieren.
+{TANK} Leerenschlitzer immer mit aktiver Mitigation oder Defensive abfangen, weil die Combo extrem hoch spikt.
+Bei Dezimieren den Boss so stellen, dass Verdichtete Leere nicht geradeaus in ihn hineinläuft.
+{DD} Verdichtete Leere sofort fokussieren und mit Slows, Stuns oder Knockbacks Zeit kaufen, weil Kontakt mit dem Boss sonst massiven Gruppenschaden verursacht.
+Hand der Nichtigkeit strikt frontal vermeiden und als Range nicht durch die Melee-Positionen laufen.
+{HEAL} Für Triefendes Schmettern früh einen CD-Plan haben, weil Gruppen-DoT und Flächen gleichzeitig Heilstress erzeugen.
+Hereinbrechende Leere als großen Gruppentreffer plus Knockback vorbereiten und die Gruppe vor Channel-Ende stabilisieren.
 {HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den priorisierten Quellen war keine verifizierbare HC-exklusive Änderungsliste auffindbar.
 ]=],
 	BOSS_GUIDES_BOSS_SARPUSH_NAME = "Saprish",
 	BOSS_GUIDES_BOSS_SARPUSH_BODY = [=[
-Allgemein: Leerenbombe (246026) nicht berühren, sondern mit dem Phasenspurt (1280067)-Kreis entfernen, um möglichst viele Bomben kontrolliert zu beseitigen.
-Überladung (1263523) wird umso gefährlicher, je mehr Bomben noch liegen; Restbomben daher vor Cast-Ende defensiv oder mit Immunities soaken.
-Kreischen des Grauens (248831) von Schemenschwinge konsequent unterbrechen, weil Fear und Schaden Overlap-Fenster schnell eskalieren lassen.
-Schattenhaftes Anspringen (245742) von Dunkelzahn verursacht Schaden auf Zufallsziele mit Blutung; betroffene Spieler daher sofort stabilisieren und Cleanses bei Bedarf nutzen.
-Verwundende Leere (1266449) ist dauerhafter tanklastiger Nahkampfschaden und verschärft besonders die Stressfenster rund um Überladung (1263523).
+Allgemein: Leerenbombe nicht berühren, sondern mit dem Phasenspurt-Kreis entfernen, um möglichst viele Bomben kontrolliert zu beseitigen.
+Überladung wird umso gefährlicher, je mehr Bomben noch liegen; Restbomben daher vor Cast-Ende defensiv oder mit Immunities soaken.
+Kreischen des Grauens von Schemenschwinge konsequent unterbrechen, weil Fear und Schaden Overlap-Fenster schnell eskalieren lassen.
+Schattenhaftes Anspringen von Dunkelzahn verursacht Schaden auf Zufallsziele mit Blutung; betroffene Spieler daher sofort stabilisieren und Cleanses bei Bedarf nutzen.
+Verwundende Leere ist dauerhafter tanklastiger Nahkampfschaden und verschärft besonders die Stressfenster rund um Überladung.
 Quellen: 4Fansites, WoWHead DE, Method, Icy Veins und Blizzard Hotfix Notes.
 {TANK} Boss und Begleiter dauerhaft stapeln, weil sie Health teilen und ihr sonst unnötig Zeit verliert.
-Wenn vor Überladung (1263523) noch Bomben liegen, diese gezielt als Tank oder mit Immunity-Spielern aufnehmen, um zusätzlichen Stack- oder Explosionsschaden zu verhindern.
-{DD} Phasenspurt (1280067) so laufen, dass Bomben maximal mitgenommen werden und nicht im Kernbereich des Kampfes liegen bleiben.
-Kreischen des Grauens (248831) mit fester Kick-Rotation absichern, weil Overlaps mit Phasenspurt (1280067) sonst sehr schnell zu Kettenfehlern führen.
-{HEAL} Die Gruppe vor Überladung (1263523) immer vollständig vorbereiten, weil zusätzlich DoT-Druck entsteht und kleine Vorfehler dann sofort eskalieren.
-Ziele von Schattenhaftes Anspringen (245742) priorisiert spothealen, weil zufällige Blutung plus Überladung-Fenster schnell tödlich werden kann.
-{HC} Bestätigte Hotfix-Änderungen ohne klare Schwierigkeitsbindung: Leerenbombe (246026) bekam ein Visual-Update und der Impact-Radius von Phasenspurt (1280067) wurde auf 8 Meter erhöht.
+Wenn vor Überladung noch Bomben liegen, diese gezielt als Tank oder mit Immunity-Spielern aufnehmen, um zusätzlichen Stack- oder Explosionsschaden zu verhindern.
+{DD} Phasenspurt so laufen, dass Bomben maximal mitgenommen werden und nicht im Kernbereich des Kampfes liegen bleiben.
+Kreischen des Grauens mit fester Kick-Rotation absichern, weil Overlaps mit Phasenspurt sonst sehr schnell zu Kettenfehlern führen.
+{HEAL} Die Gruppe vor Überladung immer vollständig vorbereiten, weil zusätzlich DoT-Druck entsteht und kleine Vorfehler dann sofort eskalieren.
+Ziele von Schattenhaftes Anspringen priorisiert spothealen, weil zufällige Blutung plus Überladung-Fenster schnell tödlich werden kann.
+{HC} Bestätigte Hotfix-Änderungen ohne klare Schwierigkeitsbindung: Leerenbombe bekam ein Visual-Update und der Impact-Radius von Phasenspurt wurde auf 8 Meter erhöht.
 Darüber hinaus sind derzeit keine verifizierbaren HC-exklusiven Änderungen bestätigt.
 ]=],
 	BOSS_GUIDES_BOSS_VICEROY_NEZHAR_NAME = "Vizekönig Nezhar",
 	BOSS_GUIDES_BOSS_VICEROY_NEZHAR_BODY = [=[
-Allgemein: Gedankenschlag (244750) ist ein Tank-Cast und muss mit Kick-Rotation gedeckelt werden, sonst kippt der Kampf sehr schnell.
-Tore des Abgrunds (1277358) spawnen Umbralwellen (1264257), die ihr konsequent dodgen müsst, weil sie dauerhaften Raumdruck erzeugen.
-Massenleereninfusion (1263542) trifft mehrere Spieler gleichzeitig; Defensives und Heiler-CDs daher gezielt auf diese Fenster legen.
-Umbraltentakel (1263538) erscheinen in Sets und channeln Gedankenschinden (1268733) auf Spieler; sie müssen schnell gecleavt oder fokussiert werden.
-Bei voller Energie folgt Abstoßende Kraft (1263533) mit Knockback und danach Kollabierende Leere (1263529); dann sofort unter den Boss in die Safe-Zone spielen und Gruppendefensives ziehen.
+Allgemein: Gedankenschlag ist ein Tank-Cast und muss mit Kick-Rotation gedeckelt werden, sonst kippt der Kampf sehr schnell.
+Tore des Abgrunds spawnen Umbralwellen, die ihr konsequent dodgen müsst, weil sie dauerhaften Raumdruck erzeugen.
+Massenleereninfusion trifft mehrere Spieler gleichzeitig; Defensives und Heiler-CDs daher gezielt auf diese Fenster legen.
+Umbraltentakel erscheinen in Sets und channeln Gedankenschinden auf Spieler; sie müssen schnell gecleavt oder fokussiert werden.
+Bei voller Energie folgt Abstoßende Kraft mit Knockback und danach Kollabierende Leere; dann sofort unter den Boss in die Safe-Zone spielen und Gruppendefensives ziehen.
 Quellen: 4Fansites, WoWHead DE, Method, wow.gg und Icy Veins.
-{TANK} Gedankenschlag (244750) aktiv in die Interrupt-Rotation einplanen und defensiv mitdenken, weil es der Primärspike auf den Tank ist.
-Vor Abstoßende Kraft (1263533) den Boss möglichst zentral positionieren, damit die Gruppe die Safe-Zone unter dem Boss für Kollabierende Leere (1263529) zuverlässig erreicht.
-{DD} Umbraltentakel (1263538) sofort cleaven oder töten, weil jede Channel-Sekunde von Gedankenschinden (1268733) zusätzlichen Gruppenschaden bedeutet.
-In der Kollabierende Leere (1263529)-Phase Movement-CDs nutzen, um den Safe-Spot unter dem Boss sicher zu halten, statt außerhalb zu greeden.
-{HEAL} Massenleereninfusion (1263542) und Kollabierende Leere (1263529) sind die klaren CD-Anker des Kampfes.
-Nach dem Knockback von Abstoßende Kraft (1263533) direkt stabilisieren, weil Fehlpositionen sonst zusätzliche Treffer durch Waves erzwingen.
+{TANK} Gedankenschlag aktiv in die Interrupt-Rotation einplanen und defensiv mitdenken, weil es der Primärspike auf den Tank ist.
+Vor Abstoßende Kraft den Boss möglichst zentral positionieren, damit die Gruppe die Safe-Zone unter dem Boss für Kollabierende Leere zuverlässig erreicht.
+{DD} Umbraltentakel sofort cleaven oder töten, weil jede Channel-Sekunde von Gedankenschinden zusätzlichen Gruppenschaden bedeutet.
+In der Kollabierende Leere-Phase Movement-CDs nutzen, um den Safe-Spot unter dem Boss sicher zu halten, statt außerhalb zu greeden.
+{HEAL} Massenleereninfusion und Kollabierende Leere sind die klaren CD-Anker des Kampfes.
+Nach dem Knockback von Abstoßende Kraft direkt stabilisieren, weil Fehlpositionen sonst zusätzliche Treffer durch Waves erzwingen.
 {HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den priorisierten Quellen war keine verifizierbare HC-exklusive Änderungsliste auffindbar.
 ]=],
 	BOSS_GUIDES_BOSS_LURA_NAME = "L'ura",
 	BOSS_GUIDES_BOSS_LURA_BODY = [=[
-Allgemein: Klagelied der Verzweiflung (1265421) ist der Gruppentreffer, der Noten der Verzweiflung (1265419) erzeugt; Heiler-CDs daher über die Note-Phase verteilen.
-Disharmonischer Strahl (1265464) gezielt auf aktive Noten der Verzweiflung (1265419) schießen, um sie zu silencen und so den permanenten Puls-Schaden zu reduzieren.
-Wenn alle Noten der Verzweiflung (1265419) gesilenced sind, startet eine Intermission mit Leere entziehen (1265999) als klarem Schadensfenster; DPS-CDs dafür sparen.
-Grimmiger Chor (1265689) repositioniert Noten der Verzweiflung (1265419) und erzeugt Gefahrenzonen um aktive Noten; deshalb sofort neu ausrichten und nicht stehen bleiben.
-Qual (1265650) tickt alle 2 Sekunden auf die Gruppe, solange Noten aktiv sind; die Intermission daher erzwingen, bevor der Dauerschaden unheilbar wird.
-Desintegration (1264196) als rotierende Beam-Mechanik gemeinsam mitlaufen, statt quer durch Strahlen zu schneiden.
-Abyssische Lanze (1267207) stapelt auf Boss und Tank und triggert bei 3 Stacks einen großen Treffer nach kurzer Verzögerung; diesen Punkt defensiv vorplanen.
-{TANK} Abyssische Lanze (1267207) bei 3 Stacks als klaren Defensive-Pflichtpunkt behandeln, weil der folgende Treffer sonst tödlich spiken kann.
-Boss möglichst zentral halten, damit die Gruppe Desintegration (1264196) sauber umlaufen und Disharmonischer Strahl (1265464) kontrolliert ausrichten kann.
-{DD} Disharmonischer Strahl (1265464) aktiv als Mechanik-DPS spielen und immer auf eine aktive Note richten, bis alle sechs gesilenced sind.
-In der Intermission mit Leere entziehen (1265999) alle Offensiv-CDs bündeln, weil dort das eigentliche Schadensfenster des Kampfes liegt.
-{HEAL} Klagelied der Verzweiflung (1265421) plus aktive Noten bedeuten permanenten Gruppendruck; CDs daher staffeln statt alles gleichzeitig zu ziehen.
-Grimmiger Chor (1265689) zusammen mit Qual (1265650) ist euer eskalierendes Fail-Signal; fordert früh Defensives oder Externals, bis die Intermission erreicht ist.
+Allgemein: Klagelied der Verzweiflung ist der Gruppentreffer, der Noten der Verzweiflung erzeugt; Heiler-CDs daher über die Note-Phase verteilen.
+Disharmonischer Strahl gezielt auf aktive Noten der Verzweiflung schießen, um sie zu silencen und so den permanenten Puls-Schaden zu reduzieren.
+Wenn alle Noten der Verzweiflung gesilenced sind, startet eine Intermission mit Leere entziehen als klarem Schadensfenster; DPS-CDs dafür sparen.
+Grimmiger Chor repositioniert Noten der Verzweiflung und erzeugt Gefahrenzonen um aktive Noten; deshalb sofort neu ausrichten und nicht stehen bleiben.
+Qual tickt alle 2 Sekunden auf die Gruppe, solange Noten aktiv sind; die Intermission daher erzwingen, bevor der Dauerschaden unheilbar wird.
+Desintegration als rotierende Beam-Mechanik gemeinsam mitlaufen, statt quer durch Strahlen zu schneiden.
+Abyssische Lanze stapelt auf Boss und Tank und triggert bei 3 Stacks einen großen Treffer nach kurzer Verzögerung; diesen Punkt defensiv vorplanen.
+{TANK} Abyssische Lanze bei 3 Stacks als klaren Defensive-Pflichtpunkt behandeln, weil der folgende Treffer sonst tödlich spiken kann.
+Boss möglichst zentral halten, damit die Gruppe Desintegration sauber umlaufen und Disharmonischer Strahl kontrolliert ausrichten kann.
+{DD} Disharmonischer Strahl aktiv als Mechanik-DPS spielen und immer auf eine aktive Note richten, bis alle sechs gesilenced sind.
+In der Intermission mit Leere entziehen alle Offensiv-CDs bündeln, weil dort das eigentliche Schadensfenster des Kampfes liegt.
+{HEAL} Klagelied der Verzweiflung plus aktive Noten bedeuten permanenten Gruppendruck; CDs daher staffeln statt alles gleichzeitig zu ziehen.
+Grimmiger Chor zusammen mit Qual ist euer eskalierendes Fail-Signal; fordert früh Defensives oder Externals, bis die Intermission erreicht ist.
 {HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den priorisierten Quellen war keine verifizierbare HC-exklusive Änderungsliste auffindbar.
 ]=],
 	BOSS_GUIDES_SPELL_NAMES = {
