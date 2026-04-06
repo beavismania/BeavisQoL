@@ -100,8 +100,9 @@ local function SkipCurrentMovie()
         return
     end
 
-    if StopMovie then
-        StopMovie()
+    local stopMovie = rawget(_G, "StopMovie")
+    if type(stopMovie) == "function" then
+        stopMovie()
     end
 end
 

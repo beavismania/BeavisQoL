@@ -280,16 +280,19 @@ local function IsPortalSpellKnown(spellID)
         return C_Spell.IsSpellKnown(spellID) == true
     end
 
-    if IsSpellKnownOrOverridesKnown then
-        return IsSpellKnownOrOverridesKnown(spellID) == true
+    local isSpellKnownOrOverridesKnown = rawget(_G, "IsSpellKnownOrOverridesKnown")
+    if type(isSpellKnownOrOverridesKnown) == "function" then
+        return isSpellKnownOrOverridesKnown(spellID) == true
     end
 
-    if IsPlayerSpell then
-        return IsPlayerSpell(spellID) == true
+    local isPlayerSpell = rawget(_G, "IsPlayerSpell")
+    if type(isPlayerSpell) == "function" then
+        return isPlayerSpell(spellID) == true
     end
 
-    if IsSpellKnown then
-        return IsSpellKnown(spellID) == true
+    local isSpellKnown = rawget(_G, "IsSpellKnown")
+    if type(isSpellKnown) == "function" then
+        return isSpellKnown(spellID) == true
     end
 
     return false

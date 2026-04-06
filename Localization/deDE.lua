@@ -83,7 +83,6 @@ BeavisQoL.Localization.deDE = {
 
 	-- Home/Startseite
 	GOLDAUSWERTUNG_DESC = "Kompakte Übersicht für Einnahmen, Ausgaben, Reparaturen und Währungen. Gesamtverlauf über Verlauf.",
-	LOGGING_CLEANUP = "Zeitraum löschen",
 	GOLDAUSWERTUNG_CLEANUP = "Zeitraum löschen",
 	WELCOME_SUBTITLE = "Zentrale Übersicht für Fortschritt, Komfort und Interface",
 	GOLDAUSWERTUNG_RETENTION_HINT = "Reparaturen 30 Tage, Gold und Währungen 1 Jahr.",
@@ -1344,7 +1343,7 @@ Grim Chorus (ID nicht gefunden) zusammen mit Anguish (ID nicht gefunden) ist eue
 	STREAMER_PLANNER_RAID_GROUP = "Gruppe %d",
 	STREAMER_PLANNER_RAID_SLOT = "G%d / %d",
 	STREAMER_PLANNER_QUEUE_TITLE = "Whisper-Queue",
-	STREAMER_PLANNER_QUEUE_HINT = "Nur Whisper mit !enter oder !inv landen hier. Rolle und Spec werden ergänzt, wenn passende Daten verfügbar sind. Rechtsklick entfernt Whisper-Einträge. AutoInv und FullInv greifen nur im Raid-Modus.",
+	STREAMER_PLANNER_QUEUE_HINT = "Nur Whisper mit !enter oder !inv landen hier. Rolle und Spec werden ergänzt, wenn passende Daten verfügbar sind. Rechtsklick entfernt Whisper-Einträge. AutoInv greift in Dungeon und Raid, FullInv bleibt Raid-only.",
 	STREAMER_PLANNER_AUTO_INVITE_WHISPER = "!inv automatisch einladen",
 	STREAMER_PLANNER_FULL_INVITE = "FullInv",
 	STREAMER_PLANNER_QUEUE_EMPTY = "Noch keine Whisper-Einträge vorhanden.",
@@ -1791,8 +1790,6 @@ Grim Chorus (ID nicht gefunden) zusammen mit Anguish (ID nicht gefunden) ist eue
 	CHECKLIST_TODO_WEEKLY_PROFESSION = "Max. Wöchentliche Berufspunkte farmen (%s)",
 	STREAMER_PLANNER_ROLE = "Rolle",
 	STREAMER_PLANNER_ROLE_AUTO = "Auto",
-	STREAMER_PLANNER_SPEC_PROMPT_TITLE = "Anfrage",
-	STREAMER_PLANNER_SPEC_PROMPT_HINT = "Kurzinfo für die !enter-Anfrage.",
 	STREAMER_PLANNER_SPEC_PROMPT_HINT_CLASS = "Klasse wählen",
 	STREAMER_PLANNER_SPEC_PROMPT_HINT_ROLE = "Rolle wählen",
 	STREAMER_PLANNER_SELF_ROLE_TITLE = "Eigene Rolle auswählen",

@@ -1,5 +1,12 @@
 -- Hinweistext zu Blizzard-Limitierung bei Cursorgrößen
+local MouseHelper
+local CursorSizeDropdown
+
 local function ShowCursorSizeInfoLabel()
+    if not MouseHelper or not CursorSizeDropdown then
+        return
+    end
+
     if not MouseHelper.CursorSizeInfoLabel then
         MouseHelper.CursorSizeInfoLabel = CursorSizeDropdown:CreateFontString(nil, "OVERLAY")
         MouseHelper.CursorSizeInfoLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
@@ -16,7 +23,7 @@ local Content = BeavisQoL.Content
 local L = BeavisQoL.L
 
 BeavisQoL.MouseHelper = BeavisQoL.MouseHelper or {}
-local MouseHelper = BeavisQoL.MouseHelper
+MouseHelper = BeavisQoL.MouseHelper
 
 local GetCVarValue = (C_CVar and C_CVar.GetCVar) or rawget(_G, "GetCVar")
 local SetCVarValue = (C_CVar and C_CVar.SetCVar) or rawget(_G, "SetCVar")
@@ -979,7 +986,7 @@ CursorSizeLabel:SetPoint("TOPLEFT", GeneralEnableCheckbox, "BOTTOMLEFT", 34, -8)
 CursorSizeLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 CursorSizeLabel:SetTextColor(1, 0.82, 0, 1)
 
-local CursorSizeDropdown = CreateFrame("Frame", "BeavisQoLMouseHelperCursorSizeDropdown", GeneralPanel, "UIDropDownMenuTemplate")
+CursorSizeDropdown = CreateFrame("Frame", "BeavisQoLMouseHelperCursorSizeDropdown", GeneralPanel, "UIDropDownMenuTemplate")
 CursorSizeDropdown:SetPoint("TOPLEFT", CursorSizeLabel, "BOTTOMLEFT", -18, -2)
 UIDropDownMenu_SetWidth(CursorSizeDropdown, 150)
 

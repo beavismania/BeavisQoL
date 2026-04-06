@@ -123,8 +123,11 @@ local function GetTrackedBattlefieldIndex()
     local maxQueues = 0
     if type(GetMaxBattlefieldID) == "function" then
         maxQueues = GetMaxBattlefieldID() or 0
-    elseif type(MAX_BATTLEFIELD_QUEUES) == "number" then
-        maxQueues = MAX_BATTLEFIELD_QUEUES
+    else
+        local maxBattlefieldQueues = rawget(_G, "MAX_BATTLEFIELD_QUEUES")
+        if type(maxBattlefieldQueues) == "number" then
+            maxQueues = maxBattlefieldQueues
+        end
     end
 
     for queueIndex = 1, maxQueues do

@@ -1201,8 +1201,9 @@ local function IsPlayerListingLeader()
             return UnitIsGroupLeader("player", partyCategory) == true
         end
 
-        if IsRaidLeader then
-            return IsRaidLeader() == true
+        local isRaidLeader = rawget(_G, "IsRaidLeader")
+        if type(isRaidLeader) == "function" then
+            return isRaidLeader() == true
         end
 
         return false
@@ -1213,8 +1214,9 @@ local function IsPlayerListingLeader()
             return UnitIsGroupLeader("player", partyCategory) == true
         end
 
-        if IsPartyLeader then
-            return IsPartyLeader() == true
+        local isPartyLeader = rawget(_G, "IsPartyLeader")
+        if type(isPartyLeader) == "function" then
+            return isPartyLeader() == true
         end
 
         return false
