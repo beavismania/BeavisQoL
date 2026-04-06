@@ -826,7 +826,7 @@ local function BuildWhisperSpecAliasLookups()
                 AddWhisperSpecAlias(global, localizedSpecName, specID)
             end
 
-            for _, aliasText in ipairs(WHISPER_SPEC_ALIAS_HINTS[specID] or {}) do
+            for _, aliasText in ipairs(StreamerPlannerModule.WHISPER_SPEC_ALIAS_HINTS[specID] or {}) do
                 AddWhisperSpecAlias(byClass[classFile], aliasText, specID)
                 AddWhisperSpecAlias(global, aliasText, specID)
             end
@@ -1317,13 +1317,16 @@ end
 
 PlannerPrivate.NormalizeSlotEntry = function(entry)
     if type(entry) == "table" then
+        local inviteName = PlannerPrivate.IsUsablePlainString(entry.inviteName) and entry.inviteName
+            or (PlannerPrivate.IsUsablePlainString(entry.name) and entry.name or nil)
+        inviteName = PlannerPrivate.BuildCharacterFullName(inviteName, nil)
+
         return {
             name = tostring(entry.name or ""),
             classFile = PlannerPrivate.IsUsablePlainString(entry.classFile) and entry.classFile or nil,
             specID = type(entry.specID) == "number" and entry.specID or nil,
             roleKey = PlannerPrivate.NormalizePlannerRoleKey(entry.roleKey),
-            inviteName = PlannerPrivate.IsUsablePlainString(entry.inviteName) and entry.inviteName
-                or (PlannerPrivate.IsUsablePlainString(entry.name) and entry.name or nil),
+            inviteName = inviteName,
             sourceKey = PlannerPrivate.IsUsablePlainString(entry.sourceKey) and entry.sourceKey or nil,
         }
     end
@@ -1354,8 +1357,8 @@ PlannerPrivate.NormalizeWhisperApplicantEntry = function(entry)
         return nil
     end
 
-    local fullName = PlannerPrivate.IsUsablePlainString(entry.fullName) and entry.fullName or nil
-    local inviteName = PlannerPrivate.IsUsablePlainString(entry.inviteName) and entry.inviteName or fullName
+    local fullName = PlannerPrivate.IsUsablePlainString(entry.fullName) and PlannerPrivate.BuildCharacterFullName(entry.fullName, nil) or nil
+    local inviteName = PlannerPrivate.IsUsablePlainString(entry.inviteName) and PlannerPrivate.BuildCharacterFullName(entry.inviteName, nil) or fullName
     local displayName = PlannerPrivate.IsUsablePlainString(entry.displayName) and entry.displayName
         or PlannerPrivate.GetDisplayNameFromFullName(fullName or inviteName)
     local createdAt = type(entry.createdAt) == "number" and entry.createdAt or GetCurrentTimestamp()
@@ -1438,11 +1441,55 @@ PlannerPrivate.BuildCharacterFullName = function(characterName, realmName)
         return nil
     end
 
-    if PlannerPrivate.IsUsablePlainString(realmName) and realmName ~= "" then
-        return string.format("%s-%s", characterName, realmName:gsub("%s+", ""))
+    local function CollapseDuplicateRealmPart(realmText)
+        if not PlannerPrivate.IsUsablePlainString(realmText) then
+            return realmText
+        end
+
+        local collapsedRealmText = realmText
+        local changed = true
+        while changed do
+            changed = false
+            local searchStart = 1
+            while true do
+                local splitPos = collapsedRealmText:find("-", searchStart, true)
+                if not splitPos then
+                    break
+                end
+
+                local leftPart = collapsedRealmText:sub(1, splitPos - 1)
+                local rightPart = collapsedRealmText:sub(splitPos + 1)
+                if leftPart == rightPart then
+                    collapsedRealmText = leftPart
+                    changed = true
+                    break
+                end
+
+                searchStart = splitPos + 1
+            end
+        end
+
+        return collapsedRealmText
     end
 
-    return characterName
+    local trimmedName = characterName:match("^%s*(.-)%s*$") or characterName
+    local existingCharacterName, existingRealmName = trimmedName:match("^([^-]+)%-(.+)$")
+    local normalizedRealmName = PlannerPrivate.IsUsablePlainString(realmName) and (realmName:gsub("%s+", "")) or nil
+
+    if existingCharacterName and existingRealmName then
+        local collapsedRealmName = CollapseDuplicateRealmPart(existingRealmName)
+        if normalizedRealmName and collapsedRealmName:gsub("%s+", "") == normalizedRealmName then
+            return string.format("%s-%s", existingCharacterName, normalizedRealmName)
+        end
+
+        return string.format("%s-%s", existingCharacterName, collapsedRealmName)
+    end
+
+    if normalizedRealmName and normalizedRealmName ~= "" then
+        return string.format("%s-%s", trimmedName, normalizedRealmName)
+    end
+
+    return trimmedName
 end
 
 PlannerPrivate.GetPlayerFullName = function()
@@ -1716,6 +1763,10 @@ PlannerPrivate.ResolveWhisperAuthorName = function(authorName, playerGUID, sende
         resolvedClassFile = resolvedClassFile or PlannerPrivate.NormalizeClassFile(classFile)
         if resolvedName == nil and PlannerPrivate.IsUsablePlainString(playerName) then
             resolvedName = playerName
+        end
+
+        if PlannerPrivate.IsUsablePlainString(playerName) and PlannerPrivate.IsUsablePlainString(realmName) and realmName ~= "" then
+            return PlannerPrivate.BuildCharacterFullName(playerName, realmName), resolvedClassFile
         end
 
         if resolvedName and PlannerPrivate.IsUsablePlainString(realmName) and realmName ~= "" then
@@ -2044,6 +2095,10 @@ local function GetLocalizedClassName(classFile)
     end
 
     local _, infoByFile = BuildClassOptions()
+    if type(infoByFile) ~= "table" then
+        return classFile
+    end
+
     local info = infoByFile[classFile]
     return info and info.name or classFile
 end
@@ -4439,7 +4494,8 @@ PlannerPrivate.RefreshWhisperSpecPromptButtons = function(whisperEntry)
         WhisperSpecPromptUI.Frame.ClassButtonAnchor:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
 
         local classVisibleIndex = 0
-        for _, classInfo in ipairs(BuildClassOptions()) do
+        local classOptions = BuildClassOptions()
+        for _, classInfo in ipairs(classOptions or {}) do
             if classInfo.file then
                 classVisibleIndex = classVisibleIndex + 1
                 local button = WhisperSpecPromptUI.ClassButtons[classVisibleIndex]
@@ -4605,7 +4661,9 @@ PlannerPrivate.RefreshWhisperSpecPrompt = function()
 
     if PlannerPrivate.activeSpecPromptIdentity then
         local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(PlannerPrivate.activeSpecPromptIdentity)
-        if not PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
+        if type(whisperEntry) ~= "table" then
+            PlannerPrivate.DismissActiveWhisperSpecPrompt()
+        elseif not PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
             PlannerPrivate.DismissActiveWhisperSpecPrompt()
         else
             if WhisperSpecPromptUI.ActiveIdentity ~= PlannerPrivate.activeSpecPromptIdentity then
@@ -4621,17 +4679,21 @@ PlannerPrivate.RefreshWhisperSpecPrompt = function()
                 end
             end
 
-            WhisperSpecPromptUI.Frame.ActiveName = whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName
-            local showClassChooser = not PlannerPrivate.IsUsablePlainString(WhisperSpecPromptUI.SelectedClassFile or whisperEntry.classFile)
+            local displayName = whisperEntry.displayName or ""
+            local activeName = whisperEntry.fullName or whisperEntry.inviteName or displayName
+            local selectedClassFile = WhisperSpecPromptUI.SelectedClassFile or whisperEntry.classFile
+
+            WhisperSpecPromptUI.Frame.ActiveName = activeName
+            local showClassChooser = not PlannerPrivate.IsUsablePlainString(selectedClassFile)
             WhisperSpecPromptUI.Title:SetText(L("STREAMER_PLANNER_SPEC_PROMPT_TITLE"))
             WhisperSpecPromptUI.Hint:SetText(showClassChooser and L("STREAMER_PLANNER_SPEC_PROMPT_HINT_CLASS") or L("STREAMER_PLANNER_SPEC_PROMPT_HINT_ROLE"))
-            WhisperSpecPromptUI.Name:SetText(whisperEntry.displayName ~= "" and whisperEntry.displayName or (whisperEntry.fullName or whisperEntry.inviteName or ""))
+            WhisperSpecPromptUI.Name:SetText(displayName ~= "" and displayName or activeName or "")
             WhisperSpecPromptUI.Frame.LaterButton:Hide()
             if WhisperSpecPromptUI.Frame.RemoveButton.Label then
                 WhisperSpecPromptUI.Frame.RemoveButton.Label:SetText("X")
             end
             WhisperSpecPromptUI.Frame.RemoveButton:Show()
-            local classRed, classGreen, classBlue = GetClassColor(WhisperSpecPromptUI.SelectedClassFile or whisperEntry.classFile)
+            local classRed, classGreen, classBlue = GetClassColor(selectedClassFile)
             WhisperSpecPromptUI.Name:SetTextColor(classRed, classGreen, classBlue, 1)
             PlannerPrivate.RefreshWhisperSpecPromptButtons(whisperEntry)
             WhisperSpecPromptUI.Frame:Show()
@@ -4656,11 +4718,12 @@ end
 
 PlannerPrivate.EnqueueWhisperSpecPrompt = function(name)
     local whisperEntry = PlannerPrivate.FindWhisperApplicantByName(name)
-    if not PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
+    if type(whisperEntry) ~= "table" or not PlannerPrivate.NeedsWhisperSpecSelection(whisperEntry) then
         return false
     end
 
-    local identityKey = PlannerPrivate.GetIdentityKey(whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName)
+    local identityKeySource = whisperEntry.fullName or whisperEntry.inviteName or whisperEntry.displayName or ""
+    local identityKey = PlannerPrivate.GetIdentityKey(identityKeySource)
     if identityKey == nil then
         return false
     end
@@ -4748,6 +4811,7 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
 
     local settings = GetStreamerPlannerSettings()
     local allowRaidInviteAutomation = GetCurrentMode() == "raid"
+    local allowWhisperInviteAutomation = true
     local showPanel = true
     ApplicantPanel:SetShown(showPanel)
 
@@ -4762,7 +4826,7 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
     if ApplicantPanel and ApplicantPanel.AutoInviteCheckbox then
         ApplicantPanel.AutoInviteCheckbox.Label:SetText(L("STREAMER_PLANNER_AUTO_INVITE_WHISPER"))
         ApplicantPanel.AutoInviteCheckbox:SetChecked(settings.whisperCommandAutoInvite == true)
-        ApplicantPanel.AutoInviteCheckbox:SetEnabled(allowRaidInviteAutomation)
+        ApplicantPanel.AutoInviteCheckbox:SetEnabled(allowWhisperInviteAutomation)
     end
 
     local rowDataList = PlannerPrivate.BuildApplicantPanelRowData(snapshot)
@@ -4793,7 +4857,7 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
     if OverlayAutoInviteCheckbox then
         OverlayAutoInviteCheckbox.Label:SetText(L("STREAMER_PLANNER_AUTO_INVITE_WHISPER"))
         OverlayAutoInviteCheckbox:SetChecked(settings.whisperCommandAutoInvite == true)
-        OverlayAutoInviteCheckbox:SetEnabled(allowRaidInviteAutomation)
+        OverlayAutoInviteCheckbox:SetEnabled(allowWhisperInviteAutomation)
     end
 
     local maxRows = 10
@@ -6213,7 +6277,8 @@ EditClassTitle:SetPoint("TOPLEFT", EditDialogInput, "BOTTOMLEFT", 0, -18)
 EditClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
 EditClassTitle:SetTextColor(1, 0.82, 0, 1)
 
-for _, classInfo in ipairs(BuildClassOptions()) do
+local classOptions = BuildClassOptions()
+for _, classInfo in ipairs(classOptions or {}) do
     if classInfo.file ~= nil then
         local button = CreateIconPickerButton(EditDialog, EDIT_CLASS_BUTTON_SIZE, false)
         button.ClassFile = classInfo.file
@@ -6891,6 +6956,12 @@ PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
         local whisperCommand = PlannerPrivate.ResolveWhisperCommand(messageText)
 
         if whisperCommand then
+            local existingWhisperEntry = nil
+            if whisperCommand == "inv" then
+                local resolvedWhisperName = PlannerPrivate.ResolveWhisperAuthorName(authorName, playerGUID, senderBnetIDAccount)
+                existingWhisperEntry = PlannerPrivate.FindWhisperApplicantByName(resolvedWhisperName or authorName)
+            end
+
             local whisperEntry = PlannerPrivate.UpsertWhisperApplicant(authorName, playerGUID, whisperCommand, senderBnetIDAccount, messageText)
             PlannerPrivate.RequestWhisperApplicantSpec(whisperEntry)
             if whisperEntry and whisperCommand == "enter" then
@@ -6898,7 +6969,8 @@ PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
             end
             if whisperEntry
                 and whisperCommand == "inv"
-                and GetStreamerPlannerSettings().mode == "raid"
+                and type(existingWhisperEntry) == "table"
+                and existingWhisperEntry.command == "enter"
                 and GetStreamerPlannerSettings().whisperCommandAutoInvite == true then
                 local applicantData = PlannerPrivate.FindApplicantByName(whisperEntry.inviteName or whisperEntry.fullName or whisperEntry.displayName)
                 local inviteTarget = PlannerPrivate.ResolveInviteTarget({
