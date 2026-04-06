@@ -752,10 +752,12 @@ local function GetSpellRenderInfo(englishSpellName)
     local mapEntry = centralMap[englishSpellName]
     local localizedSpellName = englishSpellName
     local mappedSpellID
+    local mappedIconID
     local spellNameCandidates = {}
     local seenSpellNameCandidates = {}
     local fallbackTooltipText
     local fallbackTooltipKind = "Guide-Begriff"
+    local skipClientLookup = false
 
     local function AddSpellNameCandidate(candidate)
         if type(candidate) ~= "string" or candidate == "" or seenSpellNameCandidates[candidate] then
@@ -768,9 +770,11 @@ local function GetSpellRenderInfo(englishSpellName)
 
     if type(mapEntry) == "table" then
         mappedSpellID = tonumber(mapEntry.spellID or mapEntry.id)
+        mappedIconID = tonumber(mapEntry.iconID or mapEntry.icon)
         localizedSpellName = mapEntry.localizedName or mapEntry.name or englishSpellName
         fallbackTooltipText = mapEntry.tooltipText
         fallbackTooltipKind = mapEntry.tooltipKind or mapEntry.kind or fallbackTooltipKind
+        skipClientLookup = mapEntry.skipClientLookup == true
         AddSpellNameCandidate(mapEntry.localizedName)
         AddSpellNameCandidate(mapEntry.name)
         AddSpellNameCandidate(mapEntry.englishName)
@@ -790,16 +794,17 @@ local function GetSpellRenderInfo(englishSpellName)
 
     local info
     local spellLink
+    local resolvedIconID = mappedIconID
 
-    if mappedSpellID and C_Spell and C_Spell.GetSpellInfo then
+    if not skipClientLookup and mappedSpellID and C_Spell and C_Spell.GetSpellInfo then
         info = C_Spell.GetSpellInfo(mappedSpellID)
     end
 
-    if mappedSpellID and C_Spell and C_Spell.GetSpellLink then
+    if not skipClientLookup and mappedSpellID and C_Spell and C_Spell.GetSpellLink then
         spellLink = C_Spell.GetSpellLink(mappedSpellID)
     end
 
-    if C_Spell and C_Spell.GetSpellInfo then
+    if not skipClientLookup and C_Spell and C_Spell.GetSpellInfo then
         for _, candidate in ipairs(spellNameCandidates) do
             info = info or C_Spell.GetSpellInfo(candidate)
             if info then
@@ -808,7 +813,7 @@ local function GetSpellRenderInfo(englishSpellName)
         end
     end
 
-    if C_Spell and C_Spell.GetSpellLink then
+    if not skipClientLookup and C_Spell and C_Spell.GetSpellLink then
         for _, candidate in ipairs(spellNameCandidates) do
             spellLink = spellLink or C_Spell.GetSpellLink(candidate)
             if spellLink then
@@ -818,19 +823,38 @@ local function GetSpellRenderInfo(englishSpellName)
     end
 
     local spellID = mappedSpellID or (info and info.spellID) or ParseSpellIDFromLink(spellLink)
-    if spellID and C_Spell and C_Spell.GetSpellInfo then
+    if not skipClientLookup and spellID and C_Spell and C_Spell.GetSpellInfo then
         info = info or C_Spell.GetSpellInfo(spellID)
     end
 
-    if spellID and not spellLink and C_Spell and C_Spell.GetSpellLink then
+    if not skipClientLookup and spellID and not spellLink and C_Spell and C_Spell.GetSpellLink then
         spellLink = C_Spell.GetSpellLink(spellID)
+    end
+
+    if not resolvedIconID and C_Spell and C_Spell.GetSpellInfo then
+        local iconInfo
+
+        if mappedSpellID then
+            iconInfo = C_Spell.GetSpellInfo(mappedSpellID)
+        end
+
+        if not iconInfo then
+            for _, candidate in ipairs(spellNameCandidates) do
+                iconInfo = C_Spell.GetSpellInfo(candidate)
+                if iconInfo and iconInfo.iconID then
+                    break
+                end
+            end
+        end
+
+        resolvedIconID = iconInfo and iconInfo.iconID or nil
     end
 
     local renderInfo = {
         englishName = englishSpellName,
         localizedName = (info and info.name) or localizedSpellName,
         spellID = spellID,
-        iconID = info and info.iconID or nil,
+        iconID = resolvedIconID or (info and info.iconID) or nil,
         spellLink = spellLink,
         isResolved = spellID ~= nil or (type(spellLink) == "string" and spellLink ~= ""),
         hasFallbackTooltip = type(fallbackTooltipText) == "string" and fallbackTooltipText ~= "",

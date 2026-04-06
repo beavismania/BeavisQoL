@@ -644,28 +644,28 @@ Allgemein: Die Maisarakavernen sind ein 5-Spieler-Dungeon in Zul'Aman mit einem 
 ]=],
 	BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_NAME = "Muro'jin & Nekraxx",
 	BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_BODY = [=[
-Allgemein: Schaden immer auf beide Bosse verteilen, weil Revive Pet und Bestial Wrath sonst die Endphase eskalieren.
-• Die anvisierte Frontale stabil wegdrehen; alle anderen verlassen den Kegel konsequent.
-• Als Gruppe eng zusammen rotieren, weil Freezing Trap unter Spielern entsteht und sonst Wege blockiert.
-• Wenn Icy Slick aktiv ist, die Eisfläche meiden.
-• Infected Pinions ist der Hauptdruck des Kampfes. Defensiv- und Heal-CDs nach DoT-Stacks timen.
-• Nach Fetid Quillstorm sofort aus Flächen und Swirlies laufen, damit kein Dodge-Teppich entsteht.
-• Wer von Carrion Swoop markiert ist, stellt sich so, dass die Charge nicht durch die Gruppe geht.
-• Bei Coordinated Assault steht niemand in der Charge-Linie, damit Knock-up-Ziele keine Extra-Treffer kassieren.
-• Flanking Spear so spielen, dass Knockbacks niemanden in Fallen drücken.
-• Open Wound ist planbarer Tankdruck und wird zusammen mit Speer- oder Knockback-Fenstern defensiv abgefangen.
-• Vilebranch Sting ist vor allem ein Movement-Problem durch stapelnde Verlangsamung.
-• Wenn Muro'jin allein steht, wird Revive Pet zum kurzen Finish-Fenster.
-• Wenn Nekraxx allein steht, skaliert Bestial Wrath stapelnd; Finish priorisieren statt safe zu spielen.
-{TANK} Flanking Spear aktiv defensiv nehmen und den Knockback mit Mobilität abfangen, damit du sofort wieder Positionskontrolle hast.
-• Open Wound mit Mitigation und externen CDs vorplanen.
-• So stehen, dass dich kein Rückstoß in eine Freezing Trap drückt.
+Allgemein: Schaden immer auf beide Bosse verteilen, weil Tier wiederbeleben und Zorn des Wildtiers sonst die Endphase eskalieren.
+• Speerfeuer ist die anvisierte Frontale: Das Ziel steht stabil und dreht den Kegel weg, alle anderen verlassen ihn konsequent.
+• Als Gruppe eng zusammen rotieren, weil Eiskältefalle unter Spielern entsteht und sonst Wege blockiert.
+• Wenn Eisige Lache aktiv ist, die Eisfläche meiden.
+• Infizierte Flügelspitzen ist der Hauptdruck des Kampfes. Defensiv- und Heal-CDs nach DoT-Stacks timen.
+• Nach Faulem Federsturm sofort aus Flächen und Swirlies laufen, damit kein Dodge-Teppich entsteht.
+• Wer von Aasfressersturzflug markiert ist, stellt sich so, dass die Charge nicht durch die Gruppe geht.
+• Bei Koordinierter Angriff steht niemand in der Charge-Linie, damit Knock-up-Ziele keine Extra-Treffer kassieren.
+• Flankenspeer so spielen, dass Knockbacks niemanden in Fallen drücken.
+• Offene Wunde ist planbarer Tankdruck und wird zusammen mit Speer- oder Knockback-Fenstern defensiv abgefangen.
+• Stich der Blutfratzen ist vor allem ein Movement-Problem durch stapelnde Verlangsamung.
+• Wenn Muro'jin allein steht, wird Tier wiederbeleben zum kurzen Finish-Fenster.
+• Wenn Nekraxx allein steht, skaliert Zorn des Wildtiers stapelnd; Finish priorisieren statt safe zu spielen.
+{TANK} Flankenspeer aktiv defensiv nehmen und den Knockback mit Mobilität abfangen, damit du sofort wieder Positionskontrolle hast.
+• Offene Wunde mit Mitigation und externen CDs vorplanen.
+• So stehen, dass dich kein Rückstoß in eine Eiskältefalle drückt.
 {DD} Schaden immer splitten oder cleaven, damit kein Boss alleine übrig bleibt.
-• Wenn du Ziel von Carrion Swoop bist, kann ein Trap-Intercept Nekraxx stoppen; Timing gruppenintern callen.
-• Wenn du Ziel der Frontale bist, den Kegel stabil vom Raid weg parken.
-{HEAL} Infected Pinions-Dispels rotieren, statt alles gleichzeitig zu lösen, damit der Healdruck geglättet wird.
-• Wer eine Freezing Trap auslöst, ist kurz aus dem Spiel; dafür Spot-Heals und Externals bereithalten, bis die Gruppe wieder stabil ist.
-{HC} Zusätzlich zu Freezing Trap kann Icy Slick als rutschige Frostfläche entstehen und verschärft das Movement.
+• Wenn du Ziel von Aasfressersturzflug bist, kann ein Eiskältefalle-Intercept Nekraxx stoppen; Timing gruppenintern callen.
+• Wenn du Ziel von Speerfeuer bist, den Kegel stabil vom Raid weg parken.
+{HEAL} Infizierte Flügelspitzen-Dispels rotieren, statt alles gleichzeitig zu lösen, damit der Healdruck geglättet wird.
+• Wer eine Eiskältefalle auslöst, ist kurz aus dem Spiel; dafür Spot-Heals und Externals bereithalten, bis die Gruppe wieder stabil ist.
+{HC} Zusätzlich zu Eiskältefalle kann Eisige Lache als rutschige Frostfläche entstehen und verschärft das Movement.
 ]=],
 	BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_NAME = "Oberster Kernbauer Kasreth",
 	BOSS_GUIDES_BOSS_OBERSTER_KERNBAUER_KASRETH_BODY = [=[
@@ -949,6 +949,102 @@ Grim Chorus (ID nicht gefunden) zusammen mit Anguish (ID nicht gefunden) ist eue
 		["Dark Barrage"] = "Dunkelsalve",
 		["Decimate"] = { spellID = 244579 },
 		["Null Palm"] = { spellID = 246134 },
+		["Tier wiederbeleben"] = {
+			spellID = 1249789,
+			localizedName = "Tier wiederbeleben",
+			aliases = { "Revive Pet" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Muro'jin belebt Nekraxx wieder, wodurch sie mit einem großen Teil ihrer Gesundheit zurückkehrt. Beide Bosse deshalb möglichst gleichzeitig besiegen.",
+			skipClientLookup = true,
+		},
+		["Zorn des Wildtiers"] = {
+			spellID = 1249948,
+			localizedName = "Zorn des Wildtiers",
+			aliases = { "Bestial Wrath" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Muro'jins Niederlage versetzt Nekraxx in Raserei und erhöht ihren verursachten Schaden regelmäßig. Der Effekt stapelt sich, daher das Finish sofort durchziehen.",
+			skipClientLookup = true,
+		},
+		["Speerfeuer"] = {
+			spellID = 1260643,
+			localizedName = "Speerfeuer",
+			aliases = { "Sperrfeuer" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Muro'jin nimmt einen Spieler ins Visier und feuert mehrere giftige Salven in einem frontalen Kegel auf ihn. Treffer verursachen Seuchenschaden und belegen Ziele mit Stich der Blutfratzen.",
+			skipClientLookup = true,
+		},
+		["Eisige Lache"] = {
+			spellID = 1243751,
+			localizedName = "Eisige Lache",
+			aliases = { "Icy Slick" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Mehrere Instanzen von Eiskältefalle hinterlassen eine vereiste Fläche, die regelmäßig Frostschaden verursacht und Spieler rutschen lässt.",
+			skipClientLookup = true,
+		},
+		["Eiskältefalle"] = {
+			spellID = 1260731,
+			iconID = 135834,
+			localizedName = "Eiskältefalle",
+			aliases = { "Freezing Trap" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Muro'jin wirft Fallen auf Spieler, die lange bestehen bleiben. Wer sie auslöst, wird kurz handlungsunfähig; Schaden kann den Effekt brechen.",
+		},
+		["Stich der Blutfratzen"] = {
+			spellID = 1260709,
+			localizedName = "Stich der Blutfratzen",
+			aliases = { "Vilebranch Sting" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Muro'jins giftüberzogene Pfeile verlangsamen das Ziel mehrere Sekunden lang. Der Effekt ist stapelbar und macht Folge-Mechaniken deutlich schwerer.",
+			skipClientLookup = true,
+		},
+		["Flankenspeer"] = {
+			spellID = 1266480,
+			localizedName = "Flankenspeer",
+			aliases = { "Flanking Spear" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Muro'jin springt hinter sein aktuelles Ziel und schleudert einen gewaltigen Speer. Der Treffer stößt zurück und belegt das Ziel mit Offene Wunde.",
+			skipClientLookup = true,
+		},
+		["Offene Wunde"] = {
+			spellID = 1266488,
+			localizedName = "Offene Wunde",
+			aliases = { "Open Wound" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Blutung von Flankenspeer. Verursacht mehrere Sekunden lang regelmäßigen körperlichen Schaden auf dem Tank.",
+			skipClientLookup = true,
+		},
+		["Aasfressersturzflug"] = {
+			spellID = 1249479,
+			localizedName = "Aasfressersturzflug",
+			aliases = { "Carrion Swoop" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Nekraxx stürmt auf ein markiertes Ziel zu, fügt allen Spielern in ihrem Weg Schaden zu und schleudert sie in die Luft. Trifft sie einen in Eiskältefalle gefangenen Spieler, wird die Falle zerstört und Nekraxx betäubt.",
+			skipClientLookup = true,
+		},
+		["Koordinierter Angriff"] = {
+			spellID = 1249769,
+			localizedName = "Koordinierter Angriff",
+			aliases = { "Coordinated Assault" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Muro'jin wirft eine Axt auf Spieler, die durch Aasfressersturzflug in die Luft geschleudert wurden. Der Folgetreffer verursacht zusätzlichen körperlichen Schaden und noch mehr Knock-up.",
+			skipClientLookup = true,
+		},
+		["Fauler Federsturm"] = {
+			spellID = 1243900,
+			localizedName = "Fauler Federsturm",
+			aliases = { "Fetid Quillstorm", "Faulem Federsturm" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Nekraxx springt an eine Position, entfesselt dort dunkle Energie und verschießt Federn. Einschlag und Folgeflächen müssen sofort ausgewichen werden.",
+			skipClientLookup = true,
+		},
+		["Infizierte Flügelspitzen"] = {
+			spellID = 1246666,
+			localizedName = "Infizierte Flügelspitzen",
+			aliases = { "Infected Pinions" },
+			tooltipKind = "Bossmechanik",
+			tooltipText = "Nekraxx durchbohrt alle Spieler mit eitrigen Federn, die über längere Zeit Seuchenschaden verursachen. Das ist der zentrale Heilcheck des Kampfes.",
+			skipClientLookup = true,
+		},
 		["Throw Saronite"] = { spellID = 1261299 },
 		["Ore Chunks"] = { spellID = 1272433, aliases = { "Ore Chunk" } },
 		["Orebreaker"] = { spellID = 1261546 },

@@ -417,7 +417,8 @@
         "SECONDS_PER_DAY"
     ],
     "Lua.diagnostics.disable": [
-        "assign-type-mismatch"
+        "assign-type-mismatch",
+        "undefined-field"
     ],
     "chat.tools.terminal.autoApprove": {
         "git remote": true
