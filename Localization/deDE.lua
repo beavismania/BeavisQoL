@@ -1343,7 +1343,7 @@ Grim Chorus (ID nicht gefunden) zusammen mit Anguish (ID nicht gefunden) ist eue
 	STREAMER_PLANNER_RAID_GROUP = "Gruppe %d",
 	STREAMER_PLANNER_RAID_SLOT = "G%d / %d",
 	STREAMER_PLANNER_QUEUE_TITLE = "Whisper-Queue",
-	STREAMER_PLANNER_QUEUE_HINT = "Nur Whisper mit !enter oder !inv landen hier. Rolle und Spec werden ergänzt, wenn passende Daten verfügbar sind. Rechtsklick entfernt Whisper-Einträge. AutoInv greift in Dungeon und Raid, FullInv bleibt Raid-only.",
+	STREAMER_PLANNER_QUEUE_HINT = "Nur Whisper mit !enter oder !inv landen hier. Rolle und Spec werden ergänzt, wenn passende Daten verfügbar sind. Rechtsklick entfernt Whisper-Einträge. AutoInv greift in Dungeon und Raid, aber nur wenn der Spieler bereits per !enter bekannt ist. FullInv bleibt Raid-only.",
 	STREAMER_PLANNER_AUTO_INVITE_WHISPER = "!inv automatisch einladen",
 	STREAMER_PLANNER_FULL_INVITE = "FullInv",
 	STREAMER_PLANNER_QUEUE_EMPTY = "Noch keine Whisper-Einträge vorhanden.",
