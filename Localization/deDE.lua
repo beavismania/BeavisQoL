@@ -759,59 +759,93 @@ Allgemein: Zielscheibenwindstoß (468429) erzeugt Wogender Wind (468442) als exp
 ]=],
 	BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_NAME = "Überwuchertes Urtum",
 	BOSS_GUIDES_BOSS_UEBERWUCHERTES_URTUM_BODY = [=[
-Allgemein: Kernidee laut den vorliegenden Midnight-S1-Guides ist saubere Add-Kontrolle, ein früh antizipierter Tankbuster und eine große Energie- oder Burstphase als defensives Hauptfenster.
-{TANK} Der Tankbuster Borkenbrecher gilt in der gelieferten Quelle als zentrale Gefahr und sollte bewusst mit Defensives getimt werden.
-{DD} Adds aus Keimen- oder Verästeln-Mechaniken schnell bündeln und töten, bevor der Gruppenschaden eskaliert.
-{HEAL} Die große Energie-Spitze ist hier das primäre Healcheck-Fenster und sollte mit CD-Plan vorbereitet werden.
-{HC} Für diese Dungeonsektion liegen in den verfügbaren Quellen keine vollständig verifizierten DE-Zauber-IDs vor; der Guide stützt sich deshalb bewusst nur auf die Kernmechaniken aus Midnight-S1-Notizen.
+Allgemein: DE-Name unspezifiziert: Germinate (ID nicht gefunden) als Gruppe stacken und gemeinsam rotieren, damit die entstehenden Adds gebündelt cleavbar bleiben.
+DE-Name unspezifiziert: Branch Out (ID nicht gefunden) mit großem Einschlag oder Knockback seitlich dodgen, damit niemand in Folgeeffekte gedrückt wird.
+DE-Name unspezifiziert: Healing Touch (ID nicht gefunden) vom Ancient-Branch-Add immer unterbrechen, sonst heilt der Encounter unnötig hoch.
+DE-Name unspezifiziert: Abundance (ID nicht gefunden) im Kreis nach Add-Tod stehen, um die Bleed-Stacks sicher zu entfernen und den Reset mitzunehmen.
+Quellen: WoWHead DE, Warcraft Wiki, Icy Veins und Method. Verifizierte DE-Spell-IDs waren in der Recherche nicht sauber auffindbar, deshalb bleiben die Einträge bewusst bei ID nicht gefunden.
+{TANK} DE-Name unspezifiziert: Barkbreaker (ID nicht gefunden) mit aktiver Mitigation nehmen, weil der Tankbuster danach physischen Folgeschaden deutlich gefährlicher macht.
+DE-Name unspezifiziert: Burst Forth (ID nicht gefunden) vor dem 100-Energie-AoE mit Defensives und Add-Aggro-Plan vorbereiten, um aktivierte Lashers sofort zu kontrollieren.
+{DD} DE-Name unspezifiziert: Splinterbark (ID nicht gefunden) beim Abundance-Kreis kurz stacken, damit der Gruppen-Bleed nicht weiter eskaliert.
+{HEAL} DE-Name unspezifiziert: Lasher Toxin (ID nicht gefunden) als Poison-Stacks wenn möglich rotierend dispellen, weil sie auf Tanks und Spielern schnell überdrehen.
+{HC} DE-Name unspezifiziert: Barkbreaker (ID nicht gefunden) erhöht auf Heroic+ den physischen Damage-Taken-Debuff deutlich und macht gleichzeitig lebende Adds wesentlich punisher.
 ]=],
 	BOSS_GUIDES_BOSS_KRAAS_NAME = "Kraas",
 	BOSS_GUIDES_BOSS_KRAAS_BODY = [=[
-Allgemein: Laut gelieferter Quelle steht der Kampf um eine Ball- oder Goal-Phase mit Wind und Feuer sowie mehrere Frontal- und Unterbrechungsfenster. Mechaniken gehen klar vor DPS-Greed.
-{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte Frontals kontrolliert vom Raid weg und ermögliche klare Laufwege für die Ball-Phase.
-{DD} Priorisiere Mechaniken, Unterbrechungen und saubere Positionswechsel vor rohem Bossschaden. Fehler in der Ball-Phase kosten hier mehr als verlorene Globals.
-{HEAL} Plane CDs für die großen Überlappungen aus Bewegungs- und Frontalphasen, auch wenn die Quelle keine vollständige ID-Liste liefert.
-{HC} In dieser Ausgabe fehlen belastbare DE-Zauber-IDs und ausgearbeitete HC-Zusatzmechaniken; der Guide bleibt deshalb bewusst auf Kernprinzipien reduziert.
+Allgemein: DE-Name unspezifiziert: Play Ball! oder Score a Goal (ID nicht gefunden) verlangt, dass Bälle konsequent in ein Ziel gespielt werden, statt nebenbei DPS zu greeden.
+DE-Name unspezifiziert: Firestorm (ID nicht gefunden) erzeugt danach dauerhaft neue Feuerzonen, die strikt gedodged werden müssen; den 12-Sekunden-Damage-Amp-Stun als Burst-Fenster nutzen.
+DE-Name unspezifiziert: Power of the Storm (ID nicht gefunden) über Cyclones oder Sphären kontrollieren und den erhaltenen Knockback-Schutz oder Speed-Buff aktiv fürs Positionsspiel verwenden.
+DE-Name unspezifiziert: Destructive Winds (ID nicht gefunden) bei 75 Prozent und 45 Prozent HP früh gegenhalten, damit niemand in Folgemechaniken fliegt.
+Quellen: WoWHead DE, wow.gg und Method. Verifizierbare DE-Spell-IDs fehlen weiterhin, deshalb bleiben die Fähigkeiten als ID nicht gefunden markiert.
+{TANK} DE-Name unspezifiziert: Ferocious Peck (ID nicht gefunden) vor dem Treffer defensiv planen, weil physischer Spike und Bleed sonst schnell Heiler überfordern.
+{DD} DE-Name unspezifiziert: Deafening Screech (ID nicht gefunden) mit Debuff oder Interrupt-Strafe sauber timen und danach sofort stabil repositionieren, statt im Push zu sterben.
+{HEAL} DE-Name unspezifiziert: Scorching Fire (ID nicht gefunden) erzeugt nach Firestorm permanenten Gruppenschaden; Heals und Defensivs deshalb über Zeit staffeln.
+{HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den verfügbaren Quellen war keine eindeutige HC-Abweichung dokumentiert.
 ]=],
 	BOSS_GUIDES_BOSS_VEXAMUS_NAME = "Vexamus",
 	BOSS_GUIDES_BOSS_VEXAMUS_BODY = [=[
-Allgemein: Kernprinzip laut Quelle ist Energieverwaltung plus Orb-Kontrolle. Wenn große Energiefähigkeiten anstehen, wird der Kampf schnell zu einem Defensiv- und Heilcheck.
-{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; positioniere den Boss so, dass Orbs kontrolliert werden können und die Gruppe freie Wege behält.
-{DD} Verhindere so viele Orb-Fehler wie möglich und spiele große Energiefenster sauber statt gierig. Priorität hat Kontrolle vor zusätzlichem Schaden.
-{HEAL} Halte CDs für die großen Energiefähigkeiten zurück und rechne damit, dass Orb-Fehler den Kampf sofort deutlich härter machen.
-{HC} Für die verfügbaren Midnight-Notizen fehlen in dieser Ausgabe verifizierte DE-Zauber-IDs und belastbare HC-Zusatzmechaniken.
+Allgemein: DE-Name unspezifiziert: Arcane Orbs (ID nicht gefunden) früh soaken, bevor sie den Boss erreichen, damit er keine Energie- oder Damage-Eskalation bekommt.
+DE-Name unspezifiziert: Mana Bombs (ID nicht gefunden) als Ziel nach außen laufen und die Pfützen so droppen, dass Wege frei bleiben.
+DE-Name unspezifiziert: Arcane Fissure (ID nicht gefunden) bei 100 Energie den Knockback gegensteuern und die entstehenden Bodenkreise konsequent dodgen.
+Quellen: WoWHead DE, Warcraft Wiki und Method. Verifizierte DE-Spell-Einträge oder IDs waren in der Recherche nicht sauber verfügbar, deshalb bleiben die Einträge bei ID nicht gefunden.
+{TANK} DE-Name unspezifiziert: Arcane Expulsion (ID nicht gefunden) als Frontal strikt von der Gruppe weg stellen und für den Treffer aktive Mitigation oder Defensive nutzen.
+{DD} DE-Name unspezifiziert: Oversurge (ID nicht gefunden) nie unnötig mehrfach soaken, weil der Debuff das nächste Soaken massiv gefährlicher macht.
+{HEAL} DE-Name unspezifiziert: Corrupted Mana (ID nicht gefunden) darf niemand stehen lassen, weil die Pfütze konstant tickt und Overlaps deutlich schwerer heilbar macht.
+{HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den verfügbaren Quellen wurde keine eigene Heroic-Abweichung belastbar dokumentiert.
 ]=],
-	BOSS_GUIDES_BOSS_ECHO_OF_DORAGOSA_NAME = "Echo von Doragosa",
+	BOSS_GUIDES_BOSS_ECHO_OF_DORAGOSA_NAME = "Echo von Direktorin Doragosa",
 	BOSS_GUIDES_BOSS_ECHO_OF_DORAGOSA_BODY = [=[
-Allgemein: Laut Quelle liegt der Schwerpunkt auf sauberem Positionsspiel und klar geplanten AoE-Fenstern. Große Gruppenschaden-Events sollten früh vorbereitet werden.
-{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte den Boss so, dass die Gruppe AoE-Fenster sicher spielen und Flächen sauber ablegen kann.
-{DD} Gute Positionierung und korrektes Ausnutzen der AoE-Fenster bringen hier mehr als starres Single-Target-Spielen.
-{HEAL} Starke Gruppencooldowns sind laut Quelle ein zentraler Bestandteil des Kampfes und sollten nicht erst reaktiv eingesetzt werden.
-{HC} Für diese Sektion fehlen im verfügbaren Material verifizierte DE-Zauber-IDs und ausformulierte HC-Sondermechaniken.
+Allgemein: DE-Name unspezifiziert: Unleash Energy (ID nicht gefunden) bedeutet, dass der Pull nur mit vollen HP erfolgen sollte, weil der Startcast sofort Gruppenschaden plus Rifts erzeugt.
+DE-Name unspezifiziert: Arcane Rift (ID nicht gefunden) bewusst an den Rand legen, damit beim späteren Pull oder Knock keine No-Go-Zonen im Kern entstehen.
+DE-Name unspezifiziert: Uncontrolled Energy (ID nicht gefunden) aus den Rifts konsequent dodgen, weil Treffer weitere Stack-Eskalation auslösen.
+DE-Name unspezifiziert: Overwhelming Power (ID nicht gefunden) möglichst komplett vermeiden und bei drohendem Stack-Trigger die nächste Rift an eine saubere Stelle platzieren.
+Quellen: WoWHead DE, Warcraft Wiki, Method und wow.gg. Verifizierbare DE-Spell-IDs waren in der Recherche nicht eindeutig verfügbar, daher bleiben die Fähigkeiten als ID nicht gefunden markiert.
+{TANK} DE-Name unspezifiziert: Power Vacuum (ID nicht gefunden) verlangt, dass der Boss so steht, dass das Gruppenziehen niemanden in Rifts zieht; nach dem Pull sofort aus dem AoE heraus.
+{DD} DE-Name unspezifiziert: Energy Bomb (ID nicht gefunden) isoliert spielen, damit die Explosion keine Mitspieler cleavt und keine unnötigen Stacks erzeugt.
+{HEAL} DE-Name unspezifiziert: Arcane Missiles (ID nicht gefunden) ist vor allem in Overlaps ein Kill-Setup; Spot-Heal oder Defensiv-Calls daher früh setzen.
+DE-Name unspezifiziert: Astral Breath (ID nicht gefunden) als Breath-Kegel nie gruppenweit fressen, weil sonst Stacks und Rift-Dichte eskalieren.
+{HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den verfügbaren Quellen war keine verlässliche HC-Sonderliste dokumentiert.
 ]=],
 	BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_NAME = "Schmiedemeister Garfrost",
 	BOSS_GUIDES_BOSS_FORGEMASTER_GARFROST_BODY = [=[
-Allgemein: Für diesen Dungeon liegen in den aktuell abrufbaren Quellen keine vollständig verknüpfbaren deutschen Zauber-IDs vor. Der Guide bleibt deshalb absichtlich bei verlässlichen Kernprinzipien statt erfundener Detailmechaniken.
-{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; spiele Frontals, Positionierung und Übergänge sauber und halte der Gruppe Ausweichraum offen.
-{DD} Ohne verifizierte Detaildaten gilt hier besonders: Mechaniken vor Greed, cleare Add- oder Prioritätsziele zuerst und vermeide vermeidbaren Bodenschaden.
-{HEAL} Plane Heil-CDs für die größten bekannten Gruppenfenster und rechne damit, dass Fehler in alten Dungeonkämpfen oft kaskadieren statt einzeln zu töten.
-{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+Allgemein: Throw Saronite (1261299) nicht stacken und die Ore Chunks (1272433) sinnvoll platzieren, damit die Arena nicht zugestellt wird.
+Bei voller Energie folgt Glacial Overload (1262029); dafür hinter einem Ore Chunk (1272433) verstecken, weil der Chunk die Abschirmung liefert.
+Nach Glacial Overload (1262029) kommt Cryostomp (1261847) mit Gruppen-AoE und zwei Magie-Debuffs; diese schnell dispellen, damit sie nicht zusammen mit Siphoning Chill (1261806) unnötig viel Heilung fressen.
+{TANK} Orebreaker (1261546) ist der Tank-Buster. Defensiv timen und den Boss so stellen, dass dabei ein Ore Chunk (1272433) getroffen oder zerstört wird.
+Lasst nicht mehrere ungelöste Ore Chunks (1272433) gleichzeitig stehen, wenn euer Setup sie schlecht kontrolliert bekommt.
+{DD} Ore Chunks (1272433) kontrolliert mit entfernen und nicht wahllos zusätzliche Bodenprobleme erzeugen.
+Während Glacial Overload (1262029) sauber hinter den Chunk gehen und danach sofort wieder heraus, damit Uptime und Wege kurz bleiben.
+{HEAL} Cryostomp (1261847) ist das klare Heil-CD-Fenster, besonders auf höheren Stufen.
+Die Magie-Debuffs nach Cryostomp (1261847) zügig dispellen, idealerweise ein Ziel sofort und das zweite je nach GCD und Gruppenschaden.
+Siphoning Chill (1261806) läuft dauerhaft als Aura-Schaden und bestimmt euren Mana- und CD-Plan.
+{HC} In den aktuell verfügbaren Guides werden keine getrennten Mechanik-Unterschiede für Heroic gegenüber Mythic genannt; der Unterschied liegt vor allem im Tuning.
 ]=],
 	BOSS_GUIDES_BOSS_ICK_AND_KRICK_NAME = "Ick und Krick",
 	BOSS_GUIDES_BOSS_ICK_AND_KRICK_BODY = [=[
-Allgemein: Für diesen Boss fehlen in den aktuell abrufbaren Quellen verlässlich verknüpfbare deutsche Zauber-IDs. Der Guide bleibt daher bewusst bei allgemeinen Kernprinzipien.
-{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; halte Boss und gefährliche Effekte kontrolliert vom Raid weg und schaffe freie Bewegungswege.
-{DD} Priorisiere sichere Bewegung, Unterbrechungen und klare Zielwechsel über rohen Bossschaden.
-{HEAL} Reagiere früh auf vermeidbare Fehler, weil fehlende Detaildaten die Kampfspitzen weniger exakt planbar machen.
-{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+Allgemein: Necrolink (1264192) bedeutet geteilte HP; cleaven deshalb immer mit, wenn es sicher geht.
+Blight Smash (1264287) und Plague Explosion (1264336) erzeugen Area-Denial; haltet daher bewusst saubere Zonen offen.
+Shade Shift (1264027) bringt Adds ins Spiel; cleave diese mit Priorität, ohne dabei den wichtigsten Interrupt zu verlieren.
+{TANK} Blight Smash (1264287) defensiv spielen und die entstehende Fläche aus dem Kampfbereich heraus droppen, nicht in Melee- oder Heiler-Positionen.
+Während Get 'em, Ick! (1264363) fixiert der Boss ein Zufallsziel; wenn das bei dir oder in deiner Nähe passiert, so laufen, dass die Gruppe nicht gegrieft wird.
+{DD} Death Bolt (1278893) von Krick ist Top-Priorität für Kicks.
+Bei Shade Shift (1264027) Shades sofort cleaven oder töten; Shadowbind (1264186) unterbrechen oder entfluchen, wenn euer Setup das kann.
+Wenn Get 'em, Ick! (1264363) auf dich geht, sauber kiten; wenn nicht, das Fenster für Cleave und Push nutzen.
+{HEAL} Plague Explosion (1264336) wird schnell spiky, wenn Spieler schlecht stehen; vorher HoTs oder Schilde vorbereiten.
+Shadowbind (1264186) bei verfügbarem Fluch-Dispel zügig lösen, alternativ Kicks und Stops sauber abdecken.
+{HC} Öffentlich dokumentiert sind vor allem Mythic- und M+-Mechaniken, die laut Guides weitgehend auch für Normal und Heroic gelten; Unterschiede liegen meist in Zahlen und Tuning.
 ]=],
 	BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_NAME = "Geißelfürst Tyrannus",
 	BOSS_GUIDES_BOSS_SCOURGELORD_TYRANNUS_BODY = [=[
-Allgemein: Für diesen Boss fehlen im aktuell abrufbaren Material verifizierte deutsche Zauber-IDs. Entsprechend bleibt der Guide auf robuste Kernprinzipien begrenzt.
-{TANK} Es liegt keine separat verifizierte Tank-Detailnotiz mit DE-ID vor; richte Bossfähigkeiten von der Gruppe weg aus und halte Positionen stabil.
-{DD} Spiele Movement und Mechanik-Sauberkeit priorisiert, bis belastbare Detaildaten ergänzt sind.
-{HEAL} Halte CDs eher konservativ zurück und stabilisiere nach Fehlern schnell, weil die verifizierten Schadensfenster in der Quelle nicht sauber ausformuliert sind.
-{HC} Für diese Sektion fehlen aktuell verifizierte HC-Zusatzmechaniken mit DE-Zauber-IDs.
+Allgemein: Bone Piles (1276357) sind das Kernobjektiv des Encounters. Wenn du Rime Blast (1262745) bekommst, so stehen, dass du gezielt ein markiertes Bone Pile cleavest.
+Army Of The Dead (1263406) aktiviert Bone Piles (1276357) und erzeugt Rotlings sowie bei infizierten Piles gefährlichere Scourge Plaguespreaders; diese haben Fokus und Interrupt-Priorität.
+Death's Grasp (1263756) und Ice Barrage (1276948) erzeugen zusätzliche Dodge-Zonen; also in Bewegung bleiben und keine unnötigen Treffer nehmen.
+{TANK} Scourgelord's Brand (1262582) ist ein großer Knockback mit Folge-Sprung. Defensives und Bewegung so einplanen, dass der zweite Treffer nicht gratis durchgeht.
+In den Add-Wellen Rotting Strikes (1262929)-Stacks von Rotlings im Blick behalten und bei Möglichkeit Disease-Dispels oder Externals einfordern.
+{DD} Scourge Plaguespreaders nach Army Of The Dead (1263406) sofort answappen; Plague Bolt (1262941) kicken, weil Festering Pulse (1262997) starken Gruppenschaden erzeugt.
+Bone Piles (1276357) nicht zufällig cleaven, sondern über das Positionsspiel von Rime Blast (1262745) gezielt vorbereiten.
+{HEAL} Die Army-Phase rund um Army Of The Dead (1263406) ist euer großes Druckfenster; Festering Pulse (1262997) plus Flächenfehler eskalieren dort sehr schnell.
+Rotting Strikes (1262929)-Stacks auf dem Tank sind Heil- und Mitigation-Checks; bei hohen Stacks Externals oder Dispels früh einplanen.
+{HC} Auch hier fokussieren die verfügbaren Quellen vor allem Mythic und M+ und beschreiben die Mechaniken als weitgehend auf Normal und Heroic übertragbar; spezifische Heroic-only-Mechaniken sind nicht separat ausgewiesen.
 ]=],
 	BOSS_GUIDES_BOSS_RANJIT_NAME = "Ranjit",
 	BOSS_GUIDES_BOSS_RANJIT_BODY = [=[
@@ -847,38 +881,97 @@ Allgemein: Auch für Hochweise Viryx fehlen in den aktuell abrufbaren Quellen ve
 ]=],
 	BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_NAME = "Zuraal der Aufgestiegene",
 	BOSS_GUIDES_BOSS_ZURAAL_THE_ASCENDED_BODY = [=[
-Allgemein: Zonen sauber rauslegen, Kegel und Frontals dodgen und Add-Objekte priorisieren, bevor der Raum oder Gruppenschaden eskaliert.
-{TANK} Halte Kegel und Frontals konsequent von der Gruppe weg und stelle den Boss so, dass abgelegte Zonen den Raum nicht früh schließen.
-{DD} Adds & Mechanik gehen vor Bossschaden. Gute Positionsdisziplin hält den Raum spielbar.
-{HEAL} Rechne mit Schaden aus Zone-Fehlern und Frontaltreffern; CDs eher für die stabilen Gruppenfenster statt für einzelne kleine Fehler aufheben.
+Allgemein: Decimate (244579) so platzieren, dass die entstehende Pfütze am Rand oder auf bestehenden Flächen landet und nicht den Kampfbereich schließt.
+Null Palm (246134) sofort seitlich auslaufen, weil es als Frontal sehr oft tödlich ist.
+Oozing Slam (ID nicht gefunden) fügt der Gruppe einen DoT zu und spawnt Coalesced Void (ID nicht gefunden), die ihr verlangsamen, kontrollieren und priorisiert töten müsst.
+Crashing Void oder Crushing Void (Name oder ID unspezifiziert) zieht Spieler und beschleunigt Oozes; Oozes daher vorher töten oder kontrollieren und beim Knockback nicht in Pfützen fliegen.
+Void Slash (ID nicht gefunden) ist die Tank-Buster-Combo, daher zählt jeder abgefangene Treffer über Defensives und aktive Mitigation.
+Quellen: WoWHead DE, Method, Icy Veins und wow.gg. Die Spell-Verifikation war dabei nur teilweise möglich.
+{TANK} Void Slash (ID nicht gefunden) immer mit aktiver Mitigation oder Defensive abfangen, weil die Combo extrem hoch spikt.
+Bei Decimate (244579) den Boss so stellen, dass Coalesced Void (ID nicht gefunden) nicht geradeaus in ihn hineinlaufen.
+{DD} Coalesced Void (ID nicht gefunden) sofort fokussieren und mit Slows, Stuns oder Knockbacks Zeit kaufen, weil Kontakt mit dem Boss sonst massiven Gruppenschaden verursacht.
+Null Palm (246134) strikt frontal vermeiden und als Range nicht durch die Melee-Positionen laufen.
+{HEAL} Für Oozing Slam (ID nicht gefunden) früh einen CD-Plan haben, weil Gruppen-DoT und Flächen gleichzeitig Heilstress erzeugen.
+Crashing Void oder Crushing Void (Name oder ID unspezifiziert) als großen Gruppentreffer plus Knockback vorbereiten und die Gruppe vor Channel-Ende stabilisieren.
+{HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den priorisierten Quellen war keine verifizierbare HC-exklusive Änderungsliste auffindbar.
 ]=],
-	BOSS_GUIDES_BOSS_SARPUSH_NAME = "Sarpush",
+	BOSS_GUIDES_BOSS_SARPUSH_NAME = "Saprish",
 	BOSS_GUIDES_BOSS_SARPUSH_BODY = [=[
-Allgemein: Kernprinzip laut Quelle: Bomben und Flächen kontrolliert detonieren, für die Phasenmechanik bewusst stacken und den Fear-Cast der Add-Komponente zuverlässig unterbrechen.
-{TANK} Halte Boss und Add-Komponenten so, dass kontrollierte Detonationen möglich bleiben und die Stack-Position nicht mit Bodenflächen kollidiert.
-{DD} Fear-Cast der Add-Komponente ist zentrale Kick-Pflicht. Kontrollierte Bomben-Detonationen gehen vor reiner DPS-Zeit.
-{HEAL} Gestackte Phasenmechaniken und unsaubere Detonationen erzeugen die größten Schadensspitzen. CD-Plan darauf ausrichten.
-{HC} Für diese Sektion fehlen in der gelieferten Quelle verifizierte DE-Zauber-IDs und harte HC-Sondermechaniken.
+Allgemein: Void Bomb (ID nicht gefunden) nicht berühren, sondern mit dem Phase Dash (ID nicht gefunden)-Kreis entfernen, um möglichst viele Bomben kontrolliert zu beseitigen.
+Overload (ID nicht gefunden) wird umso gefährlicher, je mehr Bomben noch liegen; Restbomben daher vor Cast-Ende defensiv oder mit Immunities soaken.
+Dread Screech (ID nicht gefunden) von Shadewing konsequent unterbrechen, weil Fear und Schaden Overlap-Fenster schnell eskalieren lassen.
+Shadow Pounce (ID nicht gefunden) von Darkfang verursacht Schaden auf Zufallsziele mit Blutung; betroffene Spieler daher sofort stabilisieren und Cleanses bei Bedarf nutzen.
+Rending Void (ID nicht gefunden) ist dauerhafter tanklastiger Nahkampfschaden und verschärft besonders die Stressfenster rund um Overload (ID nicht gefunden).
+Quellen: WoWHead DE, Method, Icy Veins und Blizzard Hotfix Notes. Die Spell-Verifikation war in dieser Recherche nicht eindeutig möglich.
+{TANK} Boss und Begleiter dauerhaft stapeln, weil sie Health teilen und ihr sonst unnötig Zeit verliert.
+Wenn vor Overload (ID nicht gefunden) noch Bomben liegen, diese gezielt als Tank oder mit Immunity-Spielern aufnehmen, um zusätzlichen Stack- oder Explosionsschaden zu verhindern.
+{DD} Phase Dash (ID nicht gefunden) so laufen, dass Bomben maximal mitgenommen werden und nicht im Kernbereich des Kampfes liegen bleiben.
+Dread Screech (ID nicht gefunden) mit fester Kick-Rotation absichern, weil Overlaps mit Phase Dash (ID nicht gefunden) sonst sehr schnell zu Kettenfehlern führen.
+{HEAL} Die Gruppe vor Overload (ID nicht gefunden) immer vollständig vorbereiten, weil zusätzlich DoT-Druck entsteht und kleine Vorfehler dann sofort eskalieren.
+Ziele von Shadow Pounce (ID nicht gefunden) priorisiert spothealen, weil zufällige Blutung plus Overload-Fenster schnell tödlich werden kann.
+{HC} Bestätigte Hotfix-Änderungen ohne klare Schwierigkeitsbindung: Void Bomb (ID nicht gefunden) bekam ein Visual-Update und der Impact-Radius von Phase Dash (ID nicht gefunden) wurde auf 8 Meter erhöht.
+Darüber hinaus sind derzeit keine verifizierbaren HC-exklusiven Änderungen bestätigt.
 ]=],
 	BOSS_GUIDES_BOSS_VICEROY_NEZHAR_NAME = "Vizekönig Nezhar",
 	BOSS_GUIDES_BOSS_VICEROY_NEZHAR_BODY = [=[
-Allgemein: Kernprinzip laut Quelle: Gedankenschlag konsequent kicken, die Plattform vor Energiephasen sauber positionieren und Tentakel oder Adds priorisieren.
-{TANK} Stelle Nezhar so, dass Plattformwege für Energiephasen offen bleiben und Tentakel nicht unkontrolliert durch die Gruppe laufen.
-{DD} Gedankenschlag hat Kick-Priorität. Danach Tentakel und andere Prioritätsziele zuerst spielen, bevor wieder freier Bossschaden gedrückt wird.
-{HEAL} Energiephasen und Add-Overlaps sind die Stellen, an denen der Kampf kippt. Heile früh gegen statt erst nach einem Fehler.
-{HC} Für diese Sektion fehlen in der gelieferten Quelle verifizierte DE-Zauber-IDs und ausformulierte HC-Zusätze.
+Allgemein: Mind Blast (ID nicht gefunden) ist ein Tank-Cast und muss mit Kick-Rotation gedeckelt werden, sonst kippt der Kampf sehr schnell.
+Gates Of The Abyss (ID nicht gefunden) spawnen Umbral Waves (ID nicht gefunden), die ihr konsequent dodgen müsst, weil sie dauerhaften Raumdruck erzeugen.
+Mass Void Infusion (ID nicht gefunden) trifft mehrere Spieler gleichzeitig; Defensives und Heiler-CDs daher gezielt auf diese Fenster legen.
+Umbral Tentacles (ID nicht gefunden) erscheinen in Sets und channeln Mind Flay (ID nicht gefunden) auf Spieler; sie müssen schnell gecleavt oder fokussiert werden.
+Bei voller Energie folgt Repulse (ID nicht gefunden) mit Knockback und danach Collapsing Void (ID nicht gefunden); dann sofort unter den Boss in die Safe-Zone spielen und Gruppendefensives ziehen.
+Quellen: WoWHead DE, Method, wow.gg und Icy Veins. Die Spell-Verifikation war in dieser Recherche nicht eindeutig möglich.
+{TANK} Mind Blast (ID nicht gefunden) aktiv in die Interrupt-Rotation einplanen und defensiv mitdenken, weil es der Primärspike auf den Tank ist.
+Vor Repulse (ID nicht gefunden) den Boss möglichst zentral positionieren, damit die Gruppe die Safe-Zone unter dem Boss für Collapsing Void (ID nicht gefunden) zuverlässig erreicht.
+{DD} Umbral Tentacles (ID nicht gefunden) sofort cleaven oder töten, weil jede Channel-Sekunde von Mind Flay (ID nicht gefunden) zusätzlichen Gruppenschaden bedeutet.
+In der Collapsing Void (ID nicht gefunden)-Phase Movement-CDs nutzen, um den Safe-Spot unter dem Boss sicher zu halten, statt außerhalb zu greeden.
+{HEAL} Mass Void Infusion (ID nicht gefunden) und Collapsing Void (ID nicht gefunden) sind die klaren CD-Anker des Kampfes.
+Nach dem Knockback von Repulse (ID nicht gefunden) direkt stabilisieren, weil Fehlpositionen sonst zusätzliche Treffer durch Waves erzwingen.
+{HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den priorisierten Quellen war keine verifizierbare HC-exklusive Änderungsliste auffindbar.
 ]=],
 	BOSS_GUIDES_BOSS_LURA_NAME = "L'ura",
 	BOSS_GUIDES_BOSS_LURA_BODY = [=[
-Allgemein: Kernprinzip laut Quelle: Rotierende Strahlen sauber dodgen, die Resonator- oder Beam-Mechanik korrekt spielen und das Damage-Window nach einem Stun konsequent nutzen.
-{TANK} Halte den Boss so, dass rotierende Strahlen den Raid nicht unkontrolliert abschneiden und das Stun-Fenster sauber vorbereitet werden kann.
-{DD} Movement sauber spielen, Resonator- oder Beam-Mechanik korrekt lösen und danach das Stun-Fenster für konzentrierten Schaden nutzen.
-{HEAL} Größte Gefahr entsteht meist aus Strahlenfehlern plus verspäteter Stabilisierung. Bewahre CDs für die planbaren Gruppenschadensfenster nach Übergängen oder Fehltritten auf.
-{HC} Für diese Sektion fehlen in der gelieferten Quelle verifizierte DE-Zauber-IDs und ausgearbeitete HC-Sondermechaniken.
+Allgemein: Dirge Of Despair (ID nicht gefunden) ist der Gruppentreffer, der Notes Of Despair (ID nicht gefunden) erzeugt; Heiler-CDs daher über die Note-Phase verteilen.
+Discordant Beam (ID nicht gefunden) gezielt auf aktive Notes schießen, um sie zu silencen und so den permanenten Puls-Schaden zu reduzieren.
+Wenn alle Notes Of Despair (ID nicht gefunden) gesilenced sind, startet eine Intermission mit Siphon Void (ID nicht gefunden) als klarem Schadensfenster; DPS-CDs dafür sparen.
+Grim Chorus (ID nicht gefunden) repositioniert Notes und erzeugt Gefahrenzonen um aktive Notes; deshalb sofort neu ausrichten und nicht stehen bleiben.
+Anguish (ID nicht gefunden) tickt alle 2 Sekunden auf die Gruppe, solange Notes aktiv sind; die Intermission daher erzwingen, bevor der Dauerschaden unheilbar wird.
+Disintegrate (ID nicht gefunden) als rotierende Beam-Mechanik gemeinsam mitlaufen, statt quer durch Strahlen zu schneiden.
+Abyssal Lance (ID nicht gefunden) stapelt auf Boss und Tank und triggert bei 3 Stacks einen großen Treffer nach kurzer Verzögerung; diesen Punkt defensiv vorplanen.
+{TANK} Abyssal Lance (ID nicht gefunden) bei 3 Stacks als klaren Defensive-Pflichtpunkt behandeln, weil der folgende Treffer sonst tödlich spiken kann.
+Boss möglichst zentral halten, damit die Gruppe Disintegrate (ID nicht gefunden) sauber umlaufen und Discordant Beam (ID nicht gefunden) kontrolliert ausrichten kann.
+{DD} Discordant Beam (ID nicht gefunden) aktiv als Mechanik-DPS spielen und immer auf eine aktive Note richten, bis alle sechs gesilenced sind.
+In der Intermission mit Siphon Void (ID nicht gefunden) alle Offensiv-CDs bündeln, weil dort das eigentliche Schadensfenster des Kampfes liegt.
+{HEAL} Dirge Of Despair (ID nicht gefunden) plus aktive Notes bedeuten permanenten Gruppendruck; CDs daher staffeln statt alles gleichzeitig zu ziehen.
+Grim Chorus (ID nicht gefunden) zusammen mit Anguish (ID nicht gefunden) ist euer eskalierendes Fail-Signal; fordert früh Defensives oder Externals, bis die Intermission erreicht ist.
+{HC} HC-spezifische Änderungen sind derzeit unspezifiziert; in den priorisierten Quellen war keine verifizierbare HC-exklusive Änderungsliste auffindbar.
 ]=],
 	BOSS_GUIDES_SPELL_NAMES = {
 		["Shadow Phalanx"] = { spellID = 1284786, localizedName = "Schattenphalanx" },
 		["Dark Barrage"] = "Dunkelsalve",
+		["Decimate"] = { spellID = 244579 },
+		["Null Palm"] = { spellID = 246134 },
+		["Throw Saronite"] = { spellID = 1261299 },
+		["Ore Chunks"] = { spellID = 1272433, aliases = { "Ore Chunk" } },
+		["Orebreaker"] = { spellID = 1261546 },
+		["Glacial Overload"] = { spellID = 1262029 },
+		["Cryostomp"] = { spellID = 1261847 },
+		["Siphoning Chill"] = { spellID = 1261806 },
+		["Necrolink"] = { spellID = 1264192 },
+		["Shade Shift"] = { spellID = 1264027 },
+		["Shadowbind"] = { spellID = 1264186 },
+		["Death Bolt"] = { spellID = 1278893 },
+		["Blight Smash"] = { spellID = 1264287 },
+		["Plague Explosion"] = { spellID = 1264336 },
+		["Get 'em, Ick!"] = { spellID = 1264363 },
+		["Rime Blast"] = { spellID = 1262745 },
+		["Bone Piles"] = { spellID = 1276357, aliases = { "Bone Pile" } },
+		["Army Of The Dead"] = { spellID = 1263406 },
+		["Rotting Strikes"] = { spellID = 1262929 },
+		["Festering Pulse"] = { spellID = 1262997 },
+		["Plague Bolt"] = { spellID = 1262941 },
+		["Scourgelord's Brand"] = { spellID = 1262582 },
+		["Death's Grasp"] = { spellID = 1263756 },
+		["Ice Barrage"] = { spellID = 1276948 },
 		["Void Infusion"] = { spellID = 1245960, localizedName = "Leereninfusion" },
 		["Dark Uproar"] = { spellID = 1249251, localizedName = "Dunkle Verwerfung" },
 		["Black Miasma"] = { spellID = 1275059, localizedName = "Schwarzes Miasma" },

@@ -223,10 +223,6 @@ local GUIDE_DATA = {
         matchTokens = { "maisara caverns", "maisara hoehlen", "maisara höhlen", "maisarakavernen" },
         bosses = {
             {
-                nameKey = "BOSS_GUIDES_BOSS_MAISARA_CAVERNS_OVERVIEW_NAME",
-                bodyKey = "BOSS_GUIDES_BOSS_MAISARA_CAVERNS_OVERVIEW_BODY",
-            },
-            {
                 nameKey = "BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_NAME",
                 bodyKey = "BOSS_GUIDES_BOSS_MUROJIN_NEKRAXX_BODY",
             },
@@ -344,21 +340,28 @@ local LegendFontStrings = {}
 local PinBtn
 local GuideTextSegments = {}
 local GuideSpellButtons = {}
+local GuideSectionButtons = {}
 local GuideHomeTitleText
 local GuideHomeBodyText
 local GuideHomeSectionTitle
 local GuideHomeEmptyText
 local GuideHomeTiles = {}
 local GuideHomeSections = {}
+local GuideSectionExpansionState = {}
 local GetBossGuidesSettings
 local GuideJournalInfoCache = {}
 local activeGuideSource = nil
 local UpdateGuideUi
+local UpdateGuideText
 local AutoSizeGuideWindow
 local GetGuideTitle
 local GetGuideTileTexture
 local GetSortedGuideKeys
 local SetActiveGuide
+local IsGuideSectionExpanded
+local SetGuideSectionExpanded
+local GetGuideSectionLabel
+local ParseGuideBodySections
 local CurrentGuideContentHeight = 220
 local GuideHomeContentHeight = 0
 local isAutoSizingGuideWindow = false
@@ -1079,6 +1082,86 @@ local function HideGuideContentWidgets()
     for _, button in ipairs(GuideSpellButtons) do
         button:Hide()
     end
+
+    for _, button in ipairs(GuideSectionButtons) do
+        button:Hide()
+    end
+end
+
+local function GetGuideSectionDisplayLabel(sectionKey, label, iconSize)
+    label = label or GetGuideSectionLabel(sectionKey) or ""
+
+    if sectionKey == "TANK" or sectionKey == "DD" or sectionKey == "HEAL" or sectionKey == "HC" or sectionKey == "M" then
+        return string.format("%s %s", GetRoleIcon(sectionKey, iconSize or 13), label)
+    end
+
+    return label
+end
+
+local function ApplyGuideSectionButtonVisual(button)
+    if not button then
+        return
+    end
+
+    local isExpanded = button.isExpanded == true
+    local isHovered = button.isHovered == true
+    local sectionLabel = GetGuideSectionDisplayLabel(button.SectionKey, button.SectionLabel, 13)
+
+    button.Bg:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, isHovered and (isExpanded and 0.22 or 0.16) or (isExpanded and 0.15 or 0.10))
+    button.Accent:SetColorTexture(1.00, 0.94, 0.47, isExpanded and 0.95 or 0.60)
+    button.Text:SetTextColor(isExpanded and 1.00 or 0.90, isExpanded and 0.94 or 0.88, isExpanded and 0.47 or 0.76, 1)
+    button.Text:SetText(string.format("%s %s", isExpanded and "[-]" or "[+]", sectionLabel))
+end
+
+local function AcquireGuideSectionButton(index)
+    local button = GuideSectionButtons[index]
+    if button then
+        return button
+    end
+
+    button = CreateFrame("Button", nil, ContentText or ContentScrollChild)
+    button:EnableMouse(true)
+    button:RegisterForClicks("AnyUp")
+
+    local bg = button:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    button.Bg = bg
+
+    local accent = button:CreateTexture(nil, "ARTWORK")
+    accent:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+    accent:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
+    accent:SetWidth(2)
+    button.Accent = accent
+
+    local text = button:CreateFontString(nil, "OVERLAY")
+    text:SetPoint("LEFT", button, "LEFT", 8, 0)
+    text:SetPoint("RIGHT", button, "RIGHT", -8, 0)
+    text:SetJustifyH("LEFT")
+    text:SetJustifyV("MIDDLE")
+    text:SetWordWrap(false)
+    button.Text = text
+
+    button:SetScript("OnEnter", function(self)
+        self.isHovered = true
+        ApplyGuideSectionButtonVisual(self)
+    end)
+
+    button:SetScript("OnLeave", function(self)
+        self.isHovered = false
+        ApplyGuideSectionButtonVisual(self)
+    end)
+
+    button:SetScript("OnClick", function(self)
+        if not self.SectionKey then
+            return
+        end
+
+        SetGuideSectionExpanded(self.SectionKey, not IsGuideSectionExpanded(self.SectionKey))
+        UpdateGuideText()
+    end)
+
+    GuideSectionButtons[index] = button
+    return button
 end
 
 local function RefreshGuideHomeTileVisual(tile)
@@ -1401,6 +1484,102 @@ local function LayoutGuideHome()
     end
 end
 
+local function RenderGuideLine(line, baseX, y, rightLimit, db, textIndex, spellIndex)
+    if type(line) ~= "string" or line == "" then
+        return y - (db.fontSize + 6), textIndex, spellIndex
+    end
+
+    local x = baseX
+    local currentLineHeight = db.fontSize + 6
+
+    for _, segment in ipairs(SplitGuideLineSegments(line)) do
+        local widget
+        local segmentWidth
+        local segmentHeight
+        local textValue
+
+        if segment.kind == "spell" then
+            spellIndex = spellIndex + 1
+            widget = AcquireGuideSpellButton(spellIndex)
+            widget.Text:SetFont(FONT_PATH, db.fontSize, "OUTLINE")
+            widget.Text:SetTextColor(1.00, 0.82, 0.20, 1)
+
+            local spellText = string.format("[%s]", segment.spell.localizedName)
+            if segment.spell.iconID then
+                spellText = string.format("|T%d:14:14:0:0|t %s", segment.spell.iconID, spellText)
+            end
+
+            widget.Text:SetText(spellText)
+            segmentWidth = math.max(
+                widget.Text:GetStringWidth(),
+                widget.Text.GetUnboundedStringWidth and widget.Text:GetUnboundedStringWidth() or 0
+            )
+            segmentHeight = math.max(widget.Text:GetStringHeight(), db.fontSize + 6) + 2
+            widget.spellID = segment.spell.spellID
+            widget.spellLink = segment.spell.spellLink
+            widget.spellName = segment.spell.localizedName
+            widget.englishName = segment.spell.englishName
+            widget.fallbackTooltipKind = segment.spell.fallbackTooltipKind
+            widget.fallbackTooltipText = segment.spell.fallbackTooltipText
+            widget:SetSize(segmentWidth, segmentHeight)
+        else
+            textIndex = textIndex + 1
+            widget = AcquireGuideTextSegment(textIndex)
+            widget:SetFont(FONT_PATH, db.fontSize, "OUTLINE")
+            widget:SetTextColor(0.93, 0.90, 0.83, 1)
+            textValue = segment.text
+            if x == baseX then
+                textValue = textValue:gsub("^%s+", "")
+            end
+
+            if textValue == "" then
+                segmentWidth = 0
+                segmentHeight = currentLineHeight
+                widget:Hide()
+            else
+                widget:SetText(textValue)
+                segmentWidth = widget:GetStringWidth()
+                segmentHeight = math.max(widget:GetStringHeight(), db.fontSize + 4)
+            end
+        end
+
+        if x > baseX and (x + segmentWidth) > rightLimit then
+            x = baseX
+            y = y - currentLineHeight
+            if segment.kind == "text" and textValue then
+                local wrappedTextValue = textValue:gsub("^%s+", "")
+                if wrappedTextValue ~= textValue then
+                    textValue = wrappedTextValue
+
+                    if textValue == "" then
+                        segmentWidth = 0
+                        segmentHeight = currentLineHeight
+                        widget:Hide()
+                    else
+                        widget:SetText(textValue)
+                        segmentWidth = widget:GetStringWidth()
+                        segmentHeight = math.max(widget:GetStringHeight(), db.fontSize + 4)
+                    end
+                end
+            end
+
+            currentLineHeight = segmentHeight
+        else
+            currentLineHeight = math.max(currentLineHeight, segmentHeight)
+        end
+
+        if segmentWidth > 0 then
+            widget:ClearAllPoints()
+            widget:SetPoint("TOPLEFT", ContentText or ContentScrollChild, "TOPLEFT", x, y)
+            widget:Show()
+        end
+
+        x = x + segmentWidth
+    end
+
+    return y - currentLineHeight - 3, textIndex, spellIndex
+end
+
 local function RenderGuideBody(body)
     if not ContentText or not ContentScrollFrame then
         return 220
@@ -1410,104 +1589,76 @@ local function RenderGuideBody(body)
 
     local db = GetBossGuidesSettings()
     local baseX = 4
-    local x = baseX
     local y = -4
-    local lineGap = 3
-    local availableWidth = math.max(ContentScrollFrame:GetWidth() - 8, 40)
+    local headerGap = 4
+    local sectionGap = 6
+    local rightLimit = math.max(ContentScrollFrame:GetWidth() - 8, 40)
     local textIndex = 0
     local spellIndex = 0
+    local sectionButtonIndex = 0
+    local sections = ParseGuideBodySections(body)
 
-    for line in tostring(body or ""):gmatch("[^\n]+") do
-        local segments = SplitGuideLineSegments(line)
-        local currentLineHeight = db.fontSize + 6
+    if #sections == 0 then
+        sections = {
+            {
+                key = "general",
+                label = nil,
+                lines = { tostring(body or "") },
+                collapsible = false,
+                showHeader = false,
+            },
+        }
+    end
 
-        for _, segment in ipairs(segments) do
-            local widget
-            local segmentWidth
-            local segmentHeight
-            local textValue
+    for sectionIndex, section in ipairs(sections) do
+        if section.collapsible then
+            sectionButtonIndex = sectionButtonIndex + 1
 
-            if segment.kind == "spell" then
-                spellIndex = spellIndex + 1
-                widget = AcquireGuideSpellButton(spellIndex)
-                widget.Text:SetFont(FONT_PATH, db.fontSize, "OUTLINE")
-                widget.Text:SetTextColor(1.00, 0.82, 0.20, 1)
+            local button = AcquireGuideSectionButton(sectionButtonIndex)
+            local isExpanded = IsGuideSectionExpanded(section.key)
+            local buttonHeight = math.max(db.fontSize + 10, 22)
 
-                local spellText = string.format("[%s]", segment.spell.localizedName)
-                if segment.spell.iconID then
-                    spellText = string.format("|T%d:14:14:0:0|t %s", segment.spell.iconID, spellText)
+            button.SectionKey = section.key
+            button.SectionLabel = section.label or GetGuideSectionLabel(section.key)
+            button.isExpanded = isExpanded
+            button.isHovered = false
+            button.Text:SetFont(FONT_PATH, db.fontSize + 1, "OUTLINE")
+            button:ClearAllPoints()
+            button:SetPoint("TOPLEFT", ContentText or ContentScrollChild, "TOPLEFT", baseX, y)
+            button:SetSize(math.max(rightLimit - baseX, 40), buttonHeight)
+            ApplyGuideSectionButtonVisual(button)
+            button:Show()
+
+            y = y - buttonHeight - headerGap
+
+            if isExpanded then
+                for _, line in ipairs(section.lines) do
+                    y, textIndex, spellIndex = RenderGuideLine(line, baseX + 12, y, rightLimit, db, textIndex, spellIndex)
                 end
-
-                widget.Text:SetText(spellText)
-                segmentWidth = math.max(
-                    widget.Text:GetStringWidth(),
-                    widget.Text.GetUnboundedStringWidth and widget.Text:GetUnboundedStringWidth() or 0
-                )
-                segmentHeight = math.max(widget.Text:GetStringHeight(), db.fontSize + 6) + 2
-                widget.spellID = segment.spell.spellID
-                widget.spellLink = segment.spell.spellLink
-                widget.spellName = segment.spell.localizedName
-                widget.englishName = segment.spell.englishName
-                widget.fallbackTooltipKind = segment.spell.fallbackTooltipKind
-                widget.fallbackTooltipText = segment.spell.fallbackTooltipText
-                widget:SetSize(segmentWidth, segmentHeight)
-            else
+            end
+        else
+            if section.showHeader ~= false and section.label and section.label ~= "" then
                 textIndex = textIndex + 1
-                widget = AcquireGuideTextSegment(textIndex)
-                widget:SetFont(FONT_PATH, db.fontSize, "OUTLINE")
-                widget:SetTextColor(0.93, 0.90, 0.83, 1)
-                textValue = segment.text
-                if x == baseX then
-                    textValue = textValue:gsub("^%s+", "")
-                end
 
-                if textValue == "" then
-                    segmentWidth = 0
-                    segmentHeight = currentLineHeight
-                    widget:Hide()
-                else
-                    widget:SetText(textValue)
-                    segmentWidth = widget:GetStringWidth()
-                    segmentHeight = math.max(widget:GetStringHeight(), db.fontSize + 4)
-                end
+                local titleWidget = AcquireGuideTextSegment(textIndex)
+                titleWidget:SetFont(FONT_PATH, db.fontSize + 1, "OUTLINE")
+                titleWidget:SetTextColor(1.00, 0.94, 0.47, 1)
+                titleWidget:SetText(GetGuideSectionDisplayLabel(section.key, section.label, 14) .. ":")
+                titleWidget:ClearAllPoints()
+                titleWidget:SetPoint("TOPLEFT", ContentText or ContentScrollChild, "TOPLEFT", baseX, y)
+                titleWidget:Show()
+
+                y = y - math.max(titleWidget:GetStringHeight(), db.fontSize + 7) - headerGap
             end
 
-            if x > baseX and (x + segmentWidth) > availableWidth then
-                x = baseX
-                y = y - currentLineHeight
-                if segment.kind == "text" and textValue then
-                    local wrappedTextValue = textValue:gsub("^%s+", "")
-                    if wrappedTextValue ~= textValue then
-                        textValue = wrappedTextValue
-
-                        if textValue == "" then
-                            segmentWidth = 0
-                            segmentHeight = currentLineHeight
-                            widget:Hide()
-                        else
-                            widget:SetText(textValue)
-                            segmentWidth = widget:GetStringWidth()
-                            segmentHeight = math.max(widget:GetStringHeight(), db.fontSize + 4)
-                        end
-                    end
-                end
-
-                currentLineHeight = segmentHeight
-            else
-                currentLineHeight = math.max(currentLineHeight, segmentHeight)
+            for _, line in ipairs(section.lines) do
+                y, textIndex, spellIndex = RenderGuideLine(line, baseX, y, rightLimit, db, textIndex, spellIndex)
             end
-
-            if segmentWidth > 0 then
-                widget:ClearAllPoints()
-                widget:SetPoint("TOPLEFT", ContentText or ContentScrollChild, "TOPLEFT", x, y)
-                widget:Show()
-            end
-
-            x = x + segmentWidth
         end
 
-        x = baseX
-        y = y - currentLineHeight - lineGap
+        if sectionIndex < #sections then
+            y = y - sectionGap
+        end
     end
 
     return math.max((-y) + 8, 32)
@@ -1921,6 +2072,7 @@ SetActiveGuide = function(guideKey, source, resetBossIndex)
 
         if guideChanged or resetBossIndex then
             activeBossIndex = 1
+            GuideSectionExpansionState[string.format("%s:%d", guideKey, activeBossIndex)] = nil
         end
     else
         activeGuideSource = nil
@@ -2014,6 +2166,116 @@ local function AddSeparators(body)
     return body
 end
 
+GetGuideSectionLabel = function(sectionKey)
+    if sectionKey == "general" then
+        return L("BOSS_GUIDES_SECTION_GENERAL")
+    elseif sectionKey == "TANK" then
+        return L("BOSS_GUIDES_LEGEND_TANK")
+    elseif sectionKey == "DD" then
+        return L("BOSS_GUIDES_LEGEND_DD")
+    elseif sectionKey == "HEAL" then
+        return L("BOSS_GUIDES_LEGEND_HEAL")
+    elseif sectionKey == "HC" then
+        return L("BOSS_GUIDES_LEGEND_HC")
+    elseif sectionKey == "M" then
+        return L("BOSS_GUIDES_LABEL_MYTHIC")
+    end
+
+    return tostring(sectionKey or "")
+end
+
+local function GetActiveGuideSectionState()
+    if not activeGuideKey then
+        return nil
+    end
+
+    local stateKey = string.format("%s:%d", activeGuideKey, activeBossIndex or 0)
+    GuideSectionExpansionState[stateKey] = GuideSectionExpansionState[stateKey] or {}
+    return GuideSectionExpansionState[stateKey]
+end
+
+IsGuideSectionExpanded = function(sectionKey)
+    if sectionKey == "general" then
+        return true
+    end
+
+    local state = GetActiveGuideSectionState()
+    if not state then
+        return false
+    end
+
+    return state[sectionKey] == true
+end
+
+SetGuideSectionExpanded = function(sectionKey, expanded)
+    if not sectionKey or sectionKey == "general" then
+        return
+    end
+
+    local state = GetActiveGuideSectionState()
+    if not state then
+        return
+    end
+
+    if expanded then
+        state[sectionKey] = true
+    else
+        state[sectionKey] = nil
+    end
+end
+
+ParseGuideBodySections = function(body)
+    local sections = {}
+    local currentSection
+    local generalLabel = L("BOSS_GUIDES_SECTION_GENERAL")
+
+    local function BeginSection(sectionKey, showHeader, collapsible)
+        local section = {
+            key = sectionKey,
+            label = GetGuideSectionLabel(sectionKey),
+            lines = {},
+            collapsible = collapsible == true,
+            showHeader = showHeader ~= false,
+        }
+
+        sections[#sections + 1] = section
+        currentSection = section
+        return section
+    end
+
+    for line in tostring(body or ""):gmatch("[^\n]+") do
+        if line ~= SEP_ROLE and line ~= SEP_HC then
+            local generalText = line:match("^" .. EscapeLuaPattern(generalLabel) .. ":%s*(.*)$")
+            if generalText ~= nil then
+                local section = BeginSection("general", true, false)
+                generalText = TrimText(generalText)
+                if generalText ~= "" then
+                    section.lines[#section.lines + 1] = generalText
+                end
+            else
+                local token, sectionText = line:match("^({[A-Z]+})%s*(.*)$")
+                local sectionKey = token and token:match("{([A-Z]+)}")
+
+                if sectionKey == "TANK" or sectionKey == "DD" or sectionKey == "HEAL" or sectionKey == "HC" or sectionKey == "M" then
+                    local section = BeginSection(sectionKey, true, true)
+                    sectionText = TrimText((sectionText or ""):gsub("^%b[]%s*", ""))
+                    if sectionText ~= "" then
+                        section.lines[#section.lines + 1] = sectionText
+                    end
+                else
+                    if not currentSection then
+                        currentSection = BeginSection("general", false, false)
+                    end
+
+                    currentSection.lines[#currentSection.lines + 1] = line
+                end
+            end
+        end
+    end
+
+    return sections
+end
+
 local function GetContentScrollMax()
     if not ContentScrollFrame or not ContentScrollChild then
         return 0
@@ -2085,7 +2347,7 @@ local function SetContentScrollOffset(value)
     SyncContentScrollbar()
 end
 
-local function UpdateGuideText()
+UpdateGuideText = function()
     if not GuideWindow or not ContentText then
         return
     end
@@ -2114,7 +2376,7 @@ local function UpdateGuideText()
         return
     end
 
-    local formattedBody = AddSeparators(FormatRoleRows(GetBossBody(bossData)))
+    local formattedBody = FormatRoleRows(GetBossBody(bossData))
     local expectedHeight = RenderGuideBody(formattedBody)
     ContentText:SetHeight(expectedHeight)
     local minHeight = math.max(ContentScrollFrame:GetHeight(), 220)
@@ -2179,6 +2441,10 @@ local function AcquireBossMenuButton(buttonIndex)
             SetActiveGuide(nil, nil, true)
             UpdateGuideUi()
             return
+        end
+
+        if activeGuideKey and self.BossIndex then
+            GuideSectionExpansionState[string.format("%s:%d", activeGuideKey, self.BossIndex)] = nil
         end
 
         activeBossIndex = self.BossIndex
