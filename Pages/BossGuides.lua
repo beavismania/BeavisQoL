@@ -25,23 +25,41 @@ local DEFAULT_SCALE = 1.00
 local MIN_SCALE = 0.80
 local MAX_SCALE = 1.40
 
-local DEFAULT_WINDOW_WIDTH  = 560
-local DEFAULT_WINDOW_HEIGHT = 320
-local MIN_WINDOW_WIDTH      = 500
+local DEFAULT_WINDOW_WIDTH  = 980
+local DEFAULT_WINDOW_HEIGHT = 360
+local MIN_WINDOW_WIDTH      = 760
 local MIN_WINDOW_HEIGHT     = 180
 
 local DEFAULT_FONT_SIZE = 10
 local MIN_FONT_SIZE = 8
 local MAX_FONT_SIZE = 18
 
-local GUIDE_TILE_HEIGHT = 116
-local GUIDE_TILE_MIN_WIDTH = 176
+local GUIDE_TILE_MIN_WIDTH = 132
+local GUIDE_TILE_MAX_WIDTH = 180
+local GUIDE_TILE_MIN_IMAGE_HEIGHT = 76
+local GUIDE_TILE_IMAGE_ASPECT_RATIO = 2.10
+local GUIDE_TILE_TITLE_OVERLAY_HEIGHT = 30
+local GUIDE_TILE_CARD_LEFT_CROP = 0.04
+local GUIDE_TILE_CARD_RIGHT_CROP = 0.96
+local GUIDE_TILE_CARD_TOP_CROP = 0.02
+local GUIDE_TILE_CARD_BOTTOM_CROP = 0.60
+local GUIDE_TILE_FULL_LEFT_CROP = 0.02
+local GUIDE_TILE_FULL_RIGHT_CROP = 0.98
+local GUIDE_TILE_FULL_TOP_CROP = 0.02
+local GUIDE_TILE_FULL_BOTTOM_CROP = 0.98
 local GUIDE_WINDOW_HOME_CHROME_HEIGHT = 52
 local GUIDE_WINDOW_GUIDE_CHROME_HEIGHT = 60
 local GUIDE_WINDOW_ATTACH_MARGIN = 12
 local GUIDE_WINDOW_ATTACH_OFFSET_Y_ABOVE = 2
+local HOME_WINDOW_MIN_WIDTH = 500
+local HOME_WINDOW_PREFERRED_WIDTH = 540
+local HOME_TILE_GAP = 8
+local HOME_SECTION_GAP = 18
+local HOME_SECTION_TITLE_SPACING = 10
 
 local FONT_PATH = "Interface\\AddOns\\BeavisQoL\\Media\\Fonts\\Expressway.ttf"
+local GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B = 0.01, 0.01, 0.02
+local GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B = 0.30, 0.30, 0.34
 
 local HOME_CATEGORY_ORDER = {
     { type = "raid", titleKey = "BOSS_GUIDES_HOME_CATEGORY_RAIDS" },
@@ -90,6 +108,77 @@ local GUIDE_DATA = {
                 bodyKey = "BOSS_GUIDES_BOSS_CHIMAERUS_BODY",
             },
         },
+    },
+    march_on_queldanas = {
+        titleKey = "BOSS_GUIDES_INSTANCE_MARCH_ON_QUEL_DANAS_TITLE",
+        type = "raid",
+        matchTokensKey = "BOSS_GUIDES_INSTANCE_MARCH_ON_QUEL_DANAS_TOKENS",
+        bosses = {
+            {
+                nameKey = "BOSS_GUIDES_BOSS_BELOREN_CHILD_OF_ALAR_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_BELOREN_CHILD_OF_ALAR_BODY",
+            },
+            {
+                nameKey = "BOSS_GUIDES_BOSS_MIDNIGHT_FALLS_NAME",
+                bodyKey = "BOSS_GUIDES_BOSS_MIDNIGHT_FALLS_BODY",
+            },
+        },
+    },
+    windrunner_spire = {
+        titleKey = "BOSS_GUIDES_INSTANCE_WINDRUNNER_SPIRE_TITLE",
+        type = "dungeon",
+        sortOrder = 4,
+        matchTokens = { "windrunner spire", "windlaeuferturm", "windläuferturm" },
+        bosses = {},
+    },
+    magisters_terrace = {
+        titleKey = "BOSS_GUIDES_INSTANCE_MAGISTERS_TERRACE_TITLE",
+        type = "dungeon",
+        sortOrder = 3,
+        matchTokens = { "magisters terrace", "magisterterrasse", "terrasse der magister" },
+        bosses = {},
+    },
+    algethar_academy = {
+        titleKey = "BOSS_GUIDES_INSTANCE_ALGETHAR_ACADEMY_TITLE",
+        type = "dungeon",
+        sortOrder = 5,
+        matchTokens = { "algethar academy", "akademie von algeth'ar", "akademie von algethar", "algethar" },
+        bosses = {},
+    },
+    pit_of_saron = {
+        titleKey = "BOSS_GUIDES_INSTANCE_PIT_OF_SARON_TITLE",
+        type = "dungeon",
+        sortOrder = 6,
+        matchTokens = { "pit of saron", "grube von saron" },
+        bosses = {},
+    },
+    maisara_caverns = {
+        titleKey = "BOSS_GUIDES_INSTANCE_MAISARA_CAVERNS_TITLE",
+        type = "dungeon",
+        sortOrder = 1,
+        matchTokens = { "maisara caverns", "maisara hoehlen", "maisara höhlen", "maisarakavernen" },
+        bosses = {},
+    },
+    skyreach = {
+        titleKey = "BOSS_GUIDES_INSTANCE_SKYREACH_TITLE",
+        type = "dungeon",
+        sortOrder = 7,
+        matchTokens = { "skyreach", "himmelsnadel" },
+        bosses = {},
+    },
+    seat_of_the_triumvirate = {
+        titleKey = "BOSS_GUIDES_INSTANCE_SEAT_OF_THE_TRIUMVIRATE_TITLE",
+        type = "dungeon",
+        sortOrder = 8,
+        matchTokens = { "seat of the triumvirate", "sitz des triumvirats", "triumvirate" },
+        bosses = {},
+    },
+    nexus_point_xenas = {
+        titleKey = "BOSS_GUIDES_INSTANCE_NEXUS_POINT_XENAS_TITLE",
+        type = "dungeon",
+        sortOrder = 2,
+        matchTokens = { "nexus point xenas", "nexuspunkt xenas" },
+        bosses = {},
     },
 }
 
@@ -156,6 +245,10 @@ local function Clamp(value, minValue, maxValue)
     end
 
     return value
+end
+
+local function GetGuideTileHeight(tileWidth)
+    return math.max(GUIDE_TILE_MIN_IMAGE_HEIGHT, math.floor((tileWidth / GUIDE_TILE_IMAGE_ASPECT_RATIO) + 0.5))
 end
 
 local function GetFrameBoundsInUiParent(frame)
@@ -870,20 +963,56 @@ local function RefreshGuideHomeTileVisual(tile)
     tile.Glow:SetShown(isHovered)
 
     if isHovered then
-        tile.Shade:SetColorTexture(0.02, 0.03, 0.04, 0.16)
-        tile.BorderTop:SetColorTexture(0.26, 0.75, 0.63, 0.95)
-        tile.BorderBottom:SetColorTexture(0.26, 0.75, 0.63, 0.78)
-        tile.Accent:SetColorTexture(0.26, 0.75, 0.63, 1)
+        tile.Shade:SetColorTexture(GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B, 0.02)
+        tile.BorderTop:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.92)
+        tile.BorderBottom:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.72)
+        tile.Accent:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.95)
         tile.Title:SetTextColor(1.00, 0.96, 0.84, 1)
-        tile.Subtitle:SetTextColor(0.90, 0.98, 0.94, 1)
+        tile.Subtitle:SetTextColor(0.88, 0.88, 0.92, 1)
     else
-        tile.Shade:SetColorTexture(0.02, 0.03, 0.04, 0.42)
-        tile.BorderTop:SetColorTexture(0.26, 0.75, 0.63, 0.58)
-        tile.BorderBottom:SetColorTexture(0.26, 0.75, 0.63, 0.28)
-        tile.Accent:SetColorTexture(0.26, 0.75, 0.63, 0.74)
+        tile.Shade:SetColorTexture(GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B, 0.08)
+        tile.BorderTop:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.52)
+        tile.BorderBottom:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.24)
+        tile.Accent:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.60)
         tile.Title:SetTextColor(0.96, 0.92, 0.70, 1)
-        tile.Subtitle:SetTextColor(0.74, 0.86, 0.84, 1)
+        tile.Subtitle:SetTextColor(0.72, 0.74, 0.78, 1)
     end
+end
+
+local function ApplyGuideTileArt(tile, texturePath, cropMode)
+    if not tile or not tile.Art then
+        return
+    end
+
+    if texturePath then
+        tile.Art:SetTexture(texturePath)
+
+        if cropMode == "card" then
+            tile.Art:SetTexCoord(
+                GUIDE_TILE_CARD_LEFT_CROP,
+                GUIDE_TILE_CARD_RIGHT_CROP,
+                GUIDE_TILE_CARD_TOP_CROP,
+                GUIDE_TILE_CARD_BOTTOM_CROP
+            )
+        else
+            tile.Art:SetTexCoord(
+                GUIDE_TILE_FULL_LEFT_CROP,
+                GUIDE_TILE_FULL_RIGHT_CROP,
+                GUIDE_TILE_FULL_TOP_CROP,
+                GUIDE_TILE_FULL_BOTTOM_CROP
+            )
+        end
+
+        return
+    end
+
+    tile.Art:SetColorTexture(0.08, 0.10, 0.12, 1)
+    tile.Art:SetTexCoord(
+        GUIDE_TILE_FULL_LEFT_CROP,
+        GUIDE_TILE_FULL_RIGHT_CROP,
+        GUIDE_TILE_FULL_TOP_CROP,
+        GUIDE_TILE_FULL_BOTTOM_CROP
+    )
 end
 
 local function AcquireGuideHomeTile(index)
@@ -893,12 +1022,12 @@ local function AcquireGuideHomeTile(index)
     end
 
     tile = CreateFrame("Button", nil, GuideHomePanel)
-    tile:SetHeight(GUIDE_TILE_HEIGHT)
+    tile:SetHeight(GUIDE_TILE_MIN_IMAGE_HEIGHT)
     tile:EnableMouse(true)
 
     local art = tile:CreateTexture(nil, "BACKGROUND")
     art:SetAllPoints()
-    art:SetTexCoord(0.04, 0.96, 0.05, 0.90)
+    art:SetTexCoord(0.02, 0.98, 0.02, 0.98)
     tile.Art = art
 
     local shade = tile:CreateTexture(nil, "ARTWORK")
@@ -908,12 +1037,12 @@ local function AcquireGuideHomeTile(index)
     local topGlow = tile:CreateTexture(nil, "BORDER")
     topGlow:SetPoint("TOPLEFT", tile, "TOPLEFT", 0, 0)
     topGlow:SetPoint("TOPRIGHT", tile, "TOPRIGHT", 0, 0)
-    topGlow:SetHeight(28)
+    topGlow:SetHeight(GUIDE_TILE_TITLE_OVERLAY_HEIGHT + 6)
     topGlow:SetColorTexture(1, 1, 1, 0.04)
 
     local glow = tile:CreateTexture(nil, "BORDER")
     glow:SetAllPoints()
-    glow:SetColorTexture(0.26, 0.75, 0.63, 0.14)
+    glow:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.10)
     glow:Hide()
     tile.Glow = glow
 
@@ -936,17 +1065,24 @@ local function AcquireGuideHomeTile(index)
     tile.Accent = accent
 
     local footer = tile:CreateTexture(nil, "OVERLAY")
-    footer:SetPoint("BOTTOMLEFT", tile, "BOTTOMLEFT", 0, 0)
-    footer:SetPoint("BOTTOMRIGHT", tile, "BOTTOMRIGHT", 0, 0)
-    footer:SetHeight(36)
-    footer:SetColorTexture(0.02, 0.03, 0.04, 0.56)
+    footer:SetPoint("TOPLEFT", tile, "TOPLEFT", 0, 0)
+    footer:SetPoint("TOPRIGHT", tile, "TOPRIGHT", 0, 0)
+    footer:SetHeight(GUIDE_TILE_TITLE_OVERLAY_HEIGHT)
+    footer:SetColorTexture(GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B, 0.56)
 
     local title = tile:CreateFontString(nil, "OVERLAY")
-    title:SetPoint("BOTTOMLEFT", tile, "BOTTOMLEFT", 12, 16)
-    title:SetPoint("RIGHT", tile, "RIGHT", -12, 0)
+    title:SetPoint("TOPLEFT", tile, "TOPLEFT", 10, -6)
+    title:SetPoint("TOPRIGHT", tile, "TOPRIGHT", -10, -6)
+    title:SetHeight(GUIDE_TILE_TITLE_OVERLAY_HEIGHT - 8)
     title:SetJustifyH("LEFT")
-    title:SetJustifyV("BOTTOM")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+    title:SetJustifyV("TOP")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    if title.SetWordWrap then
+        title:SetWordWrap(true)
+    end
+    if title.SetMaxLines then
+        title:SetMaxLines(2)
+    end
     tile.Title = title
 
     local subtitle = tile:CreateFontString(nil, "OVERLAY")
@@ -954,7 +1090,7 @@ local function AcquireGuideHomeTile(index)
     subtitle:SetPoint("RIGHT", tile, "RIGHT", -12, 0)
     subtitle:SetJustifyH("LEFT")
     subtitle:SetJustifyV("TOP")
-    subtitle:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    subtitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
     tile.Subtitle = subtitle
 
     tile:SetScript("OnEnter", function(self)
@@ -993,14 +1129,14 @@ local function AcquireGuideHomeSection(index)
 
     local title = GuideHomePanel:CreateFontString(nil, "OVERLAY")
     title:SetJustifyH("LEFT")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
     title:SetTextColor(0.96, 0.92, 0.72, 1)
     section.Title = title
 
     local emptyText = GuideHomePanel:CreateFontString(nil, "OVERLAY")
     emptyText:SetJustifyH("LEFT")
     emptyText:SetJustifyV("TOP")
-    emptyText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    emptyText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
     emptyText:SetTextColor(0.74, 0.78, 0.82, 1)
     emptyText:SetText(L("BOSS_GUIDES_EMPTY_CATEGORY"))
     emptyText:Hide()
@@ -1029,9 +1165,7 @@ local function LayoutGuideHome()
         panelWidth = (GuideWindow and GuideWindow:GetWidth() or DEFAULT_WINDOW_WIDTH) - 24
     end
 
-    local tileGap = 12
-    local columns = panelWidth >= ((GUIDE_TILE_MIN_WIDTH * 2) + tileGap) and 2 or 1
-    local tileWidth = math.floor((panelWidth - ((columns - 1) * tileGap)) / columns)
+    local tileGap = HOME_TILE_GAP
 
     local yOffset = 0
     local tileIndex = 0
@@ -1053,6 +1187,25 @@ local function LayoutGuideHome()
 
     for _, category in ipairs(HOME_CATEGORY_ORDER) do
         local guideKeys = GetSortedGuideKeys(category.type)
+        local maxColumns = 3
+        local columns = math.max(1, math.min(maxColumns, math.floor((panelWidth + tileGap) / (GUIDE_TILE_MIN_WIDTH + tileGap))))
+        local tileWidth = 0
+
+        while columns > 1 do
+            local candidateWidth = math.floor((panelWidth - ((columns - 1) * tileGap)) / columns)
+            if candidateWidth >= GUIDE_TILE_MIN_WIDTH then
+                tileWidth = math.min(candidateWidth, GUIDE_TILE_MAX_WIDTH)
+                break
+            end
+
+            columns = columns - 1
+        end
+
+        if tileWidth <= 0 then
+            tileWidth = math.min(math.floor(panelWidth), GUIDE_TILE_MAX_WIDTH)
+        end
+
+        local tileHeight = GetGuideTileHeight(tileWidth)
         visibleSectionCount = visibleSectionCount + 1
 
         local section = AcquireGuideHomeSection(visibleSectionCount)
@@ -1065,31 +1218,28 @@ local function LayoutGuideHome()
             section.EmptyText:Hide()
         end
 
-        yOffset = yOffset + section.Title:GetStringHeight() + 14
+        yOffset = yOffset + section.Title:GetStringHeight() + HOME_SECTION_TITLE_SPACING
 
         if #guideKeys > 0 then
             for index, guideKey in ipairs(guideKeys) do
                 local tile = AcquireGuideHomeTile(tileIndex + index)
                 local guideData = GUIDE_DATA[guideKey]
-                local tileTexture = GetGuideTileTexture(guideKey, guideData)
+                local tileTexture, _, cropMode = GetGuideTileTexture(guideKey, guideData)
 
                 tile.GuideKey = guideKey
                 tile.Title:SetText(GetGuideTitle(guideData))
                 tile.Subtitle:SetText("")
                 tile.Subtitle:Hide()
-                tile:SetWidth(tileWidth)
+                tile:SetSize(tileWidth, tileHeight)
+                ApplyGuideTileArt(tile, tileTexture, cropMode)
 
-                if tileTexture then
-                    tile.Art:SetTexture(tileTexture)
-                else
-                    tile.Art:SetTexture(nil)
-                    tile.Art:SetColorTexture(0.08, 0.10, 0.12, 1)
-                end
-
-                local columnIndex = (index - 1) % columns
                 local rowIndex = math.floor((index - 1) / columns)
+                local columnIndex = (index - 1) % columns
+                local itemsInRow = math.min(columns, #guideKeys - (rowIndex * columns))
+                local rowWidth = (itemsInRow * tileWidth) + ((itemsInRow - 1) * tileGap)
+                local rowOffsetX = math.max(math.floor((panelWidth - rowWidth) / 2), 0)
                 tile:ClearAllPoints()
-                tile:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", columnIndex * (tileWidth + tileGap), -(yOffset + (rowIndex * (GUIDE_TILE_HEIGHT + tileGap))))
+                tile:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", rowOffsetX + (columnIndex * (tileWidth + tileGap)), -(yOffset + (rowIndex * (tileHeight + tileGap))))
                 tile:Show()
                 RefreshGuideHomeTileVisual(tile)
             end
@@ -1097,14 +1247,14 @@ local function LayoutGuideHome()
             tileIndex = tileIndex + #guideKeys
 
             local rowCount = math.ceil(#guideKeys / columns)
-            yOffset = yOffset + (rowCount * GUIDE_TILE_HEIGHT) + ((rowCount - 1) * tileGap) + 24
+            yOffset = yOffset + (rowCount * tileHeight) + ((rowCount - 1) * tileGap) + HOME_SECTION_GAP
         elseif section.EmptyText then
             section.EmptyText:SetText(L("BOSS_GUIDES_EMPTY_CATEGORY"))
             section.EmptyText:ClearAllPoints()
             section.EmptyText:SetPoint("TOPLEFT", GuideHomePanel, "TOPLEFT", 0, -yOffset)
             section.EmptyText:SetPoint("RIGHT", GuideHomePanel, "RIGHT", 0, 0)
             section.EmptyText:Show()
-            yOffset = yOffset + section.EmptyText:GetStringHeight() + 20
+            yOffset = yOffset + section.EmptyText:GetStringHeight() + 16
         end
     end
 
@@ -1115,7 +1265,7 @@ local function LayoutGuideHome()
         GuideHomeEmptyText:Show()
         GuideHomeContentHeight = math.max(GuideHomeEmptyText:GetStringHeight(), 24)
     else
-        GuideHomeContentHeight = math.max(yOffset - 24, 24)
+        GuideHomeContentHeight = math.max(yOffset - HOME_SECTION_GAP, 24)
     end
 
     if AutoSizeGuideWindow then
@@ -1147,6 +1297,7 @@ local function RenderGuideBody(body)
             local widget
             local segmentWidth
             local segmentHeight
+            local textValue
 
             if segment.kind == "spell" then
                 spellIndex = spellIndex + 1
@@ -1163,7 +1314,7 @@ local function RenderGuideBody(body)
                 segmentWidth = math.max(
                     widget.Text:GetStringWidth(),
                     widget.Text.GetUnboundedStringWidth and widget.Text:GetUnboundedStringWidth() or 0
-                ) + 8
+                )
                 segmentHeight = math.max(widget.Text:GetStringHeight(), db.fontSize + 6) + 2
                 widget.spellID = segment.spell.spellID
                 widget.spellLink = segment.spell.spellLink
@@ -1177,7 +1328,7 @@ local function RenderGuideBody(body)
                 widget = AcquireGuideTextSegment(textIndex)
                 widget:SetFont(FONT_PATH, db.fontSize, "OUTLINE")
                 widget:SetTextColor(0.93, 0.90, 0.83, 1)
-                local textValue = segment.text
+                textValue = segment.text
                 if x == baseX then
                     textValue = textValue:gsub("^%s+", "")
                 end
@@ -1196,6 +1347,23 @@ local function RenderGuideBody(body)
             if x > baseX and (x + segmentWidth) > availableWidth then
                 x = baseX
                 y = y - currentLineHeight
+                if segment.kind == "text" and textValue then
+                    local wrappedTextValue = textValue:gsub("^%s+", "")
+                    if wrappedTextValue ~= textValue then
+                        textValue = wrappedTextValue
+
+                        if textValue == "" then
+                            segmentWidth = 0
+                            segmentHeight = currentLineHeight
+                            widget:Hide()
+                        else
+                            widget:SetText(textValue)
+                            segmentWidth = widget:GetStringWidth()
+                            segmentHeight = math.max(widget:GetStringHeight(), db.fontSize + 4)
+                        end
+                    end
+                end
+
                 currentLineHeight = segmentHeight
             else
                 currentLineHeight = math.max(currentLineHeight, segmentHeight)
@@ -1353,10 +1521,26 @@ end
 GetGuideTileTexture = function(guideKey, guideData)
     local journalInfo = GetGuideJournalInfo(guideKey, guideData)
     if not journalInfo then
-        return nil, nil
+        return nil, nil, nil
     end
 
-    return journalInfo.buttonImage2 or journalInfo.loreImage or journalInfo.buttonImage1 or journalInfo.bgImage, journalInfo
+    if journalInfo.buttonImage2 then
+        return journalInfo.buttonImage2, journalInfo, "card"
+    end
+
+    if journalInfo.buttonImage1 then
+        return journalInfo.buttonImage1, journalInfo, "card"
+    end
+
+    if journalInfo.loreImage then
+        return journalInfo.loreImage, journalInfo, "full"
+    end
+
+    if journalInfo.bgImage then
+        return journalInfo.bgImage, journalInfo, "full"
+    end
+
+    return nil, journalInfo, nil
 end
 
 GetSortedGuideKeys = function(filterType)
@@ -1369,7 +1553,26 @@ GetSortedGuideKeys = function(filterType)
     end
 
     table.sort(guideKeys, function(leftKey, rightKey)
-        return GetGuideTitle(GUIDE_DATA[leftKey]) < GetGuideTitle(GUIDE_DATA[rightKey])
+        local leftData = GUIDE_DATA[leftKey]
+        local rightData = GUIDE_DATA[rightKey]
+        local leftOrder = leftData and leftData.sortOrder
+        local rightOrder = rightData and rightData.sortOrder
+
+        if leftOrder ~= nil or rightOrder ~= nil then
+            if leftOrder == nil then
+                return false
+            end
+
+            if rightOrder == nil then
+                return true
+            end
+
+            if leftOrder ~= rightOrder then
+                return leftOrder < rightOrder
+            end
+        end
+
+        return GetGuideTitle(leftData) < GetGuideTitle(rightData)
     end)
 
     return guideKeys
@@ -1611,15 +1814,15 @@ local function ApplyBossButtonVisual(btn, isActive)
 
     btn.Bg:SetColorTexture(0, 0, 0, 0)
     btn.Accent:Hide()
-    btn.Text:SetTextColor(0.26, 0.75, 0.63, 1)
+    btn.Text:SetTextColor(0.76, 0.78, 0.82, 1)
 end
 
 local function ApplyNavigationButtonVisual(btn)
     local isHovered = btn.isHovered == true
 
-    btn.Bg:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.10 or 0)
+    btn.Bg:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, isHovered and 0.12 or 0)
     btn.Accent:Hide()
-    btn.Text:SetTextColor(isHovered and 1.00 or 0.90, isHovered and 0.94 or 0.86, isHovered and 0.47 or 0.78, 1)
+    btn.Text:SetTextColor(isHovered and 1.00 or 0.82, isHovered and 0.94 or 0.84, isHovered and 0.47 or 0.88, 1)
 end
 
 local SEP_ROLE = "|cFF2B6B5A" .. string.rep("-", 34) .. "|r"
@@ -1630,19 +1833,8 @@ local function TrimText(value)
 end
 
 local function SplitInstructionParts(text)
-    local parts = {}
-    for chunk in text:gmatch("[^.;,]+[.;,]?") do
-        local normalized = TrimText(chunk)
-        if normalized ~= "" then
-            table.insert(parts, normalized)
-        end
-    end
-
-    if #parts == 0 then
-        table.insert(parts, TrimText(text))
-    end
-
-    return parts
+    local normalized = TrimText(text or "")
+    return { normalized }
 end
 
 local function FormatRoleRows(body)
@@ -1841,7 +2033,7 @@ local function AcquireBossMenuButton(buttonIndex)
         if self.IsHomeButton then
             ApplyNavigationButtonVisual(self)
         elseif self.BossIndex ~= activeBossIndex then
-            self.Bg:SetColorTexture(0.26, 0.75, 0.63, 0.08)
+            self.Bg:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.10)
         end
     end)
 
@@ -2019,6 +2211,16 @@ UpdateGuideUi = function()
         end
 
         if GuideHomePanel then
+            local maxHomeWidth = GetGuideWindowMaxWidth()
+            local minHomeWidth = math.min(HOME_WINDOW_MIN_WIDTH, maxHomeWidth)
+            local homeWidth = Clamp(HOME_WINDOW_PREFERRED_WIDTH, minHomeWidth, maxHomeWidth)
+            if GuideWindow and math.abs((GuideWindow:GetWidth() or 0) - homeWidth) > 1 then
+                isAutoSizingGuideWindow = true
+                GuideWindow:SetWidth(homeWidth)
+                AttachGuideWindowToOverlayButton(homeWidth, GuideWindow:GetHeight() or DEFAULT_WINDOW_HEIGHT)
+                isAutoSizingGuideWindow = false
+            end
+
             GuideHomePanel:Show()
             LayoutGuideHome()
         end
@@ -2247,28 +2449,28 @@ local function CreateOverlayFrames()
         local isHovered = self.isHovered == true
 
         if isOpen then
-            buttonBg:SetColorTexture(0.04, 0.04, 0.07, 0.84)
-            buttonGlow:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.16 or 0.10)
-            buttonBorderTop:SetColorTexture(0.26, 0.75, 0.63, 0.90)
+            buttonBg:SetColorTexture(GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B, 0.92)
+            buttonGlow:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, isHovered and 0.12 or 0.08)
+            buttonBorderTop:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.82)
             buttonBorderBottom:Hide()
-            buttonAccent:SetColorTexture(0.26, 0.75, 0.63, 0.96)
+            buttonAccent:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.88)
             buttonConnector:Show()
             buttonLabel:SetTextColor(1.00, 0.96, 0.82, 1)
             buttonIndicator:SetText("v")
-            buttonIndicator:SetTextColor(0.92, 0.98, 0.94, 1)
+            buttonIndicator:SetTextColor(0.82, 0.84, 0.88, 1)
             return
         end
 
-        buttonBg:SetColorTexture(0.04, 0.04, 0.07, isHovered and 0.78 or 0.68)
-        buttonGlow:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.14 or 0.06)
-        buttonBorderTop:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.78 or 0.56)
+        buttonBg:SetColorTexture(GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B, isHovered and 0.88 or 0.80)
+        buttonGlow:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, isHovered and 0.10 or 0.04)
+        buttonBorderTop:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, isHovered and 0.70 or 0.48)
         buttonBorderBottom:Show()
-        buttonBorderBottom:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.42 or 0.22)
-        buttonAccent:SetColorTexture(0.26, 0.75, 0.63, isHovered and 0.90 or 0.70)
+        buttonBorderBottom:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, isHovered and 0.34 or 0.18)
+        buttonAccent:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, isHovered and 0.82 or 0.62)
         buttonConnector:Hide()
         buttonLabel:SetTextColor(isHovered and 1.00 or 0.94, isHovered and 0.95 or 0.90, isHovered and 0.78 or 0.72, 1)
         buttonIndicator:SetText(">")
-        buttonIndicator:SetTextColor(isHovered and 0.92 or 0.78, isHovered and 0.98 or 0.90, isHovered and 0.94 or 0.86, 1)
+        buttonIndicator:SetTextColor(isHovered and 0.84 or 0.72, isHovered and 0.86 or 0.76, isHovered and 0.90 or 0.80, 1)
     end
 
     OverlayButton:SetScript("OnEnter", function(self)
@@ -2338,21 +2540,21 @@ local function CreateOverlayFrames()
 
     local bg = GuideWindow:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
-    bg:SetColorTexture(0.04, 0.04, 0.07, 0.55)
+    bg:SetColorTexture(GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B, 0.82)
 
     -- 1px Teal-Linie oben
     local lineTop = GuideWindow:CreateTexture(nil, "ARTWORK")
     lineTop:SetPoint("TOPLEFT", GuideWindow, "TOPLEFT", 0, 0)
     lineTop:SetPoint("TOPRIGHT", GuideWindow, "TOPRIGHT", 0, 0)
     lineTop:SetHeight(1)
-    lineTop:SetColorTexture(0.26, 0.75, 0.63, 0.80)
+    lineTop:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.72)
 
     -- 1px Teal-Linie unten
     local lineBottom = GuideWindow:CreateTexture(nil, "ARTWORK")
     lineBottom:SetPoint("BOTTOMLEFT", GuideWindow, "BOTTOMLEFT", 0, 0)
     lineBottom:SetPoint("BOTTOMRIGHT", GuideWindow, "BOTTOMRIGHT", 0, 0)
     lineBottom:SetHeight(1)
-    lineBottom:SetColorTexture(0.26, 0.75, 0.63, 0.40)
+    lineBottom:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.30)
 
     -- Kopfzeile: kompakt, ohne Dropdowns im Viewer
     local headerRow = CreateFrame("Frame", nil, GuideWindow)
@@ -2380,7 +2582,7 @@ local function CreateOverlayFrames()
 
         local bg = btn:CreateTexture(nil, "BACKGROUND")
         bg:SetAllPoints()
-        bg:SetColorTexture(0.26, 0.75, 0.63, 0)
+        bg:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0)
         btn.Bg = bg
 
         local icon = btn:CreateTexture(nil, "ARTWORK")
@@ -2391,12 +2593,12 @@ local function CreateOverlayFrames()
         btn.Icon = icon
 
         btn:SetScript("OnEnter", function(self)
-            self.Bg:SetColorTexture(0.26, 0.75, 0.63, 0.14)
-            self.Icon:SetVertexColor(0.26, 0.75, 0.63, 1)
+            self.Bg:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.16)
+            self.Icon:SetVertexColor(0.86, 0.88, 0.92, 1)
         end)
 
         btn:SetScript("OnLeave", function(self)
-            self.Bg:SetColorTexture(0.26, 0.75, 0.63, 0)
+            self.Bg:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0)
             if self.RestoreVisual then
                 self:RestoreVisual()
             else
@@ -2464,7 +2666,7 @@ local function CreateOverlayFrames()
     menuSep:SetPoint("BOTTOMLEFT",  BossMenuPanel, "BOTTOMLEFT",  0, 0)
     menuSep:SetPoint("BOTTOMRIGHT", BossMenuPanel, "BOTTOMRIGHT", 0, 0)
     menuSep:SetHeight(1)
-    menuSep:SetColorTexture(0.26, 0.75, 0.63, 0.30)
+    menuSep:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.26)
 
     -- Legende unten (kein eigener Hintergrund)
     LegendBar = CreateFrame("Frame", nil, GuideWindow)
@@ -2530,14 +2732,14 @@ local function CreateOverlayFrames()
 
     local scrollbarTrack = ContentScrollbar:CreateTexture(nil, "BACKGROUND")
     scrollbarTrack:SetAllPoints()
-    scrollbarTrack:SetColorTexture(0.04, 0.04, 0.07, 0.75)
+    scrollbarTrack:SetColorTexture(GUIDE_BG_R, GUIDE_BG_G, GUIDE_BG_B, 0.88)
 
     local scrollbarBorder = ContentScrollbar:CreateTexture(nil, "ARTWORK")
     scrollbarBorder:SetAllPoints()
-    scrollbarBorder:SetColorTexture(0.26, 0.75, 0.63, 0.20)
+    scrollbarBorder:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.24)
 
     local scrollbarThumb = ContentScrollbar:CreateTexture(nil, "OVERLAY")
-    scrollbarThumb:SetColorTexture(0.26, 0.75, 0.63, 0.90)
+    scrollbarThumb:SetColorTexture(GUIDE_ACCENT_R, GUIDE_ACCENT_G, GUIDE_ACCENT_B, 0.92)
     scrollbarThumb:SetSize(CONTENT_SCROLLBAR_WIDTH, 36)
     ContentScrollbar:SetThumbTexture(scrollbarThumb)
 
@@ -2590,9 +2792,9 @@ local function CreateOverlayFrames()
     gripTxt:SetText(">")
     gripTxt:SetJustifyH("RIGHT")
     gripTxt:SetJustifyV("BOTTOM")
-    gripTxt:SetTextColor(0.26, 0.75, 0.63, 0.45)
-    resizeGrip:SetScript("OnEnter",    function() gripTxt:SetTextColor(0.26, 0.75, 0.63, 0.90) end)
-    resizeGrip:SetScript("OnLeave",    function() gripTxt:SetTextColor(0.26, 0.75, 0.63, 0.45) end)
+    gripTxt:SetTextColor(0.60, 0.60, 0.64, 0.45)
+    resizeGrip:SetScript("OnEnter",    function() gripTxt:SetTextColor(0.82, 0.84, 0.88, 0.90) end)
+    resizeGrip:SetScript("OnLeave",    function() gripTxt:SetTextColor(0.60, 0.60, 0.64, 0.45) end)
     resizeGrip:SetScript("OnMouseDown", function()
         if BossGuidesModule.IsOverlayLocked() then return end
         GuideWindow:StartSizing("RIGHT")
