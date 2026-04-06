@@ -4,15 +4,15 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.27.0`
-- Release-Datum: `2026-04-03`
+- Version: `0.27.1`
+- Release-Datum: `2026-04-06`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - neues Komfort-Modul `Flugmeister-Timer` mit Countdown, lernenden Routenzeiten und optionalem Ankunftssound
-  - neues Komfort-Modul `Cutscene Skip`, das bekannte Movies und Cutscenes nach dem ersten Ansehen automatisch überspringt
-  - neues Komfort-Modul `Schlüsselstein-Buttons` mit `Readycheck`, `Timer & GO` und optionalem `Auto Timer`
-  - `Gruppensuche` zeigt jetzt sichtbare Invite-Timer für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen inklusive optionalem Countdown-Sound
-  - `Portal Viewer` als eigenes Fenster im Minimap-Schnellmenü für die aktuellen Midnight-S1-Dungeonportale
+  - `Boss Guides` decken jetzt deutlich mehr Midnight-S1-Dungeons ab und wurden in mehreren Instanzen inhaltlich komplett ausgebaut
+  - `Boss Guides` unterstützen einklappbare Rollenabschnitte für `Tank`, `DD`, `Heal`, `HC` und `Mythisch`, während `Allgemein` offen bleibt
+  - `Gruppenplaner` unterstützt jetzt 40-Spieler-Raids mit breiterem Layout und verbesserter Ziel- und Schwierigkeits-Erkennung
+  - Whisper- und Invite-Logik im `Gruppenplaner` wurde robuster, inklusive sauberer Realm-Normalisierung und verlässlicherem `!inv`-Flow
+  - `!inv`-AutoInvite greift jetzt in Dungeon und Raid, aber nur wenn derselbe Spieler bereits per `!enter` im Planner bekannt ist
 
 ## Download
 
@@ -54,10 +54,10 @@ Regeln:
 
 Beispiele:
 
-- `0.27.0` → aktueller Stand des laufenden Feature-Releases
-- `0.27.0` → korrekt, weil es für diesen Stand noch keine Hotfixes gibt
-- Hotfix nach veröffentlichtem `0.27.0` → `0.27.1`
-- nächstes neues Modul nach `0.27.0` → `0.28.0`
+- `0.27.0` → letzter veröffentlichter Feature-/Modulstand
+- `0.27.1` → aktueller Hotfix-Stand mit Verbesserungen an bestehenden Modulen
+- Hotfix nach veröffentlichtem `0.27.1` → `0.27.2`
+- nächstes neues Modul nach `0.27.1` → `0.28.0`
 - großer Hauptrelease → `1.0.0`
 
 ## Module im Addon

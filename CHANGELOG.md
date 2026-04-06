@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.27.1 - 2026-04-06
+
+### Versionshinweis
+
+- `0.27.1` ist ein Hotfix-/Verbesserungsstand zum bestehenden Release `0.27.0`, weil keine neuen Module hinzugekommen sind
+- der nächste echte Feature-/Modulstand bleibt damit `0.28.0`
+
+### Verbessert
+
+- `Boss Guides` um umfangreiche Dungeon-Guides für `Nexuspunkt Xenas`, `Terrasse der Magister`, `Windläuferturm`, `Akademie von Algeth'ar`, `Grube von Saron`, `Himmelsnadel`, `Sitz des Triumvirats` und `Maisarakavernen` erweitert
+- `Boss Guides` unterstützen jetzt einklappbare Rollenabschnitte für `Tank`, `DD`, `Heal`, `HC` und `Mythisch`, während `Allgemein` offen bleibt
+- `Gruppenplaner` unterstützt jetzt 40-Spieler-Raids mit erweitertem Raidlayout und automatischer Ziel- und Schwierigkeits-Erkennung für Raid-Listings
+- `Maisarakavernen` auf die kombinierte Duo-Struktur `Muro'jin & Nekraxx` umgestellt und der zusätzliche `Überblick`-Tab wieder entfernt
+- `Boss Guides` behalten Rollen-Symbole auch in den neuen einklappbaren Überschriften
+- `Gruppenplaner` skaliert Raidansichten breiter statt nur höher und zeigt alle Raidgruppen im Overlay sauber an
+- `Gruppenplaner` öffnet auf dem eigenen Dungeon-Slot jetzt direkt die Rollen-Zuteilung statt des allgemeinen Slot-Editors
+- Whisper- und Invite-Namen im `Gruppenplaner` werden robuster normalisiert, damit Realm-Anteile und gespeicherte Slot-Namen verlässlicher zusammenpassen
+- `!inv`-AutoInvite funktioniert jetzt in Dungeon und Raid, greift aber nur noch, wenn für denselben Spieler bereits ein `!enter`-Eintrag im Planner existiert
+
+### Behoben
+
+- einklappbare Bossguide-Abschnitte rufen `UpdateGuideText` jetzt korrekt auf und werfen keinen Nil-Fehler mehr
+- der `Gruppenplaner` vermeidet falsche Invite-Namen mit doppeltem Realm-Suffix, die zu irreführenden Blizzard-Fehlermeldungen führen konnten
+- mehrere doppelte Lokalisierungs-Keys und Lua-Diagnostics-Fundstellen in bestehenden Modulen bereinigt, ohne produktive WoW-Funktionalität zu ändern
+
 ## 0.27.0 - 2026-04-03
 
 ### Versionshinweis

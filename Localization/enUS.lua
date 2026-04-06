@@ -541,7 +541,7 @@ General: L'ura's unleashed void energy now threatens the Sunwell itself. This bo
 	STREAMER_PLANNER_RAID_GROUP = "Group %d",
 	STREAMER_PLANNER_RAID_SLOT = "G%d / %d",
 	STREAMER_PLANNER_QUEUE_TITLE = "Whisper Queue",
-	STREAMER_PLANNER_QUEUE_HINT = "Only whispers with !enter or !inv are listed here. Role and spec are added when matching data is available. Right-click removes whisper entries. AutoInv works in dungeon and raid, FullInv stays raid-only.",
+	STREAMER_PLANNER_QUEUE_HINT = "Only whispers with !enter or !inv are listed here. Role and spec are added when matching data is available. Right-click removes whisper entries. AutoInv works in dungeon and raid, but only if that player is already known via !enter. FullInv stays raid-only.",
 	STREAMER_PLANNER_AUTO_INVITE_WHISPER = "Auto invite on !inv",
 	STREAMER_PLANNER_FULL_INVITE = "FullInv",
 	STREAMER_PLANNER_QUEUE_EMPTY = "No whisper entries yet.",
