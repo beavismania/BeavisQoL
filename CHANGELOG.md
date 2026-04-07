@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.28.0 - 2026-04-07
+
+### Versionshinweis
+
+- `0.28.0` ist der nächste echte Feature-/Modulstand nach `0.27.2`, weil mit dem `Minimap-Sammler` ein neues Modul dazugekommen ist
+- die mittlere Zahl steigt damit auf `28`, der Hotfix-Zähler startet für diesen Stand wieder bei `0`
+
+### Neu
+
+- neues Modul `Minimap-Sammler` ergänzt
+- der Sammler bringt einen eigenen frei verschiebbaren Launcher mit rundem Beavis-Icon und transparentem Sammelfenster mit
+- erkannte Minimap-Buttons können jetzt pro Eintrag gesammelt, direkt auf der Minimap gelassen oder komplett ausgeblendet werden
+- `Makro`, `Ruf` und `Währungen` haben jeweils eine eigene Suchfunktion direkt in den Blizzard-Fenstern erhalten
+- `Mouse Helper` zeigt jetzt optional einen `Cast-Ring` direkt um den Cursor während des Zauberns
+
+### Verbessert
+
+- der `Minimap-Sammler` besitzt getrennte Skalierung für Launcher und Sammelfenster
+- `Mouse Helper` unterstützt Klassenfarben jetzt sowohl für den Maus-Trail als auch für den Cursor-Kreis
+- der `Minimap-Sammler` öffnet per Rechtsklick direkt `/beavis` und bietet schnellere Bedienung für Reload und Launcher-Steuerung
+- die Erkennung und Benennung gesammelter Minimap-Buttons wurde robuster auf echte Addon-Namen umgestellt
+- die Moduloptionen des `Minimap-Sammlers` sind kompakter in mehreren Spalten angeordnet
+- der `Mouse Helper` reduziert Leerlaufkosten sauberer und enthält Feinschliff an Trail-Fade und Ring-Darstellung
+
+### Behoben
+
+- Sammler-Launcher-Kreis und Logo-Ausrichtung stabilisiert, ohne den bekannten Beavis-Minimapbutton umzubauen
+- mehrere deutsche Collector- und MouseHelper-Texte auf saubere Umlaute und klarere Beschriftungen gebracht
+- Klassenfarben-Erkennung im `Mouse Helper` robuster gegen unterschiedliche Blizzard-Farbobjekte gemacht
+
 ## 0.27.2 - 2026-04-06
 
 ### Versionshinweis
