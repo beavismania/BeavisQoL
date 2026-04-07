@@ -72,7 +72,7 @@ local function GetPlayerClassColor()
     end
 
     local _, classFile = UnitClass("player")
-    local classColors = CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS
+    local classColors = rawget(_G, "CUSTOM_CLASS_COLORS") or rawget(_G, "RAID_CLASS_COLORS")
     local color = classColors and classFile and classColors[classFile] or nil
     if not color then
         return nil
