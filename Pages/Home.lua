@@ -9,19 +9,55 @@ local name = metadata.title or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or
 local TWITCH_URL = "https://www.twitch.tv/beavismania"
 local WEBSITE_URL = "https://www.beavismania.de"
 
+local function ApplyTextureGradient(texture, orientation, startR, startG, startB, startA, endR, endG, endB, endA)
+    if not texture then
+        return
+    end
+
+    if texture.SetGradientAlpha then
+        texture:SetGradientAlpha(orientation, startR, startG, startB, startA, endR, endG, endB, endA)
+        return
+    end
+
+    if texture.SetGradient and CreateColor then
+        texture:SetGradient(
+            orientation,
+            CreateColor(startR, startG, startB, startA),
+            CreateColor(endR, endG, endB, endA)
+        )
+        return
+    end
+
+    texture:SetColorTexture(startR, startG, startB, math.max(startA or 0, endA or 0))
+end
+
 local function CreatePanelSurface(frame)
     local bg = frame:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
 
+    local detail = frame:CreateTexture(nil, "ARTWORK")
+    detail:SetAllPoints()
+    detail:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background-Dark")
+
     local glow = frame:CreateTexture(nil, "BORDER")
     glow:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     glow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-    glow:SetHeight(34)
+    glow:SetHeight(30)
+    glow:SetTexture("Interface\\Buttons\\WHITE8X8")
+
+    local vignette = frame:CreateTexture(nil, "ARTWORK")
+    vignette:SetAllPoints()
+    vignette:SetTexture("Interface\\Buttons\\WHITE8X8")
 
     local accent = frame:CreateTexture(nil, "ARTWORK")
-    accent:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -12)
-    accent:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 12)
-    accent:SetWidth(3)
+    accent:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -10)
+    accent:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 10)
+    accent:SetWidth(2)
+
+    local topLine = frame:CreateTexture(nil, "ARTWORK")
+    topLine:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    topLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    topLine:SetHeight(1)
 
     local border = frame:CreateTexture(nil, "ARTWORK")
     border:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
@@ -30,51 +66,69 @@ local function CreatePanelSurface(frame)
 
     return {
         bg = bg,
+        detail = detail,
         glow = glow,
+        vignette = vignette,
         accent = accent,
+        topLine = topLine,
         border = border,
     }
 end
 
 local function ApplyPanelSurface(surface, style, highlighted)
-    local bgR = 0.085
-    local bgG = 0.085
-    local bgB = 0.09
-    local bgA = 0.94
+    local bgR = 0.055
+    local bgG = 0.039
+    local bgB = 0.029
+    local bgA = 0.92
+    local detailA = 0.09
     local glowA = 0.05
-    local accentA = 0.7
-    local borderA = 0.78
+    local vignetteA = 0.16
+    local accentA = 0.2
+    local topLineA = 0.2
+    local borderA = 0.26
 
     if style == "hero" then
-        bgR = 0.065
-        bgG = 0.065
-        bgB = 0.07
-        bgA = 0.97
-        glowA = 0.09
-        accentA = 0.88
-        borderA = 0.88
+        bgR = 0.062
+        bgG = 0.044
+        bgB = 0.032
+        bgA = 0.95
+        detailA = 0.12
+        glowA = 0.08
+        vignetteA = 0.2
+        accentA = 0.28
+        topLineA = 0.3
+        borderA = 0.34
     elseif style == "footer" then
-        bgR = 0.075
-        bgG = 0.075
-        bgB = 0.08
-        bgA = 0.9
-        glowA = 0.04
-        accentA = 0.55
-        borderA = 0.6
+        bgR = 0.05
+        bgG = 0.036
+        bgB = 0.026
+        bgA = 0.88
+        detailA = 0.07
+        glowA = 0.035
+        vignetteA = 0.12
+        accentA = 0.14
+        topLineA = 0.14
+        borderA = 0.18
     end
 
     if highlighted then
-        bgR = bgR + 0.03
-        bgG = bgG + 0.03
-        bgB = bgB + 0.03
-        glowA = glowA + 0.05
-        accentA = math.min(1, accentA + 0.12)
+        bgR = math.min(1, bgR + 0.018)
+        bgG = math.min(1, bgG + 0.018)
+        bgB = math.min(1, bgB + 0.018)
+        detailA = detailA + 0.03
+        glowA = glowA + 0.03
+        accentA = math.min(1, accentA + 0.08)
+        topLineA = math.min(1, topLineA + 0.08)
+        borderA = math.min(1, borderA + 0.08)
     end
 
     surface.bg:SetColorTexture(bgR, bgG, bgB, bgA)
-    surface.glow:SetColorTexture(1, 0.82, 0, glowA)
-    surface.accent:SetColorTexture(1, 0.82, 0, accentA)
-    surface.border:SetColorTexture(1, 0.82, 0, borderA)
+    surface.detail:SetVertexColor(0.96, 0.82, 0.56, detailA)
+    ApplyTextureGradient(surface.glow, "VERTICAL", 1, 0.88, 0.58, glowA, 1, 0.88, 0.58, 0)
+    ApplyTextureGradient(surface.vignette, "HORIZONTAL", 0, 0, 0, 0.02, 0, 0, 0, vignetteA)
+    surface.accent:SetColorTexture(0.9, 0.76, 0.5, accentA)
+    surface.topLine:SetColorTexture(0.92, 0.79, 0.56, topLineA)
+    surface.border:SetColorTexture(0.92, 0.79, 0.56, borderA)
 end
 
 local function CreateInfoCard(parent, titleText, bodyText, footerText)
@@ -83,28 +137,28 @@ local function CreateInfoCard(parent, titleText, bodyText, footerText)
     ApplyPanelSurface(surface, "card", false)
 
     local title = frame:CreateFontString(nil, "OVERLAY")
-    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, -18)
-    title:SetPoint("RIGHT", frame, "RIGHT", -18, 0)
+    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -14)
+    title:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
     title:SetJustifyH("LEFT")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-    title:SetTextColor(1, 0.82, 0, 1)
+    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "")
+    title:SetTextColor(0.97, 0.9, 0.76, 1)
     title:SetText(titleText)
 
     local body = frame:CreateFontString(nil, "OVERLAY")
-    body:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -12)
-    body:SetPoint("RIGHT", frame, "RIGHT", -18, 0)
+    body:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
+    body:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
     body:SetJustifyH("LEFT")
     body:SetJustifyV("TOP")
-    body:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-    body:SetTextColor(0.96, 0.96, 0.96, 1)
+    body:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    body:SetTextColor(0.91, 0.89, 0.86, 1)
     body:SetText(bodyText)
 
     local footer = frame:CreateFontString(nil, "OVERLAY")
-    footer:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 18, 14)
-    footer:SetPoint("RIGHT", frame, "RIGHT", -18, 0)
+    footer:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 16, 12)
+    footer:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
     footer:SetJustifyH("LEFT")
-    footer:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
-    footer:SetTextColor(1, 0.85, 0.25, 1)
+    footer:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    footer:SetTextColor(0.92, 0.8, 0.58, 1)
     footer:SetText(footerText)
 
     frame.Title = title
@@ -118,47 +172,54 @@ local function CreateActionCard(parent, iconPath, titleText, bodyText, footerTex
     local button = CreateFrame("Button", nil, parent)
     local surface = CreatePanelSurface(button)
     ApplyPanelSurface(surface, "card", false)
+    button:SetHitRectInsets(-4, -4, -4, -4)
 
     local icon = button:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(56, 56)
-    icon:SetPoint("TOPLEFT", button, "TOPLEFT", 18, -18)
+    icon:SetSize(40, 40)
+    icon:SetPoint("TOPLEFT", button, "TOPLEFT", 16, -14)
     icon:SetTexture(iconPath)
+    icon:SetVertexColor(1, 1, 1, 0.94)
 
     local title = button:CreateFontString(nil, "OVERLAY")
-    title:SetPoint("LEFT", icon, "RIGHT", 16, 5)
-    title:SetPoint("RIGHT", button, "RIGHT", -18, 0)
+    title:SetPoint("LEFT", icon, "RIGHT", 12, 3)
+    title:SetPoint("RIGHT", button, "RIGHT", -16, 0)
     title:SetJustifyH("LEFT")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-    title:SetTextColor(1, 0.82, 0, 1)
+    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "")
+    title:SetTextColor(0.97, 0.9, 0.76, 1)
     title:SetText(titleText)
 
     local body = button:CreateFontString(nil, "OVERLAY")
-    body:SetPoint("TOPLEFT", icon, "BOTTOMLEFT", 0, -12)
-    body:SetPoint("RIGHT", button, "RIGHT", -18, 0)
+    body:SetPoint("TOPLEFT", icon, "BOTTOMLEFT", 0, -10)
+    body:SetPoint("RIGHT", button, "RIGHT", -16, 0)
     body:SetJustifyH("LEFT")
     body:SetJustifyV("TOP")
-    body:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-    body:SetTextColor(0.96, 0.96, 0.96, 1)
+    body:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    body:SetTextColor(0.91, 0.89, 0.86, 1)
     body:SetText(bodyText)
 
     local footer = button:CreateFontString(nil, "OVERLAY")
-    footer:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 18, 14)
-    footer:SetPoint("RIGHT", button, "RIGHT", -18, 0)
+    footer:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 16, 12)
+    footer:SetPoint("RIGHT", button, "RIGHT", -16, 0)
     footer:SetJustifyH("LEFT")
-    footer:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
-    footer:SetTextColor(1, 0.85, 0.25, 1)
+    footer:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    footer:SetTextColor(0.92, 0.8, 0.58, 1)
     footer:SetText(footerText)
 
     button.Title = title
     button.Body = body
     button.Footer = footer
+    button.Icon = icon
 
     button:SetScript("OnEnter", function()
         ApplyPanelSurface(surface, "card", true)
+        button.Title:SetTextColor(1, 0.94, 0.84, 1)
+        button.Footer:SetTextColor(0.98, 0.86, 0.64, 1)
     end)
 
     button:SetScript("OnLeave", function()
         ApplyPanelSurface(surface, "card", false)
+        button.Title:SetTextColor(0.97, 0.9, 0.76, 1)
+        button.Footer:SetTextColor(0.92, 0.8, 0.58, 1)
     end)
 
     button:SetScript("OnClick", function()
@@ -181,6 +242,21 @@ local function GetTextHeight(fontString, minimumHeight)
     return textHeight
 end
 
+local function GetActionCardHeight(card)
+    local iconHeight = card.Icon and card.Icon.GetHeight and card.Icon:GetHeight() or 40
+    local titleBlockHeight = math.max(iconHeight, GetTextHeight(card.Title, 15))
+
+    return math.ceil(
+        14
+        + titleBlockHeight
+        + 10
+        + GetTextHeight(card.Body, 11)
+        + 12
+        + GetTextHeight(card.Footer, 10)
+        + 12
+    )
+end
+
 local PageHome = CreateFrame("Frame", nil, Content)
 PageHome:SetAllPoints()
 
@@ -194,101 +270,101 @@ PageHomeContent:SetSize(1, 1)
 PageHomeScrollFrame:SetScrollChild(PageHomeContent)
 
 local IntroPanel = CreateFrame("Frame", nil, PageHomeContent)
-IntroPanel:SetPoint("TOPLEFT", PageHomeContent, "TOPLEFT", 22, -22)
-IntroPanel:SetPoint("TOPRIGHT", PageHomeContent, "TOPRIGHT", -22, -22)
-IntroPanel:SetHeight(220)
+IntroPanel:SetPoint("TOPLEFT", PageHomeContent, "TOPLEFT", 18, -18)
+IntroPanel:SetPoint("TOPRIGHT", PageHomeContent, "TOPRIGHT", -18, -18)
+IntroPanel:SetHeight(196)
 
 local IntroSurface = CreatePanelSurface(IntroPanel)
 ApplyPanelSurface(IntroSurface, "hero", false)
 
 local IntroEyebrow = IntroPanel:CreateFontString(nil, "OVERLAY")
-IntroEyebrow:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 22, -18)
-IntroEyebrow:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
-IntroEyebrow:SetTextColor(1, 0.88, 0.35, 1)
+IntroEyebrow:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
+IntroEyebrow:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
+IntroEyebrow:SetTextColor(0.93, 0.82, 0.62, 1)
 IntroEyebrow:SetText(L("HOME"))
 
 local SpotlightPanel = CreateFrame("Frame", nil, IntroPanel)
-SpotlightPanel:SetPoint("TOPRIGHT", IntroPanel, "TOPRIGHT", -20, -28)
-SpotlightPanel:SetWidth(292)
-SpotlightPanel:SetHeight(174)
+SpotlightPanel:SetPoint("TOPRIGHT", IntroPanel, "TOPRIGHT", -18, -20)
+SpotlightPanel:SetWidth(280)
+SpotlightPanel:SetHeight(150)
 
 local SpotlightSurface = CreatePanelSurface(SpotlightPanel)
 ApplyPanelSurface(SpotlightSurface, "card", false)
 
 local SpotlightHeader = CreateFrame("Frame", nil, SpotlightPanel)
-SpotlightHeader:SetPoint("TOPLEFT", SpotlightPanel, "TOPLEFT", 18, -16)
-SpotlightHeader:SetPoint("TOPRIGHT", SpotlightPanel, "TOPRIGHT", -18, -16)
-SpotlightHeader:SetHeight(44)
+SpotlightHeader:SetPoint("TOPLEFT", SpotlightPanel, "TOPLEFT", 16, -14)
+SpotlightHeader:SetPoint("TOPRIGHT", SpotlightPanel, "TOPRIGHT", -16, -14)
+SpotlightHeader:SetHeight(36)
 
 local SpotlightLogo = SpotlightPanel:CreateTexture(nil, "ARTWORK")
-SpotlightLogo:SetSize(44, 44)
+SpotlightLogo:SetSize(36, 36)
 SpotlightLogo:SetPoint("TOPLEFT", SpotlightHeader, "TOPLEFT", 0, 0)
 SpotlightLogo:SetTexture("Interface\\AddOns\\BeavisQoL\\Media\\logo.tga")
 
 local SpotlightTitle = SpotlightPanel:CreateFontString(nil, "OVERLAY")
-SpotlightTitle:SetPoint("LEFT", SpotlightLogo, "RIGHT", 14, 0)
+SpotlightTitle:SetPoint("LEFT", SpotlightLogo, "RIGHT", 12, 0)
 SpotlightTitle:SetPoint("RIGHT", SpotlightHeader, "RIGHT", 0, 0)
 SpotlightTitle:SetPoint("CENTER", SpotlightLogo, "CENTER", 0, 0)
 SpotlightTitle:SetJustifyH("LEFT")
-SpotlightTitle:SetFont("Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
-SpotlightTitle:SetTextColor(1, 0.82, 0, 1)
+SpotlightTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+SpotlightTitle:SetTextColor(0.97, 0.9, 0.76, 1)
 SpotlightTitle:SetText(L("PROJECT_STATUS"))
 
 local SpotlightVersion = SpotlightPanel:CreateFontString(nil, "OVERLAY")
-SpotlightVersion:SetPoint("TOPLEFT", SpotlightTitle, "BOTTOMLEFT", 0, -12)
-SpotlightVersion:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -18, 0)
+SpotlightVersion:SetPoint("TOPLEFT", SpotlightTitle, "BOTTOMLEFT", 0, -8)
+SpotlightVersion:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -16, 0)
 SpotlightVersion:SetJustifyH("LEFT")
-SpotlightVersion:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SpotlightVersion:SetTextColor(1, 1, 1, 1)
+SpotlightVersion:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SpotlightVersion:SetTextColor(0.94, 0.91, 0.86, 1)
 SpotlightVersion:SetText(L("VERSION") .. ": " .. version)
 
 local SpotlightState = SpotlightPanel:CreateFontString(nil, "OVERLAY")
-SpotlightState:SetPoint("TOPLEFT", SpotlightVersion, "BOTTOMLEFT", 0, -10)
-SpotlightState:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -18, 0)
+SpotlightState:SetPoint("TOPLEFT", SpotlightVersion, "BOTTOMLEFT", 0, -7)
+SpotlightState:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -16, 0)
 SpotlightState:SetJustifyH("LEFT")
-SpotlightState:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SpotlightState:SetTextColor(1, 1, 1, 1)
+SpotlightState:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SpotlightState:SetTextColor(0.94, 0.91, 0.86, 1)
 SpotlightState:SetText(BeavisQoL.GetReleaseStatusText and BeavisQoL.GetReleaseStatusText() or L("STATUS_ALPHA"))
 
 local SpotlightFocus = SpotlightPanel:CreateFontString(nil, "OVERLAY")
-SpotlightFocus:SetPoint("TOPLEFT", SpotlightState, "BOTTOMLEFT", 0, -10)
-SpotlightFocus:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -18, 0)
+SpotlightFocus:SetPoint("TOPLEFT", SpotlightState, "BOTTOMLEFT", 0, -8)
+SpotlightFocus:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -16, 0)
 SpotlightFocus:SetJustifyH("LEFT")
 SpotlightFocus:SetJustifyV("TOP")
-SpotlightFocus:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SpotlightFocus:SetTextColor(0.93, 0.93, 0.95, 1)
+SpotlightFocus:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SpotlightFocus:SetTextColor(0.89, 0.87, 0.84, 1)
 SpotlightFocus:SetText("")
 SpotlightFocus:Hide()
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
-IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -14)
-IntroTitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -28, 0)
+IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -10)
+IntroTitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -24, 0)
 IntroTitle:SetJustifyH("LEFT")
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "")
+IntroTitle:SetTextColor(0.99, 0.93, 0.84, 1)
 IntroTitle:SetText(L("WELCOME_TITLE"):format(name))
 
 local IntroSubtitle = IntroPanel:CreateFontString(nil, "OVERLAY")
-IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -8)
-IntroSubtitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -28, 0)
+IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -6)
+IntroSubtitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -24, 0)
 IntroSubtitle:SetJustifyH("LEFT")
-IntroSubtitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-IntroSubtitle:SetTextColor(0.84, 0.84, 0.86, 1)
+IntroSubtitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+IntroSubtitle:SetTextColor(0.82, 0.79, 0.75, 1)
 IntroSubtitle:SetText(L("WELCOME_SUBTITLE"))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
-IntroText:SetPoint("TOPLEFT", IntroSubtitle, "BOTTOMLEFT", 0, -16)
-IntroText:SetPoint("RIGHT", SpotlightPanel, "LEFT", -28, 0)
+IntroText:SetPoint("TOPLEFT", IntroSubtitle, "BOTTOMLEFT", 0, -12)
+IntroText:SetPoint("RIGHT", SpotlightPanel, "LEFT", -24, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
-IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(0.96, 0.96, 0.96, 1)
+IntroText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+IntroText:SetTextColor(0.91, 0.89, 0.86, 1)
 IntroText:SetText(L("WELCOME_BODY"))
 
 local HighlightsRow = CreateFrame("Frame", nil, PageHomeContent)
-HighlightsRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
-HighlightsRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -22, 0)
-HighlightsRow:SetHeight(162)
+HighlightsRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -14)
+HighlightsRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -18, 0)
+HighlightsRow:SetHeight(138)
 
 local ProgressCard = CreateInfoCard(
     HighlightsRow,
@@ -298,7 +374,7 @@ local ProgressCard = CreateInfoCard(
 )
 ProgressCard:SetPoint("TOPLEFT", HighlightsRow, "TOPLEFT", 0, 0)
 ProgressCard:SetPoint("BOTTOMLEFT", HighlightsRow, "BOTTOMLEFT", 0, 0)
-ProgressCard:SetPoint("RIGHT", HighlightsRow, "CENTER", -9, 0)
+ProgressCard:SetPoint("RIGHT", HighlightsRow, "CENTER", -7, 0)
 
 local ComfortCard = CreateInfoCard(
     HighlightsRow,
@@ -308,13 +384,13 @@ local ComfortCard = CreateInfoCard(
 )
 ComfortCard:SetPoint("TOPRIGHT", HighlightsRow, "TOPRIGHT", 0, 0)
 ComfortCard:SetPoint("BOTTOMRIGHT", HighlightsRow, "BOTTOMRIGHT", 0, 0)
-ComfortCard:SetPoint("LEFT", HighlightsRow, "CENTER", 9, 0)
+ComfortCard:SetPoint("LEFT", HighlightsRow, "CENTER", 7, 0)
 HighlightsRow:Hide()
 
 local ActionRow = CreateFrame("Frame", nil, PageHomeContent)
-ActionRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -10)
-ActionRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -22, 0)
-ActionRow:SetHeight(184)
+ActionRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -8)
+ActionRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -18, 0)
+ActionRow:SetHeight(156)
 
 local TwitchCard = CreateActionCard(
     ActionRow,
@@ -327,7 +403,7 @@ local TwitchCard = CreateActionCard(
 )
 TwitchCard:SetPoint("TOPLEFT", ActionRow, "TOPLEFT", 0, 0)
 TwitchCard:SetPoint("BOTTOMLEFT", ActionRow, "BOTTOMLEFT", 0, 0)
-TwitchCard:SetPoint("RIGHT", ActionRow, "CENTER", -9, 0)
+TwitchCard:SetPoint("RIGHT", ActionRow, "CENTER", -7, 0)
 
 local DiscordCard = CreateActionCard(
     ActionRow,
@@ -340,12 +416,12 @@ local DiscordCard = CreateActionCard(
 )
 DiscordCard:SetPoint("TOPRIGHT", ActionRow, "TOPRIGHT", 0, 0)
 DiscordCard:SetPoint("BOTTOMRIGHT", ActionRow, "BOTTOMRIGHT", 0, 0)
-DiscordCard:SetPoint("LEFT", ActionRow, "CENTER", 9, 0)
+DiscordCard:SetPoint("LEFT", ActionRow, "CENTER", 7, 0)
 
 local WebsiteRow = CreateFrame("Frame", nil, PageHomeContent)
-WebsiteRow:SetPoint("TOPLEFT", ActionRow, "BOTTOMLEFT", 0, -14)
-WebsiteRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -22, 0)
-WebsiteRow:SetHeight(150)
+WebsiteRow:SetPoint("TOPLEFT", ActionRow, "BOTTOMLEFT", 0, -10)
+WebsiteRow:SetPoint("RIGHT", PageHomeContent, "RIGHT", -18, 0)
+WebsiteRow:SetHeight(124)
 
 local WebsiteCard = CreateActionCard(
     WebsiteRow,
@@ -371,48 +447,55 @@ local function LayoutHomePage()
     IntroText:ClearAllPoints()
     SpotlightPanel:ClearAllPoints()
 
-    IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -14)
-    IntroTitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -22, 0)
+    IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -10)
+    IntroTitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 
-    IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -8)
-    IntroSubtitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -22, 0)
+    IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -6)
+    IntroSubtitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 
-    IntroText:SetPoint("TOPLEFT", IntroSubtitle, "BOTTOMLEFT", 0, -16)
-    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -22, 0)
+    IntroText:SetPoint("TOPLEFT", IntroSubtitle, "BOTTOMLEFT", 0, -12)
+    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 
-    SpotlightPanel:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -12)
-    SpotlightPanel:SetPoint("RIGHT", IntroPanel, "RIGHT", -20, 0)
+    SpotlightPanel:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -10)
+    SpotlightPanel:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 
-    local headerHeight = math.max(40, SpotlightLogo:GetHeight())
+    local headerHeight = math.max(36, SpotlightLogo:GetHeight())
     SpotlightHeader:SetHeight(headerHeight)
 
     local leftColumnHeight =
-        18
-        + GetTextHeight(IntroEyebrow, 11)
-        + 14
-        + GetTextHeight(IntroTitle, 30)
-        + 8
-        + GetTextHeight(IntroSubtitle, 14)
-        + 16
-        + GetTextHeight(IntroText, 13)
+        16
+        + GetTextHeight(IntroEyebrow, 9)
+        + 10
+        + GetTextHeight(IntroTitle, 24)
+        + 6
+        + GetTextHeight(IntroSubtitle, 12)
         + 12
+        + GetTextHeight(IntroText, 12)
+        + 10
 
     local spotlightHeight =
-        16
+        14
         + headerHeight
-        + GetTextHeight(SpotlightVersion, 12)
-        + 10
-        + GetTextHeight(SpotlightState, 12)
-        + 18
+        + 8
+        + GetTextHeight(SpotlightVersion, 11)
+        + 7
+        + GetTextHeight(SpotlightState, 11)
+        + 12
 
-    SpotlightPanel:SetHeight(math.max(104, math.ceil(spotlightHeight)))
-    IntroPanel:SetHeight(math.max(176, math.ceil(leftColumnHeight + 12 + spotlightHeight + 10)))
+    if SpotlightFocus:IsShown() then
+        spotlightHeight = spotlightHeight + 8 + GetTextHeight(SpotlightFocus, 11)
+    end
 
-    local contentHeight = 22
+    SpotlightPanel:SetHeight(math.max(92, math.ceil(spotlightHeight)))
+    IntroPanel:SetHeight(math.max(164, math.ceil(leftColumnHeight + 8 + spotlightHeight + 10)))
+    ActionRow:SetHeight(math.max(132, math.max(GetActionCardHeight(TwitchCard), GetActionCardHeight(DiscordCard))))
+    WebsiteRow:SetHeight(math.max(108, GetActionCardHeight(WebsiteCard)))
+
+    local contentHeight = 18
         + IntroPanel:GetHeight()
-        + 10 + ActionRow:GetHeight()
-        + 14 + WebsiteRow:GetHeight()
-        + 20
+        + 8 + ActionRow:GetHeight()
+        + 10 + WebsiteRow:GetHeight()
+        + 18
 
     PageHomeContent:SetHeight(contentHeight)
 end
