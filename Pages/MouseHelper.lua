@@ -73,16 +73,41 @@ local function GetPlayerClassColor()
     end
 
     local _, classFile = UnitClass("player")
-    local classColors = rawget(_G, "CUSTOM_CLASS_COLORS") or rawget(_G, "RAID_CLASS_COLORS")
-    local color = classColors and classFile and classColors[classFile] or nil
-    if not color then
+    if type(classFile) ~= "string" or classFile == "" then
         return nil
     end
 
-    local red = Clamp(tonumber(color.r) or 1, 0, 1)
-    local green = Clamp(tonumber(color.g) or 1, 0, 1)
-    local blue = Clamp(tonumber(color.b) or 1, 0, 1)
-    return red, green, blue
+    local function ReadColor(color)
+        if not color then
+            return nil
+        end
+
+        if type(color.GetRGB) == "function" then
+            local red, green, blue = color:GetRGB()
+            if type(red) == "number" and type(green) == "number" and type(blue) == "number" then
+                return Clamp(red, 0, 1), Clamp(green, 0, 1), Clamp(blue, 0, 1)
+            end
+        end
+
+        local red = tonumber(color.r or color.red or color.R)
+        local green = tonumber(color.g or color.green or color.G)
+        local blue = tonumber(color.b or color.blue or color.B)
+        if red and green and blue then
+            return Clamp(red, 0, 1), Clamp(green, 0, 1), Clamp(blue, 0, 1)
+        end
+
+        return nil
+    end
+
+    if C_ClassColor and C_ClassColor.GetClassColor then
+        local red, green, blue = ReadColor(C_ClassColor.GetClassColor(classFile))
+        if red and green and blue then
+            return red, green, blue
+        end
+    end
+
+    local classColors = rawget(_G, "CUSTOM_CLASS_COLORS") or rawget(_G, "RAID_CLASS_COLORS")
+    return ReadColor(classColors and classColors[classFile] or nil)
 end
 
 local function GetTrailColorComponents(db)
@@ -102,6 +127,35 @@ local function GetTrailColorComponents(db)
     end
 
     return red, green, blue, alpha
+end
+
+local function GetCircleColorComponents(db)
+    local circleColor = db and db.circleColor or nil
+    local red = Clamp(tonumber(circleColor and circleColor.r) or 1, 0, 1)
+    local green = Clamp(tonumber(circleColor and circleColor.g) or 0.82, 0, 1)
+    local blue = Clamp(tonumber(circleColor and circleColor.b) or 0, 0, 1)
+    local alpha = Clamp(tonumber(circleColor and circleColor.a) or 0.9, 0, 1)
+
+    if db and db.circleUseClassColor == true then
+        local classRed, classGreen, classBlue = GetPlayerClassColor()
+        if classRed and classGreen and classBlue then
+            red = classRed
+            green = classGreen
+            blue = classBlue
+        end
+    end
+
+    return red, green, blue, alpha
+end
+
+local function GetCircleDisplayColor(db)
+    local red, green, blue, alpha = GetCircleColorComponents(db)
+    return {
+        r = red,
+        g = green,
+        b = blue,
+        a = alpha,
+    }
 end
 
 local function GetTrailDisplayColor(db)
@@ -162,6 +216,10 @@ function MouseHelper.GetDB()
 
     if db.circleCombatOnly == nil then
         db.circleCombatOnly = false
+    end
+
+    if db.circleUseClassColor == nil then
+        db.circleUseClassColor = false
     end
 
     if db.castRingEnabled == nil then
@@ -284,8 +342,8 @@ local MouseHelperRuntimeOnUpdate
 local function EnsureRingDots(count)
     for index = #ringDots + 1, count do
         local dot = CursorCircleFrame:CreateTexture(nil, "ARTWORK")
-        dot:SetTexture(COLOR_TEXTURE)
-        dot:SetBlendMode("ADD")
+        dot:SetColorTexture(1, 1, 1, 1)
+        dot:SetBlendMode("BLEND")
         dot:Hide()
         ringDots[index] = dot
     end
@@ -336,7 +394,7 @@ local function DrawRing(size, thickness, color)
             dot:ClearAllPoints()
             dot:SetPoint("CENTER", CursorCircleFrame, "CENTER", x, y)
             dot:SetSize(dotSize, dotSize)
-            dot:SetVertexColor(color.r, color.g, color.b, color.a * laneAlphaFactor)
+            dot:SetColorTexture(color.r, color.g, color.b, color.a * laneAlphaFactor)
             dot:Show()
         end
     end
@@ -426,19 +484,20 @@ end
 
 local function ApplyCircleVisual(db)
     CursorCircleFrame:SetSize(db.circleSize, db.circleSize)
+    local circleColor = GetCircleDisplayColor(db)
 
     local renderKey = string.format(
         "%d|%d|%.3f|%.3f|%.3f|%.3f",
         math.floor((db.circleSize or 0) + 0.5),
         math.floor((db.circleThickness or 0) + 0.5),
-        db.circleColor.r or 0,
-        db.circleColor.g or 0,
-        db.circleColor.b or 0,
-        db.circleColor.a or 0
+        circleColor.r or 0,
+        circleColor.g or 0,
+        circleColor.b or 0,
+        circleColor.a or 0
     )
 
     if renderKey ~= lastRingRenderKey then
-        DrawRing(db.circleSize, db.circleThickness, db.circleColor)
+        DrawRing(db.circleSize, db.circleThickness, circleColor)
         lastRingRenderKey = renderKey
     end
 end
@@ -1036,6 +1095,11 @@ function MouseHelper.SetTrailUseClassColor(enabled)
     ApplyVisualState()
 end
 
+function MouseHelper.SetCircleUseClassColor(enabled)
+    MouseHelper.GetDB().circleUseClassColor = enabled == true
+    ApplyVisualState()
+end
+
 function MouseHelper.SetCircleCombatOnly(enabled)
     MouseHelper.GetDB().circleCombatOnly = enabled == true
     ApplyVisualState()
@@ -1296,7 +1360,7 @@ UIDropDownMenu_SetWidth(CursorSizeDropdown, 150)
 local CirclePanel = CreateFrame("Frame", nil, PageContent)
 CirclePanel:SetPoint("TOPLEFT", GeneralPanel, "BOTTOMLEFT", 0, -18)
 CirclePanel:SetPoint("TOPRIGHT", GeneralPanel, "BOTTOMRIGHT", 0, -18)
-CirclePanel:SetHeight(332)
+CirclePanel:SetHeight(362)
 
 local CircleBg = CirclePanel:CreateTexture(nil, "BACKGROUND")
 CircleBg:SetAllPoints()
@@ -1337,8 +1401,16 @@ CastRingLabel:SetPoint("LEFT", CastRingCheckbox, "RIGHT", 6, 0)
 CastRingLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 CastRingLabel:SetTextColor(1, 1, 1, 1)
 
+local CircleClassColorCheckbox = CreateFrame("CheckButton", nil, CirclePanel, "UICheckButtonTemplate")
+CircleClassColorCheckbox:SetPoint("TOPLEFT", CastRingCheckbox, "BOTTOMLEFT", 0, -10)
+
+local CircleClassColorLabel = CirclePanel:CreateFontString(nil, "OVERLAY")
+CircleClassColorLabel:SetPoint("LEFT", CircleClassColorCheckbox, "RIGHT", 6, 0)
+CircleClassColorLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+CircleClassColorLabel:SetTextColor(1, 1, 1, 1)
+
 local CircleSizeSlider = CreateValueSlider(CirclePanel, "", 24, 180, 1)
-CircleSizeSlider:SetPoint("TOPLEFT", CastRingCheckbox, "BOTTOMLEFT", 10, -24)
+CircleSizeSlider:SetPoint("TOPLEFT", CircleClassColorCheckbox, "BOTTOMLEFT", 10, -24)
 
 local CircleThicknessSlider = CreateValueSlider(CirclePanel, "", 2, 20, 1)
 CircleThicknessSlider:SetPoint("TOPLEFT", CircleSizeSlider, "BOTTOMLEFT", 0, -48)
@@ -1411,9 +1483,10 @@ local function SetControlsEnabled(masterEnabled, db)
     CircleCheckbox:SetEnabled(masterEnabled)
     CircleCombatOnlyCheckbox:SetEnabled(masterEnabled and CircleCheckbox:GetChecked())
     CastRingCheckbox:SetEnabled(masterEnabled)
+    CircleClassColorCheckbox:SetEnabled(masterEnabled and CircleCheckbox:GetChecked())
     CircleSizeSlider:SetEnabled(masterEnabled)
     CircleThicknessSlider:SetEnabled(masterEnabled)
-    CircleColorButton:SetEnabled(masterEnabled)
+    CircleColorButton:SetEnabled(masterEnabled and db.circleUseClassColor ~= true)
     CastRingColorButton:SetEnabled(masterEnabled and db.castRingEnabled == true)
 
     TrailCheckbox:SetEnabled(masterEnabled)
@@ -1449,6 +1522,7 @@ function PageMouseHelper:RefreshState()
     CircleLabel:SetText(L("MOUSE_HELPER_CIRCLE_ENABLE"))
     CircleCombatOnlyLabel:SetText(L("MOUSE_HELPER_CIRCLE_COMBAT_ONLY"))
     CastRingLabel:SetText(L("MOUSE_HELPER_CAST_RING_ENABLE"))
+    CircleClassColorLabel:SetText(L("MOUSE_HELPER_CIRCLE_CLASS_COLOR"))
     CircleSizeSlider.Text:SetText(L("MOUSE_HELPER_CIRCLE_SIZE"))
     CircleThicknessSlider.Text:SetText(L("MOUSE_HELPER_CIRCLE_THICKNESS"))
     CircleColorButton:SetText(L("MOUSE_HELPER_COLOR_PICK"))
@@ -1466,6 +1540,7 @@ function PageMouseHelper:RefreshState()
     CircleCheckbox:SetChecked(db.circleEnabled)
     CircleCombatOnlyCheckbox:SetChecked(db.circleCombatOnly)
     CastRingCheckbox:SetChecked(db.castRingEnabled)
+    CircleClassColorCheckbox:SetChecked(db.circleUseClassColor)
     TrailCheckbox:SetChecked(db.trailEnabled)
     TrailClassColorCheckbox:SetChecked(db.trailUseClassColor)
 
@@ -1497,7 +1572,7 @@ function PageMouseHelper:RefreshState()
         end
     end
 
-    SetButtonSwatchColor(CircleColorButton, db.circleColor)
+    SetButtonSwatchColor(CircleColorButton, GetCircleDisplayColor(db))
     SetButtonSwatchColor(CastRingColorButton, db.castRingColor)
     SetButtonSwatchColor(TrailColorButton, GetTrailDisplayColor(db))
     SetControlsEnabled(db.enabled == true, db)
@@ -1600,6 +1675,11 @@ end)
 
 CastRingCheckbox:SetScript("OnClick", function(self)
     MouseHelper.SetCastRingEnabled(self:GetChecked())
+    PageMouseHelper:RefreshState()
+end)
+
+CircleClassColorCheckbox:SetScript("OnClick", function(self)
+    MouseHelper.SetCircleUseClassColor(self:GetChecked())
     PageMouseHelper:RefreshState()
 end)
 
