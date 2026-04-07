@@ -37,6 +37,7 @@ Pages\Misc\PreyHuntProgress.lua
 Pages\Misc\KeystoneActions.lua
 Pages\Misc\AutoRespawnPet.lua
 Pages\Misc\MacroFrame.lua
+Pages\Misc\ReputationSearch.lua
 Pages\LFG\Flags.lua
 Pages\LFG\InviteTimer.lua
 Pages\Stats.lua

@@ -214,6 +214,7 @@ BeavisQoL.Localization.deDE = {
 
 	MISC_TITLE = "Komfort",
 	MISC_DESC = "Hier findest du Komfortfunktionen, die unabhängig vom Rest des Addons genutzt werden können.",
+	REPUTATION_SEARCH_PLACEHOLDER = "Ruf suchen",
 	AUTOSELL_HINT = "Verkauft beim Öffnen eines Händlers automatisch alle grauen Gegenstände mit Händlerwert.",
 	AUTOREPAIR_HINT = "Repariert beim Öffnen eines Händlers automatisch beschädigte Gegenstände.",
 	AUTOREPAIR_GUILD = "Per Gilde vorrangig",
