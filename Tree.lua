@@ -457,7 +457,7 @@ local QuestAbandonEntry = RegisterModuleEntry(ProgressSection, "QUEST_ABANDON", 
     searchAliases = "quest remove abandon cancel marked selected",
 })
 
-local LoggingEntry = RegisterModuleEntry(GoldSection, "LOGGING", "Logging", {
+local LoggingEntry = RegisterModuleEntry(GoldSection, "GOLDAUSWERTUNG", "Logging", {
     searchTextKeys = { "LOGGING_DESC", "LOGGING_SALES_HINT", "LOGGING_REPAIRS_HINT", "LOGGING_INCOME_HINT", "LOGGING_EXPENSE_HINT" },
     searchAliases = "gold sales repairs income expenses vendor auction trade",
 })
@@ -776,7 +776,7 @@ BeavisQoL.UpdateTree = function()
     ItemLevelGuideEntry.text:SetText(L("ITEMLEVEL_GUIDE"))
     QuestCheckEntry.text:SetText(L("QUEST_CHECK"))
     QuestAbandonEntry.text:SetText(L("QUEST_ABANDON"))
-    LoggingEntry.text:SetText(L("LOGGING"))
+    LoggingEntry.text:SetText(L("GOLDAUSWERTUNG"))
     AutoSellEntry.text:SetText(L("AUTOSELL_JUNK"))
     AutoRepairEntry.text:SetText(L("AUTOREPAIR"))
     FastLootEntry.text:SetText(L("FAST_LOOT"))
