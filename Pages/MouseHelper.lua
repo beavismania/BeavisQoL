@@ -31,6 +31,9 @@ local OpacitySliderFrameRef = rawget(_G, "OpacitySliderFrame")
 
 local COLOR_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 local DEFAULT_TRAIL_STYLE = "lightning_storm"
+local TRAIL_SAMPLE_INTERVAL = 0.010
+local TRAIL_RENDER_INTERVAL = 0.016
+local TRAIL_IDLE_FADE_INTERVAL = 0.024
 local TRAIL_STYLE_OPTIONS = {
     { value = "lightning_storm", textKey = "MOUSE_HELPER_TRAIL_STYLE_LIGHTNING" },
     { value = "holy_light", textKey = "MOUSE_HELPER_TRAIL_STYLE_HOLY" },
@@ -207,6 +210,7 @@ local trailPoints = {}
 local smoothTrailPoints = {}
 local sampleAccumulator = 0
 local trailRenderAccumulator = 0
+local trailFadeAccumulator = 0
 local ringDots = {}
 local lastRingRenderKey = nil
 local lastTrailSampleX = nil
@@ -311,6 +315,7 @@ local function ClearTrail()
     lastTrailSampleY = nil
     sampleAccumulator = 0
     trailRenderAccumulator = 0
+    trailFadeAccumulator = 0
 
     for index = 1, #trailCoreLines do
         trailCoreLines[index]:Hide()
@@ -675,6 +680,16 @@ local function ApplyVisualState()
     end
 end
 
+local function PushTrailPoint(cursorX, cursorY, maxCount)
+    lastTrailSampleX = cursorX
+    lastTrailSampleY = cursorY
+    table.insert(trailPoints, 1, { x = cursorX, y = cursorY })
+
+    while #trailPoints > maxCount do
+        table.remove(trailPoints)
+    end
+end
+
 local function HandleMouseHelperRuntimeUpdate(_, elapsed)
     local db = MouseHelper.GetDB()
 
@@ -699,25 +714,26 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
 
     trailRenderAccumulator = trailRenderAccumulator + elapsed
     sampleAccumulator = sampleAccumulator + elapsed
-    if sampleAccumulator >= 0.014 then
-        sampleAccumulator = 0
+    while sampleAccumulator >= TRAIL_SAMPLE_INTERVAL do
+        sampleAccumulator = sampleAccumulator - TRAIL_SAMPLE_INTERVAL
         local deltaX = cursorX - (lastTrailSampleX or cursorX)
         local deltaY = cursorY - (lastTrailSampleY or cursorY)
         local movedEnough = ((deltaX * deltaX) + (deltaY * deltaY)) >= 1
 
         if movedEnough or #trailPoints == 0 then
-            lastTrailSampleX = cursorX
-            lastTrailSampleY = cursorY
-            table.insert(trailPoints, 1, { x = cursorX, y = cursorY })
-
-            while #trailPoints > (db.trailLength + 4) do
+            trailFadeAccumulator = 0
+            PushTrailPoint(cursorX, cursorY, db.trailLength + 4)
+        elseif #trailPoints > 0 then
+            trailFadeAccumulator = trailFadeAccumulator + TRAIL_SAMPLE_INTERVAL
+            while trailFadeAccumulator >= TRAIL_IDLE_FADE_INTERVAL and #trailPoints > 0 do
+                trailFadeAccumulator = trailFadeAccumulator - TRAIL_IDLE_FADE_INTERVAL
                 table.remove(trailPoints)
             end
         end
     end
 
-    if trailRenderAccumulator >= 0.03 then
-        trailRenderAccumulator = 0
+    if trailRenderAccumulator >= TRAIL_RENDER_INTERVAL then
+        trailRenderAccumulator = trailRenderAccumulator - TRAIL_RENDER_INTERVAL
         DrawTrail(db)
     end
 end
