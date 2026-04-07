@@ -34,6 +34,7 @@ local DEFAULT_TRAIL_STYLE = "lightning_storm"
 local TRAIL_SAMPLE_INTERVAL = 0.010
 local TRAIL_RENDER_INTERVAL = 0.016
 local TRAIL_IDLE_FADE_INTERVAL = 0.024
+local CAST_RING_SEGMENT_COUNT = 96
 local TRAIL_STYLE_OPTIONS = {
     { value = "lightning_storm", textKey = "MOUSE_HELPER_TRAIL_STYLE_LIGHTNING" },
     { value = "holy_light", textKey = "MOUSE_HELPER_TRAIL_STYLE_HOLY" },
@@ -163,10 +164,15 @@ function MouseHelper.GetDB()
         db.circleCombatOnly = false
     end
 
+    if db.castRingEnabled == nil then
+        db.castRingEnabled = true
+    end
+
     db.circleSize = Clamp(tonumber(db.circleSize) or 64, 24, 180)
     db.circleThickness = Clamp(tonumber(db.circleThickness) or 6, 2, 20)
 
     db.circleColor = CopyColor(db.circleColor or { r = 1, g = 0.82, b = 0, a = 0.9 })
+    db.castRingColor = CopyColor(db.castRingColor or { r = 1, g = 0.9, b = 0.22, a = 0.95 })
 
     if db.trailEnabled == nil then
         db.trailEnabled = true
@@ -248,11 +254,17 @@ CursorCircleFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 CursorCircleFrame:SetFrameLevel(200)
 CursorCircleFrame:Hide()
 
+local CastRingFrame = CreateFrame("Frame", nil, RuntimeFrame)
+CastRingFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+CastRingFrame:SetFrameLevel(210)
+CastRingFrame:Hide()
+
 local TrailFrame = CreateFrame("Frame", nil, RuntimeFrame)
 TrailFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 TrailFrame:SetFrameLevel(180)
 TrailFrame:Hide()
 
+local castRingSegments = {}
 local trailCoreLines = {}
 local trailGlowLines = {}
 local trailAccentLines = {}
@@ -263,6 +275,7 @@ local sampleAccumulator = 0
 local trailRenderAccumulator = 0
 local trailFadeAccumulator = 0
 local ringDots = {}
+local lastCastRingRenderKey = nil
 local lastRingRenderKey = nil
 local lastTrailSampleX = nil
 local lastTrailSampleY = nil
@@ -330,6 +343,25 @@ local function DrawRing(size, thickness, color)
 
     for index = dotIndex + 1, #ringDots do
         ringDots[index]:Hide()
+    end
+end
+
+local function EnsureCastRingSegments(count)
+    for index = #castRingSegments + 1, count do
+        local segment = CastRingFrame:CreateTexture(nil, "OVERLAY")
+        segment:SetTexture(COLOR_TEXTURE)
+        segment:SetBlendMode("ADD")
+        segment:Hide()
+        castRingSegments[index] = segment
+    end
+end
+
+local function HideCastRing()
+    lastCastRingRenderKey = nil
+    CastRingFrame:Hide()
+
+    for index = 1, #castRingSegments do
+        castRingSegments[index]:Hide()
     end
 end
 
@@ -409,6 +441,98 @@ local function ApplyCircleVisual(db)
         DrawRing(db.circleSize, db.circleThickness, db.circleColor)
         lastRingRenderKey = renderKey
     end
+end
+
+local function GetCastRingProgress()
+    if type(UnitCastingInfo) == "function" then
+        local _, _, _, startTimeMS, endTimeMS = UnitCastingInfo("player")
+        if startTimeMS and endTimeMS and endTimeMS > startTimeMS then
+            local nowMS = ((GetTimePreciseSec and GetTimePreciseSec()) or GetTime()) * 1000
+            return Clamp((nowMS - startTimeMS) / (endTimeMS - startTimeMS), 0, 1)
+        end
+    end
+
+    if type(UnitChannelInfo) == "function" then
+        local _, _, _, startTimeMS, endTimeMS = UnitChannelInfo("player")
+        if startTimeMS and endTimeMS and endTimeMS > startTimeMS then
+            local nowMS = ((GetTimePreciseSec and GetTimePreciseSec()) or GetTime()) * 1000
+            return Clamp((endTimeMS - nowMS) / (endTimeMS - startTimeMS), 0, 1)
+        end
+    end
+
+    return nil
+end
+
+local function DrawCastRing(db, progress)
+    if not db or not progress then
+        HideCastRing()
+        return
+    end
+
+    local segmentCount = Clamp(math.floor(((db.circleSize or 64) * 1.5) + 0.5), 72, CAST_RING_SEGMENT_COUNT)
+    local litSegmentCount = Clamp(math.floor((progress * segmentCount) + 0.5), 0, segmentCount)
+    if litSegmentCount <= 0 then
+        HideCastRing()
+        return
+    end
+
+    local color = db.castRingColor or db.circleColor or { r = 1, g = 0.9, b = 0.22, a = 0.95 }
+    local radius = math.max(10, (db.circleSize * 0.5) + (db.circleThickness * 0.95))
+    local ringThickness = Clamp((db.circleThickness * 0.72) + 1, 2, 12)
+    local segmentLength = math.max(4, ((2 * math.pi * radius) / segmentCount) * 0.82)
+    local pulse = 0.84 + (0.16 * math.sin((GetTime() or 0) * 12))
+    local renderKey = string.format(
+        "%d|%d|%d|%.3f|%.3f|%.3f|%.3f|%.3f",
+        math.floor((db.circleSize or 0) + 0.5),
+        math.floor((db.circleThickness or 0) + 0.5),
+        litSegmentCount,
+        color.r or 0,
+        color.g or 0,
+        color.b or 0,
+        color.a or 0,
+        pulse
+    )
+
+    CastRingFrame:SetSize((radius * 2) + (ringThickness * 4), (radius * 2) + (ringThickness * 4))
+
+    if renderKey == lastCastRingRenderKey and CastRingFrame:IsShown() then
+        return
+    end
+
+    lastCastRingRenderKey = renderKey
+    EnsureCastRingSegments(segmentCount)
+
+    -- Inspired by cursor-ring addons: render a separate progress arc instead of replacing the base cursor ring.
+    for index = 1, segmentCount do
+        local segment = castRingSegments[index]
+        local angle = (-math.pi * 0.5) + (((index - 1) / segmentCount) * (math.pi * 2))
+        local x = math.cos(angle) * radius
+        local y = math.sin(angle) * radius
+
+        segment:ClearAllPoints()
+        segment:SetPoint("CENTER", CastRingFrame, "CENTER", x, y)
+        segment:SetSize(segmentLength, ringThickness)
+        segment:SetRotation(angle + (math.pi * 0.5))
+
+        if index <= litSegmentCount then
+            local alphaRatio = 0.42 + (0.58 * (index / math.max(1, litSegmentCount)))
+            local alpha = (color.a or 1) * alphaRatio
+            if index == litSegmentCount then
+                alpha = Clamp(alpha * pulse, 0, 1)
+            end
+
+            segment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, alpha)
+            segment:Show()
+        else
+            segment:Hide()
+        end
+    end
+
+    for index = segmentCount + 1, #castRingSegments do
+        castRingSegments[index]:Hide()
+    end
+
+    CastRingFrame:Show()
 end
 
 local function BuildSmoothedTrailPoints(sourceCount)
@@ -721,7 +845,7 @@ local function IsVisualFeatureEnabled(db)
         return false
     end
 
-    return db.circleEnabled == true or db.trailEnabled == true
+    return db.circleEnabled == true or db.trailEnabled == true or db.castRingEnabled == true
 end
 
 local function ShouldShowCircle(db)
@@ -736,14 +860,19 @@ local function ShouldShowCircle(db)
     return true
 end
 
+local function ShouldShowCastRing(db)
+    return db.enabled == true and db.castRingEnabled == true
+end
+
 local function ApplyVisualState()
     local db = MouseHelper.GetDB()
-    local shouldRunRuntime = db.enabled == true and (db.trailEnabled == true or ShouldShowCircle(db))
+    local shouldRunRuntime = db.enabled == true and (db.trailEnabled == true or ShouldShowCircle(db) or ShouldShowCastRing(db))
 
     if not IsVisualFeatureEnabled(db) or not shouldRunRuntime then
         RuntimeFrame:SetScript("OnUpdate", nil)
         RuntimeFrame:Hide()
         CursorCircleFrame:Hide()
+        HideCastRing()
         if db.trailEnabled ~= true then
             TrailFrame:Hide()
             ClearTrail()
@@ -759,6 +888,12 @@ local function ApplyVisualState()
         CursorCircleFrame:Show()
     else
         CursorCircleFrame:Hide()
+    end
+
+    if ShouldShowCastRing(db) then
+        CastRingFrame:Show()
+    else
+        HideCastRing()
     end
 
     if db.trailEnabled == true then
@@ -795,6 +930,19 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
         CursorCircleFrame:Show()
     else
         CursorCircleFrame:Hide()
+    end
+
+    if ShouldShowCastRing(db) then
+        local castProgress = GetCastRingProgress()
+        if castProgress ~= nil then
+            CastRingFrame:ClearAllPoints()
+            CastRingFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cursorX, cursorY)
+            DrawCastRing(db, castProgress)
+        else
+            HideCastRing()
+        end
+    else
+        HideCastRing()
     end
 
     if db.trailEnabled ~= true then
@@ -890,6 +1038,11 @@ end
 
 function MouseHelper.SetCircleCombatOnly(enabled)
     MouseHelper.GetDB().circleCombatOnly = enabled == true
+    ApplyVisualState()
+end
+
+function MouseHelper.SetCastRingEnabled(enabled)
+    MouseHelper.GetDB().castRingEnabled = enabled == true
     ApplyVisualState()
 end
 
@@ -1143,7 +1296,7 @@ UIDropDownMenu_SetWidth(CursorSizeDropdown, 150)
 local CirclePanel = CreateFrame("Frame", nil, PageContent)
 CirclePanel:SetPoint("TOPLEFT", GeneralPanel, "BOTTOMLEFT", 0, -18)
 CirclePanel:SetPoint("TOPRIGHT", GeneralPanel, "BOTTOMRIGHT", 0, -18)
-CirclePanel:SetHeight(288)
+CirclePanel:SetHeight(332)
 
 local CircleBg = CirclePanel:CreateTexture(nil, "BACKGROUND")
 CircleBg:SetAllPoints()
@@ -1176,14 +1329,25 @@ CircleCombatOnlyLabel:SetPoint("LEFT", CircleCombatOnlyCheckbox, "RIGHT", 6, 0)
 CircleCombatOnlyLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 CircleCombatOnlyLabel:SetTextColor(1, 1, 1, 1)
 
+local CastRingCheckbox = CreateFrame("CheckButton", nil, CirclePanel, "UICheckButtonTemplate")
+CastRingCheckbox:SetPoint("TOPLEFT", CircleCombatOnlyCheckbox, "BOTTOMLEFT", 0, -10)
+
+local CastRingLabel = CirclePanel:CreateFontString(nil, "OVERLAY")
+CastRingLabel:SetPoint("LEFT", CastRingCheckbox, "RIGHT", 6, 0)
+CastRingLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+CastRingLabel:SetTextColor(1, 1, 1, 1)
+
 local CircleSizeSlider = CreateValueSlider(CirclePanel, "", 24, 180, 1)
-CircleSizeSlider:SetPoint("TOPLEFT", CircleCombatOnlyCheckbox, "BOTTOMLEFT", 10, -24)
+CircleSizeSlider:SetPoint("TOPLEFT", CastRingCheckbox, "BOTTOMLEFT", 10, -24)
 
 local CircleThicknessSlider = CreateValueSlider(CirclePanel, "", 2, 20, 1)
 CircleThicknessSlider:SetPoint("TOPLEFT", CircleSizeSlider, "BOTTOMLEFT", 0, -48)
 
 local CircleColorButton = CreateColorButton(CirclePanel)
 CircleColorButton:SetPoint("TOPLEFT", CircleThicknessSlider, "BOTTOMLEFT", -10, -20)
+
+local CastRingColorButton = CreateColorButton(CirclePanel)
+CastRingColorButton:SetPoint("LEFT", CircleColorButton, "RIGHT", 14, 0)
 
 local TrailPanel = CreateFrame("Frame", nil, PageContent)
 TrailPanel:SetPoint("TOPLEFT", CirclePanel, "BOTTOMLEFT", 0, -18)
@@ -1246,9 +1410,11 @@ end
 local function SetControlsEnabled(masterEnabled, db)
     CircleCheckbox:SetEnabled(masterEnabled)
     CircleCombatOnlyCheckbox:SetEnabled(masterEnabled and CircleCheckbox:GetChecked())
+    CastRingCheckbox:SetEnabled(masterEnabled)
     CircleSizeSlider:SetEnabled(masterEnabled)
     CircleThicknessSlider:SetEnabled(masterEnabled)
     CircleColorButton:SetEnabled(masterEnabled)
+    CastRingColorButton:SetEnabled(masterEnabled and db.castRingEnabled == true)
 
     TrailCheckbox:SetEnabled(masterEnabled)
     TrailClassColorCheckbox:SetEnabled(masterEnabled)
@@ -1282,9 +1448,11 @@ function PageMouseHelper:RefreshState()
     CircleTitle:SetText(L("MOUSE_HELPER_CIRCLE_TITLE"))
     CircleLabel:SetText(L("MOUSE_HELPER_CIRCLE_ENABLE"))
     CircleCombatOnlyLabel:SetText(L("MOUSE_HELPER_CIRCLE_COMBAT_ONLY"))
+    CastRingLabel:SetText(L("MOUSE_HELPER_CAST_RING_ENABLE"))
     CircleSizeSlider.Text:SetText(L("MOUSE_HELPER_CIRCLE_SIZE"))
     CircleThicknessSlider.Text:SetText(L("MOUSE_HELPER_CIRCLE_THICKNESS"))
     CircleColorButton:SetText(L("MOUSE_HELPER_COLOR_PICK"))
+    CastRingColorButton:SetText(L("MOUSE_HELPER_CAST_RING_COLOR"))
 
     TrailTitle:SetText(L("MOUSE_HELPER_TRAIL_TITLE"))
     TrailLabel:SetText(L("MOUSE_HELPER_TRAIL_ENABLE"))
@@ -1297,6 +1465,7 @@ function PageMouseHelper:RefreshState()
     GeneralEnableCheckbox:SetChecked(db.enabled)
     CircleCheckbox:SetChecked(db.circleEnabled)
     CircleCombatOnlyCheckbox:SetChecked(db.circleCombatOnly)
+    CastRingCheckbox:SetChecked(db.castRingEnabled)
     TrailCheckbox:SetChecked(db.trailEnabled)
     TrailClassColorCheckbox:SetChecked(db.trailUseClassColor)
 
@@ -1329,6 +1498,7 @@ function PageMouseHelper:RefreshState()
     end
 
     SetButtonSwatchColor(CircleColorButton, db.circleColor)
+    SetButtonSwatchColor(CastRingColorButton, db.castRingColor)
     SetButtonSwatchColor(TrailColorButton, GetTrailDisplayColor(db))
     SetControlsEnabled(db.enabled == true, db)
 
@@ -1428,6 +1598,11 @@ CircleCombatOnlyCheckbox:SetScript("OnClick", function(self)
     PageMouseHelper:RefreshState()
 end)
 
+CastRingCheckbox:SetScript("OnClick", function(self)
+    MouseHelper.SetCastRingEnabled(self:GetChecked())
+    PageMouseHelper:RefreshState()
+end)
+
 CircleSizeSlider.ApplyValue = function(_, value)
     MouseHelper.GetDB().circleSize = Clamp(value, 24, 180)
     ApplyVisualState()
@@ -1442,6 +1617,15 @@ CircleColorButton:SetScript("OnClick", function()
     local db = MouseHelper.GetDB()
     OpenColorPicker(db.circleColor, function(red, green, blue, alpha)
         db.circleColor = CopyColor({ r = red, g = green, b = blue, a = alpha })
+        ApplyVisualState()
+        PageMouseHelper:RefreshState()
+    end)
+end)
+
+CastRingColorButton:SetScript("OnClick", function()
+    local db = MouseHelper.GetDB()
+    OpenColorPicker(db.castRingColor, function(red, green, blue, alpha)
+        db.castRingColor = CopyColor({ r = red, g = green, b = blue, a = alpha })
         ApplyVisualState()
         PageMouseHelper:RefreshState()
     end)

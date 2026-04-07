@@ -559,7 +559,7 @@ local MouseHelperEntry = RegisterModuleEntry(InterfaceSection, "MOUSE_HELPER", "
         "MOUSE_HELPER_TRAIL_HINT",
         "MOUSE_HELPER_BLIZZARD_CURSOR_HINT",
     },
-    searchAliases = "mouse cursor circle trail pointer highlight blizzard large",
+    searchAliases = "mouse cursor circle trail pointer highlight blizzard large cast casting ring progress",
 })
 local BossGuidesEntry = RegisterModuleEntry(InterfaceSection, "BOSS_GUIDES", "BossGuides", {
     searchTextKeys = {
