@@ -66,6 +66,53 @@ local function CopyColor(color)
     }
 end
 
+local function GetPlayerClassColor()
+    if type(UnitClass) ~= "function" then
+        return nil
+    end
+
+    local _, classFile = UnitClass("player")
+    local classColors = CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS
+    local color = classColors and classFile and classColors[classFile] or nil
+    if not color then
+        return nil
+    end
+
+    local red = Clamp(tonumber(color.r) or 1, 0, 1)
+    local green = Clamp(tonumber(color.g) or 1, 0, 1)
+    local blue = Clamp(tonumber(color.b) or 1, 0, 1)
+    return red, green, blue
+end
+
+local function GetTrailColorComponents(db)
+    local trailColor = db and db.trailColor or nil
+    local red = Clamp(tonumber(trailColor and trailColor.r) or 1, 0, 1)
+    local green = Clamp(tonumber(trailColor and trailColor.g) or 0.62, 0, 1)
+    local blue = Clamp(tonumber(trailColor and trailColor.b) or 0.1, 0, 1)
+    local alpha = Clamp(tonumber(trailColor and trailColor.a) or 0.75, 0, 1)
+
+    if db and db.trailUseClassColor == true then
+        local classRed, classGreen, classBlue = GetPlayerClassColor()
+        if classRed and classGreen and classBlue then
+            red = classRed
+            green = classGreen
+            blue = classBlue
+        end
+    end
+
+    return red, green, blue, alpha
+end
+
+local function GetTrailDisplayColor(db)
+    local red, green, blue, alpha = GetTrailColorComponents(db)
+    return {
+        r = red,
+        g = green,
+        b = blue,
+        a = alpha,
+    }
+end
+
 local function IsValidTrailStyle(value)
     for _, option in ipairs(TRAIL_STYLE_OPTIONS) do
         if option.value == value then
@@ -123,6 +170,10 @@ function MouseHelper.GetDB()
 
     if db.trailEnabled == nil then
         db.trailEnabled = true
+    end
+
+    if db.trailUseClassColor == nil then
+        db.trailUseClassColor = false
     end
 
     db.trailLength = Clamp(math.floor(tonumber(db.trailLength) or 20), 6, 60)
@@ -436,6 +487,8 @@ local function DrawTrail(db)
 
     local timeNow = GetTime() or 0
     local style = db.trailStyle or DEFAULT_TRAIL_STYLE
+    local useClassColor = db.trailUseClassColor == true
+    local trailRed, trailGreen, trailBlue, trailAlpha = GetTrailColorComponents(db)
 
     for index = 1, segmentCount do
         local p1 = smoothTrailPoints[index]
@@ -452,12 +505,12 @@ local function DrawTrail(db)
 
             if distance > 0.35 then
                 local ratio = 1 - ((index - 1) / math.max(1, segmentCount))
-                local alpha = db.trailColor.a * ratio * ratio
+                local alpha = trailAlpha * ratio * ratio
                 local coreThickness = math.max(1.0, db.trailSize * (0.16 + (ratio * 0.42)))
                 local glowThickness = coreThickness * 2.6
-                local coreRed = db.trailColor.r
-                local coreGreen = db.trailColor.g
-                local coreBlue = db.trailColor.b
+                local coreRed = trailRed
+                local coreGreen = trailGreen
+                local coreBlue = trailBlue
                 local glowRed = coreRed
                 local glowGreen = coreGreen
                 local glowBlue = coreBlue
@@ -474,14 +527,26 @@ local function DrawTrail(db)
 
                 if style == "holy_light" then
                     local pulse = 0.5 + (math.sin((timeNow * 4.8) + (index * 0.34)) * 0.5)
-                    coreRed = Lerp(coreRed, 1.0, 0.68)
-                    coreGreen = Lerp(coreGreen, 0.95, 0.58)
-                    coreBlue = Lerp(coreBlue, 0.72, 0.54)
+                    if useClassColor then
+                        coreRed = Lerp(coreRed, 1.0, 0.34)
+                        coreGreen = Lerp(coreGreen, 0.95, 0.22)
+                        coreBlue = Lerp(coreBlue, 0.72, 0.14)
+                    else
+                        coreRed = Lerp(coreRed, 1.0, 0.68)
+                        coreGreen = Lerp(coreGreen, 0.95, 0.58)
+                        coreBlue = Lerp(coreBlue, 0.72, 0.54)
+                    end
                     coreThickness = coreThickness * (1.10 + (pulse * 0.10))
                     glowThickness = coreThickness * 3.1
-                    glowRed = 1.0
-                    glowGreen = 0.93
-                    glowBlue = 0.72
+                    if useClassColor then
+                        glowRed = Lerp(coreRed, 1.0, 0.18)
+                        glowGreen = Lerp(coreGreen, 0.93, 0.18)
+                        glowBlue = Lerp(coreBlue, 0.72, 0.14)
+                    else
+                        glowRed = 1.0
+                        glowGreen = 0.93
+                        glowBlue = 0.72
+                    end
                     glowAlpha = alpha * (0.40 + (pulse * 0.16))
                     strandOffsetA = baseOffset * (0.32 + (0.22 * waveA))
                     strandOffsetB = -baseOffset * (0.30 + (0.20 * waveB))
@@ -490,14 +555,26 @@ local function DrawTrail(db)
                     strandAlphaC = strandAlpha * 0.8
                 elseif style == "arc_ribbons" then
                     local flow = 0.5 + (math.sin((timeNow * 1.9) + (index * 0.18)) * 0.5)
-                    coreRed = 0.74
-                    coreGreen = 0.86
-                    coreBlue = 1.0
+                    if useClassColor then
+                        coreRed = Lerp(coreRed, 0.74, 0.12)
+                        coreGreen = Lerp(coreGreen, 0.86, 0.12)
+                        coreBlue = Lerp(coreBlue, 1.0, 0.18)
+                    else
+                        coreRed = 0.74
+                        coreGreen = 0.86
+                        coreBlue = 1.0
+                    end
                     coreThickness = math.max(1.0, coreThickness * 0.88)
                     glowThickness = coreThickness * 1.7
-                    glowRed = 0.68
-                    glowGreen = 0.82
-                    glowBlue = 1.0
+                    if useClassColor then
+                        glowRed = Lerp(coreRed, 0.68, 0.16)
+                        glowGreen = Lerp(coreGreen, 0.82, 0.16)
+                        glowBlue = Lerp(coreBlue, 1.0, 0.18)
+                    else
+                        glowRed = 0.68
+                        glowGreen = 0.82
+                        glowBlue = 1.0
+                    end
                     glowAlpha = alpha * 0.18
 
                     local arcBase = db.trailSize * (0.80 + (1.95 * ratio))
@@ -522,14 +599,26 @@ local function DrawTrail(db)
                     strandOffsetC = 0
                     strandAlphaC = 0
                 else
-                    coreRed = Lerp(coreRed, 0.70, 0.62)
-                    coreGreen = Lerp(coreGreen, 0.86, 0.62)
-                    coreBlue = Lerp(coreBlue, 1.0, 0.76)
+                    if useClassColor then
+                        coreRed = Lerp(coreRed, 0.70, 0.24)
+                        coreGreen = Lerp(coreGreen, 0.86, 0.24)
+                        coreBlue = Lerp(coreBlue, 1.0, 0.28)
+                    else
+                        coreRed = Lerp(coreRed, 0.70, 0.62)
+                        coreGreen = Lerp(coreGreen, 0.86, 0.62)
+                        coreBlue = Lerp(coreBlue, 1.0, 0.76)
+                    end
                     coreThickness = coreThickness * 1.03
                     glowThickness = coreThickness * 2.4
-                    glowRed = 0.72
-                    glowGreen = 0.84
-                    glowBlue = 1.0
+                    if useClassColor then
+                        glowRed = Lerp(coreRed, 0.72, 0.18)
+                        glowGreen = Lerp(coreGreen, 0.84, 0.18)
+                        glowBlue = Lerp(coreBlue, 1.0, 0.22)
+                    else
+                        glowRed = 0.72
+                        glowGreen = 0.84
+                        glowBlue = 1.0
+                    end
                     glowAlpha = alpha * 0.36
                     strandOffsetA = baseOffset * (0.52 + (0.24 * waveA))
                     strandOffsetB = -baseOffset * (0.64 + (0.30 * waveB))
@@ -791,6 +880,11 @@ function MouseHelper.SetTrailStyle(style)
     end
 
     db.trailStyle = style
+    ApplyVisualState()
+end
+
+function MouseHelper.SetTrailUseClassColor(enabled)
+    MouseHelper.GetDB().trailUseClassColor = enabled == true
     ApplyVisualState()
 end
 
@@ -1094,7 +1188,7 @@ CircleColorButton:SetPoint("TOPLEFT", CircleThicknessSlider, "BOTTOMLEFT", -10, 
 local TrailPanel = CreateFrame("Frame", nil, PageContent)
 TrailPanel:SetPoint("TOPLEFT", CirclePanel, "BOTTOMLEFT", 0, -18)
 TrailPanel:SetPoint("TOPRIGHT", CirclePanel, "BOTTOMRIGHT", 0, -18)
-TrailPanel:SetHeight(308)
+TrailPanel:SetHeight(340)
 
 local TrailBg = TrailPanel:CreateTexture(nil, "BACKGROUND")
 TrailBg:SetAllPoints()
@@ -1134,14 +1228,22 @@ local TrailStyleDropdown = CreateFrame("Frame", "BeavisQoLMouseHelperTrailStyleD
 TrailStyleDropdown:SetPoint("TOPLEFT", TrailStyleLabel, "BOTTOMLEFT", -18, -2)
 UIDropDownMenu_SetWidth(TrailStyleDropdown, 170)
 
+local TrailClassColorCheckbox = CreateFrame("CheckButton", nil, TrailPanel, "UICheckButtonTemplate")
+TrailClassColorCheckbox:SetPoint("TOPLEFT", TrailStyleDropdown, "BOTTOMLEFT", 18, -6)
+
+local TrailClassColorLabel = TrailPanel:CreateFontString(nil, "OVERLAY")
+TrailClassColorLabel:SetPoint("LEFT", TrailClassColorCheckbox, "RIGHT", 6, 0)
+TrailClassColorLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+TrailClassColorLabel:SetTextColor(1, 1, 1, 1)
+
 local TrailColorButton = CreateColorButton(TrailPanel)
-TrailColorButton:SetPoint("TOPLEFT", TrailStyleDropdown, "BOTTOMLEFT", 18, -8)
+TrailColorButton:SetPoint("TOPLEFT", TrailClassColorCheckbox, "BOTTOMLEFT", 10, -10)
 
 local function SetButtonSwatchColor(button, color)
     button.Swatch:SetVertexColor(color.r, color.g, color.b, color.a)
 end
 
-local function SetControlsEnabled(masterEnabled)
+local function SetControlsEnabled(masterEnabled, db)
     CircleCheckbox:SetEnabled(masterEnabled)
     CircleCombatOnlyCheckbox:SetEnabled(masterEnabled and CircleCheckbox:GetChecked())
     CircleSizeSlider:SetEnabled(masterEnabled)
@@ -1149,9 +1251,10 @@ local function SetControlsEnabled(masterEnabled)
     CircleColorButton:SetEnabled(masterEnabled)
 
     TrailCheckbox:SetEnabled(masterEnabled)
+    TrailClassColorCheckbox:SetEnabled(masterEnabled)
     TrailLengthSlider:SetEnabled(masterEnabled)
     TrailSizeSlider:SetEnabled(masterEnabled)
-    TrailColorButton:SetEnabled(masterEnabled)
+    TrailColorButton:SetEnabled(masterEnabled and db.trailUseClassColor ~= true)
 
     if masterEnabled then
         UIDropDownMenu_EnableDropDown(TrailStyleDropdown)
@@ -1188,12 +1291,14 @@ function PageMouseHelper:RefreshState()
     TrailLengthSlider.Text:SetText(L("MOUSE_HELPER_TRAIL_LENGTH"))
     TrailSizeSlider.Text:SetText(L("MOUSE_HELPER_TRAIL_SIZE"))
     TrailStyleLabel:SetText(L("MOUSE_HELPER_TRAIL_STYLE"))
+    TrailClassColorLabel:SetText(L("MOUSE_HELPER_TRAIL_CLASS_COLOR"))
     TrailColorButton:SetText(L("MOUSE_HELPER_COLOR_PICK"))
 
     GeneralEnableCheckbox:SetChecked(db.enabled)
     CircleCheckbox:SetChecked(db.circleEnabled)
     CircleCombatOnlyCheckbox:SetChecked(db.circleCombatOnly)
     TrailCheckbox:SetChecked(db.trailEnabled)
+    TrailClassColorCheckbox:SetChecked(db.trailUseClassColor)
 
     CircleSizeSlider:SetValue(db.circleSize)
     CircleThicknessSlider:SetValue(db.circleThickness)
@@ -1224,8 +1329,8 @@ function PageMouseHelper:RefreshState()
     end
 
     SetButtonSwatchColor(CircleColorButton, db.circleColor)
-    SetButtonSwatchColor(TrailColorButton, db.trailColor)
-    SetControlsEnabled(db.enabled == true)
+    SetButtonSwatchColor(TrailColorButton, GetTrailDisplayColor(db))
+    SetControlsEnabled(db.enabled == true, db)
 
     isRefreshing = false
 end
@@ -1346,6 +1451,11 @@ TrailCheckbox:SetScript("OnClick", function(self)
     local db = MouseHelper.GetDB()
     db.trailEnabled = self:GetChecked() == true
     ApplyVisualState()
+    PageMouseHelper:RefreshState()
+end)
+
+TrailClassColorCheckbox:SetScript("OnClick", function(self)
+    MouseHelper.SetTrailUseClassColor(self:GetChecked())
     PageMouseHelper:RefreshState()
 end)
 

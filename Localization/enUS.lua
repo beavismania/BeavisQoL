@@ -270,6 +270,7 @@ BeavisQoL.Localization.enUS = {
 	MOUSE_HELPER_TRAIL_LENGTH = "Length",
 	MOUSE_HELPER_TRAIL_SIZE = "Dot size",
 	MOUSE_HELPER_TRAIL_STYLE = "Trail style",
+	MOUSE_HELPER_TRAIL_CLASS_COLOR = "Use class color automatically",
 	MOUSE_HELPER_TRAIL_STYLE_LIGHTNING = "Lightning",
 	MOUSE_HELPER_TRAIL_STYLE_HOLY = "Holy Light",
 	MOUSE_HELPER_TRAIL_STYLE_ARC = "Arc Ribbons",
