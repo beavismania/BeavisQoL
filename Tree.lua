@@ -588,11 +588,13 @@ local TreeSettingsButton, TreeSettingsText = RegisterGeneralEntry("Settings", "S
     searchAliases = "config option minimap window",
 })
 
-local ProgressSection = RegisterModuleSection("PROGRESS")
-local GoldSection = RegisterModuleSection("GOLD_TRADE")
-local ComfortSection = RegisterModuleSection("COMFORT")
-local InterfaceSection = RegisterModuleSection("INTERFACE_COMBAT")
-local GroupSection = RegisterModuleSection("GROUP_SEARCH")
+local ProgressSection = RegisterModuleSection("PROGRESS_QUESTS")
+local GoldSection = RegisterModuleSection("GOLD_VENDOR")
+local EverydaySection = RegisterModuleSection("EVERYDAY_AUTOMATION")
+local WindowsSection = RegisterModuleSection("WINDOWS_SEARCH")
+local WorldSection = RegisterModuleSection("WORLD_TRAVEL")
+local InterfaceSection = RegisterModuleSection("INTERFACE_OVERLAYS")
+local GroupSection = RegisterModuleSection("GROUP_INSTANCES")
 local StreamerSection = RegisterModuleSection("STREAMER_TOOLS")
 
 local LevelTimeEntry = RegisterModuleEntry(ProgressSection, "LEVEL_TIME", "LevelTime", {
@@ -602,10 +604,6 @@ local LevelTimeEntry = RegisterModuleEntry(ProgressSection, "LEVEL_TIME", "Level
 local ChecklistEntry = RegisterModuleEntry(ProgressSection, "CHECKLIST", "Checklist", {
     searchTextKeys = { "CHECKLIST_DESC", "CHECKLIST_INTRO_HINT", "CHECKLIST_DAILY_HINT", "CHECKLIST_WEEKLY_HINT", "CHECKLIST_SHOW_TRACKER_HINT" },
     searchAliases = "todo daily weekly tracker tasks",
-})
-local WeeklyKeysEntry = RegisterModuleEntry(ProgressSection, "WEEKLY_KEYS", "WeeklyKeys", {
-    searchTextKeys = { "WEEKLY_KEYS_DESC", "WEEKLY_KEYS_SHOW_OVERLAY_HINT", "WEEKLY_KEYS_SUMMARY" },
-    searchAliases = "mythic dungeon vault overlay",
 })
 local ItemLevelGuideEntry = RegisterModuleEntry(ProgressSection, "ITEMLEVEL_GUIDE", "ItemLevelGuide", {
     searchTextKeys = { "ITEM_GUIDE_TITLE", "ITEM_GUIDE_SUBTITLE", "ITEM_GUIDE_DESC", "ITEM_GUIDE_DUNGEON_CARD_SUBTITLE", "ITEM_GUIDE_RAID_CARD_SUBTITLE" },
@@ -624,85 +622,87 @@ local LoggingEntry = RegisterModuleEntry(GoldSection, "GOLDAUSWERTUNG", "Logging
     searchTextKeys = { "LOGGING_DESC", "LOGGING_SALES_HINT", "LOGGING_REPAIRS_HINT", "LOGGING_INCOME_HINT", "LOGGING_EXPENSE_HINT" },
     searchAliases = "gold sales repairs income expenses vendor auction trade",
 })
-local AutoSellEntry = RegisterModuleEntry(GoldSection, "AUTOSELL_JUNK", "Misc", {
+local AutoSellEntry = RegisterModuleEntry(GoldSection, "AUTOSELL_JUNK", "AutoSell", {
     miscSection = "AutoSell",
     searchTextKeys = { "AUTOSELL_HINT", "LOGGING_AUTOSELL" },
     searchAliases = "sell junk gray vendor trash",
 })
-local AutoRepairEntry = RegisterModuleEntry(GoldSection, "AUTOREPAIR", "Misc", {
+local AutoRepairEntry = RegisterModuleEntry(GoldSection, "AUTOREPAIR", "AutoRepair", {
     miscSection = "AutoRepair",
     searchTextKeys = { "AUTOREPAIR_HINT", "AUTOREPAIR_GUILD_HINT" },
     searchAliases = "repair merchant guild gear",
 })
 
-local FastLootEntry = RegisterModuleEntry(ComfortSection, "FAST_LOOT", "Misc", {
+local FastLootEntry = RegisterModuleEntry(EverydaySection, "FAST_LOOT", "FastLoot", {
     miscSection = "FastLoot",
     searchTextKeys = { "FAST_LOOT_HINT" },
     searchAliases = "loot auto loot plunder",
 })
-local EasyDeleteEntry = RegisterModuleEntry(ComfortSection, "EASY_DELETE", "Misc", {
+local EasyDeleteEntry = RegisterModuleEntry(EverydaySection, "EASY_DELETE", "EasyDelete", {
     miscSection = "EasyDelete",
     searchTextKeys = { "EASY_DELETE_HINT" },
     searchAliases = "delete remove confirm item",
 })
-local CutsceneSkipEntry = RegisterModuleEntry(ComfortSection, "CUTSCENE_SKIP", "Misc", {
+local CutsceneSkipEntry = RegisterModuleEntry(EverydaySection, "CUTSCENE_SKIP", "CutsceneSkip", {
     miscSection = "CutsceneSkip",
     searchTextKeys = { "CUTSCENE_SKIP_HINT" },
     searchAliases = "cutscene cinematic movie story video skip autoskip",
 })
-local AutoRespawnPetEntry = RegisterModuleEntry(ComfortSection, "AUTO_RESPAWN_PET_TITLE", "Misc", {
+local AutoRespawnPetEntry = RegisterModuleEntry(EverydaySection, "AUTO_RESPAWN_PET_TITLE", "AutoRespawnPet", {
     miscSection = "AutoRespawnPet",
     searchTextKeys = { "AUTO_RESPAWN_PET_HINT" },
     searchAliases = "pet companion battle pet respawn summon revive",
 })
-local FlightMasterTimerEntry = RegisterModuleEntry(ComfortSection, "FLIGHT_MASTER_TIMER", "Misc", {
+local FlightMasterTimerEntry = RegisterModuleEntry(WorldSection, "FLIGHT_MASTER_TIMER", "FlightMasterTimer", {
     miscSection = "FlightMasterTimer",
     searchTextKeys = { "FLIGHT_MASTER_TIMER_HINT", "FLIGHT_MASTER_TIMER_UNKNOWN" },
     searchAliases = "flight taxi gryphon wyvern flightmaster travel timer arrival countdown",
 })
--- Dieser Tree-Eintrag springt nicht auf eine eigene Seite, sondern direkt auf
--- die passende Karte innerhalb der Misc-Seite.
-local TooltipItemLevelEntry = RegisterModuleEntry(ComfortSection, "TOOLTIP_ITEMLEVEL", "Misc", {
+local TooltipItemLevelEntry = RegisterModuleEntry(WindowsSection, "TOOLTIP_ITEMLEVEL", "TooltipItemLevel", {
     miscSection = "TooltipItemLevel",
     searchTextKeys = { "TOOLTIP_ITEMLEVEL_HINT", "TOOLTIP_ITEMLEVEL_LABEL" },
     searchAliases = "tooltip inspect ilvl itemlevel mouseover",
 })
-local CameraDistanceEntry = RegisterModuleEntry(ComfortSection, "CAMERA_DISTANCE", "Misc", {
+local CameraDistanceEntry = RegisterModuleEntry(EverydaySection, "CAMERA_DISTANCE", "CameraDistance", {
     miscSection = "CameraDistance",
     searchTextKeys = { "CAMERA_DISTANCE_HINT", "CAMERA_DISTANCE_MAX" },
     searchAliases = "camera zoom distance max",
 })
-local MacroFrameEntry = RegisterModuleEntry(ComfortSection, "MACRO_FRAME", "Misc", {
+local MacroFrameEntry = RegisterModuleEntry(WindowsSection, "MACRO_FRAME", "MacroFrame", {
     miscSection = "MacroFrame",
     searchTextKeys = { "MACRO_FRAME_HINT" },
     searchAliases = "macro macros macroframe macro ui window larger bigger",
 })
-local ReputationSearchEntry = RegisterModuleEntry(ComfortSection, "REPUTATION_SEARCH", "Misc", {
+local ReputationSearchEntry = RegisterModuleEntry(WindowsSection, "REPUTATION_SEARCH", "ReputationSearch", {
     miscSection = "ReputationSearch",
     searchTextKeys = { "REPUTATION_SEARCH_HINT", "REPUTATION_SEARCH_PLACEHOLDER" },
     searchAliases = "reputation factions renown standing search filter ruf",
 })
-local CurrencySearchEntry = RegisterModuleEntry(ComfortSection, "CURRENCY_SEARCH", "Misc", {
+local CurrencySearchEntry = RegisterModuleEntry(WindowsSection, "CURRENCY_SEARCH", "CurrencySearch", {
     miscSection = "CurrencySearch",
     searchTextKeys = { "CURRENCY_SEARCH_HINT", "CURRENCY_SEARCH_PLACEHOLDER" },
     searchAliases = "currency currencies search filter token badge crest währung",
 })
-local PreyHuntProgressEntry = RegisterModuleEntry(ComfortSection, "PREY_HUNT_PROGRESS", "Misc", {
+local PreyHuntProgressEntry = RegisterModuleEntry(WorldSection, "PREY_HUNT_PROGRESS", "PreyHuntProgress", {
     miscSection = "PreyHuntProgress",
     searchTextKeys = { "PREY_HUNT_PROGRESS_HINT" },
     searchAliases = "midnight prey hunt jagd progress percent prozent symbol",
 })
-local KeystoneActionsEntry = RegisterModuleEntry(ComfortSection, "KEYSTONE_ACTIONS", "Misc", {
+local WeeklyKeysEntry = RegisterModuleEntry(GroupSection, "WEEKLY_KEYS", "WeeklyKeys", {
+    searchTextKeys = { "WEEKLY_KEYS_DESC", "WEEKLY_KEYS_SHOW_OVERLAY_HINT", "WEEKLY_KEYS_SUMMARY" },
+    searchAliases = "mythic dungeon vault overlay",
+})
+local KeystoneActionsEntry = RegisterModuleEntry(GroupSection, "KEYSTONE_ACTIONS", "KeystoneActions", {
     miscSection = "KeystoneActions",
     searchTextKeys = { "KEYSTONE_ACTIONS_HINT", "KEYSTONE_ACTIONS_READYCHECK", "KEYSTONE_ACTIONS_PULLTIMER" },
     searchAliases = "mythic plus keystone readycheck pulltimer countdown start",
 })
-local PortalViewerEntry = RegisterModuleEntry(ComfortSection, "PORTAL_VIEWER_TITLE", "Misc", {
+local PortalViewerEntry = RegisterModuleEntry(WorldSection, "PORTAL_VIEWER_TITLE", "PortalViewer", {
     miscSection = "PortalViewer",
     searchTextKeys = { "PORTAL_VIEWER_HINT", "PORTAL_VIEWER_SECTION_AVAILABLE", "PORTAL_VIEWER_SECTION_MISSING" },
     searchAliases = "portal viewer portals dungeon teleport midnight mythic plus season",
 })
-local FishingEntry = RegisterModuleEntry(ComfortSection, "FISHING_HELPER", "Fishing", {
+local FishingEntry = RegisterModuleEntry(WorldSection, "FISHING_HELPER", "Fishing", {
     searchTextKeys = {
         "FISHING_HELPER_DESC",
         "FISHING_HELPER_USAGE_HINT",
@@ -743,7 +743,7 @@ local MinimapCollectorEntry = RegisterModuleEntry(InterfaceSection, "MINIMAP_COL
     },
     searchAliases = "minimap collector buttons tray launcher drag transparent panel",
 })
-local BossGuidesEntry = RegisterModuleEntry(InterfaceSection, "BOSS_GUIDES", "BossGuides", {
+local BossGuidesEntry = RegisterModuleEntry(GroupSection, "BOSS_GUIDES", "BossGuides", {
     searchTextKeys = {
         "BOSS_GUIDES_DESC",
         "BOSS_GUIDES_SHOW_OVERLAY",
@@ -933,11 +933,13 @@ BeavisQoL.UpdateTree = function()
     TreeVersionText:SetText(L("VERSION"))
     TreeSettingsText:SetText(L("SETTINGS"))
 
-    ProgressSection.text:SetText(L("PROGRESS"))
-    GoldSection.text:SetText(L("GOLD_TRADE"))
-    ComfortSection.text:SetText(L("COMFORT"))
-    InterfaceSection.text:SetText(L("INTERFACE_COMBAT"))
-    GroupSection.text:SetText(L("GROUP_SEARCH"))
+    ProgressSection.text:SetText(L("PROGRESS_QUESTS"))
+    GoldSection.text:SetText(L("GOLD_VENDOR"))
+    EverydaySection.text:SetText(L("EVERYDAY_AUTOMATION"))
+    WindowsSection.text:SetText(L("WINDOWS_SEARCH"))
+    WorldSection.text:SetText(L("WORLD_TRAVEL"))
+    InterfaceSection.text:SetText(L("INTERFACE_OVERLAYS"))
+    GroupSection.text:SetText(L("GROUP_INSTANCES"))
     StreamerSection.text:SetText(L("STREAMER_TOOLS"))
 
     LevelTimeEntry.text:SetText(L("LEVEL_TIME"))
@@ -993,6 +995,21 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         QuestCheck = { page = Pages.QuestCheck, text = QuestCheckEntry.text, group = "module" },
         QuestAbandon = { page = Pages.QuestAbandon, text = QuestAbandonEntry.text, group = "module" },
         Misc = { page = Pages.Misc, text = nil, group = "module" },
+        AutoSell = { page = Pages.Misc, text = AutoSellEntry.text, group = "module", miscSection = "AutoSell" },
+        AutoRepair = { page = Pages.Misc, text = AutoRepairEntry.text, group = "module", miscSection = "AutoRepair" },
+        FastLoot = { page = Pages.Misc, text = FastLootEntry.text, group = "module", miscSection = "FastLoot" },
+        EasyDelete = { page = Pages.Misc, text = EasyDeleteEntry.text, group = "module", miscSection = "EasyDelete" },
+        CutsceneSkip = { page = Pages.Misc, text = CutsceneSkipEntry.text, group = "module", miscSection = "CutsceneSkip" },
+        AutoRespawnPet = { page = Pages.Misc, text = AutoRespawnPetEntry.text, group = "module", miscSection = "AutoRespawnPet" },
+        FlightMasterTimer = { page = Pages.Misc, text = FlightMasterTimerEntry.text, group = "module", miscSection = "FlightMasterTimer" },
+        TooltipItemLevel = { page = Pages.Misc, text = TooltipItemLevelEntry.text, group = "module", miscSection = "TooltipItemLevel" },
+        CameraDistance = { page = Pages.Misc, text = CameraDistanceEntry.text, group = "module", miscSection = "CameraDistance" },
+        MacroFrame = { page = Pages.Misc, text = MacroFrameEntry.text, group = "module", miscSection = "MacroFrame" },
+        ReputationSearch = { page = Pages.Misc, text = ReputationSearchEntry.text, group = "module", miscSection = "ReputationSearch" },
+        CurrencySearch = { page = Pages.Misc, text = CurrencySearchEntry.text, group = "module", miscSection = "CurrencySearch" },
+        PreyHuntProgress = { page = Pages.Misc, text = PreyHuntProgressEntry.text, group = "module", miscSection = "PreyHuntProgress" },
+        KeystoneActions = { page = Pages.Misc, text = KeystoneActionsEntry.text, group = "module", miscSection = "KeystoneActions" },
+        PortalViewer = { page = Pages.Misc, text = PortalViewerEntry.text, group = "module", miscSection = "PortalViewer" },
         Fishing = { page = Pages.Fishing, text = FishingEntry.text, group = "module" },
         Stats = { page = Pages.Stats, text = StatsEntry.text, group = "module" },
         MarkerBar = { page = Pages.MarkerBar, text = MarkerBarEntry.text, group = "module" },
@@ -1009,6 +1026,15 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         return
     end
 
+    local miscPage = Pages and Pages.Misc
+    if miscPage and miscPage.SetStandaloneSection then
+        if target.page == miscPage then
+            miscPage:SetStandaloneSection(target.miscSection)
+        else
+            miscPage:SetStandaloneSection(nil)
+        end
+    end
+
     UpdateTreeLayout()
 
     if not BeavisQoL.Frame:IsShown() then
@@ -1020,12 +1046,25 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
 end
 
 function BeavisQoL.OpenMiscSection(sectionKey, activeTextOverride)
-    BeavisQoL.OpenPage("Misc", activeTextOverride)
+    local sectionPageMap = {
+        AutoSell = "AutoSell",
+        AutoRepair = "AutoRepair",
+        FastLoot = "FastLoot",
+        EasyDelete = "EasyDelete",
+        CutsceneSkip = "CutsceneSkip",
+        AutoRespawnPet = "AutoRespawnPet",
+        FlightMasterTimer = "FlightMasterTimer",
+        TooltipItemLevel = "TooltipItemLevel",
+        CameraDistance = "CameraDistance",
+        MacroFrame = "MacroFrame",
+        ReputationSearch = "ReputationSearch",
+        CurrencySearch = "CurrencySearch",
+        PreyHuntProgress = "PreyHuntProgress",
+        KeystoneActions = "KeystoneActions",
+        PortalViewer = "PortalViewer",
+    }
 
-    local miscPage = Pages and Pages.Misc
-    if miscPage and miscPage.OpenSection then
-        miscPage:OpenSection(sectionKey)
-    end
+    BeavisQoL.OpenPage(sectionPageMap[sectionKey] or "Misc", activeTextOverride)
 end
 
 TreeHomeButton:SetScript("OnClick", function()
@@ -1042,11 +1081,6 @@ end)
 
 for _, entry in ipairs(ModuleEntries) do
     entry.button:SetScript("OnClick", function()
-        if entry.miscSection then
-            BeavisQoL.OpenMiscSection(entry.miscSection, entry.text)
-            return
-        end
-
         BeavisQoL.OpenPage(entry.pageKey, entry.text)
     end)
 end

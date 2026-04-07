@@ -33,6 +33,13 @@ BeavisQoL.Localization.enUS = {
 	INTERFACE_COMBAT = "Interface & Combat",
 	GOLDAUSWERTUNG_CLEANUP = "Clear period",
 	STREAMER_TOOLS = "Streamer Tools",
+	PROGRESS_QUESTS = "Progress & Quests",
+	GOLD_VENDOR = "Gold & Vendors",
+	EVERYDAY_AUTOMATION = "Everyday & Automation",
+	WINDOWS_SEARCH = "Windows & Search",
+	WORLD_TRAVEL = "World & Travel",
+	GROUP_INSTANCES = "Group & Instances",
+	INTERFACE_OVERLAYS = "Interface & Overlays",
 	GOLDAUSWERTUNG_RETENTION_HINT = "Repairs 30 days, gold and currencies 1 year.",
 
 	GOLDAUSWERTUNG_CLEANUP_TITLE = "Clear log period",

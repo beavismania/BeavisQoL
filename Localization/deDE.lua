@@ -33,6 +33,13 @@ BeavisQoL.Localization.deDE = {
 	INTERFACE_COMBAT = "Interface & Kampf",
 	GROUP_SEARCH = "Gruppe & Suche",
 	STREAMER_TOOLS = "Streamer Tools",
+	PROGRESS_QUESTS = "Fortschritt & Quests",
+	GOLD_VENDOR = "Gold & Händler",
+	EVERYDAY_AUTOMATION = "Alltag & Automatik",
+	WINDOWS_SEARCH = "Fenster & Suche",
+	WORLD_TRAVEL = "Welt & Reisen",
+	GROUP_INSTANCES = "Gruppe & Instanzen",
+	INTERFACE_OVERLAYS = "Interface & Overlays",
 	COMPANION = "Begleiter",
 
 	-- Module/Entries
