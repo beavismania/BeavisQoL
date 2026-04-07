@@ -215,8 +215,12 @@ BeavisQoL.Localization.deDE = {
 
 	MISC_TITLE = "Komfort",
 	MISC_DESC = "Hier findest du Komfortfunktionen, die unabhängig vom Rest des Addons genutzt werden können.",
+	REPUTATION_SEARCH = "Rufsuche",
 	REPUTATION_SEARCH_PLACEHOLDER = "Ruf suchen",
+	REPUTATION_SEARCH_HINT = "Fügt dem Blizzard-Ruf-Fenster ein Suchfeld hinzu, damit du Fraktionen direkt filtern kannst.",
+	CURRENCY_SEARCH = "Währungssuche",
 	CURRENCY_SEARCH_PLACEHOLDER = "Währung suchen",
+	CURRENCY_SEARCH_HINT = "Fügt dem Blizzard-Währungsfenster ein Suchfeld hinzu, damit du Währungen direkt filtern kannst.",
 	AUTOSELL_HINT = "Verkauft beim Öffnen eines Händlers automatisch alle grauen Gegenstände mit Händlerwert.",
 	AUTOREPAIR_HINT = "Repariert beim Öffnen eines Händlers automatisch beschädigte Gegenstände.",
 	AUTOREPAIR_GUILD = "Per Gilde vorrangig",
