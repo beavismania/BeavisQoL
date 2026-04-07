@@ -1035,6 +1035,72 @@ local SectionPanels = {
     PortalViewer = PortalViewerPanel,
 }
 
+local SectionOrder = {
+    "AutoSell",
+    "AutoRepair",
+    "EasyDelete",
+    "FastLoot",
+    "CutsceneSkip",
+    "AutoRespawnPet",
+    "FlightMasterTimer",
+    "TooltipItemLevel",
+    "CameraDistance",
+    "MacroFrame",
+    "ReputationSearch",
+    "CurrencySearch",
+    "PreyHuntProgress",
+    "KeystoneActions",
+    "PortalViewer",
+}
+
+local SectionMeta = {
+    AutoSell = { titleKey = "AUTOSELL_JUNK", descKey = "AUTOSELL_HINT" },
+    AutoRepair = { titleKey = "AUTOREPAIR", descKey = "AUTOREPAIR_HINT" },
+    EasyDelete = { titleKey = "EASY_DELETE", descKey = "EASY_DELETE_HINT" },
+    FastLoot = { titleKey = "FAST_LOOT", descKey = "FAST_LOOT_HINT" },
+    CutsceneSkip = { titleKey = "CUTSCENE_SKIP", descKey = "CUTSCENE_SKIP_HINT" },
+    AutoRespawnPet = { titleKey = "AUTO_RESPAWN_PET_TITLE", descKey = "AUTO_RESPAWN_PET_HINT" },
+    FlightMasterTimer = { titleKey = "FLIGHT_MASTER_TIMER", descKey = "FLIGHT_MASTER_TIMER_HINT" },
+    TooltipItemLevel = { titleKey = "TOOLTIP_ITEMLEVEL", descKey = "TOOLTIP_ITEMLEVEL_HINT" },
+    CameraDistance = { titleKey = "CAMERA_DISTANCE", descKey = "CAMERA_DISTANCE_HINT" },
+    MacroFrame = { titleKey = "MACRO_FRAME", descKey = "MACRO_FRAME_HINT" },
+    ReputationSearch = { titleKey = "REPUTATION_SEARCH", descKey = "REPUTATION_SEARCH_HINT" },
+    CurrencySearch = { titleKey = "CURRENCY_SEARCH", descKey = "CURRENCY_SEARCH_HINT" },
+    PreyHuntProgress = { titleKey = "PREY_HUNT_PROGRESS", descKey = "PREY_HUNT_PROGRESS_HINT" },
+    KeystoneActions = { titleKey = "KEYSTONE_ACTIONS", descKey = "KEYSTONE_ACTIONS_HINT" },
+    PortalViewer = { titleKey = "PORTAL_VIEWER_TITLE", descKey = "PORTAL_VIEWER_SETTINGS_HINT" },
+}
+
+local function GetVisibleSectionKeys()
+    if PageMisc.ActiveStandaloneSection and SectionPanels[PageMisc.ActiveStandaloneSection] then
+        return { PageMisc.ActiveStandaloneSection }
+    end
+
+    return SectionOrder
+end
+
+local function GetFontStringHeight(fontString, minimumHeight)
+    local height = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+    if height < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return height
+end
+
+local function UpdateIntroPanelContent()
+    local activeMeta = SectionMeta[PageMisc.ActiveStandaloneSection]
+    local titleKey = activeMeta and activeMeta.titleKey or "MISC_TITLE"
+    local descKey = activeMeta and activeMeta.descKey or "MISC_DESC"
+
+    IntroTitle:SetText(L(titleKey))
+    IntroText:SetText(L(descKey))
+    IntroPanel:SetHeight(math.max(
+        96,
+        math.ceil(16 + GetFontStringHeight(IntroTitle, 24) + 10 + GetFontStringHeight(IntroText, 44) + 18)
+    ))
+end
+
 PageMisc.Widgets = {
     IntroTitle = IntroTitle,
     IntroText = IntroText,
@@ -1130,6 +1196,19 @@ PageMisc.Widgets = {
     PortalViewerMinimapLabel = PortalViewerMinimapLabel,
     PortalViewerMinimapHint = PortalViewerMinimapHint,
 }
+
+function PageMisc:SetStandaloneSection(sectionKey)
+    if sectionKey ~= nil and not SectionPanels[sectionKey] then
+        sectionKey = nil
+    end
+
+    self.ActiveStandaloneSection = sectionKey
+
+    if self:IsShown() then
+        self:RefreshState()
+        PageMiscScrollFrame:SetVerticalScroll(0)
+    end
+end
 
 local function RefreshFlightMasterTimerSoundDropdown()
     if not FlightMasterTimerSoundDropdown then
@@ -1308,8 +1387,7 @@ function PageMisc:RefreshState()
     -- So bleibt die UI robust, selbst wenn ein Teilmodul später einmal
     -- umgebaut oder vorübergehend nicht geladen sein sollte.
 
-    widgets.IntroTitle:SetText(L("MISC_TITLE"))
-    widgets.IntroText:SetText(L("MISC_DESC"))
+    UpdateIntroPanelContent()
     widgets.AutoSellTitle:SetText(L("AUTOSELL_JUNK"))
     widgets.AutoSellLabel:SetText(L("ACTIVE"))
     widgets.AutoSellHint:SetText(L("AUTOSELL_HINT"))
@@ -1492,77 +1570,55 @@ function PageMisc:RefreshState()
         widgets.PortalViewerLockHint:SetTextColor(0.45, 0.45, 0.45, 1)
     end
 
-    if (UpdateFlightMasterTimerPanelLayout() or UpdatePortalViewerPanelLayout()) and self.UpdateScrollLayout then
+    if self.UpdateScrollLayout then
         self:UpdateScrollLayout()
     end
 end
 
--- Die Höhe setzen wir aus den sichtbaren Blöcken zusammen.
 function PageMisc:UpdateScrollLayout()
-    -- Statt den Inhalt an feste Pixelpositionen zu ketten, berechnen wir die
-    -- Gesamtgröße aus allen Panels. Das ist für spätere Erweiterungen
-    -- deutlich wartbarer als viele verstreute Einzel-Offsets.
     local contentWidth = math.max(1, PageMiscScrollFrame:GetWidth())
-    local contentHeight = 20
-        + IntroPanel:GetHeight()
-        + 18 + AutoSellPanel:GetHeight()
-        + 18 + AutoRepairPanel:GetHeight()
-        + 18 + EasyDeletePanel:GetHeight()
-        + 18 + FastLootPanel:GetHeight()
-        + 18 + CutsceneSkipPanel:GetHeight()
-        + 18 + AutoRespawnPetPanel:GetHeight()
-        + 18 + FlightMasterTimerPanel:GetHeight()
-        + 18 + TooltipItemLevelPanel:GetHeight()
-        -- Die neue Kamera-Karte gehört fest in die Gesamthöhe,
-        -- damit der Scrollbereich unten nicht zu früh endet.
-        + 18 + CameraDistancePanel:GetHeight()
-        + 18 + MacroFramePanel:GetHeight()
-        + 18 + ReputationSearchPanel:GetHeight()
-        + 18 + CurrencySearchPanel:GetHeight()
-        + 18 + PreyHuntProgressPanel:GetHeight()
-        + 18 + KeystoneActionsPanel:GetHeight()
-        + 18 + PortalViewerPanel:GetHeight()
-        + 20
+    local visibleSectionKeys = GetVisibleSectionKeys()
+    local visibleLookup = {}
+    local previousFrame = IntroPanel
+    local contentHeight = 20 + IntroPanel:GetHeight()
+
+    for _, sectionKey in ipairs(visibleSectionKeys) do
+        visibleLookup[sectionKey] = true
+    end
+
+    for _, sectionKey in ipairs(SectionOrder) do
+        local panel = SectionPanels[sectionKey]
+        panel:ClearAllPoints()
+
+        if visibleLookup[sectionKey] then
+            panel:SetPoint("TOPLEFT", previousFrame, "BOTTOMLEFT", 0, -18)
+            panel:SetPoint("TOPRIGHT", previousFrame, "BOTTOMRIGHT", 0, -18)
+            panel:Show()
+            previousFrame = panel
+        else
+            panel:Hide()
+        end
+    end
+
+    UpdateFlightMasterTimerPanelLayout()
+    UpdatePortalViewerPanelLayout()
+
+    for _, sectionKey in ipairs(visibleSectionKeys) do
+        contentHeight = contentHeight + 18 + (SectionPanels[sectionKey]:GetHeight() or 0)
+    end
+
+    contentHeight = contentHeight + 20
 
     PageMiscContent:SetWidth(contentWidth)
     PageMiscContent:SetHeight(contentHeight)
 end
 
 function PageMisc:OpenSection(sectionKey)
-    local targetPanel = SectionPanels[sectionKey]
-    if not targetPanel then
-        return
-    end
-
-    self:RefreshState()
-    self:UpdateScrollLayout()
-
-    local function ScrollToSection()
-        local contentTop = PageMiscContent:GetTop()
-        local panelTop = targetPanel:GetTop()
-
-        if not contentTop or not panelTop then
-            return
-        end
-
-        local maxScroll = math.max(0, PageMiscContent:GetHeight() - PageMiscScrollFrame:GetHeight())
-        local targetScroll = math.max(0, math.min(maxScroll, math.floor((contentTop - panelTop) + 8)))
-        PageMiscScrollFrame:SetVerticalScroll(targetScroll)
-    end
-
-    ScrollToSection()
-
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0, ScrollToSection)
-    end
+    self:SetStandaloneSection(sectionKey)
 end
 
 PageMiscScrollFrame:SetScript("OnSizeChanged", function()
     PageMisc:UpdateScrollLayout()
-
-    if UpdateFlightMasterTimerPanelLayout() or UpdatePortalViewerPanelLayout() then
-        PageMisc:UpdateScrollLayout()
-    end
 end)
 
 -- Mit dem Mausrad fühlt sich die Seite etwas angenehmer an.
