@@ -236,21 +236,6 @@ local LockCheckbox = CreateCheckbox(SettingsPanel, L("LOCK_WINDOW"), GetSettings
 end)
 LockCheckbox:SetPoint("TOPLEFT", GeneralSection.Divider, "BOTTOMLEFT", 0, -10)
 
--- Checkbox für MouseHelper aktivieren/deaktivieren
-local MouseHelperCheckbox = CreateCheckbox(SettingsPanel, L("MOUSE_HELPER_ENABLE"), BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.GetDB().enabled or false, function(self)
-    if BeavisQoL.MouseHelper and BeavisQoL.MouseHelper.SetEnabled then
-        BeavisQoL.MouseHelper.SetEnabled(self:GetChecked())
-    end
-end)
-MouseHelperCheckbox:SetPoint("TOPLEFT", LockCheckbox, "BOTTOMLEFT", 0, -22)
-
--- Hinweistext für Cursorgröße
-local MouseHelperSizeHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
-MouseHelperSizeHint:SetPoint("TOPLEFT", MouseHelperCheckbox, "BOTTOMLEFT", 4, -6)
-MouseHelperSizeHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-MouseHelperSizeHint:SetTextColor(0.82, 0.82, 0.82, 1)
-MouseHelperSizeHint:SetText(L("MOUSE_HELPER_SIZE_HINT"))
-
 local function SetLanguage(lang)
     BeavisQoL.SetLocale(lang)
     ReloadUI()

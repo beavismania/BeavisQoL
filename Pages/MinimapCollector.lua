@@ -124,6 +124,8 @@ local function GetSliderPercentText(value)
     return string.format("%d%%", math.floor(((value or 1) * 100) + 0.5))
 end
 
+local SCALE_SLIDER_LEFT_INSET = 4
+
 local function CreateSlider(parent, nameSuffix)
     local sliderName = string.format("%sMinimapCollector%sSlider", ADDON_NAME, tostring(nameSuffix or "Scale"))
     local slider = CreateFrame("Slider", sliderName, parent, "OptionsSliderTemplate")
@@ -250,7 +252,7 @@ LauncherScaleHint:SetTextColor(0.82, 0.82, 0.82, 1)
 LauncherScaleHint:SetText(L("MINIMAP_COLLECTOR_LAUNCHER_SCALE_HINT"))
 
 local LauncherScaleSlider, LauncherScaleSliderText = CreateSlider(Panel, "LauncherScale")
-LauncherScaleSlider:SetPoint("TOPLEFT", LauncherScaleHint, "BOTTOMLEFT", -16, -22)
+LauncherScaleSlider:SetPoint("TOPLEFT", LauncherScaleHint, "BOTTOMLEFT", -SCALE_SLIDER_LEFT_INSET, -22)
 LauncherScaleSlider:SetScript("OnValueChanged", function(self, value)
     if isRefreshingPage then
         return
@@ -266,7 +268,7 @@ LauncherScaleSlider:SetScript("OnValueChanged", function(self, value)
 end)
 
 local WindowScaleHint = Panel:CreateFontString(nil, "OVERLAY")
-WindowScaleHint:SetPoint("TOPLEFT", LauncherScaleSlider, "BOTTOMLEFT", 16, -12)
+WindowScaleHint:SetPoint("TOPLEFT", LauncherScaleSlider, "BOTTOMLEFT", SCALE_SLIDER_LEFT_INSET, -12)
 WindowScaleHint:SetPoint("RIGHT", Panel, "RIGHT", -22, 0)
 WindowScaleHint:SetJustifyH("LEFT")
 WindowScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
@@ -274,7 +276,7 @@ WindowScaleHint:SetTextColor(0.82, 0.82, 0.82, 1)
 WindowScaleHint:SetText(L("MINIMAP_COLLECTOR_WINDOW_SCALE_HINT"))
 
 local WindowScaleSlider, WindowScaleSliderText = CreateSlider(Panel, "WindowScale")
-WindowScaleSlider:SetPoint("TOPLEFT", WindowScaleHint, "BOTTOMLEFT", -16, -22)
+WindowScaleSlider:SetPoint("TOPLEFT", WindowScaleHint, "BOTTOMLEFT", -SCALE_SLIDER_LEFT_INSET, -22)
 WindowScaleSlider:SetScript("OnValueChanged", function(self, value)
     if isRefreshingPage then
         return
@@ -290,7 +292,7 @@ WindowScaleSlider:SetScript("OnValueChanged", function(self, value)
 end)
 
 local ButtonsSection = CreateSectionHeader(Panel, L("MODULES"), L("MINIMAP_COLLECTOR_BUTTONS_DESC"))
-ButtonsSection.Title:SetPoint("TOPLEFT", WindowScaleSlider, "BOTTOMLEFT", 16, -20)
+ButtonsSection.Title:SetPoint("TOPLEFT", WindowScaleSlider, "BOTTOMLEFT", SCALE_SLIDER_LEFT_INSET, -20)
 
 local ButtonsHint = Panel:CreateFontString(nil, "OVERLAY")
 ButtonsHint:SetPoint("TOPLEFT", ButtonsSection.Divider, "BOTTOMLEFT", 0, -10)
