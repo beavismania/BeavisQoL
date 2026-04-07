@@ -1,14 +1,19 @@
 local _, BeavisQoL = ...
 
+BeavisQoL.Misc = BeavisQoL.Misc or {}
+local Misc = BeavisQoL.Misc
 local L = BeavisQoL.L
 local HookSecureFunction = rawget(_G, "hooksecurefunc")
 local HidePanel = rawget(_G, "HideUIPanel")
 local TimerAfter = C_Timer and C_Timer.After
+local baseGetMiscDB = Misc.GetMiscDB
 local CurrencySearchWatcher = CreateFrame("Frame")
 
 local TOKEN_UI_ADDON_NAME = "Blizzard_TokenUI"
 
 local currencySearchQuery = ""
+local defaultCurrencyScrollBoxPoints = nil
+local defaultCurrencyTransferLogButtonPoints = nil
 
 local function NormalizeSearchText(text)
     local normalizedText = tostring(text or "")
@@ -57,6 +62,88 @@ local function IsTokenUILoaded()
     end
 
     return rawget(_G, "TokenFrame") ~= nil
+end
+
+local function RefreshMiscPageState()
+    local miscPage = BeavisQoL.Pages and BeavisQoL.Pages.Misc
+    if miscPage and miscPage:IsShown() and miscPage.RefreshState then
+        miscPage:RefreshState()
+    end
+end
+
+local function CaptureAnchorPoints(frame)
+    local points = {}
+    if not frame or not frame.GetNumPoints or not frame.GetPoint then
+        return points
+    end
+
+    for pointIndex = 1, (frame:GetNumPoints() or 0) do
+        local point, relativeTo, relativePoint, xOffset, yOffset = frame:GetPoint(pointIndex)
+        if point then
+            points[#points + 1] = {
+                point = point,
+                relativeTo = relativeTo,
+                relativePoint = relativePoint,
+                xOffset = xOffset or 0,
+                yOffset = yOffset or 0,
+            }
+        end
+    end
+
+    return points
+end
+
+local function RestoreAnchorPoints(frame, points)
+    if not frame or not frame.ClearAllPoints or not frame.SetPoint or not points or #points == 0 then
+        return
+    end
+
+    frame:ClearAllPoints()
+    for _, pointInfo in ipairs(points) do
+        frame:SetPoint(
+            pointInfo.point,
+            pointInfo.relativeTo,
+            pointInfo.relativePoint,
+            pointInfo.xOffset,
+            pointInfo.yOffset
+        )
+    end
+end
+
+local function RememberCurrencyDefaultLayout(frame)
+    if not frame then
+        return
+    end
+
+    if (not defaultCurrencyScrollBoxPoints or #defaultCurrencyScrollBoxPoints == 0) and frame.ScrollBox then
+        defaultCurrencyScrollBoxPoints = CaptureAnchorPoints(frame.ScrollBox)
+    end
+
+    if (not defaultCurrencyTransferLogButtonPoints or #defaultCurrencyTransferLogButtonPoints == 0) and frame.CurrencyTransferLogToggleButton then
+        defaultCurrencyTransferLogButtonPoints = CaptureAnchorPoints(frame.CurrencyTransferLogToggleButton)
+    end
+end
+
+function Misc.GetMiscDB()
+    local db
+
+    if baseGetMiscDB then
+        db = baseGetMiscDB()
+    else
+        BeavisQoLDB = BeavisQoLDB or {}
+        BeavisQoLDB.misc = BeavisQoLDB.misc or {}
+        db = BeavisQoLDB.misc
+    end
+
+    if db.currencySearchEnabled == nil then
+        db.currencySearchEnabled = true
+    end
+
+    return db
+end
+
+function Misc.IsCurrencySearchEnabled()
+    return Misc.GetMiscDB().currencySearchEnabled == true
 end
 
 local function UpdatePlaceholder(editBox)
@@ -214,6 +301,10 @@ local function ClearCurrencySelection(frame)
 end
 
 local function ApplyCurrencySearchFilter(frame)
+    if not Misc.IsCurrencySearchEnabled or not Misc.IsCurrencySearchEnabled() then
+        return
+    end
+
     if not frame
         or not frame.ScrollBox
         or not C_CurrencyInfo
@@ -247,6 +338,16 @@ local function ApplyCurrencySearchFilter(frame)
     end
 
     frame.ScrollBox:SetDataProvider(CreateDataProvider(filteredList), ScrollBoxConstants.RetainScrollPosition)
+end
+
+local function RestoreDefaultCurrencyLayout(frame)
+    if not frame then
+        return
+    end
+
+    RememberCurrencyDefaultLayout(frame)
+    RestoreAnchorPoints(frame.ScrollBox, defaultCurrencyScrollBoxPoints)
+    RestoreAnchorPoints(frame.CurrencyTransferLogToggleButton, defaultCurrencyTransferLogButtonPoints)
 end
 
 local function LayoutCurrencySearchUI(frame, searchBox)
@@ -325,6 +426,7 @@ local function EnsureCurrencySearchUI()
     end
 
     frame.BeavisCurrencySearchInitialized = true
+    RememberCurrencyDefaultLayout(frame)
 
     local searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
     searchBox:SetHeight(22)
@@ -346,8 +448,14 @@ local function EnsureCurrencySearchUI()
     frame.BeavisCurrencySearchBox = searchBox
 
     frame:HookScript("OnShow", function()
-        RefreshCurrencySearchLayout(frame, searchBox)
-        UpdatePlaceholder(searchBox)
+        if Misc.IsCurrencySearchEnabled and Misc.IsCurrencySearchEnabled() then
+            searchBox:Show()
+            RefreshCurrencySearchLayout(frame, searchBox)
+            UpdatePlaceholder(searchBox)
+        else
+            searchBox:Hide()
+            RestoreDefaultCurrencyLayout(frame)
+        end
     end)
 
     searchBox:SetScript("OnTextChanged", function(self)
@@ -379,13 +487,54 @@ local function EnsureCurrencySearchUI()
     UpdatePlaceholder(searchBox)
 end
 
-local function InitializeCurrencySearch()
-    EnsureCurrencySearchUI()
-
+local function RefreshCurrencySearchState(forceUpdate)
     local frame = rawget(_G, "TokenFrame")
-    if frame and frame.Update then
+    if not frame then
+        return
+    end
+
+    local searchBox = frame.BeavisCurrencySearchBox
+    local enabled = Misc.IsCurrencySearchEnabled and Misc.IsCurrencySearchEnabled() or false
+
+    RememberCurrencyDefaultLayout(frame)
+
+    if enabled then
+        if searchBox then
+            searchBox:Show()
+            RefreshCurrencySearchLayout(frame, searchBox)
+            UpdatePlaceholder(searchBox)
+        end
+    else
+        currencySearchQuery = ""
+
+        if searchBox then
+            searchBox:SetText("")
+            searchBox:ClearFocus()
+            UpdatePlaceholder(searchBox)
+            searchBox:Hide()
+        end
+
+        RestoreDefaultCurrencyLayout(frame)
+    end
+
+    if forceUpdate and frame.Update then
         frame:Update()
     end
+end
+
+local function InitializeCurrencySearch()
+    EnsureCurrencySearchUI()
+    RefreshCurrencySearchState(true)
+end
+
+function Misc.SetCurrencySearchEnabled(value)
+    Misc.GetMiscDB().currencySearchEnabled = value == true
+
+    if IsTokenUILoaded() then
+        InitializeCurrencySearch()
+    end
+
+    RefreshMiscPageState()
 end
 
 CurrencySearchWatcher:RegisterEvent("ADDON_LOADED")

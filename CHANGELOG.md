@@ -1,10 +1,30 @@
 # Changelog
 
+## 0.29.0 - 2026-04-07
+
+### Versionshinweis
+
+- `0.29.0` ist der nächste veröffentlichte Feature-Stand nach `0.28.0`
+- dieser Release ergänzt bestehende Komfortfunktionen: `Rufsuche` und `Währungssuche` haben jetzt eigene Schalter im `Misc`-Bereich
+- die mittlere Zahl steigt damit auf `29`, der Hotfix-Zähler startet für diesen Stand wieder bei `0`
+
+### Neu
+
+- `Rufsuche` ist jetzt als eigener Bereich im `Misc`-Menü sichtbar und direkt aktivierbar oder deaktivierbar
+- `Währungssuche` ist jetzt als eigener Bereich im `Misc`-Menü sichtbar und direkt aktivierbar oder deaktivierbar
+- Sidebar und Modulsuche können jetzt direkt zu `Rufsuche` und `Währungssuche` innerhalb von `Misc` springen
+
+### Verbessert
+
+- deaktivierte `Rufsuche` stellt das Blizzard-Ruf-Fenster wieder auf sein Standardlayout zurück
+- deaktivierte `Währungssuche` stellt das Blizzard-Währungsfenster samt Such-/Button-Anordnung wieder auf sein Standardlayout zurück
+
 ## 0.28.0 - 2026-04-07
 
 ### Versionshinweis
 
-- `0.28.0` ist der nächste echte Feature-/Modulstand nach `0.27.2`, weil mit dem `Minimap-Sammler` ein neues Modul dazugekommen ist
+- `0.28.0` ist der nächste veröffentlichte Feature-/Modulstand nach `0.27.2`
+- in diesem Release-Batch steckt mit dem `Minimap-Sammler` ein neues eigenständiges Modul; weitere Ergänzungen wie `Makro`, `Ruf` und `Währungen` sind zusätzliche Features im selben Release
 - die mittlere Zahl steigt damit auf `28`, der Hotfix-Zähler startet für diesen Stand wieder bei `0`
 
 ### Neu
@@ -35,7 +55,7 @@
 ### Versionshinweis
 
 - `0.27.2` ist ein weiterer Hotfix-/Verbesserungsstand zum bestehenden Release `0.27.0`, weil weiterhin keine neuen Module hinzugekommen sind
-- der nächste echte Feature-/Modulstand bleibt damit `0.28.0`
+- der nächste veröffentlichte Feature-/Modulstand bleibt damit `0.28.0`
 
 ### Verbessert
 
@@ -52,7 +72,7 @@
 ### Versionshinweis
 
 - `0.27.1` ist ein Hotfix-/Verbesserungsstand zum bestehenden Release `0.27.0`, weil keine neuen Module hinzugekommen sind
-- der nächste echte Feature-/Modulstand bleibt damit `0.28.0`
+- der nächste veröffentlichte Feature-/Modulstand bleibt damit `0.28.0`
 
 ### Verbessert
 
@@ -76,7 +96,7 @@
 
 ### Versionshinweis
 
-- `0.27.0` ist der aktuelle Feature-Stand; die heutigen Erweiterungen an neuen Modulen gehören weiter zu diesem Release und sind kein separates Hotfix-Release
+- `0.27.0` ist der aktuelle veröffentlichte Feature-Stand; mehrere neue Module können gemeinsam zu diesem einen Release gehören und erzeugen nicht automatisch mehrere Minor-Sprünge
 - die mittlere Zahl steht für den nächsten Feature-/Modulstand, die hintere Zahl bleibt ohne Hotfixes auf `0`
 
 ### Neu
@@ -264,7 +284,8 @@
 - `major` steht für Hauptversionen wie `1.0.0`
 - `minor` steht für Feature-Releases wie `0.1.0`
 - `patch` steht für Hotfix-Releases wie `0.0.1`
-- neue Module müssen ab jetzt mindestens die Feature-Version erhöhen
+- neue Module verlangen ab jetzt mindestens einen Feature-Release
+- mehrere neue Module dürfen gemeinsam in demselben Feature-Release erscheinen
 
 ## 0.0.16 Alpha - 2026-03-22
 

@@ -675,12 +675,98 @@ MacroFrameHint:SetTextColor(0.80, 0.80, 0.80, 1)
 MacroFrameHint:SetText(L("MACRO_FRAME_HINT"))
 
 -- ========================================
+-- Bereich: Reputation Search
+-- ========================================
+
+local ReputationSearchPanel = CreateFrame("Frame", nil, PageMiscContent)
+ReputationSearchPanel:SetPoint("TOPLEFT", MacroFramePanel, "BOTTOMLEFT", 0, -18)
+ReputationSearchPanel:SetPoint("TOPRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, -18)
+ReputationSearchPanel:SetHeight(115)
+
+local ReputationSearchBg = ReputationSearchPanel:CreateTexture(nil, "BACKGROUND")
+ReputationSearchBg:SetAllPoints()
+ReputationSearchBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local ReputationSearchBorder = ReputationSearchPanel:CreateTexture(nil, "ARTWORK")
+ReputationSearchBorder:SetPoint("BOTTOMLEFT", ReputationSearchPanel, "BOTTOMLEFT", 0, 0)
+ReputationSearchBorder:SetPoint("BOTTOMRIGHT", ReputationSearchPanel, "BOTTOMRIGHT", 0, 0)
+ReputationSearchBorder:SetHeight(1)
+ReputationSearchBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local ReputationSearchTitle = ReputationSearchPanel:CreateFontString(nil, "OVERLAY")
+ReputationSearchTitle:SetPoint("TOPLEFT", ReputationSearchPanel, "TOPLEFT", 18, -14)
+ReputationSearchTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+ReputationSearchTitle:SetTextColor(1, 0.82, 0, 1)
+ReputationSearchTitle:SetText(L("REPUTATION_SEARCH"))
+
+local ReputationSearchCheckbox = CreateFrame("CheckButton", nil, ReputationSearchPanel, "UICheckButtonTemplate")
+ReputationSearchCheckbox:SetPoint("TOPLEFT", ReputationSearchTitle, "BOTTOMLEFT", -4, -12)
+
+local ReputationSearchLabel = ReputationSearchPanel:CreateFontString(nil, "OVERLAY")
+ReputationSearchLabel:SetPoint("LEFT", ReputationSearchCheckbox, "RIGHT", 6, 0)
+ReputationSearchLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+ReputationSearchLabel:SetTextColor(1, 1, 1, 1)
+ReputationSearchLabel:SetText(L("ACTIVE"))
+
+local ReputationSearchHint = ReputationSearchPanel:CreateFontString(nil, "OVERLAY")
+ReputationSearchHint:SetPoint("TOPLEFT", ReputationSearchCheckbox, "BOTTOMLEFT", 34, -2)
+ReputationSearchHint:SetPoint("RIGHT", ReputationSearchPanel, "RIGHT", -18, 0)
+ReputationSearchHint:SetJustifyH("LEFT")
+ReputationSearchHint:SetJustifyV("TOP")
+ReputationSearchHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+ReputationSearchHint:SetTextColor(0.80, 0.80, 0.80, 1)
+ReputationSearchHint:SetText(L("REPUTATION_SEARCH_HINT"))
+
+-- ========================================
+-- Bereich: Currency Search
+-- ========================================
+
+local CurrencySearchPanel = CreateFrame("Frame", nil, PageMiscContent)
+CurrencySearchPanel:SetPoint("TOPLEFT", ReputationSearchPanel, "BOTTOMLEFT", 0, -18)
+CurrencySearchPanel:SetPoint("TOPRIGHT", ReputationSearchPanel, "BOTTOMRIGHT", 0, -18)
+CurrencySearchPanel:SetHeight(115)
+
+local CurrencySearchBg = CurrencySearchPanel:CreateTexture(nil, "BACKGROUND")
+CurrencySearchBg:SetAllPoints()
+CurrencySearchBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local CurrencySearchBorder = CurrencySearchPanel:CreateTexture(nil, "ARTWORK")
+CurrencySearchBorder:SetPoint("BOTTOMLEFT", CurrencySearchPanel, "BOTTOMLEFT", 0, 0)
+CurrencySearchBorder:SetPoint("BOTTOMRIGHT", CurrencySearchPanel, "BOTTOMRIGHT", 0, 0)
+CurrencySearchBorder:SetHeight(1)
+CurrencySearchBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local CurrencySearchTitle = CurrencySearchPanel:CreateFontString(nil, "OVERLAY")
+CurrencySearchTitle:SetPoint("TOPLEFT", CurrencySearchPanel, "TOPLEFT", 18, -14)
+CurrencySearchTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+CurrencySearchTitle:SetTextColor(1, 0.82, 0, 1)
+CurrencySearchTitle:SetText(L("CURRENCY_SEARCH"))
+
+local CurrencySearchCheckbox = CreateFrame("CheckButton", nil, CurrencySearchPanel, "UICheckButtonTemplate")
+CurrencySearchCheckbox:SetPoint("TOPLEFT", CurrencySearchTitle, "BOTTOMLEFT", -4, -12)
+
+local CurrencySearchLabel = CurrencySearchPanel:CreateFontString(nil, "OVERLAY")
+CurrencySearchLabel:SetPoint("LEFT", CurrencySearchCheckbox, "RIGHT", 6, 0)
+CurrencySearchLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+CurrencySearchLabel:SetTextColor(1, 1, 1, 1)
+CurrencySearchLabel:SetText(L("ACTIVE"))
+
+local CurrencySearchHint = CurrencySearchPanel:CreateFontString(nil, "OVERLAY")
+CurrencySearchHint:SetPoint("TOPLEFT", CurrencySearchCheckbox, "BOTTOMLEFT", 34, -2)
+CurrencySearchHint:SetPoint("RIGHT", CurrencySearchPanel, "RIGHT", -18, 0)
+CurrencySearchHint:SetJustifyH("LEFT")
+CurrencySearchHint:SetJustifyV("TOP")
+CurrencySearchHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+CurrencySearchHint:SetTextColor(0.80, 0.80, 0.80, 1)
+CurrencySearchHint:SetText(L("CURRENCY_SEARCH_HINT"))
+
+-- ========================================
 -- Bereich: Prey Hunt Progress
 -- ========================================
 
 local PreyHuntProgressPanel = CreateFrame("Frame", nil, PageMiscContent)
-PreyHuntProgressPanel:SetPoint("TOPLEFT", MacroFramePanel, "BOTTOMLEFT", 0, -18)
-PreyHuntProgressPanel:SetPoint("TOPRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, -18)
+PreyHuntProgressPanel:SetPoint("TOPLEFT", CurrencySearchPanel, "BOTTOMLEFT", 0, -18)
+PreyHuntProgressPanel:SetPoint("TOPRIGHT", CurrencySearchPanel, "BOTTOMRIGHT", 0, -18)
 PreyHuntProgressPanel:SetHeight(115)
 
 local PreyHuntProgressBg = PreyHuntProgressPanel:CreateTexture(nil, "BACKGROUND")
@@ -942,6 +1028,8 @@ local SectionPanels = {
     TooltipItemLevel = TooltipItemLevelPanel,
     CameraDistance = CameraDistancePanel,
     MacroFrame = MacroFramePanel,
+    ReputationSearch = ReputationSearchPanel,
+    CurrencySearch = CurrencySearchPanel,
     PreyHuntProgress = PreyHuntProgressPanel,
     KeystoneActions = KeystoneActionsPanel,
     PortalViewer = PortalViewerPanel,
@@ -1008,6 +1096,14 @@ PageMisc.Widgets = {
     MacroFrameLabel = MacroFrameLabel,
     MacroFrameHint = MacroFrameHint,
     MacroFrameCheckbox = MacroFrameCheckbox,
+    ReputationSearchTitle = ReputationSearchTitle,
+    ReputationSearchLabel = ReputationSearchLabel,
+    ReputationSearchHint = ReputationSearchHint,
+    ReputationSearchCheckbox = ReputationSearchCheckbox,
+    CurrencySearchTitle = CurrencySearchTitle,
+    CurrencySearchLabel = CurrencySearchLabel,
+    CurrencySearchHint = CurrencySearchHint,
+    CurrencySearchCheckbox = CurrencySearchCheckbox,
     PreyHuntProgressTitle = PreyHuntProgressTitle,
     PreyHuntProgressLabel = PreyHuntProgressLabel,
     PreyHuntProgressHint = PreyHuntProgressHint,
@@ -1096,6 +1192,8 @@ function PageMisc:RefreshState()
     local flightMasterTimerPreviewVisible = false
     local tooltipItemLevelEnabled = false
     local macroFrameEnabled = false
+    local reputationSearchEnabled = false
+    local currencySearchEnabled = false
     local preyHuntProgressEnabled = false
     local keystoneActionsEnabled = false
     local keystoneActionsGroupLockEnabled = true
@@ -1161,6 +1259,14 @@ function PageMisc:RefreshState()
 
     if Misc.IsLargeMacroFrameEnabled then
         macroFrameEnabled = Misc.IsLargeMacroFrameEnabled()
+    end
+
+    if Misc.IsReputationSearchEnabled then
+        reputationSearchEnabled = Misc.IsReputationSearchEnabled()
+    end
+
+    if Misc.IsCurrencySearchEnabled then
+        currencySearchEnabled = Misc.IsCurrencySearchEnabled()
     end
 
     if Misc.IsPreyHuntProgressEnabled then
@@ -1252,6 +1358,12 @@ function PageMisc:RefreshState()
     widgets.MacroFrameTitle:SetText(L("MACRO_FRAME"))
     widgets.MacroFrameLabel:SetText(L("ACTIVE"))
     widgets.MacroFrameHint:SetText(L("MACRO_FRAME_HINT"))
+    widgets.ReputationSearchTitle:SetText(L("REPUTATION_SEARCH"))
+    widgets.ReputationSearchLabel:SetText(L("ACTIVE"))
+    widgets.ReputationSearchHint:SetText(L("REPUTATION_SEARCH_HINT"))
+    widgets.CurrencySearchTitle:SetText(L("CURRENCY_SEARCH"))
+    widgets.CurrencySearchLabel:SetText(L("ACTIVE"))
+    widgets.CurrencySearchHint:SetText(L("CURRENCY_SEARCH_HINT"))
     widgets.PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
     widgets.PreyHuntProgressLabel:SetText(L("ACTIVE"))
     widgets.PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
@@ -1286,6 +1398,8 @@ function PageMisc:RefreshState()
     widgets.FlightMasterTimerLockCheckbox:SetChecked(flightMasterTimerLocked)
     widgets.TooltipItemLevelCheckbox:SetChecked(tooltipItemLevelEnabled)
     widgets.MacroFrameCheckbox:SetChecked(macroFrameEnabled)
+    widgets.ReputationSearchCheckbox:SetChecked(reputationSearchEnabled)
+    widgets.CurrencySearchCheckbox:SetChecked(currencySearchEnabled)
     widgets.PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
     widgets.KeystoneActionsCheckbox:SetChecked(keystoneActionsEnabled)
     widgets.KeystoneActionsGroupLockCheckbox:SetChecked(keystoneActionsGroupLockEnabled)
@@ -1403,6 +1517,8 @@ function PageMisc:UpdateScrollLayout()
         -- damit der Scrollbereich unten nicht zu früh endet.
         + 18 + CameraDistancePanel:GetHeight()
         + 18 + MacroFramePanel:GetHeight()
+        + 18 + ReputationSearchPanel:GetHeight()
+        + 18 + CurrencySearchPanel:GetHeight()
         + 18 + PreyHuntProgressPanel:GetHeight()
         + 18 + KeystoneActionsPanel:GetHeight()
         + 18 + PortalViewerPanel:GetHeight()
@@ -1601,6 +1717,22 @@ end)
 MacroFrameCheckbox:SetScript("OnClick", function(self)
     if Misc.SetLargeMacroFrameEnabled then
         Misc.SetLargeMacroFrameEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+ReputationSearchCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetReputationSearchEnabled then
+        Misc.SetReputationSearchEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+CurrencySearchCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetCurrencySearchEnabled then
+        Misc.SetCurrencySearchEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

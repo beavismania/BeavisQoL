@@ -4,14 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.28.0`
+- Version: `0.29.0`
 - Release-Datum: `2026-04-07`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - neues Modul `Minimap-Sammler` ergänzt, das fremde Minimap-Buttons sammeln, sichtbar lassen oder komplett ausblenden kann
-  - der Sammler nutzt einen eigenen frei verschiebbaren Launcher mit transparentem Button-Fenster, eigener Skalierung und `/beavis` auf Rechtsklick
-  - `Mouse Helper` hat jetzt einen `Cast-Ring` beim Zaubern sowie Klassenfarben-Optionen für Trail und Cursor-Kreis
-  - neue Komfortsuche für `Makros`, `Ruf` und `Währungen` ergänzt
+  - `Rufsuche` und `Währungssuche` haben jetzt jeweils einen eigenen Schalter im `Misc`-Bereich
+  - beide Suchhilfen lassen sich bei Bedarf separat aktivieren oder deaktivieren
+  - Sidebar und Suche können jetzt direkt zu `Rufsuche` und `Währungssuche` im `Misc`-Bereich springen
 
 ## Download
 
@@ -44,8 +43,9 @@ Das Projekt soll:
 
 Regeln:
 
-- die mittlere Zahl steigt mit jedem neuen Feature- oder Modulstand
+- die mittlere Zahl steigt einmal pro veröffentlichtem Feature-/Modul-Release
 - die hintere Zahl bleibt bei neuen Feature-/Modulständen auf `0`
+- mehrere neue Module oder Features dürfen gemeinsam in derselben Minor-Version erscheinen, solange sie als ein gemeinsamer Release veröffentlicht werden
 - Weiterentwicklung, Feinschliff und Bugfixes an neuen Modulen bleiben im selben laufenden Feature-Release und erhöhen nicht automatisch die `patch`-Version
 - reine Bugfixes an bereits veröffentlichten Ständen ohne neue Module erhöhen die `patch`-Version
 - bei einem neuen Feature-/Modulstand wird der Hotfix-Zähler wieder auf `0` gesetzt
@@ -53,10 +53,10 @@ Regeln:
 
 Beispiele:
 
-- `0.27.0` → letzter veröffentlichter Feature-/Modulstand
-- `0.27.2` → aktueller Hotfix-Stand mit Verbesserungen an bestehenden Modulen
-- Hotfix nach veröffentlichtem `0.27.2` → `0.27.3`
-- nächstes neues Modul nach `0.27.2` → `0.28.0`
+- `0.28.0` → veröffentlichter Feature-Release
+- `0.28.1` → Hotfix zu `0.28.0` ohne neue Features
+- `0.29.0` → nächster veröffentlichter Feature-Release nach `0.28.0`
+- mehrere neue Module/Funktionen im selben Release-Batch nach `0.28.0` → trotzdem gemeinsam `0.29.0`
 - großer Hauptrelease → `1.0.0`
 
 ## Module im Addon

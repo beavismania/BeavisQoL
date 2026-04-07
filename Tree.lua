@@ -514,6 +514,16 @@ local MacroFrameEntry = RegisterModuleEntry(ComfortSection, "MACRO_FRAME", "Misc
     searchTextKeys = { "MACRO_FRAME_HINT" },
     searchAliases = "macro macros macroframe macro ui window larger bigger",
 })
+local ReputationSearchEntry = RegisterModuleEntry(ComfortSection, "REPUTATION_SEARCH", "Misc", {
+    miscSection = "ReputationSearch",
+    searchTextKeys = { "REPUTATION_SEARCH_HINT", "REPUTATION_SEARCH_PLACEHOLDER" },
+    searchAliases = "reputation factions renown standing search filter ruf",
+})
+local CurrencySearchEntry = RegisterModuleEntry(ComfortSection, "CURRENCY_SEARCH", "Misc", {
+    miscSection = "CurrencySearch",
+    searchTextKeys = { "CURRENCY_SEARCH_HINT", "CURRENCY_SEARCH_PLACEHOLDER" },
+    searchAliases = "currency currencies search filter token badge crest währung",
+})
 local PreyHuntProgressEntry = RegisterModuleEntry(ComfortSection, "PREY_HUNT_PROGRESS", "Misc", {
     miscSection = "PreyHuntProgress",
     searchTextKeys = { "PREY_HUNT_PROGRESS_HINT" },
@@ -785,6 +795,10 @@ BeavisQoL.UpdateTree = function()
     AutoRespawnPetEntry.text:SetText(L("AUTO_RESPAWN_PET_TITLE"))
     TooltipItemLevelEntry.text:SetText(L("TOOLTIP_ITEMLEVEL"))
     CameraDistanceEntry.text:SetText(L("CAMERA_DISTANCE"))
+    MacroFrameEntry.text:SetText(L("MACRO_FRAME"))
+    ReputationSearchEntry.text:SetText(L("REPUTATION_SEARCH"))
+    CurrencySearchEntry.text:SetText(L("CURRENCY_SEARCH"))
+    PreyHuntProgressEntry.text:SetText(L("PREY_HUNT_PROGRESS"))
     KeystoneActionsEntry.text:SetText(L("KEYSTONE_ACTIONS"))
     PortalViewerEntry.text:SetText(L("PORTAL_VIEWER_TITLE"))
     FishingEntry.text:SetText(L("FISHING_HELPER"))

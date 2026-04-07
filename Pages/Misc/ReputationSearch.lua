@@ -1,12 +1,16 @@
 local _, BeavisQoL = ...
 
+BeavisQoL.Misc = BeavisQoL.Misc or {}
+local Misc = BeavisQoL.Misc
 local L = BeavisQoL.L
 local HookSecureFunction = rawget(_G, "hooksecurefunc")
+local baseGetMiscDB = Misc.GetMiscDB
 local ReputationSearchWatcher = CreateFrame("Frame")
 
 local REPUTATION_UI_ADDON_NAME = "Blizzard_UIPanels_Game"
 
 local reputationSearchQuery = ""
+local defaultReputationScrollBoxPoints = nil
 
 local function NormalizeSearchText(text)
     local normalizedText = tostring(text or "")
@@ -36,6 +40,84 @@ local function IsReputationUILoaded()
     end
 
     return rawget(_G, "ReputationFrame") ~= nil
+end
+
+local function RefreshMiscPageState()
+    local miscPage = BeavisQoL.Pages and BeavisQoL.Pages.Misc
+    if miscPage and miscPage:IsShown() and miscPage.RefreshState then
+        miscPage:RefreshState()
+    end
+end
+
+local function CaptureAnchorPoints(frame)
+    local points = {}
+    if not frame or not frame.GetNumPoints or not frame.GetPoint then
+        return points
+    end
+
+    for pointIndex = 1, (frame:GetNumPoints() or 0) do
+        local point, relativeTo, relativePoint, xOffset, yOffset = frame:GetPoint(pointIndex)
+        if point then
+            points[#points + 1] = {
+                point = point,
+                relativeTo = relativeTo,
+                relativePoint = relativePoint,
+                xOffset = xOffset or 0,
+                yOffset = yOffset or 0,
+            }
+        end
+    end
+
+    return points
+end
+
+local function RestoreAnchorPoints(frame, points)
+    if not frame or not frame.ClearAllPoints or not frame.SetPoint or not points or #points == 0 then
+        return
+    end
+
+    frame:ClearAllPoints()
+    for _, pointInfo in ipairs(points) do
+        frame:SetPoint(
+            pointInfo.point,
+            pointInfo.relativeTo,
+            pointInfo.relativePoint,
+            pointInfo.xOffset,
+            pointInfo.yOffset
+        )
+    end
+end
+
+local function RememberReputationDefaultLayout(frame)
+    if not frame or not frame.ScrollBox then
+        return
+    end
+
+    if not defaultReputationScrollBoxPoints or #defaultReputationScrollBoxPoints == 0 then
+        defaultReputationScrollBoxPoints = CaptureAnchorPoints(frame.ScrollBox)
+    end
+end
+
+function Misc.GetMiscDB()
+    local db
+
+    if baseGetMiscDB then
+        db = baseGetMiscDB()
+    else
+        BeavisQoLDB = BeavisQoLDB or {}
+        BeavisQoLDB.misc = BeavisQoLDB.misc or {}
+        db = BeavisQoLDB.misc
+    end
+
+    if db.reputationSearchEnabled == nil then
+        db.reputationSearchEnabled = true
+    end
+
+    return db
+end
+
+function Misc.IsReputationSearchEnabled()
+    return Misc.GetMiscDB().reputationSearchEnabled == true
 end
 
 local function UpdatePlaceholder(editBox)
@@ -223,6 +305,10 @@ local function FilterFactionList(factionList, query, selectedFactionIndex)
 end
 
 local function ApplyReputationSearchFilter(frame)
+    if not Misc.IsReputationSearchEnabled or not Misc.IsReputationSearchEnabled() then
+        return
+    end
+
     if not frame or not frame.ScrollBox or not C_Reputation or not C_Reputation.GetNumFactions or not C_Reputation.GetFactionDataByIndex then
         return
     end
@@ -248,6 +334,15 @@ local function ApplyReputationSearchFilter(frame)
     if frame.ReputationDetailFrame and frame.ReputationDetailFrame.Refresh then
         frame.ReputationDetailFrame:Refresh()
     end
+end
+
+local function RestoreDefaultReputationLayout(frame)
+    if not frame or not frame.ScrollBox then
+        return
+    end
+
+    RememberReputationDefaultLayout(frame)
+    RestoreAnchorPoints(frame.ScrollBox, defaultReputationScrollBoxPoints)
 end
 
 local function IsInsetLayoutActive(inset)
@@ -316,6 +411,7 @@ local function EnsureReputationSearchUI()
     end
 
     frame.BeavisReputationSearchInitialized = true
+    RememberReputationDefaultLayout(frame)
 
     local searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
     searchBox:SetHeight(22)
@@ -336,8 +432,14 @@ local function EnsureReputationSearchUI()
     searchBox.Placeholder = placeholder
     frame.BeavisReputationSearchBox = searchBox
     frame:HookScript("OnShow", function()
-        LayoutReputationSearchUI(frame, searchBox)
-        UpdatePlaceholder(searchBox)
+        if Misc.IsReputationSearchEnabled and Misc.IsReputationSearchEnabled() then
+            searchBox:Show()
+            LayoutReputationSearchUI(frame, searchBox)
+            UpdatePlaceholder(searchBox)
+        else
+            searchBox:Hide()
+            RestoreDefaultReputationLayout(frame)
+        end
     end)
 
     searchBox:SetScript("OnTextChanged", function(self)
@@ -369,13 +471,54 @@ local function EnsureReputationSearchUI()
     UpdatePlaceholder(searchBox)
 end
 
-local function InitializeReputationSearch()
-    EnsureReputationSearchUI()
-
+local function RefreshReputationSearchState(forceUpdate)
     local frame = rawget(_G, "ReputationFrame")
-    if frame and frame.Update then
+    if not frame then
+        return
+    end
+
+    local searchBox = frame.BeavisReputationSearchBox
+    local enabled = Misc.IsReputationSearchEnabled and Misc.IsReputationSearchEnabled() or false
+
+    RememberReputationDefaultLayout(frame)
+
+    if enabled then
+        if searchBox then
+            searchBox:Show()
+            LayoutReputationSearchUI(frame, searchBox)
+            UpdatePlaceholder(searchBox)
+        end
+    else
+        reputationSearchQuery = ""
+
+        if searchBox then
+            searchBox:SetText("")
+            searchBox:ClearFocus()
+            UpdatePlaceholder(searchBox)
+            searchBox:Hide()
+        end
+
+        RestoreDefaultReputationLayout(frame)
+    end
+
+    if forceUpdate and frame.Update then
         frame:Update()
     end
+end
+
+local function InitializeReputationSearch()
+    EnsureReputationSearchUI()
+    RefreshReputationSearchState(true)
+end
+
+function Misc.SetReputationSearchEnabled(value)
+    Misc.GetMiscDB().reputationSearchEnabled = value == true
+
+    if IsReputationUILoaded() then
+        InitializeReputationSearch()
+    end
+
+    RefreshMiscPageState()
 end
 
 ReputationSearchWatcher:RegisterEvent("ADDON_LOADED")

@@ -178,8 +178,12 @@ BeavisQoL.Localization.enUS = {
 
 	MISC_TITLE = "Comfort",
 	MISC_DESC = "Here you will find comfort features that can be used independently of the rest of the addon.",
+	REPUTATION_SEARCH = "Reputation Search",
 	REPUTATION_SEARCH_PLACEHOLDER = "Search reputations",
+	REPUTATION_SEARCH_HINT = "Adds a search box to Blizzard's reputation window so factions can be filtered directly.",
+	CURRENCY_SEARCH = "Currency Search",
 	CURRENCY_SEARCH_PLACEHOLDER = "Search currencies",
+	CURRENCY_SEARCH_HINT = "Adds a search box to Blizzard's currency window so currencies can be filtered directly.",
 	AUTOSELL_HINT = "Automatically sells all gray items with vendor value when you open a merchant.",
 	AUTOREPAIR_HINT = "Automatically repairs damaged items when you open a merchant.",
 	AUTOREPAIR_GUILD = "Prefer guild funds",
