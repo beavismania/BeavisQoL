@@ -4,14 +4,14 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.27.2`
-- Release-Datum: `2026-04-06`
+- Version: `0.28.0`
+- Release-Datum: `2026-04-07`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Boss Guides` zeigen in weiteren Midnight-S1-Dungeons jetzt deutsche, hoverbare Bosszauber mit passenden Icons
-  - sichtbare Spell-IDs wurden aus den Guide-Texten entfernt, während Hover-Infos über die Spell-Map erhalten bleiben
-  - Bossguide-Texte und Lokalisierungen wurden auf fehlerhafte Umlaute und Darstellungsprobleme bereinigt
-  - `Gruppenplaner`- und Guide-Verbesserungen aus `0.27.1` bleiben vollständig enthalten
+  - neues Modul `Minimap-Sammler` ergänzt, das fremde Minimap-Buttons sammeln, sichtbar lassen oder komplett ausblenden kann
+  - der Sammler nutzt einen eigenen frei verschiebbaren Launcher mit transparentem Button-Fenster, eigener Skalierung und `/beavis` auf Rechtsklick
+  - `Mouse Helper` hat jetzt einen `Cast-Ring` beim Zaubern sowie Klassenfarben-Optionen für Trail und Cursor-Kreis
+  - neue Komfortsuche für `Makros`, `Ruf` und `Währungen` ergänzt
 
 ## Download
 
