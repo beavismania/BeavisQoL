@@ -5568,6 +5568,10 @@ function StreamerPlannerModule.RefreshOverlayWindow()
     else
         OverlayFrame:Hide()
     end
+
+    if PlannerPrivate.UpdateWatcherPollingState then
+        PlannerPrivate.UpdateWatcherPollingState()
+    end
 end
 
 function StreamerPlannerModule.IsOverlayEnabled()
@@ -6017,7 +6021,7 @@ OverlayTimer.ResetButton = CreateActionButton(OverlayTimer.Panel, 56, "", functi
 end)
 OverlayTimer.ResetButton:SetPoint("LEFT", OverlayTimer.PauseButton, "RIGHT", 6, 0)
 
-OverlayFrame:SetScript("OnUpdate", function(_, elapsed)
+local function HandleStreamerPlannerOverlayUpdate(_, elapsed)
     if not OverlayFrame:IsShown() then
         return
     end
@@ -6035,6 +6039,15 @@ OverlayFrame:SetScript("OnUpdate", function(_, elapsed)
 
     PlannerPrivate.timerRefreshElapsed = 0
     RefreshTimerDisplay()
+end
+
+OverlayFrame:SetScript("OnUpdate", function(_, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleStreamerPlannerOverlayUpdate(_, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("StreamerPlanner.OverlayOnUpdate", sampleToken)
+    end
 end)
 
 OverlayFrame:Hide()
@@ -6893,6 +6906,15 @@ PageStreamerPlanner:SetScript("OnShow", function()
     PageStreamerPlanner:RefreshState()
     PageStreamerPlanner:UpdateScrollLayout()
     PageScrollFrame:SetVerticalScroll(0)
+    if PlannerPrivate.UpdateWatcherPollingState then
+        PlannerPrivate.UpdateWatcherPollingState()
+    end
+end)
+
+PageStreamerPlanner:SetScript("OnHide", function()
+    if PlannerPrivate.UpdateWatcherPollingState then
+        PlannerPrivate.UpdateWatcherPollingState()
+    end
 end)
 
 PlannerPrivate.watcher = CreateFrame("Frame")
@@ -6996,7 +7018,7 @@ PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
     PlannerPrivate.lastDungeonSyncSignature = nil
     PlannerPrivate.SyncDynamicPlannerState(true)
 end)
-PlannerPrivate.watcher:SetScript("OnUpdate", function(_, elapsed)
+local function HandleStreamerPlannerWatcherUpdate(_, elapsed)
     PlannerPrivate.periodicSyncElapsed = PlannerPrivate.periodicSyncElapsed + elapsed
     if PlannerPrivate.periodicSyncElapsed < 1 then
         return
@@ -7004,7 +7026,29 @@ PlannerPrivate.watcher:SetScript("OnUpdate", function(_, elapsed)
 
     PlannerPrivate.periodicSyncElapsed = 0
     PlannerPrivate.SyncDynamicPlannerState(false)
-end)
+end
+
+local function StreamerPlannerWatcherOnUpdate(_, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleStreamerPlannerWatcherUpdate(_, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("StreamerPlanner.WatcherOnUpdate", sampleToken)
+    end
+end
+
+PlannerPrivate.UpdateWatcherPollingState = function()
+    local shouldPoll = (PageStreamerPlanner and PageStreamerPlanner:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
+    PlannerPrivate.periodicSyncElapsed = 0
+
+    if shouldPoll then
+        PlannerPrivate.watcher:SetScript("OnUpdate", StreamerPlannerWatcherOnUpdate)
+    else
+        PlannerPrivate.watcher:SetScript("OnUpdate", nil)
+    end
+end
+
+PlannerPrivate.UpdateWatcherPollingState()
 
 BeavisQoL.UpdateStreamerPlanner = function()
     if PageStreamerPlanner and PageStreamerPlanner.RefreshState then

@@ -1529,7 +1529,7 @@ local function EnsureOverlayFrame()
     timerBarBorder:SetPoint("BOTTOMRIGHT", timerBar, "BOTTOMRIGHT", 1, -1)
     timerBarBorder:SetColorTexture(1, 0.82, 0, 0.16)
 
-    frame:SetScript("OnUpdate", function(self, elapsed)
+    local function HandleFlightMasterTimerOnUpdate(self, elapsed)
         self.ElapsedSinceUpdate = (self.ElapsedSinceUpdate or 0) + elapsed
         if self.ElapsedSinceUpdate < FLIGHT_TIMER_UPDATE_INTERVAL then
             return
@@ -1583,6 +1583,15 @@ local function EnsureOverlayFrame()
         end
 
         self:Show()
+    end
+
+    frame:SetScript("OnUpdate", function(self, elapsed)
+        local profiler = BeavisQoL.PerformanceProfiler
+        local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+        HandleFlightMasterTimerOnUpdate(self, elapsed)
+        if profiler and profiler.EndSample then
+            profiler.EndSample("FlightMasterTimer.OnUpdate", sampleToken)
+        end
     end)
 
     OverlayFrame = frame

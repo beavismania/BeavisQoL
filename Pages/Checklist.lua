@@ -2674,7 +2674,7 @@ end)
 
 local resetTickerElapsed = 0
 local ChecklistResetTicker = CreateFrame("Frame")
-ChecklistResetTicker:SetScript("OnUpdate", function(_, elapsed)
+local function HandleChecklistResetTicker(_, elapsed)
     resetTickerElapsed = resetTickerElapsed + elapsed
 
     if resetTickerElapsed < 30 then
@@ -2686,10 +2686,19 @@ ChecklistResetTicker:SetScript("OnUpdate", function(_, elapsed)
     if ProcessChecklistResets() then
         Checklist.RefreshAllViews()
     end
+end
+
+ChecklistResetTicker:SetScript("OnUpdate", function(_, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleChecklistResetTicker(_, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("Checklist.ResetTicker", sampleToken)
+    end
 end)
 
 local ChecklistTrackerVisibilityWatcher = CreateFrame("Frame")
-ChecklistTrackerVisibilityWatcher:SetScript("OnUpdate", function(_, elapsed)
+local function HandleChecklistTrackerVisibility(_, elapsed)
     trackerVisibilityCheckElapsed = trackerVisibilityCheckElapsed + elapsed
 
     if trackerVisibilityCheckElapsed < 0.20 then
@@ -2707,5 +2716,14 @@ ChecklistTrackerVisibilityWatcher:SetScript("OnUpdate", function(_, elapsed)
 
     if TrackerFrame:IsShown() ~= shouldShowTracker then
         Checklist.RefreshTrackerWindow()
+    end
+end
+
+ChecklistTrackerVisibilityWatcher:SetScript("OnUpdate", function(_, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleChecklistTrackerVisibility(_, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("Checklist.TrackerVisibility", sampleToken)
     end
 end)

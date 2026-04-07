@@ -19,6 +19,9 @@ local PortalFrame
 local TitleText
 
 local PortalRows = {}
+local PortalStatusCache
+local PortalStatusCacheDirty = true
+local InvalidatePortalStatusCache
 
 local SEASON_DUNGEON_PORTALS = {
     {
@@ -215,6 +218,7 @@ function PortalViewerModule.SetWindowEnabled(enabled)
     settings.enabled = enabled == true
 
     if settings.enabled then
+        InvalidatePortalStatusCache()
         PortalViewerModule.RefreshWindow()
     elseif PortalFrame then
         PortalFrame:Hide()
@@ -284,38 +288,31 @@ local function IsPortalSpellKnown(spellID)
         return false
     end
 
-    if C_SpellBook and C_SpellBook.FindSpellBookSlotForSpell then
-        local ok, spellBookItemSlotIndex = pcall(C_SpellBook.FindSpellBookSlotForSpell, spellID, false, true, false, false)
-        if ok and spellBookItemSlotIndex ~= nil then
+    if C_Spell and C_Spell.IsSpellKnownOrOverridesKnown then
+        if C_Spell.IsSpellKnownOrOverridesKnown(spellID) == true then
             return true
         end
     end
 
-    if C_SpellBook and C_SpellBook.IsSpellInSpellBook then
-        return C_SpellBook.IsSpellInSpellBook(spellID) == true
-    end
-
-    if C_SpellBook and C_SpellBook.IsSpellKnown then
-        local spellBank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or nil
-        if spellBank ~= nil then
-            return C_SpellBook.IsSpellKnown(spellID, spellBank) == true
-        end
-
-        return C_SpellBook.IsSpellKnown(spellID) == true
-    end
-
     if C_Spell and C_Spell.IsSpellKnown then
-        return C_Spell.IsSpellKnown(spellID) == true
+        if C_Spell.IsSpellKnown(spellID) == true then
+            return true
+        end
     end
 
-    local isSpellKnown = rawget(_G, "IsSpellKnown")
-    if type(isSpellKnown) == "function" then
-        return isSpellKnown(spellID) == true
+    local isSpellKnownOrOverridesKnown = rawget(_G, "IsSpellKnownOrOverridesKnown")
+    if type(isSpellKnownOrOverridesKnown) == "function" and isSpellKnownOrOverridesKnown(spellID) == true then
+        return true
     end
 
     local isPlayerSpell = rawget(_G, "IsPlayerSpell")
-    if type(isPlayerSpell) == "function" then
-        return isPlayerSpell(spellID) == true
+    if type(isPlayerSpell) == "function" and isPlayerSpell(spellID) == true then
+        return true
+    end
+
+    local isSpellKnown = rawget(_G, "IsSpellKnown")
+    if type(isSpellKnown) == "function" and isSpellKnown(spellID) == true then
+        return true
     end
 
     return false
@@ -416,7 +413,16 @@ local function CreatePortalRow(parent)
     return row
 end
 
+InvalidatePortalStatusCache = function()
+    PortalStatusCache = nil
+    PortalStatusCacheDirty = true
+end
+
 local function GetPortalStatusByDungeon()
+    if not PortalStatusCacheDirty and type(PortalStatusCache) == "table" then
+        return PortalStatusCache
+    end
+
     local statusByKey = {}
 
     for _, dungeonData in ipairs(SEASON_DUNGEON_PORTALS) do
@@ -430,7 +436,10 @@ local function GetPortalStatusByDungeon()
         }
     end
 
-    return statusByKey
+    PortalStatusCache = statusByKey
+    PortalStatusCacheDirty = false
+
+    return PortalStatusCache
 end
 
 local function ApplyRowVisual(row, unlocked)
@@ -667,16 +676,6 @@ local PortalViewerEvents = CreateFrame("Frame")
 PortalViewerEvents:RegisterEvent("PLAYER_LOGIN")
 PortalViewerEvents:RegisterEvent("PLAYER_ENTERING_WORLD")
 PortalViewerEvents:RegisterEvent("SPELLS_CHANGED")
-PortalViewerEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
-PortalViewerEvents:SetScript("OnEvent", function(_, event)
-    if not PortalViewerModule.IsWindowEnabled or not PortalViewerModule.IsWindowEnabled() then
-        return
-    end
-
-    if event == "PLAYER_REGEN_ENABLED" then
-        PortalViewerModule.RefreshWindow()
-        return
-    end
-
-    PortalViewerModule.RefreshWindow()
+PortalViewerEvents:SetScript("OnEvent", function()
+    InvalidatePortalStatusCache()
 end)

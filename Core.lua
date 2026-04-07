@@ -409,6 +409,10 @@ end)
 -- SlashCmdList["<NAME>"] hinterlegt die Funktion dazu.
 SLASH_BEAVIS1 = "/beavis"
 SlashCmdList["BEAVIS"] = function(msg)
+    if BeavisQoL.HandleSlashCommand and BeavisQoL.HandleSlashCommand(msg) then
+        return
+    end
+
     -- Der Slash-Command macht nur das Fenster auf und zu. Alles andere läuft über die UI.
     -- `msg` wäre der Text hinter `/beavis`, wird aktuell aber noch nicht gebraucht.
     if not BeavisQoL.Frame then
