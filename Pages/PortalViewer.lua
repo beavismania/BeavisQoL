@@ -19,7 +19,6 @@ local PortalFrame
 local TitleText
 
 local PortalRows = {}
-local CachedAchievementStatusByKey
 
 local SEASON_DUNGEON_PORTALS = {
     {
@@ -130,6 +129,10 @@ local SEASON_DUNGEON_PORTALS = {
         key = "skyreach",
         dungeonNameKey = "PORTAL_VIEWER_DUNGEON_SKYREACH",
         spellID = 1254557,
+        spellIDs = {
+            1254557,
+            159898,
+        },
         clientDungeonNames = {
             deDE = "Himmelsnadel",
             enUS = "Skyreach",
@@ -142,40 +145,6 @@ local SEASON_DUNGEON_PORTALS = {
     },
 }
 
-local function NormalizeSearchText(text)
-    local normalizedText = string.lower(tostring(text or ""))
-    normalizedText = string.gsub(normalizedText, "[%c%p]", " ")
-    normalizedText = string.gsub(normalizedText, "%s+", " ")
-    normalizedText = string.match(normalizedText, "^%s*(.-)%s*$") or ""
-
-    return normalizedText
-end
-
-local function SearchTextContains(haystack, needle)
-    if needle == nil or needle == "" then
-        return true
-    end
-
-    if haystack == nil or haystack == "" then
-        return false
-    end
-
-    return string.find(haystack, needle, 1, true) ~= nil
-end
-
-local function ParseSpellIDFromLink(link)
-    if type(link) ~= "string" then
-        return nil
-    end
-
-    local spellID = link:match("|Hspell:(%d+)") or link:match("spell:(%d+)")
-    if spellID then
-        return tonumber(spellID)
-    end
-
-    return nil
-end
-
 local function GetPortalViewerSettings()
     BeavisQoLDB = BeavisQoLDB or {}
     BeavisQoLDB.portalViewer = BeavisQoLDB.portalViewer or {}
@@ -184,6 +153,10 @@ local function GetPortalViewerSettings()
 
     if db.enabled == nil then
         db.enabled = false
+    end
+
+    if db.locked == nil then
+        db.locked = false
     end
 
     if type(db.point) ~= "string" or db.point == "" then
@@ -233,6 +206,10 @@ function PortalViewerModule.IsWindowEnabled()
     return GetPortalViewerSettings().enabled == true
 end
 
+function PortalViewerModule.IsWindowLocked()
+    return GetPortalViewerSettings().locked == true
+end
+
 function PortalViewerModule.SetWindowEnabled(enabled)
     local settings = GetPortalViewerSettings()
     settings.enabled = enabled == true
@@ -248,14 +225,49 @@ function PortalViewerModule.ToggleWindow()
     PortalViewerModule.SetWindowEnabled(not PortalViewerModule.IsWindowEnabled())
 end
 
-local function GetPortalSpellRenderInfo(dungeonData)
-    local info
+function PortalViewerModule.SetWindowLocked(locked)
+    local settings = GetPortalViewerSettings()
+    settings.locked = locked == true
 
-    if C_Spell and C_Spell.GetSpellInfo then
-        info = C_Spell.GetSpellInfo(dungeonData.spellID)
+    if PortalFrame and PortalFrame.UpdateLockState then
+        PortalFrame:UpdateLockState()
+    end
+end
+
+function PortalViewerModule.IsMinimapContextMenuEntryVisible()
+    if BeavisQoL.IsMinimapContextMenuEntryVisible then
+        return BeavisQoL.IsMinimapContextMenuEntryVisible("portalViewer")
     end
 
-    local spellID = dungeonData.spellID
+    return true
+end
+
+function PortalViewerModule.SetMinimapContextMenuEntryVisible(visible)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("portalViewer", visible)
+    end
+end
+
+local function GetPortalSpellCandidateIDs(dungeonData)
+    if type(dungeonData) ~= "table" then
+        return {}
+    end
+
+    if type(dungeonData.spellIDs) == "table" and #dungeonData.spellIDs > 0 then
+        return dungeonData.spellIDs
+    end
+
+    if type(dungeonData.spellID) == "number" then
+        return { dungeonData.spellID }
+    end
+
+    return {}
+end
+
+local function GetPortalSpellRenderInfo(dungeonData, preferredSpellID)
+    local info
+    local spellID = tonumber(preferredSpellID) or dungeonData.spellID
+
     if not info and spellID and C_Spell and C_Spell.GetSpellInfo then
         info = C_Spell.GetSpellInfo(spellID)
     end
@@ -272,22 +284,28 @@ local function IsPortalSpellKnown(spellID)
         return false
     end
 
-    if C_Spell and C_Spell.IsSpellKnownOrOverridesKnown then
-        return C_Spell.IsSpellKnownOrOverridesKnown(spellID) == true
+    if C_SpellBook and C_SpellBook.FindSpellBookSlotForSpell then
+        local ok, spellBookItemSlotIndex = pcall(C_SpellBook.FindSpellBookSlotForSpell, spellID, false, true, false, false)
+        if ok and spellBookItemSlotIndex ~= nil then
+            return true
+        end
+    end
+
+    if C_SpellBook and C_SpellBook.IsSpellInSpellBook then
+        return C_SpellBook.IsSpellInSpellBook(spellID) == true
+    end
+
+    if C_SpellBook and C_SpellBook.IsSpellKnown then
+        local spellBank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or nil
+        if spellBank ~= nil then
+            return C_SpellBook.IsSpellKnown(spellID, spellBank) == true
+        end
+
+        return C_SpellBook.IsSpellKnown(spellID) == true
     end
 
     if C_Spell and C_Spell.IsSpellKnown then
         return C_Spell.IsSpellKnown(spellID) == true
-    end
-
-    local isSpellKnownOrOverridesKnown = rawget(_G, "IsSpellKnownOrOverridesKnown")
-    if type(isSpellKnownOrOverridesKnown) == "function" then
-        return isSpellKnownOrOverridesKnown(spellID) == true
-    end
-
-    local isPlayerSpell = rawget(_G, "IsPlayerSpell")
-    if type(isPlayerSpell) == "function" then
-        return isPlayerSpell(spellID) == true
     end
 
     local isSpellKnown = rawget(_G, "IsSpellKnown")
@@ -295,119 +313,26 @@ local function IsPortalSpellKnown(spellID)
         return isSpellKnown(spellID) == true
     end
 
+    local isPlayerSpell = rawget(_G, "IsPlayerSpell")
+    if type(isPlayerSpell) == "function" then
+        return isPlayerSpell(spellID) == true
+    end
+
     return false
 end
 
-local BuildDungeonSearchAliases
-
-local function RefreshAchievementStatusCache()
-    local statusByKey = {}
-
-    for _, dungeonData in ipairs(SEASON_DUNGEON_PORTALS) do
-        statusByKey[dungeonData.key] = {
-            unlocked = false,
-            achievementName = nil,
-        }
-    end
-
-    if not GetCategoryList or not GetCategoryNumAchievements or not GetAchievementInfo then
-        CachedAchievementStatusByKey = statusByKey
-        return
-    end
-
-    local searchAliases = {}
-    for _, dungeonData in ipairs(SEASON_DUNGEON_PORTALS) do
-        searchAliases[dungeonData.key] = BuildDungeonSearchAliases(dungeonData)
-    end
-
-    local categoryList = GetCategoryList()
-    if type(categoryList) ~= "table" then
-        categoryList = {}
-    end
-
-    for _, categoryID in ipairs(categoryList) do
-        if type(categoryID) == "number" then
-            local achievementCount = GetCategoryNumAchievements(categoryID, true) or 0
-
-            for index = 1, achievementCount do
-                local achievementID, achievementName, _, completed, _, _, _, _, _, _, rewardText = GetAchievementInfo(categoryID, index)
-
-                if type(achievementID) == "number" then
-                    local normalizedAchievementText = NormalizeSearchText(string.format("%s %s", tostring(achievementName or ""), tostring(rewardText or "")))
-
-                    if normalizedAchievementText ~= "" then
-                        for _, dungeonData in ipairs(SEASON_DUNGEON_PORTALS) do
-                            for _, alias in ipairs(searchAliases[dungeonData.key] or {}) do
-                                if SearchTextContains(normalizedAchievementText, alias) then
-                                    local dungeonStatus = statusByKey[dungeonData.key]
-
-                                    if dungeonStatus.achievementName == nil or completed == true then
-                                        dungeonStatus.achievementName = achievementName
-                                    end
-
-                                    if completed == true then
-                                        dungeonStatus.unlocked = true
-                                    end
-
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-            end
+local function ResolveKnownPortalSpellID(dungeonData)
+    for _, candidateSpellID in ipairs(GetPortalSpellCandidateIDs(dungeonData)) do
+        if IsPortalSpellKnown(candidateSpellID) then
+            return candidateSpellID
         end
     end
 
-    CachedAchievementStatusByKey = statusByKey
-end
-
-local function GetCachedAchievementStatus(dungeonKey)
-    if CachedAchievementStatusByKey == nil then
-        RefreshAchievementStatusCache()
-    end
-
-    if type(CachedAchievementStatusByKey) ~= "table" then
-        return nil
-    end
-
-    return CachedAchievementStatusByKey[dungeonKey]
-end
-
-local function GetPortalViewerLocale()
-    if GetLocale then
-        return GetLocale()
-    end
-
-    return "enUS"
+    return nil
 end
 
 local function GetDungeonDisplayName(dungeonData)
     return L(dungeonData.dungeonNameKey)
-end
-
-BuildDungeonSearchAliases = function(dungeonData)
-    local aliasMap = {}
-    local aliases = {}
-
-    local function AddAlias(text)
-        local normalizedAlias = NormalizeSearchText(text)
-        if normalizedAlias == "" or aliasMap[normalizedAlias] then
-            return
-        end
-
-        aliasMap[normalizedAlias] = true
-        aliases[#aliases + 1] = normalizedAlias
-    end
-
-    AddAlias(L(dungeonData.dungeonNameKey))
-    AddAlias(dungeonData.clientDungeonNames and dungeonData.clientDungeonNames.enUS)
-
-    for _, alias in ipairs(dungeonData.achievementAliases or {}) do
-        AddAlias(alias)
-    end
-
-    return aliases
 end
 
 local function CreateSectionDivider(parent)
@@ -476,9 +401,7 @@ local function CreatePortalRow(parent)
             GameTooltip:AddLine(L("PORTAL_VIEWER_CLICK_HINT"), 0.30, 0.90, 0.40)
         else
             GameTooltip:AddLine(L("PORTAL_VIEWER_LOCKED"), 1.00, 0.42, 0.32)
-            if self.achievementName and self.achievementName ~= "" then
-                GameTooltip:AddLine(self.achievementName, 0.82, 0.82, 0.86)
-            end
+            GameTooltip:AddLine(L("PORTAL_VIEWER_REQUIREMENT"), 0.82, 0.82, 0.86)
         end
 
         GameTooltip:Show()
@@ -497,15 +420,10 @@ local function GetPortalStatusByDungeon()
     local statusByKey = {}
 
     for _, dungeonData in ipairs(SEASON_DUNGEON_PORTALS) do
-        local spellRenderInfo = GetPortalSpellRenderInfo(dungeonData)
-        local achievementStatus = GetCachedAchievementStatus(dungeonData.key)
-        local unlockedBySpell = IsPortalSpellKnown(spellRenderInfo.spellID)
-        local unlockedByAchievement = achievementStatus and achievementStatus.unlocked == true
+        local knownSpellID = ResolveKnownPortalSpellID(dungeonData)
+        local spellRenderInfo = GetPortalSpellRenderInfo(dungeonData, knownSpellID)
         statusByKey[dungeonData.key] = {
-            unlocked = unlockedBySpell or unlockedByAchievement,
-            achievementName = achievementStatus and achievementStatus.achievementName or nil,
-            rewardText = nil,
-            matchedAchievement = unlockedByAchievement,
+            unlocked = knownSpellID ~= nil,
             iconID = spellRenderInfo.iconID,
             spellID = spellRenderInfo.spellID,
             spellName = spellRenderInfo.spellName,
@@ -542,7 +460,6 @@ end
 
 local function ConfigureRow(row, dungeonData, dungeonStatus)
     row.unlocked = dungeonStatus.unlocked == true
-    row.achievementName = dungeonStatus.achievementName
     row.spellID = dungeonStatus.spellID or dungeonData.spellID
     row.spellName = dungeonStatus.spellName or dungeonData.englishSpellName
     row.fullDungeonName = L(dungeonData.dungeonNameKey)
@@ -613,7 +530,6 @@ local function BuildPortalViewerFrame()
     PortalFrame:SetMovable(true)
     PortalFrame:SetToplevel(true)
     PortalFrame:EnableMouse(true)
-    PortalFrame:RegisterForDrag("RightButton")
     PortalFrame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8X8",
         edgeFile = "Interface\\Buttons\\WHITE8X8",
@@ -629,13 +545,6 @@ local function BuildPortalViewerFrame()
     })
     PortalFrame:SetBackdropColor(0.03, 0.03, 0.04, 0.78)
     PortalFrame:SetBackdropBorderColor(1.00, 0.82, 0.00, 0.42)
-    PortalFrame:SetScript("OnDragStart", function(self)
-        self:StartMoving()
-    end)
-    PortalFrame:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        SavePortalViewerPosition()
-    end)
     PortalFrame:Hide()
 
     local topGlow = PortalFrame:CreateTexture(nil, "BORDER")
@@ -688,12 +597,42 @@ local function BuildPortalViewerFrame()
         end
     end)
 
+    local dragHandle = CreateFrame("Frame", nil, PortalFrame)
+    dragHandle:SetPoint("TOPLEFT", PortalFrame, "TOPLEFT", 12, -10)
+    dragHandle:SetPoint("TOPRIGHT", closeButton, "TOPLEFT", -6, 0)
+    dragHandle:SetHeight(22)
+    dragHandle:EnableMouse(true)
+    dragHandle:RegisterForDrag("LeftButton")
+    dragHandle:SetScript("OnDragStart", function(self)
+        if PortalViewerModule.IsWindowLocked and PortalViewerModule.IsWindowLocked() then
+            return
+        end
+
+        self:GetParent():StartMoving()
+    end)
+    dragHandle:SetScript("OnDragStop", function(self)
+        local parent = self:GetParent()
+        parent:StopMovingOrSizing()
+        SavePortalViewerPosition()
+    end)
+    PortalFrame.DragHandle = dragHandle
+
+    PortalFrame.UpdateLockState = function(self)
+        local isLocked = PortalViewerModule.IsWindowLocked and PortalViewerModule.IsWindowLocked() or false
+        self:SetMovable(not isLocked)
+
+        if self.DragHandle then
+            self.DragHandle:EnableMouse(not isLocked)
+        end
+    end
+
     local divider = CreateSectionDivider(PortalFrame)
     divider:SetPoint("TOPLEFT", PortalFrame, "TOPLEFT", 12, -34)
     divider:SetPoint("TOPRIGHT", PortalFrame, "TOPRIGHT", -12, -34)
     divider:SetHeight(1)
 
     ApplyPortalViewerPosition()
+    PortalFrame:UpdateLockState()
 end
 
 function PortalViewerModule.RefreshWindow()
@@ -708,6 +647,9 @@ function PortalViewerModule.RefreshWindow()
     end
 
     BuildPortalViewerFrame()
+    if PortalFrame and PortalFrame.UpdateLockState then
+        PortalFrame:UpdateLockState()
+    end
     LayoutPortalRows(GetPortalStatusByDungeon())
 
     if PortalFrame then
@@ -724,14 +666,9 @@ end
 local PortalViewerEvents = CreateFrame("Frame")
 PortalViewerEvents:RegisterEvent("PLAYER_LOGIN")
 PortalViewerEvents:RegisterEvent("PLAYER_ENTERING_WORLD")
-PortalViewerEvents:RegisterEvent("ACHIEVEMENT_EARNED")
 PortalViewerEvents:RegisterEvent("SPELLS_CHANGED")
 PortalViewerEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
 PortalViewerEvents:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" or event == "ACHIEVEMENT_EARNED" then
-        RefreshAchievementStatusCache()
-    end
-
     if not PortalViewerModule.IsWindowEnabled or not PortalViewerModule.IsWindowEnabled() then
         return
     end

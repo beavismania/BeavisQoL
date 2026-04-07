@@ -438,6 +438,15 @@ function Logging._CanUseItemReferenceAPI(itemReference)
     return false
 end
 
+function Logging._CanUseItemLocationAPI(itemReference)
+    if type(itemReference) ~= "table" or type(itemReference.IsValid) ~= "function" then
+        return false
+    end
+
+    local ok, isValid = pcall(itemReference.IsValid, itemReference)
+    return ok and isValid == true
+end
+
 function Logging._GetItemReferenceLink(itemReference)
     if type(itemReference) == "string" and itemReference ~= "" and itemReference:find("|Hitem:", 1, true) then
         return itemReference
@@ -450,7 +459,7 @@ function Logging._GetItemReferenceLink(itemReference)
         end
     end
 
-    if C_Item and C_Item.GetItemLink and Logging._CanUseItemReferenceAPI(itemReference) then
+    if C_Item and C_Item.GetItemLink and Logging._CanUseItemLocationAPI(itemReference) then
         local itemLink = C_Item.GetItemLink(itemReference)
         if type(itemLink) == "string" and itemLink ~= "" then
             return itemLink
@@ -486,7 +495,7 @@ function Logging._GetItemReferenceID(itemReference)
         end
     end
 
-    if C_Item and C_Item.GetItemID and Logging._CanUseItemReferenceAPI(itemReference) then
+    if C_Item and C_Item.GetItemID and Logging._CanUseItemLocationAPI(itemReference) then
         local itemID = tonumber(C_Item.GetItemID(itemReference))
         if itemID and itemID > 0 then
             return itemID
@@ -1799,7 +1808,7 @@ local function HookAuctionHouseActions()
             end
 
             local deposit = C_AuctionHouse.CalculateItemDeposit(itemLocation, duration, quantity) or 0
-            local itemLink = C_Item and C_Item.GetItemLink and C_Item.GetItemLink(itemLocation)
+            local itemLink = Logging._GetItemReferenceLink(itemLocation)
             local items = { BuildItemText(itemLink, quantity) }
             SetPendingAuctionPost(deposit, "Einstellgebühr", items)
         end)
@@ -1811,27 +1820,13 @@ local function HookAuctionHouseActions()
                 return
             end
 
-            local itemID
-
-            if C_Item and C_Item.GetItemID then
-                itemID = C_Item.GetItemID(itemLocation)
-            end
-
-            if not itemID and type(itemLocation) == "table" then
-                itemID = tonumber(itemLocation.itemID)
-            end
-
-            if not itemID and type(itemLocation) == "number" then
-                itemID = itemLocation
-            end
-
-            itemID = tonumber(itemID)
+            local itemID = tonumber(Logging._GetItemReferenceID(itemLocation))
             if not itemID or itemID <= 0 then
                 return
             end
 
             local deposit = C_AuctionHouse.CalculateCommodityDeposit(itemID, duration, quantity) or 0
-            local itemLink = C_Item and C_Item.GetItemLink and C_Item.GetItemLink(itemLocation)
+            local itemLink = Logging._GetItemReferenceLink(itemLocation)
             local items = { BuildItemText(itemLink, quantity) }
             SetPendingAuctionPost(deposit, "Einstellgebühr", items)
         end)
@@ -2430,14 +2425,48 @@ local function BuildRepairDayExpandedText(dayEntry)
     return table.concat(lines, "\n")
 end
 
-local function BuildMoneyEntryDetails(entry)
-    local details = entry.category or L("LOGGING_ENTRY")
-
-    if type(entry.note) == "string" and entry.note ~= "" and entry.note ~= details then
-        details = string.format("%s | %s", details, entry.note)
+local function BuildMoneyEntryContextText(entry)
+    if type(entry) ~= "table" then
+        return L("LOGGING_ENTRY")
     end
 
-    local itemSummary = BuildItemListSummary(entry.items)
+    local category = type(entry.category) == "string" and entry.category ~= "" and entry.category or L("LOGGING_ENTRY")
+    local note = type(entry.note) == "string" and entry.note ~= "" and entry.note or nil
+
+    if category == L("LOGGING_REPAIR") then
+        if note then
+            return string.format("%s: %s", category, note)
+        end
+
+        return category
+    end
+
+    if note then
+        if note == category then
+            return note
+        end
+
+        if note:sub(1, #category + 2) == category .. ": " then
+            return note
+        end
+
+        return string.format("%s | %s", category, note)
+    end
+
+    return category
+end
+
+local function BuildMoneyEntryItemSummary(entry)
+    if type(entry) ~= "table" then
+        return nil
+    end
+
+    return BuildItemListSummary(entry.items)
+end
+
+local function BuildMoneyEntryDetails(entry)
+    local details = BuildMoneyEntryContextText(entry)
+    local itemSummary = BuildMoneyEntryItemSummary(entry)
     if itemSummary then
         details = string.format("%s\n%s: %s", details, L("ITEMS_LABEL"), itemSummary)
     end
@@ -2446,19 +2475,14 @@ local function BuildMoneyEntryDetails(entry)
 end
 
 local function BuildMoneyEntryPrimaryText(entry)
-    if entry.category == L("LOGGING_REPAIR") then
-        if type(entry.note) == "string" and entry.note ~= "" then
-            return string.format("%s: %s", entry.category, entry.note)
-        end
+    local contextText = BuildMoneyEntryContextText(entry)
+    local itemSummary = BuildMoneyEntryItemSummary(entry)
 
-        return entry.category
+    if itemSummary then
+        return string.format("%s | %s", contextText, itemSummary)
     end
 
-    if type(entry.note) == "string" and entry.note ~= "" then
-        return entry.note
-    end
-
-    return entry.category or L("LOGGING_ENTRY")
+    return contextText
 end
 
 local function BuildMoneyEntryExpandedText(entry)
@@ -3055,14 +3079,12 @@ local function BuildHistoryRecordForTab(tabKey, entry)
     }
 
     if tabKey == "income" or tabKey == "expense" then
-        local categoryText = entry.category or L("LOGGING_ENTRY")
-        local noteText = type(entry.note) == "string" and entry.note ~= "" and entry.note or nil
+        local contextText = BuildMoneyEntryContextText(entry)
+        local itemSummary = BuildMoneyEntryItemSummary(entry)
 
-        record.primaryText = categoryText
-        if noteText and noteText ~= categoryText then
-            record.secondaryText = noteText
-        elseif noteText then
-            record.primaryText = noteText
+        record.primaryText = contextText
+        if itemSummary then
+            record.secondaryText = itemSummary
         end
 
         if type(entry.items) == "table" and #entry.items > 0 then
