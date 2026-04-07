@@ -23,6 +23,28 @@ local function Clamp(value, minValue, maxValue)
     return value
 end
 
+local function ApplyTextureGradient(texture, orientation, startR, startG, startB, startA, endR, endG, endB, endA)
+    if not texture then
+        return
+    end
+
+    if texture.SetGradientAlpha then
+        texture:SetGradientAlpha(orientation, startR, startG, startB, startA, endR, endG, endB, endA)
+        return
+    end
+
+    if texture.SetGradient and CreateColor then
+        texture:SetGradient(
+            orientation,
+            CreateColor(startR, startG, startB, startA),
+            CreateColor(endR, endG, endB, endA)
+        )
+        return
+    end
+
+    texture:SetColorTexture(startR, startG, startB, math.max(startA or 0, endA or 0))
+end
+
 local L = BeavisQoL.L
 local metadata = BeavisQoL.Metadata or {}
 local version = metadata.version or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or L("UNKNOWN")
@@ -179,25 +201,49 @@ VersionBadge:SetPoint("TOPRIGHT", ReloadButton, "BOTTOMRIGHT", 0, -6)
 local Sidebar = CreateFrame("Frame", nil, BeavisFrame)
 Sidebar:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 10, -124)
 Sidebar:SetPoint("BOTTOMLEFT", BeavisFrame, "BOTTOMLEFT", 10, 10)
-Sidebar:SetWidth(228)
+Sidebar:SetWidth(226)
 
 BeavisQoL.Sidebar = Sidebar
 
 local SidebarBg = Sidebar:CreateTexture(nil, "BACKGROUND")
 SidebarBg:SetAllPoints()
-SidebarBg:SetColorTexture(0.035, 0.035, 0.04, 0.92)
+SidebarBg:SetColorTexture(0.05, 0.034, 0.023, 0.94)
+
+local SidebarTexture = Sidebar:CreateTexture(nil, "ARTWORK")
+SidebarTexture:SetAllPoints()
+SidebarTexture:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background-Dark")
+SidebarTexture:SetVertexColor(0.95, 0.78, 0.52, 0.11)
+
+local SidebarTopShade = Sidebar:CreateTexture(nil, "BORDER")
+SidebarTopShade:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", 0, 0)
+SidebarTopShade:SetPoint("TOPRIGHT", Sidebar, "TOPRIGHT", 0, 0)
+SidebarTopShade:SetHeight(60)
+SidebarTopShade:SetTexture("Interface\\Buttons\\WHITE8X8")
+ApplyTextureGradient(SidebarTopShade, "VERTICAL", 0.42, 0.24, 0.12, 0.11, 0.10, 0.06, 0.04, 0)
+
+local SidebarInnerShade = Sidebar:CreateTexture(nil, "ARTWORK")
+SidebarInnerShade:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", 0, 0)
+SidebarInnerShade:SetPoint("BOTTOMRIGHT", Sidebar, "BOTTOMRIGHT", 0, 0)
+SidebarInnerShade:SetTexture("Interface\\Buttons\\WHITE8X8")
+ApplyTextureGradient(SidebarInnerShade, "HORIZONTAL", 0, 0, 0, 0.06, 0, 0, 0, 0.18)
 
 local SidebarGlow = Sidebar:CreateTexture(nil, "BORDER")
 SidebarGlow:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", 0, 0)
 SidebarGlow:SetPoint("TOPRIGHT", Sidebar, "TOPRIGHT", 0, 0)
-SidebarGlow:SetHeight(38)
-SidebarGlow:SetColorTexture(1, 0.82, 0, 0.035)
+SidebarGlow:SetHeight(28)
+SidebarGlow:SetColorTexture(1, 0.82, 0, 0.025)
+
+local SidebarTopBorder = Sidebar:CreateTexture(nil, "ARTWORK")
+SidebarTopBorder:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", 0, 0)
+SidebarTopBorder:SetPoint("TOPRIGHT", Sidebar, "TOPRIGHT", 0, 0)
+SidebarTopBorder:SetHeight(1)
+SidebarTopBorder:SetColorTexture(0.84, 0.68, 0.44, 0.28)
 
 local SidebarRightBorder = Sidebar:CreateTexture(nil, "ARTWORK")
 SidebarRightBorder:SetPoint("TOPRIGHT", Sidebar, "TOPRIGHT", 0, 0)
 SidebarRightBorder:SetPoint("BOTTOMRIGHT", Sidebar, "BOTTOMRIGHT", 0, 0)
 SidebarRightBorder:SetWidth(1)
-SidebarRightBorder:SetColorTexture(1, 0.82, 0, 0.9)
+SidebarRightBorder:SetColorTexture(0.9, 0.75, 0.48, 0.72)
 
 local Content = CreateFrame("Frame", nil, BeavisFrame)
 Content:SetPoint("TOPLEFT", Sidebar, "TOPRIGHT", 14, 0)

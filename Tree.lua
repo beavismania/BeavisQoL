@@ -12,36 +12,125 @@ local SidebarFrame = BeavisQoL.Sidebar
 local Pages = BeavisQoL.Pages
 
 local L = BeavisQoL.L
+local FrameWithBackdrop = BackdropTemplateMixin and "BackdropTemplate" or nil
+
+local NAV_SECTION_HEIGHT = 18
+local NAV_SECTION_STEP = 21
+local NAV_GROUP_GAP = 7
+local NAV_ENTRY_HEIGHT = 24
+local NAV_ENTRY_STEP = 26
+local NAV_SECTION_LEFT = 10
+local NAV_ENTRY_LEFT = 6
+local NAV_RIGHT_INSET = 9
+
+local function ApplyTextureGradient(texture, orientation, startR, startG, startB, startA, endR, endG, endB, endA)
+    if not texture then
+        return
+    end
+
+    if texture.SetGradientAlpha then
+        texture:SetGradientAlpha(orientation, startR, startG, startB, startA, endR, endG, endB, endA)
+        return
+    end
+
+    if texture.SetGradient and CreateColor then
+        texture:SetGradient(
+            orientation,
+            CreateColor(startR, startG, startB, startA),
+            CreateColor(endR, endG, endB, endA)
+        )
+        return
+    end
+
+    texture:SetColorTexture(startR, startG, startB, math.max(startA or 0, endA or 0))
+end
+
+local SEARCH_FRAME_BACKDROP = {
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true,
+    tileSize = 16,
+    edgeSize = 10,
+    insets = {
+        left = 3,
+        right = 3,
+        top = 3,
+        bottom = 3,
+    },
+}
+
+local NAV_ENTRY_BACKDROP = {
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true,
+    tileSize = 16,
+    edgeSize = 10,
+    insets = {
+        left = 3,
+        right = 3,
+        top = 3,
+        bottom = 3,
+    },
+}
+
 local SidebarCaption = SidebarFrame:CreateFontString(nil, "ARTWORK")
-SidebarCaption:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 14, -12)
-SidebarCaption:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-SidebarCaption:SetTextColor(1, 0.82, 0, 1)
+SidebarCaption:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 15, -13)
+SidebarCaption:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+SidebarCaption:SetTextColor(0.98, 0.88, 0.68, 1)
 SidebarCaption:SetText(L("NAVIGATION"))
 
 local SidebarCaptionHint = SidebarFrame:CreateFontString(nil, "ARTWORK")
-SidebarCaptionHint:SetPoint("TOPLEFT", SidebarCaption, "BOTTOMLEFT", 0, -4)
-SidebarCaptionHint:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-SidebarCaptionHint:SetTextColor(0.74, 0.74, 0.76, 1)
-SidebarCaptionHint:SetText(L("NAVIGATION_HINT"))
+SidebarCaptionHint:SetFont("Fonts\\FRIZQT__.TTF", 8, "")
+SidebarCaptionHint:SetTextColor(0.78, 0.74, 0.68, 0.76)
 
-local SidebarSearchEditBox = CreateFrame("EditBox", nil, SidebarFrame, "InputBoxTemplate")
-SidebarSearchEditBox:SetSize(184, 22)
-SidebarSearchEditBox:SetPoint("TOPLEFT", SidebarCaptionHint, "BOTTOMLEFT", 4, -14)
+local SidebarSearchFrame = CreateFrame("Frame", nil, SidebarFrame, FrameWithBackdrop)
+SidebarSearchFrame:SetHeight(24)
+if SidebarSearchFrame.SetBackdrop then
+    SidebarSearchFrame:SetBackdrop(SEARCH_FRAME_BACKDROP)
+    SidebarSearchFrame:SetBackdropColor(0.09, 0.07, 0.05, 0.84)
+    SidebarSearchFrame:SetBackdropBorderColor(0.72, 0.6, 0.4, 0.32)
+end
+
+local SidebarSearchShade = SidebarSearchFrame:CreateTexture(nil, "BACKGROUND")
+SidebarSearchShade:SetAllPoints()
+SidebarSearchShade:SetTexture("Interface\\Buttons\\WHITE8X8")
+ApplyTextureGradient(SidebarSearchShade, "VERTICAL", 0.32, 0.22, 0.12, 0.14, 0.08, 0.05, 0.03, 0.02)
+
+local SidebarSearchGlow = SidebarSearchFrame:CreateTexture(nil, "ARTWORK")
+SidebarSearchGlow:SetPoint("TOPLEFT", SidebarSearchFrame, "TOPLEFT", 6, -4)
+SidebarSearchGlow:SetPoint("TOPRIGHT", SidebarSearchFrame, "TOPRIGHT", -6, -4)
+SidebarSearchGlow:SetHeight(5)
+SidebarSearchGlow:SetTexture("Interface\\Buttons\\WHITE8X8")
+ApplyTextureGradient(SidebarSearchGlow, "VERTICAL", 1, 0.95, 0.78, 0.14, 1, 0.95, 0.78, 0)
+SidebarSearchGlow:SetAlpha(0.38)
+
+local SidebarSearchEditBox = CreateFrame("EditBox", nil, SidebarSearchFrame)
+SidebarSearchEditBox:SetPoint("TOPLEFT", SidebarSearchFrame, "TOPLEFT", 9, -4)
+SidebarSearchEditBox:SetPoint("BOTTOMRIGHT", SidebarSearchFrame, "BOTTOMRIGHT", -9, 4)
 SidebarSearchEditBox:SetAutoFocus(false)
 SidebarSearchEditBox:SetMaxLetters(80)
-SidebarSearchEditBox:SetFontObject(ChatFontNormal)
+SidebarSearchEditBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SidebarSearchEditBox:SetTextColor(0.97, 0.94, 0.89, 1)
 
-local SidebarSearchPlaceholder = SidebarFrame:CreateFontString(nil, "ARTWORK")
-SidebarSearchPlaceholder:SetPoint("LEFT", SidebarSearchEditBox, "LEFT", 6, 0)
-SidebarSearchPlaceholder:SetPoint("RIGHT", SidebarSearchEditBox, "RIGHT", -8, 0)
+local SidebarSearchPlaceholder = SidebarSearchFrame:CreateFontString(nil, "ARTWORK")
+SidebarSearchPlaceholder:SetPoint("LEFT", SidebarSearchEditBox, "LEFT", 0, 0)
+SidebarSearchPlaceholder:SetPoint("RIGHT", SidebarSearchEditBox, "RIGHT", 0, 0)
 SidebarSearchPlaceholder:SetJustifyH("LEFT")
-SidebarSearchPlaceholder:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-SidebarSearchPlaceholder:SetTextColor(0.58, 0.58, 0.60, 1)
+SidebarSearchPlaceholder:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+SidebarSearchPlaceholder:SetTextColor(0.62, 0.58, 0.53, 0.92)
 SidebarSearchPlaceholder:SetText(L("NAVIGATION_SEARCH_PLACEHOLDER"))
 
+local SidebarSearchStatus = SidebarFrame:CreateFontString(nil, "ARTWORK")
+SidebarSearchStatus:SetPoint("TOPLEFT", SidebarSearchFrame, "BOTTOMLEFT", 2, -4)
+SidebarSearchStatus:SetPoint("RIGHT", SidebarFrame, "RIGHT", -16, 0)
+SidebarSearchStatus:SetJustifyH("LEFT")
+SidebarSearchStatus:SetFont("Fonts\\FRIZQT__.TTF", 8, "")
+SidebarSearchStatus:SetTextColor(0.82, 0.76, 0.68, 1)
+SidebarSearchStatus:Hide()
+
 local SidebarScrollFrame = CreateFrame("ScrollFrame", nil, SidebarFrame, "UIPanelScrollFrameTemplate")
-SidebarScrollFrame:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 10, -74)
-SidebarScrollFrame:SetPoint("BOTTOMRIGHT", SidebarFrame, "BOTTOMRIGHT", -28, 10)
+SidebarScrollFrame:SetPoint("TOPLEFT", SidebarSearchStatus, "BOTTOMLEFT", -2, -8)
+SidebarScrollFrame:SetPoint("BOTTOMRIGHT", SidebarFrame, "BOTTOMRIGHT", -28, 8)
 SidebarScrollFrame:EnableMouseWheel(true)
 
 local Sidebar = CreateFrame("Frame", nil, SidebarScrollFrame)
@@ -158,17 +247,61 @@ local function RefreshSearchIndex()
     end
 end
 
+local function UpdateSidebarHeaderLayout()
+    local hintText = L("NAVIGATION_HINT")
+
+    SidebarCaptionHint:ClearAllPoints()
+    SidebarSearchFrame:ClearAllPoints()
+
+    if hintText and hintText ~= "" then
+        SidebarCaptionHint:SetPoint("TOPLEFT", SidebarCaption, "BOTTOMLEFT", 1, -2)
+        SidebarCaptionHint:SetPoint("RIGHT", SidebarFrame, "RIGHT", -18, 0)
+        SidebarCaptionHint:SetText(hintText)
+        SidebarCaptionHint:Show()
+        SidebarSearchFrame:SetPoint("TOPLEFT", SidebarCaptionHint, "BOTTOMLEFT", -4, -7)
+    else
+        SidebarCaptionHint:SetText("")
+        SidebarCaptionHint:Hide()
+        SidebarSearchFrame:SetPoint("TOPLEFT", SidebarCaption, "BOTTOMLEFT", -4, -8)
+    end
+
+    SidebarSearchFrame:SetPoint("RIGHT", SidebarFrame, "RIGHT", -14, 0)
+end
+
+local function UpdateSearchFrameVisual()
+    local isActive = SidebarSearchEditBox:HasFocus() or SidebarSearchEditBox:GetText() ~= ""
+
+    if SidebarSearchFrame.SetBackdropColor then
+        SidebarSearchFrame:SetBackdropColor(0.09, 0.07, 0.05, isActive and 0.92 or 0.84)
+    end
+
+    if SidebarSearchFrame.SetBackdropBorderColor then
+        SidebarSearchFrame:SetBackdropBorderColor(0.8, 0.67, 0.45, isActive and 0.58 or 0.32)
+    end
+
+    SidebarSearchGlow:SetAlpha(isActive and 0.62 or 0.38)
+end
+
 local function UpdateSearchPlaceholder()
     if SidebarSearchEditBox:HasFocus() or SidebarSearchEditBox:GetText() ~= "" then
         SidebarSearchPlaceholder:Hide()
-        return
+    else
+        SidebarSearchPlaceholder:Show()
     end
 
-    SidebarSearchPlaceholder:Show()
+    UpdateSearchFrameVisual()
 end
 
 local function SetSearchStatusText(text, red, green, blue)
-    return
+    if not IsSearchActive() or not text or text == "" then
+        SidebarSearchStatus:SetText("")
+        SidebarSearchStatus:Hide()
+        return
+    end
+
+    SidebarSearchStatus:SetText(text)
+    SidebarSearchStatus:SetTextColor(red or 0.82, green or 0.76, blue or 0.68, 1)
+    SidebarSearchStatus:Show()
 end
 
 local function BuildVisibleEntriesForSearch(entries, groupSearchText)
@@ -259,22 +392,40 @@ end
 
 local function ApplyEntryVisual(entry, hovered)
     if entry.isActive then
-        entry.button.Bg:SetColorTexture(1, 0.82, 0, 0.11)
-        entry.button.Accent:SetAlpha(1)
-        entry.text:SetTextColor(1, 0.9, 0.35, 1)
+        if entry.button.SetBackdropColor then
+            entry.button:SetBackdropColor(0.13, 0.11, 0.09, 0.72)
+        end
+        if entry.button.SetBackdropBorderColor then
+            entry.button:SetBackdropBorderColor(0.74, 0.63, 0.48, 0.34)
+        end
+        entry.button.Sheen:SetAlpha(0.36)
+        entry.button.InnerGlow:SetAlpha(0.04)
+        entry.text:SetTextColor(0.99, 0.96, 0.9, 1)
         return
     end
 
     if hovered then
-        entry.button.Bg:SetColorTexture(1, 0.82, 0, 0.055)
-        entry.button.Accent:SetAlpha(0.45)
-        entry.text:SetTextColor(1, 1, 1, 1)
+        if entry.button.SetBackdropColor then
+            entry.button:SetBackdropColor(0.11, 0.09, 0.075, 0.28)
+        end
+        if entry.button.SetBackdropBorderColor then
+            entry.button:SetBackdropBorderColor(0.62, 0.52, 0.4, 0.16)
+        end
+        entry.button.Sheen:SetAlpha(0.12)
+        entry.button.InnerGlow:SetAlpha(0.015)
+        entry.text:SetTextColor(0.98, 0.93, 0.84, 1)
         return
     end
 
-    entry.button.Bg:SetColorTexture(1, 0.82, 0, 0.015)
-    entry.button.Accent:SetAlpha(0)
-    entry.text:SetTextColor(0.92, 0.92, 0.95, 1)
+    if entry.button.SetBackdropColor then
+        entry.button:SetBackdropColor(0.08, 0.06, 0.045, 0)
+    end
+    if entry.button.SetBackdropBorderColor then
+        entry.button:SetBackdropBorderColor(0.58, 0.48, 0.38, 0)
+    end
+    entry.button.Sheen:SetAlpha(0)
+    entry.button.InnerGlow:SetAlpha(0)
+    entry.text:SetTextColor(0.93, 0.84, 0.72, 1)
 end
 
 local function AttachEntryVisual(entry)
@@ -290,29 +441,42 @@ local function AttachEntryVisual(entry)
 end
 
 local function CreateEntryButton(labelTextKey)
-    local button = CreateFrame("Button", nil, Sidebar)
-    button:SetSize(192, 24)
+    local button = CreateFrame("Button", nil, Sidebar, FrameWithBackdrop)
+    button:SetHeight(NAV_ENTRY_HEIGHT)
     button:SetHitRectInsets(-4, -4, -2, -2)
 
-    local bg = button:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(1, 0.82, 0, 0.015)
-    button.Bg = bg
+    if button.SetBackdrop then
+        button:SetBackdrop(NAV_ENTRY_BACKDROP)
+        button:SetBackdropColor(0.08, 0.06, 0.045, 0)
+        button:SetBackdropBorderColor(0.58, 0.48, 0.38, 0)
+    end
 
-    local accent = button:CreateTexture(nil, "ARTWORK")
-    accent:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
-    accent:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
-    accent:SetWidth(2)
-    accent:SetColorTexture(1, 0.82, 0, 0.95)
-    accent:SetAlpha(0)
-    button.Accent = accent
+    local innerGlow = button:CreateTexture(nil, "BACKGROUND")
+    innerGlow:SetPoint("TOPLEFT", button, "TOPLEFT", 5, -4)
+    innerGlow:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -5, 4)
+    innerGlow:SetTexture("Interface\\Buttons\\WHITE8X8")
+    ApplyTextureGradient(innerGlow, "HORIZONTAL", 1, 0.86, 0.58, 0.05, 1, 0.86, 0.58, 0.01)
+    innerGlow:SetAlpha(0)
+    button.InnerGlow = innerGlow
+
+    local sheen = button:CreateTexture(nil, "ARTWORK")
+    sheen:SetPoint("TOPLEFT", button, "TOPLEFT", 8, -4)
+    sheen:SetPoint("TOPRIGHT", button, "TOPRIGHT", -8, -4)
+    sheen:SetHeight(5)
+    sheen:SetTexture("Interface\\Buttons\\WHITE8X8")
+    ApplyTextureGradient(sheen, "VERTICAL", 1, 1, 1, 0.05, 1, 1, 1, 0)
+    sheen:SetAlpha(0)
+    button.Sheen = sheen
 
     local text = button:CreateFontString(nil, "OVERLAY")
     text:SetPoint("LEFT", button, "LEFT", 12, 0)
-    text:SetPoint("RIGHT", button, "RIGHT", -8, 0)
+    text:SetPoint("RIGHT", button, "RIGHT", -10, 0)
     text:SetJustifyH("LEFT")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-    text:SetTextColor(0.92, 0.92, 0.95, 1)
+    text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    text:SetWordWrap(false)
+    text:SetShadowOffset(1, -1)
+    text:SetShadowColor(0, 0, 0, 0.35)
+    text:SetTextColor(0.93, 0.84, 0.72, 1)
     text:SetText(L(labelTextKey))
 
     return button, text
@@ -320,25 +484,24 @@ end
 
 local function CreateSectionHeader(labelTextKey)
     local frame = CreateFrame("Frame", nil, Sidebar)
-    frame:SetSize(192, 22)
+    frame:SetHeight(NAV_SECTION_HEIGHT)
 
     local line = frame:CreateTexture(nil, "BACKGROUND")
-    line:SetPoint("LEFT", frame, "LEFT", 0, 0)
-    line:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
+    line:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 5, 0)
+    line:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -12, 0)
     line:SetHeight(1)
-    line:SetColorTexture(1, 0.82, 0, 0.12)
-
-    local accent = frame:CreateTexture(nil, "ARTWORK")
-    accent:SetPoint("LEFT", frame, "LEFT", 0, 0)
-    accent:SetSize(18, 2)
-    accent:SetColorTexture(1, 0.82, 0, 0.8)
+    line:SetTexture("Interface\\Buttons\\WHITE8X8")
+    ApplyTextureGradient(line, "HORIZONTAL", 0.86, 0.72, 0.46, 0.18, 0.86, 0.72, 0.46, 0)
 
     local text = frame:CreateFontString(nil, "OVERLAY")
-    text:SetPoint("LEFT", frame, "LEFT", 0, 8)
-    text:SetPoint("RIGHT", frame, "RIGHT", 0, 8)
+    text:SetPoint("TOPLEFT", frame, "TOPLEFT", 3, -1)
+    text:SetPoint("RIGHT", frame, "RIGHT", -10, 0)
     text:SetJustifyH("LEFT")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-    text:SetTextColor(1, 0.82, 0, 0.85)
+    text:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    text:SetWordWrap(false)
+    text:SetShadowOffset(1, -1)
+    text:SetShadowColor(0, 0, 0, 0.35)
+    text:SetTextColor(0.9, 0.8, 0.62, 0.95)
     text:SetText(L(labelTextKey))
 
     return frame, text
@@ -614,7 +777,7 @@ end
 
 local function UpdateTreeScrollLayout(contentBottomY)
     Sidebar:SetWidth(math.max(1, SidebarScrollFrame:GetWidth()))
-    Sidebar:SetHeight(math.max(SidebarScrollFrame:GetHeight(), -contentBottomY + 28))
+    Sidebar:SetHeight(math.max(SidebarScrollFrame:GetHeight(), -contentBottomY + 20))
 
     local maxScroll = math.max(0, Sidebar:GetHeight() - SidebarScrollFrame:GetHeight())
     if SidebarScrollFrame:GetVerticalScroll() > maxScroll then
@@ -632,6 +795,20 @@ local function HideSection(section)
     end
 end
 
+local function LayoutSectionFrame(section, currentY)
+    section.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", NAV_SECTION_LEFT, currentY)
+    section.frame:SetPoint("RIGHT", Sidebar, "RIGHT", -NAV_RIGHT_INSET, 0)
+    section.frame:Show()
+    return currentY - NAV_SECTION_STEP
+end
+
+local function LayoutEntryButton(entry, currentY)
+    entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", NAV_ENTRY_LEFT, currentY)
+    entry.button:SetPoint("RIGHT", Sidebar, "RIGHT", -NAV_RIGHT_INSET, 0)
+    entry.button:Show()
+    return currentY - NAV_ENTRY_STEP
+end
+
 local function UpdateTreeLayout()
     for _, entry in ipairs(GeneralEntries) do
         entry.button:Hide()
@@ -646,8 +823,6 @@ local function UpdateTreeLayout()
         HideSection(section)
     end
 
-    local sectionX = 16
-    local sectionChildX = 24
     local currentY = -4
 
     if IsSearchActive() then
@@ -657,17 +832,13 @@ local function UpdateTreeLayout()
         local visibleModuleSections = {}
 
         if visibleGeneralCount > 0 then
-            GeneralSectionHeader.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
-            GeneralSectionHeader.frame:Show()
-            currentY = currentY - 28
+            currentY = LayoutSectionFrame(GeneralSectionHeader, currentY)
 
             for _, entry in ipairs(visibleGeneralEntries) do
-                entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionChildX, currentY)
-                entry.button:Show()
-                currentY = currentY - 28
+                currentY = LayoutEntryButton(entry, currentY)
             end
 
-            currentY = currentY - 10
+            currentY = currentY - NAV_GROUP_GAP
         end
 
         for _, section in ipairs(ModuleSectionHeaders) do
@@ -686,17 +857,13 @@ local function UpdateTreeLayout()
             for _, sectionState in ipairs(visibleModuleSections) do
                 local section = sectionState.section
 
-                section.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
-                section.frame:Show()
-                currentY = currentY - 28
+                currentY = LayoutSectionFrame(section, currentY)
 
                 for _, entry in ipairs(sectionState.entries) do
-                    entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionChildX, currentY)
-                    entry.button:Show()
-                    currentY = currentY - 28
+                    currentY = LayoutEntryButton(entry, currentY)
                 end
 
-                currentY = currentY - 10
+                currentY = currentY - NAV_GROUP_GAP
             end
         end
 
@@ -714,30 +881,22 @@ local function UpdateTreeLayout()
 
     SetSearchStatusText(L("NAVIGATION_SEARCH_HINT"))
 
-    GeneralSectionHeader.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
-    GeneralSectionHeader.frame:Show()
-    currentY = currentY - 28
+    currentY = LayoutSectionFrame(GeneralSectionHeader, currentY)
 
     for _, entry in ipairs(GeneralEntries) do
-        entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionChildX, currentY)
-        entry.button:Show()
-        currentY = currentY - 28
+        currentY = LayoutEntryButton(entry, currentY)
     end
 
-    currentY = currentY - 10
+    currentY = currentY - NAV_GROUP_GAP
 
     for _, section in ipairs(ModuleSectionHeaders) do
-        section.frame:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionX, currentY)
-        section.frame:Show()
-        currentY = currentY - 28
+        currentY = LayoutSectionFrame(section, currentY)
 
         for _, entry in ipairs(section.entries) do
-            entry.button:SetPoint("TOPLEFT", Sidebar, "TOPLEFT", sectionChildX, currentY)
-            entry.button:Show()
-            currentY = currentY - 28
+            currentY = LayoutEntryButton(entry, currentY)
         end
 
-        currentY = currentY - 10
+        currentY = currentY - NAV_GROUP_GAP
     end
 
     UpdateTreeScrollLayout(currentY)
@@ -766,6 +925,7 @@ BeavisQoL.UpdateTree = function()
     SidebarCaption:SetText(L("NAVIGATION"))
     SidebarCaptionHint:SetText(L("NAVIGATION_HINT"))
     SidebarSearchPlaceholder:SetText(L("NAVIGATION_SEARCH_PLACEHOLDER"))
+    UpdateSidebarHeaderLayout()
 
     GeneralSectionHeader.text:SetText(L("NAVIGATION_SECTION_ADDON"))
 
@@ -910,6 +1070,8 @@ SidebarSearchEditBox:SetScript("OnEscapePressed", function(self)
     self:ClearFocus()
 end)
 
+UpdateSidebarHeaderLayout()
+UpdateSearchPlaceholder()
 UpdateTreeLayout()
 ShowPage(Pages.Home)
 SetActiveTreeItem(TreeHomeText)
