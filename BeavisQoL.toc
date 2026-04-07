@@ -60,6 +60,8 @@ Pages\DamageText.lua
 Pages\MouseHelper.lua
 Pages\BossGuides.lua
 Pages\PortalViewer.lua
+MinimapCollector.lua
+Pages\MinimapCollector.lua
 Tree.lua
 MinimapButton.lua
 Pages\PerformanceProfiler.lua

@@ -561,6 +561,15 @@ local MouseHelperEntry = RegisterModuleEntry(InterfaceSection, "MOUSE_HELPER", "
     },
     searchAliases = "mouse cursor circle trail pointer highlight blizzard large cast casting ring progress",
 })
+local MinimapCollectorEntry = RegisterModuleEntry(InterfaceSection, "MINIMAP_COLLECTOR", "MinimapCollector", {
+    searchTextKeys = {
+        "MINIMAP_COLLECTOR_DESC",
+        "MINIMAP_COLLECTOR_ENABLE",
+        "MINIMAP_COLLECTOR_BUTTONS_DESC",
+        "MINIMAP_COLLECTOR_BUTTONS_HINT",
+    },
+    searchAliases = "minimap collector buttons tray launcher drag transparent panel",
+})
 local BossGuidesEntry = RegisterModuleEntry(InterfaceSection, "BOSS_GUIDES", "BossGuides", {
     searchTextKeys = {
         "BOSS_GUIDES_DESC",
@@ -783,6 +792,7 @@ BeavisQoL.UpdateTree = function()
     MarkerBarEntry.text:SetText(L("MARKER_BAR"))
     CombatTextEntry.text:SetText(L("COMBAT_TEXT"))
     MouseHelperEntry.text:SetText(L("MOUSE_HELPER"))
+    MinimapCollectorEntry.text:SetText(L("MINIMAP_COLLECTOR"))
     BossGuidesEntry.text:SetText(L("BOSS_GUIDES"))
     LFGEntry.text:SetText(L("LFG"))
     StreamerPlannerEntry.text:SetText(L("STREAMER_PLANNER"))
@@ -816,6 +826,7 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         StreamerPlanner = { page = Pages.StreamerPlanner, text = StreamerPlannerEntry.text, group = "module" },
         DamageText = { page = Pages.DamageText, text = CombatTextEntry.text, group = "module" },
         MouseHelper = { page = Pages.MouseHelper, text = MouseHelperEntry.text, group = "module" },
+        MinimapCollector = { page = Pages.MinimapCollector, text = MinimapCollectorEntry.text, group = "module" },
         BossGuides = { page = Pages.BossGuides, text = BossGuidesEntry.text, group = "module" },
     }
 

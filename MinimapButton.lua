@@ -463,6 +463,8 @@ local function ShowMinimapContextMenu(anchorFrame)
 end
 
 -- Linksklick öffnet das Fenster, Shift-Klick lädt die UI neu.
+BeavisQoL.ShowMinimapContextMenu = ShowMinimapContextMenu
+
 local launcher = LDB:NewDataObject(ADDON_NAME, {
     type = "launcher",
     text = addonTitle,

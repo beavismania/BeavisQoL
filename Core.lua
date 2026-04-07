@@ -356,6 +356,10 @@ function BeavisQoL.RefreshLocale()
         BeavisQoL.UpdatePortalViewer()
     end
 
+    if BeavisQoL.UpdateMinimapCollectorPage then
+        BeavisQoL.UpdateMinimapCollectorPage()
+    end
+
     local refreshablePages = {
         BeavisQoL.Pages.Misc,
         BeavisQoL.Pages.Fishing,
@@ -368,6 +372,7 @@ function BeavisQoL.RefreshLocale()
         BeavisQoL.Pages.Logging,
         BeavisQoL.Pages.Checklist,
         BeavisQoL.Pages.MouseHelper,
+        BeavisQoL.Pages.MinimapCollector,
     }
 
     for _, page in ipairs(refreshablePages) do
