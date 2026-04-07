@@ -632,12 +632,55 @@ CameraDistanceStandardButton:SetPoint("LEFT", CameraDistanceMaxButton, "RIGHT", 
 CameraDistanceStandardButton:SetText(L("STANDARD"))
 
 -- ========================================
+-- Bereich: Macro Frame
+-- ========================================
+
+local MacroFramePanel = CreateFrame("Frame", nil, PageMiscContent)
+MacroFramePanel:SetPoint("TOPLEFT", CameraDistancePanel, "BOTTOMLEFT", 0, -18)
+MacroFramePanel:SetPoint("TOPRIGHT", CameraDistancePanel, "BOTTOMRIGHT", 0, -18)
+MacroFramePanel:SetHeight(115)
+
+local MacroFrameBg = MacroFramePanel:CreateTexture(nil, "BACKGROUND")
+MacroFrameBg:SetAllPoints()
+MacroFrameBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+
+local MacroFrameBorder = MacroFramePanel:CreateTexture(nil, "ARTWORK")
+MacroFrameBorder:SetPoint("BOTTOMLEFT", MacroFramePanel, "BOTTOMLEFT", 0, 0)
+MacroFrameBorder:SetPoint("BOTTOMRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, 0)
+MacroFrameBorder:SetHeight(1)
+MacroFrameBorder:SetColorTexture(1, 0.82, 0, 0.9)
+
+local MacroFrameTitle = MacroFramePanel:CreateFontString(nil, "OVERLAY")
+MacroFrameTitle:SetPoint("TOPLEFT", MacroFramePanel, "TOPLEFT", 18, -14)
+MacroFrameTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+MacroFrameTitle:SetTextColor(1, 0.82, 0, 1)
+MacroFrameTitle:SetText(L("MACRO_FRAME"))
+
+local MacroFrameCheckbox = CreateFrame("CheckButton", nil, MacroFramePanel, "UICheckButtonTemplate")
+MacroFrameCheckbox:SetPoint("TOPLEFT", MacroFrameTitle, "BOTTOMLEFT", -4, -12)
+
+local MacroFrameLabel = MacroFramePanel:CreateFontString(nil, "OVERLAY")
+MacroFrameLabel:SetPoint("LEFT", MacroFrameCheckbox, "RIGHT", 6, 0)
+MacroFrameLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+MacroFrameLabel:SetTextColor(1, 1, 1, 1)
+MacroFrameLabel:SetText(L("ACTIVE"))
+
+local MacroFrameHint = MacroFramePanel:CreateFontString(nil, "OVERLAY")
+MacroFrameHint:SetPoint("TOPLEFT", MacroFrameCheckbox, "BOTTOMLEFT", 34, -2)
+MacroFrameHint:SetPoint("RIGHT", MacroFramePanel, "RIGHT", -18, 0)
+MacroFrameHint:SetJustifyH("LEFT")
+MacroFrameHint:SetJustifyV("TOP")
+MacroFrameHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+MacroFrameHint:SetTextColor(0.80, 0.80, 0.80, 1)
+MacroFrameHint:SetText(L("MACRO_FRAME_HINT"))
+
+-- ========================================
 -- Bereich: Prey Hunt Progress
 -- ========================================
 
 local PreyHuntProgressPanel = CreateFrame("Frame", nil, PageMiscContent)
-PreyHuntProgressPanel:SetPoint("TOPLEFT", CameraDistancePanel, "BOTTOMLEFT", 0, -18)
-PreyHuntProgressPanel:SetPoint("TOPRIGHT", CameraDistancePanel, "BOTTOMRIGHT", 0, -18)
+PreyHuntProgressPanel:SetPoint("TOPLEFT", MacroFramePanel, "BOTTOMLEFT", 0, -18)
+PreyHuntProgressPanel:SetPoint("TOPRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, -18)
 PreyHuntProgressPanel:SetHeight(115)
 
 local PreyHuntProgressBg = PreyHuntProgressPanel:CreateTexture(nil, "BACKGROUND")
@@ -898,6 +941,7 @@ local SectionPanels = {
     -- Karte gezielt ansteuern und sichtbar machen kann.
     TooltipItemLevel = TooltipItemLevelPanel,
     CameraDistance = CameraDistancePanel,
+    MacroFrame = MacroFramePanel,
     PreyHuntProgress = PreyHuntProgressPanel,
     KeystoneActions = KeystoneActionsPanel,
     PortalViewer = PortalViewerPanel,
@@ -960,6 +1004,10 @@ PageMisc.Widgets = {
     CameraDistanceStatusValue = CameraDistanceStatusValue,
     CameraDistanceMaxButton = CameraDistanceMaxButton,
     CameraDistanceStandardButton = CameraDistanceStandardButton,
+    MacroFrameTitle = MacroFrameTitle,
+    MacroFrameLabel = MacroFrameLabel,
+    MacroFrameHint = MacroFrameHint,
+    MacroFrameCheckbox = MacroFrameCheckbox,
     PreyHuntProgressTitle = PreyHuntProgressTitle,
     PreyHuntProgressLabel = PreyHuntProgressLabel,
     PreyHuntProgressHint = PreyHuntProgressHint,
@@ -1047,6 +1095,7 @@ function PageMisc:RefreshState()
     local flightMasterTimerLocked = true
     local flightMasterTimerPreviewVisible = false
     local tooltipItemLevelEnabled = false
+    local macroFrameEnabled = false
     local preyHuntProgressEnabled = false
     local keystoneActionsEnabled = false
     local keystoneActionsGroupLockEnabled = true
@@ -1108,6 +1157,10 @@ function PageMisc:RefreshState()
     -- SavedVariables immer denselben Wahrheitswert anzeigen.
     if Misc.IsTooltipItemLevelEnabled then
         tooltipItemLevelEnabled = Misc.IsTooltipItemLevelEnabled()
+    end
+
+    if Misc.IsLargeMacroFrameEnabled then
+        macroFrameEnabled = Misc.IsLargeMacroFrameEnabled()
     end
 
     if Misc.IsPreyHuntProgressEnabled then
@@ -1196,6 +1249,9 @@ function PageMisc:RefreshState()
     widgets.CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
     widgets.CameraDistanceMaxButton:SetText(L("CAMERA_DISTANCE_MAX"))
     widgets.CameraDistanceStandardButton:SetText(L("STANDARD"))
+    widgets.MacroFrameTitle:SetText(L("MACRO_FRAME"))
+    widgets.MacroFrameLabel:SetText(L("ACTIVE"))
+    widgets.MacroFrameHint:SetText(L("MACRO_FRAME_HINT"))
     widgets.PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
     widgets.PreyHuntProgressLabel:SetText(L("ACTIVE"))
     widgets.PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
@@ -1229,6 +1285,7 @@ function PageMisc:RefreshState()
     widgets.FlightMasterTimerSoundCheckbox:SetChecked(flightMasterTimerSoundEnabled)
     widgets.FlightMasterTimerLockCheckbox:SetChecked(flightMasterTimerLocked)
     widgets.TooltipItemLevelCheckbox:SetChecked(tooltipItemLevelEnabled)
+    widgets.MacroFrameCheckbox:SetChecked(macroFrameEnabled)
     widgets.PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
     widgets.KeystoneActionsCheckbox:SetChecked(keystoneActionsEnabled)
     widgets.KeystoneActionsGroupLockCheckbox:SetChecked(keystoneActionsGroupLockEnabled)
@@ -1345,6 +1402,7 @@ function PageMisc:UpdateScrollLayout()
         -- Die neue Kamera-Karte gehört fest in die Gesamthöhe,
         -- damit der Scrollbereich unten nicht zu früh endet.
         + 18 + CameraDistancePanel:GetHeight()
+        + 18 + MacroFramePanel:GetHeight()
         + 18 + PreyHuntProgressPanel:GetHeight()
         + 18 + KeystoneActionsPanel:GetHeight()
         + 18 + PortalViewerPanel:GetHeight()
@@ -1535,6 +1593,14 @@ TooltipItemLevelCheckbox:SetScript("OnClick", function(self)
     -- an das Modul weiter. Danach wird die komplette Seite neu synchronisiert.
     if Misc.SetTooltipItemLevelEnabled then
         Misc.SetTooltipItemLevelEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+MacroFrameCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetLargeMacroFrameEnabled then
+        Misc.SetLargeMacroFrameEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

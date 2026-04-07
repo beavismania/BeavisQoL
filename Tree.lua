@@ -509,6 +509,11 @@ local CameraDistanceEntry = RegisterModuleEntry(ComfortSection, "CAMERA_DISTANCE
     searchTextKeys = { "CAMERA_DISTANCE_HINT", "CAMERA_DISTANCE_MAX" },
     searchAliases = "camera zoom distance max",
 })
+local MacroFrameEntry = RegisterModuleEntry(ComfortSection, "MACRO_FRAME", "Misc", {
+    miscSection = "MacroFrame",
+    searchTextKeys = { "MACRO_FRAME_HINT" },
+    searchAliases = "macro macros macroframe macro ui window larger bigger",
+})
 local PreyHuntProgressEntry = RegisterModuleEntry(ComfortSection, "PREY_HUNT_PROGRESS", "Misc", {
     miscSection = "PreyHuntProgress",
     searchTextKeys = { "PREY_HUNT_PROGRESS_HINT" },
