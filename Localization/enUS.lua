@@ -178,6 +178,7 @@ BeavisQoL.Localization.enUS = {
 	MISC_TITLE = "Comfort",
 	MISC_DESC = "Here you will find comfort features that can be used independently of the rest of the addon.",
 	REPUTATION_SEARCH_PLACEHOLDER = "Search reputations",
+	CURRENCY_SEARCH_PLACEHOLDER = "Search currencies",
 	AUTOSELL_HINT = "Automatically sells all gray items with vendor value when you open a merchant.",
 	AUTOREPAIR_HINT = "Automatically repairs damaged items when you open a merchant.",
 	AUTOREPAIR_GUILD = "Prefer guild funds",
