@@ -307,6 +307,7 @@ BeavisQoL.Localization.deDE = {
 	MOUSE_HELPER_TRAIL_LENGTH = "Länge",
 	MOUSE_HELPER_TRAIL_SIZE = "Punktgröße",
 	MOUSE_HELPER_TRAIL_STYLE = "Trail-Stil",
+	MOUSE_HELPER_TRAIL_CLASS_COLOR = "Klassenfarbe automatisch verwenden",
 	MOUSE_HELPER_TRAIL_STYLE_LIGHTNING = "Blitz",
 	MOUSE_HELPER_TRAIL_STYLE_HOLY = "Heiliges Licht",
 	MOUSE_HELPER_TRAIL_STYLE_ARC = "Bögen (Ice)",
