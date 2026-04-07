@@ -206,8 +206,12 @@ local trailBranchLines = {}
 local trailPoints = {}
 local smoothTrailPoints = {}
 local sampleAccumulator = 0
+local trailRenderAccumulator = 0
 local ringDots = {}
 local lastRingRenderKey = nil
+local lastTrailSampleX = nil
+local lastTrailSampleY = nil
+local MouseHelperRuntimeOnUpdate
 
 local function EnsureRingDots(count)
     for index = #ringDots + 1, count do
@@ -302,6 +306,11 @@ local function ClearTrail()
     for index = 1, #trailPoints do
         trailPoints[index] = nil
     end
+
+    lastTrailSampleX = nil
+    lastTrailSampleY = nil
+    sampleAccumulator = 0
+    trailRenderAccumulator = 0
 
     for index = 1, #trailCoreLines do
         trailCoreLines[index]:Hide()
@@ -635,13 +644,21 @@ end
 
 local function ApplyVisualState()
     local db = MouseHelper.GetDB()
+    local shouldRunRuntime = db.enabled == true and (db.trailEnabled == true or ShouldShowCircle(db))
 
-    if not IsVisualFeatureEnabled(db) then
+    if not IsVisualFeatureEnabled(db) or not shouldRunRuntime then
+        RuntimeFrame:SetScript("OnUpdate", nil)
+        RuntimeFrame:Hide()
         CursorCircleFrame:Hide()
-        TrailFrame:Hide()
-        ClearTrail()
+        if db.trailEnabled ~= true then
+            TrailFrame:Hide()
+            ClearTrail()
+        end
         return
     end
+
+    RuntimeFrame:SetScript("OnUpdate", MouseHelperRuntimeOnUpdate)
+    RuntimeFrame:Show()
 
     if ShouldShowCircle(db) then
         ApplyCircleVisual(db)
@@ -658,7 +675,7 @@ local function ApplyVisualState()
     end
 end
 
-RuntimeFrame:SetScript("OnUpdate", function(_, elapsed)
+local function HandleMouseHelperRuntimeUpdate(_, elapsed)
     local db = MouseHelper.GetDB()
 
     if not IsVisualFeatureEnabled(db) then
@@ -680,18 +697,41 @@ RuntimeFrame:SetScript("OnUpdate", function(_, elapsed)
         return
     end
 
+    trailRenderAccumulator = trailRenderAccumulator + elapsed
     sampleAccumulator = sampleAccumulator + elapsed
-    if sampleAccumulator >= 0.007 then
+    if sampleAccumulator >= 0.014 then
         sampleAccumulator = 0
-        table.insert(trailPoints, 1, { x = cursorX, y = cursorY })
+        local deltaX = cursorX - (lastTrailSampleX or cursorX)
+        local deltaY = cursorY - (lastTrailSampleY or cursorY)
+        local movedEnough = ((deltaX * deltaX) + (deltaY * deltaY)) >= 1
 
-        while #trailPoints > (db.trailLength + 4) do
-            table.remove(trailPoints)
+        if movedEnough or #trailPoints == 0 then
+            lastTrailSampleX = cursorX
+            lastTrailSampleY = cursorY
+            table.insert(trailPoints, 1, { x = cursorX, y = cursorY })
+
+            while #trailPoints > (db.trailLength + 4) do
+                table.remove(trailPoints)
+            end
         end
     end
 
-    DrawTrail(db)
-end)
+    if trailRenderAccumulator >= 0.03 then
+        trailRenderAccumulator = 0
+        DrawTrail(db)
+    end
+end
+
+MouseHelperRuntimeOnUpdate = function(_, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleMouseHelperRuntimeUpdate(_, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("MouseHelper.OnUpdate", sampleToken)
+    end
+end
+
+RuntimeFrame:SetScript("OnUpdate", MouseHelperRuntimeOnUpdate)
 
 function MouseHelper.SetEnabled(enabled)
     MouseHelper.GetDB().enabled = enabled == true

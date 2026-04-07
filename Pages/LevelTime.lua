@@ -547,7 +547,7 @@ end
 local UpdateFrame = CreateFrame("Frame", nil, PageLevelTime)
 local elapsedSinceUpdate = 0
 
-UpdateFrame:SetScript("OnUpdate", function(_, elapsed)
+local function HandleLevelTimeUpdate(_, elapsed)
     -- Dieser Timer aktualisiert nur die Anzeige.
     -- Gespeichert wird weiterhin nur an Lebenszyklus-Punkten wie Level-Up oder Logout.
     elapsedSinceUpdate = elapsedSinceUpdate + elapsed
@@ -558,6 +558,15 @@ UpdateFrame:SetScript("OnUpdate", function(_, elapsed)
 
     elapsedSinceUpdate = 0
     RefreshLevelList()
+end
+
+UpdateFrame:SetScript("OnUpdate", function(_, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleLevelTimeUpdate(_, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("LevelTime.OnUpdate", sampleToken)
+    end
 end)
 
 -- ========================================

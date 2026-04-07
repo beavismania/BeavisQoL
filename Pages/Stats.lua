@@ -471,6 +471,7 @@ local function ShouldHideStatsOverlay()
         and BeavisQoL.ShouldHideOverlay("stats")
 end
 
+local UpdateStatsRefreshTickerState
 function StatsModule.RefreshOverlayWindow()
     -- Zentraler Refresh für alles, was das sichtbare Overlay betrifft:
     -- Layout, Farben, Mausverhalten und Show/Hide.
@@ -501,11 +502,25 @@ function StatsModule.RefreshOverlayWindow()
     else
         OverlayFrame:Hide()
     end
+
+    if UpdateStatsRefreshTickerState then
+        UpdateStatsRefreshTickerState()
+    end
 end
 
 local RefreshTicker = CreateFrame("Frame")
 RefreshTicker.elapsed = 0
-RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
+local HandleStatsRefreshTicker
+local function StatsRefreshTickerOnUpdate(self, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleStatsRefreshTicker(self, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("Stats.RefreshTicker", sampleToken)
+    end
+end
+
+HandleStatsRefreshTicker = function(self, elapsed)
     -- Der Ticker läuft nur dann sinnvoll weiter, wenn wenigstens Vorschau oder
     -- Overlay gerade sichtbar sind. Sonst setzen wir ihn direkt wieder ruhig.
     local needsRefresh = (PageStats and PageStats:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
@@ -528,7 +543,19 @@ RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
     if OverlayFrame and OverlayFrame:IsShown() then
         RefreshStatRows(OverlayRows)
     end
-end)
+end
+
+UpdateStatsRefreshTickerState = function()
+    local shouldRefresh = (PageStats and PageStats:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
+
+    RefreshTicker.elapsed = 0
+
+    if shouldRefresh then
+        RefreshTicker:SetScript("OnUpdate", StatsRefreshTickerOnUpdate)
+    else
+        RefreshTicker:SetScript("OnUpdate", nil)
+    end
+end
 
 local function RefreshAllDisplays()
     -- Eine Sammelfunktion spart Dopplungen in Events, Slidern und Buttons.
@@ -812,6 +839,11 @@ end
 
 PageStats:SetScript("OnShow", function()
     PageStats:RefreshState()
+    UpdateStatsRefreshTickerState()
+end)
+
+PageStats:SetScript("OnHide", function()
+    UpdateStatsRefreshTickerState()
 end)
 
 local StatsEvents = CreateFrame("Frame")

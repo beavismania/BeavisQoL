@@ -519,6 +519,47 @@ end
 local PreyHuntWatcher = CreateFrame("Frame")
 PreyHuntWatcher.elapsed = 0
 PreyHuntWatcher.needsRefresh = false
+local preyHuntRefreshScheduled = false
+
+local function RunScheduledPreyHuntRefresh()
+    preyHuntRefreshScheduled = false
+
+    if not watcherActive or Misc.IsPreyHuntProgressEnabled() ~= true then
+        return
+    end
+
+    if PreyHuntWatcher.needsRefresh ~= true then
+        return
+    end
+
+    PreyHuntWatcher.needsRefresh = false
+
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    UpdatePreyHuntOverlay()
+    if profiler and profiler.EndSample then
+        profiler.EndSample("PreyHunt.Refresh", sampleToken)
+    end
+end
+
+local function SchedulePreyHuntRefresh()
+    if not watcherActive or Misc.IsPreyHuntProgressEnabled() ~= true then
+        return
+    end
+
+    if preyHuntRefreshScheduled then
+        return
+    end
+
+    preyHuntRefreshScheduled = true
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(PREY_UPDATE_INTERVAL, RunScheduledPreyHuntRefresh)
+        return
+    end
+
+    RunScheduledPreyHuntRefresh()
+end
 
 PreyHuntWatcher:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_LEAVING_WORLD" then
@@ -544,18 +585,8 @@ PreyHuntWatcher:SetScript("OnEvent", function(self, event, ...)
     end
 
     self.needsRefresh = true
+    SchedulePreyHuntRefresh()
 end)
-
-local function PreyHuntWatcherOnUpdate(self, elapsed)
-    self.elapsed = (self.elapsed or 0) + elapsed
-    if self.elapsed < PREY_UPDATE_INTERVAL then
-        return
-    end
-
-    self.elapsed = 0
-    self.needsRefresh = false
-    UpdatePreyHuntOverlay()
-end
 
 local function UpdateWatcherState()
     if Misc.IsPreyHuntProgressEnabled() then
@@ -569,9 +600,7 @@ local function UpdateWatcherState()
             PreyHuntWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
             PreyHuntWatcher:RegisterEvent("UPDATE_ALL_UI_WIDGETS")
             PreyHuntWatcher:RegisterEvent("UPDATE_UI_WIDGET")
-            PreyHuntWatcher.elapsed = PREY_UPDATE_INTERVAL
             PreyHuntWatcher.needsRefresh = true
-            PreyHuntWatcher:SetScript("OnUpdate", PreyHuntWatcherOnUpdate)
         else
             PreyHuntWatcher.needsRefresh = true
         end
@@ -584,8 +613,8 @@ local function UpdateWatcherState()
     ClearPreyHuntCache()
     PreyHuntWatcher.elapsed = 0
     PreyHuntWatcher.needsRefresh = false
+    preyHuntRefreshScheduled = false
     PreyHuntWatcher:UnregisterAllEvents()
-    PreyHuntWatcher:SetScript("OnUpdate", nil)
     HidePreyHuntOverlay()
 end
 
@@ -598,8 +627,8 @@ local function ReinitializeEnabledWatcher()
     ClearPreyHuntCache()
     PreyHuntWatcher.elapsed = 0
     PreyHuntWatcher.needsRefresh = true
+    preyHuntRefreshScheduled = false
     PreyHuntWatcher:UnregisterAllEvents()
-    PreyHuntWatcher:SetScript("OnUpdate", nil)
 
     UpdateWatcherState()
 end

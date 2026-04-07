@@ -1192,6 +1192,7 @@ local function RefreshPreview()
     )
 end
 
+local UpdateWeeklyKeysRefreshTickerState
 function WeeklyKeysModule.RefreshOverlayWindow()
     -- Zentraler Overlay-Refresh für Weekly Keys.
     if not OverlayFrame then
@@ -1220,11 +1221,25 @@ function WeeklyKeysModule.RefreshOverlayWindow()
     else
         OverlayFrame:Hide()
     end
+
+    if UpdateWeeklyKeysRefreshTickerState then
+        UpdateWeeklyKeysRefreshTickerState()
+    end
 end
 
 local RefreshTicker = CreateFrame("Frame")
 RefreshTicker.elapsed = 0
-RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
+local HandleWeeklyKeysRefreshTicker
+local function WeeklyKeysRefreshTickerOnUpdate(self, elapsed)
+    local profiler = BeavisQoL.PerformanceProfiler
+    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+    HandleWeeklyKeysRefreshTicker(self, elapsed)
+    if profiler and profiler.EndSample then
+        profiler.EndSample("WeeklyKeys.RefreshTicker", sampleToken)
+    end
+end
+
+HandleWeeklyKeysRefreshTicker = function(self, elapsed)
     -- Nur aktualisieren, wenn Vorschau oder Overlay wirklich sichtbar sind.
     local needsRefresh = (PageWeeklyKeys and PageWeeklyKeys:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
     if not needsRefresh then
@@ -1246,7 +1261,19 @@ RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
     if OverlayFrame and OverlayFrame:IsShown() then
         WeeklyKeysModule.RefreshOverlayWindow()
     end
-end)
+end
+
+UpdateWeeklyKeysRefreshTickerState = function()
+    local shouldRefresh = (PageWeeklyKeys and PageWeeklyKeys:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
+
+    RefreshTicker.elapsed = 0
+
+    if shouldRefresh then
+        RefreshTicker:SetScript("OnUpdate", WeeklyKeysRefreshTickerOnUpdate)
+    else
+        RefreshTicker:SetScript("OnUpdate", nil)
+    end
+end
 
 local function RefreshAllDisplays()
     -- Ein Aufruf für Vorschau, Overlay und Datenanfrage.
@@ -1720,6 +1747,11 @@ end)
 PageWeeklyKeys:SetScript("OnShow", function()
     PageWeeklyKeys:RefreshState()
     PageWeeklyKeysScrollFrame:SetVerticalScroll(0)
+    UpdateWeeklyKeysRefreshTickerState()
+end)
+
+PageWeeklyKeys:SetScript("OnHide", function()
+    UpdateWeeklyKeysRefreshTickerState()
 end)
 
 local WeeklyKeysEvents = CreateFrame("Frame")
