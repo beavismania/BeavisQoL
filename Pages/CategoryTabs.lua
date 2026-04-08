@@ -72,6 +72,7 @@ PageContainerShade:SetColorTexture(0.05, 0.036, 0.026, 0.1)
 
 local TabButtons = {}
 local ActiveCategory
+local ActiveEntries
 local ActiveTab
 local ActivePage
 local LastPageByCategory = {}
@@ -98,6 +99,18 @@ local function ResolveTabPage(tab)
 
     local resolvedPageKey = tab.contentPageKey or tab.pageKey
     return Pages and Pages[resolvedPageKey] or nil
+end
+
+local function GetAvailableCategoryEntries(category)
+    local entries = {}
+
+    for _, entry in ipairs(category and category.entries or {}) do
+        if not entry.quickViewOnly then
+            entries[#entries + 1] = entry
+        end
+    end
+
+    return entries
 end
 
 local function AnchorPageToContainer(page)
@@ -214,7 +227,7 @@ local function LayoutTabButtons()
     end
 
     local buttonWidth = math.floor((availableWidth - ((buttonCount - 1) * gap)) / buttonCount)
-    buttonWidth = math.max(96, math.min(164, buttonWidth))
+    buttonWidth = math.max(96, math.min(260, buttonWidth))
 
     for index, button in ipairs(visibleButtons) do
         button:ClearAllPoints()
@@ -242,13 +255,13 @@ function PageCategoryTabs:RefreshTabLayout()
 end
 
 function PageCategoryTabs:SelectTab(pageKey)
-    if not ActiveCategory or not ActiveCategory.entries then
+    if not ActiveEntries or #ActiveEntries == 0 then
         return
     end
 
     local targetTab
 
-    for _, entry in ipairs(ActiveCategory.entries) do
+    for _, entry in ipairs(ActiveEntries) do
         if entry.pageKey == pageKey then
             targetTab = entry
             break
@@ -256,14 +269,14 @@ function PageCategoryTabs:SelectTab(pageKey)
     end
 
     if not targetTab then
-        targetTab = ActiveCategory.entries[1]
+        targetTab = ActiveEntries[1]
     end
 
     if not targetTab then
         return
     end
 
-    for _, entry in ipairs(ActiveCategory.entries) do
+    for _, entry in ipairs(ActiveEntries) do
         local page = ResolveTabPage(entry)
         if page then
             page:Hide()
@@ -303,12 +316,13 @@ function PageCategoryTabs:SelectTab(pageKey)
 end
 
 function PageCategoryTabs:OpenCategory(category, pageKey)
-    if not category or not category.entries or #category.entries == 0 then
+    local availableEntries = GetAvailableCategoryEntries(category)
+    if not category or #availableEntries == 0 then
         return
     end
 
-    if ActiveCategory and ActiveCategory.entries then
-        for _, entry in ipairs(ActiveCategory.entries) do
+    if ActiveEntries and #ActiveEntries > 0 then
+        for _, entry in ipairs(ActiveEntries) do
             local page = ResolveTabPage(entry)
             if page then
                 page:Hide()
@@ -317,9 +331,10 @@ function PageCategoryTabs:OpenCategory(category, pageKey)
     end
 
     ActiveCategory = category
+    ActiveEntries = availableEntries
     CategoryCaption:SetText(GetTextForKey(category.labelTextKey, category.key))
 
-    for index, tabData in ipairs(category.entries) do
+    for index, tabData in ipairs(availableEntries) do
         local button = TabButtons[index]
         local currentTab = tabData
         if not button then
@@ -335,7 +350,7 @@ function PageCategoryTabs:OpenCategory(category, pageKey)
         button:Show()
     end
 
-    for index = #category.entries + 1, #TabButtons do
+    for index = #availableEntries + 1, #TabButtons do
         local button = TabButtons[index]
         button.tabData = nil
         button.isActive = false

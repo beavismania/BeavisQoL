@@ -58,6 +58,7 @@ local CATEGORY_TAB_TITLE_EXCLUSIONS = {
 
 BeavisQoL.Version = version
 BeavisQoL.Title = name
+BeavisQoL.FrameVisualScale = FRAME_VISUAL_SCALE
 
 function BeavisQoL.GetModulePageTitle(pageKey, defaultText)
     return defaultText or ""
@@ -257,7 +258,7 @@ VersionBadge:ClearAllPoints()
 VersionBadge:SetPoint("TOPRIGHT", ReloadButton, "BOTTOMRIGHT", 0, -5)
 
 local Sidebar = CreateFrame("Frame", nil, BeavisFrame)
-Sidebar:SetPoint("TOPLEFT", BeavisFrame, "TOPLEFT", 10, -114)
+Sidebar:SetPoint("TOPLEFT", Header, "BOTTOMLEFT", 0, 0)
 Sidebar:SetPoint("BOTTOMLEFT", BeavisFrame, "BOTTOMLEFT", 10, 10)
 Sidebar:SetWidth(220)
 
@@ -402,6 +403,15 @@ local function HideLinkPopup()
     LinkPopup:Hide()
 end
 
+local function GetLinkPopupParent()
+    local quickView = BeavisQoL.QuickView
+    if quickView and quickView.Frame and quickView.Frame:IsShown() then
+        return quickView.Frame
+    end
+
+    return BeavisFrame
+end
+
 LinkPopupEditBox:SetScript("OnEscapePressed", function(self)
     self:ClearFocus()
     HideLinkPopup()
@@ -432,10 +442,19 @@ function BeavisQoL.ShowLinkPopup(titleText, urlText)
         return
     end
 
+    local popupParent = GetLinkPopupParent()
+    if LinkPopup:GetParent() ~= popupParent then
+        LinkPopup:SetParent(popupParent)
+    end
+
+    LinkPopup:ClearAllPoints()
+    LinkPopup:SetPoint("CENTER", popupParent, "CENTER", 0, 0)
     LinkPopupTitle:SetText(titleText or L("LINK_OPEN"))
     LinkPopupEditBox:SetText(urlText)
     LinkPopup:Show()
     LinkPopupEditBox:SetFocus()
     LinkPopupEditBox:HighlightText()
 end
+
+BeavisQoL.HideLinkPopup = HideLinkPopup
 

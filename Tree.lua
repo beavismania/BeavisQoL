@@ -225,7 +225,9 @@ local function RefreshEntrySearchText(entry)
     end
 
     for _, childEntry in ipairs(entry.entries or {}) do
-        AppendSearchText(searchParts, childEntry.searchText)
+        if not childEntry.quickViewOnly then
+            AppendSearchText(searchParts, childEntry.searchText)
+        end
     end
 
     entry.searchText = table.concat(searchParts, " ")
@@ -341,7 +343,9 @@ local function ShowPage(pageToShow)
     end
 
     for _, page in pairs(Pages) do
-        page:Hide()
+        if not page.IsDetachedQuickView then
+            page:Hide()
+        end
     end
 
     pageToShow:Show()
@@ -585,6 +589,7 @@ local function RegisterModuleEntry(section, labelTextKey, pageKey, options)
         miscSection = options and options.miscSection or nil,
         searchTextKeys = options and options.searchTextKeys or {},
         searchAliases = options and options.searchAliases or nil,
+        quickViewOnly = options and options.quickViewOnly == true or false,
         section = section,
         isActive = false,
     }
@@ -643,6 +648,7 @@ local StreamerSection = RegisterModuleSection("STREAMER_TOOLS")
 local LevelTimeEntry = RegisterModuleEntry(ProgressSection, "LEVEL_TIME", "LevelTime", {
     searchTextKeys = { "LEVELTIME_TOOLTIP_TITLE", "LEVELTIME_TOOLTIP_TEXT", "CURRENT_LEVEL", "TIME_ON_CURRENT_LEVEL", "TOTAL_TIME" },
     searchAliases = "level xp leveling time tracker",
+    quickViewOnly = true,
 })
 local ChecklistEntry = RegisterModuleEntry(ProgressSection, "CHECKLIST", "Checklist", {
     searchTextKeys = { "CHECKLIST_DESC", "CHECKLIST_INTRO_HINT", "CHECKLIST_DAILY_HINT", "CHECKLIST_WEEKLY_HINT", "CHECKLIST_SHOW_TRACKER_HINT" },
@@ -651,19 +657,23 @@ local ChecklistEntry = RegisterModuleEntry(ProgressSection, "CHECKLIST", "Checkl
 local ItemLevelGuideEntry = RegisterModuleEntry(ProgressSection, "ITEMLEVEL_GUIDE", "ItemLevelGuide", {
     searchTextKeys = { "ITEM_GUIDE_TITLE", "ITEM_GUIDE_SUBTITLE", "ITEM_GUIDE_DESC", "ITEM_GUIDE_DUNGEON_CARD_SUBTITLE", "ITEM_GUIDE_RAID_CARD_SUBTITLE" },
     searchAliases = "gear crest crafting raid dungeon delve",
+    quickViewOnly = true,
 })
 local QuestCheckEntry = RegisterModuleEntry(ProgressSection, "QUEST_CHECK", "QuestCheck", {
     searchTextKeys = { "QUESTCHECK_DESC", "QUEST_SEARCH_HINT", "QUESTCHECK_RESULT_HINT" },
     searchAliases = "quest wowhead id search completed",
+    quickViewOnly = true,
 })
 local QuestAbandonEntry = RegisterModuleEntry(ProgressSection, "QUEST_ABANDON", "QuestAbandon", {
     searchTextKeys = { "QUEST_ABANDON_DESC", "QUEST_ABANDON_SELECTED", "QUEST_ABANDON_SELECT_ALL" },
     searchAliases = "quest remove abandon cancel marked selected",
+    quickViewOnly = true,
 })
 
 local LoggingEntry = RegisterModuleEntry(GoldSection, "GOLDAUSWERTUNG", "Logging", {
     searchTextKeys = { "LOGGING_DESC", "LOGGING_SALES_HINT", "LOGGING_REPAIRS_HINT", "LOGGING_INCOME_HINT", "LOGGING_EXPENSE_HINT" },
     searchAliases = "gold sales repairs income expenses vendor auction trade",
+    quickViewOnly = true,
 })
 local AutoSellEntry = RegisterModuleEntry(GoldSection, "AUTOSELL_JUNK", "AutoSell", {
     miscSection = "AutoSell",
@@ -857,7 +867,7 @@ local function GetSearchMatchedPageKey(section)
     end
 
     for _, entry in ipairs(section.entries) do
-        if SearchTextContains(entry.searchText, NavigationSearchQuery) then
+        if not entry.quickViewOnly and SearchTextContains(entry.searchText, NavigationSearchQuery) then
             return entry.pageKey
         end
     end
@@ -1052,6 +1062,15 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         return
     end
 
+    if targetEntry.quickViewOnly and BeavisQoL.OpenQuickView then
+        BeavisQoL.OpenQuickView(targetPageKey)
+        return
+    end
+
+    if BeavisQoL.QuickView and BeavisQoL.QuickView.ActivePageKey == targetPageKey and BeavisQoL.QuickView.Close then
+        BeavisQoL.QuickView:Close()
+    end
+
     UpdateTreeLayout()
 
     if not BeavisQoL.Frame:IsShown() then
@@ -1083,6 +1102,13 @@ function BeavisQoL.OpenCategory(categoryKey, targetPageKey)
     local categoryEntry = section and CategoryEntryBySection[section]
     if not section or not categoryEntry or not Pages or not Pages.CategoryTabs then
         return
+    end
+
+    if BeavisQoL.QuickView and BeavisQoL.QuickView.ActivePageKey and BeavisQoL.QuickView.Close then
+        local quickViewCategory = select(1, GetCategoryEntryForPageKey(BeavisQoL.QuickView.ActivePageKey))
+        if quickViewCategory and quickViewCategory.section == section then
+            BeavisQoL.QuickView:Close()
+        end
     end
 
     UpdateTreeLayout()
