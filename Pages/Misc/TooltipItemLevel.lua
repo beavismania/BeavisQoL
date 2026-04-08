@@ -167,7 +167,7 @@ local function SetTooltipItemLevelLine(tooltip, valueText, red, green, blue)
     local leftLine, rightLine = GetTooltipItemLevelLine(tooltip)
     if leftLine and rightLine then
         leftLine:SetText(L("TOOLTIP_ITEMLEVEL_LABEL"))
-        leftLine:SetTextColor(1, 0.82, 0, 1)
+        leftLine:SetTextColor(1, 0.88, 0.62, 1)
         rightLine:SetText(valueText or "")
         rightLine:SetTextColor(red or 1, green or 1, blue or 1, 1)
         return

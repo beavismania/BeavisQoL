@@ -33,44 +33,44 @@ local function CreatePanelSurface(frame)
 end
 
 local function ApplyPanelSurface(surface, style, highlighted)
-    local bgR = 0.085
-    local bgG = 0.085
-    local bgB = 0.09
+    local bgR = 0.1
+    local bgG = 0.068
+    local bgB = 0.046
     local bgA = 0.94
-    local glowA = 0.05
-    local accentA = 0.7
-    local borderA = 0.78
+    local glowA = 0.04
+    local accentA = 0.62
+    local borderA = 0.82
 
     if style == "hero" then
-        bgR = 0.065
-        bgG = 0.065
-        bgB = 0.07
-        bgA = 0.97
-        glowA = 0.09
-        accentA = 0.88
-        borderA = 0.88
+        bgR = 0.1
+        bgG = 0.068
+        bgB = 0.046
+        bgA = 0.94
+        glowA = 0.03
+        accentA = 0.72
+        borderA = 0.82
     elseif style == "footer" then
-        bgR = 0.075
-        bgG = 0.075
-        bgB = 0.08
+        bgR = 0.094
+        bgG = 0.064
+        bgB = 0.044
         bgA = 0.9
-        glowA = 0.04
-        accentA = 0.55
-        borderA = 0.6
+        glowA = 0.02
+        accentA = 0.5
+        borderA = 0.62
     end
 
     if highlighted then
-        bgR = bgR + 0.03
-        bgG = bgG + 0.03
-        bgB = bgB + 0.03
-        glowA = glowA + 0.05
-        accentA = math.min(1, accentA + 0.12)
+        bgR = math.min(1, bgR + 0.018)
+        bgG = math.min(1, bgG + 0.016)
+        bgB = math.min(1, bgB + 0.014)
+        glowA = glowA + 0.03
+        accentA = math.min(1, accentA + 0.08)
     end
 
     surface.bg:SetColorTexture(bgR, bgG, bgB, bgA)
-    surface.glow:SetColorTexture(1, 0.82, 0, glowA)
-    surface.accent:SetColorTexture(1, 0.82, 0, accentA)
-    surface.border:SetColorTexture(1, 0.82, 0, borderA)
+    surface.glow:SetColorTexture(0.88, 0.72, 0.46, glowA)
+    surface.accent:SetColorTexture(0.88, 0.72, 0.46, accentA)
+    surface.border:SetColorTexture(0.88, 0.72, 0.46, borderA)
 end
 
 local function GetTextHeight(fontString, minimumHeight)
@@ -103,8 +103,8 @@ local function CreateCheckbox(parent, label, checked, onClick)
 
     local text = check:CreateFontString(nil, "OVERLAY")
     text:SetPoint("LEFT", check, "RIGHT", 8, 0)
-    text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-    text:SetTextColor(0.96, 0.96, 0.96, 1)
+    text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    text:SetTextColor(0.95, 0.91, 0.85, 1)
     text:SetText(label)
 
     check.Label = text
@@ -115,7 +115,7 @@ end
 local function CreateSectionHeader(parent, titleText, descriptionText)
     local title = parent:CreateFontString(nil, "OVERLAY")
     title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-    title:SetTextColor(1, 0.82, 0, 1)
+    title:SetTextColor(1, 0.88, 0.62, 1)
     title:SetJustifyH("LEFT")
     title:SetText(titleText)
 
@@ -123,15 +123,15 @@ local function CreateSectionHeader(parent, titleText, descriptionText)
     description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
     description:SetPoint("RIGHT", parent, "RIGHT", -22, 0)
     description:SetJustifyH("LEFT")
-    description:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    description:SetTextColor(0.76, 0.76, 0.79, 1)
+    description:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    description:SetTextColor(0.78, 0.74, 0.69, 1)
     description:SetText(descriptionText)
 
     local divider = parent:CreateTexture(nil, "ARTWORK")
     divider:SetPoint("TOPLEFT", description, "BOTTOMLEFT", 0, -8)
     divider:SetPoint("RIGHT", parent, "RIGHT", -22, 0)
     divider:SetHeight(1)
-    divider:SetColorTexture(1, 0.82, 0, 0.18)
+    divider:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 
     return {
         Title = title,
@@ -163,15 +163,15 @@ ApplyPanelSurface(SettingsSurface, "hero", false)
 local SettingsTitle = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsTitle:SetPoint("TOPLEFT", SettingsPanel, "TOPLEFT", 22, -18)
 SettingsTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-SettingsTitle:SetTextColor(1, 0.82, 0, 1)
+SettingsTitle:SetTextColor(1, 0.88, 0.62, 1)
 SettingsTitle:SetText(L("GLOBAL_SETTINGS"))
 
 local SettingsSubtitle = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsSubtitle:SetPoint("TOPLEFT", SettingsTitle, "BOTTOMLEFT", 0, -8)
 SettingsSubtitle:SetPoint("RIGHT", SettingsPanel, "RIGHT", -22, 0)
 SettingsSubtitle:SetJustifyH("LEFT")
-SettingsSubtitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SettingsSubtitle:SetTextColor(0.84, 0.84, 0.86, 1)
+SettingsSubtitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+SettingsSubtitle:SetTextColor(0.95, 0.91, 0.85, 1)
 SettingsSubtitle:SetText(L("GLOBAL_SETTINGS_DESC"))
 
 local LanguageRow = CreateFrame("Frame", nil, SettingsPanel)
@@ -181,8 +181,8 @@ LanguageRow:SetHeight(42)
 
 local LanguageLabel = LanguageRow:CreateFontString(nil, "OVERLAY")
 LanguageLabel:SetPoint("LEFT", LanguageRow, "LEFT", 0, 0)
-LanguageLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-LanguageLabel:SetTextColor(0.96, 0.96, 0.96, 1)
+LanguageLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+LanguageLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 LanguageLabel:SetText(L("LANGUAGE") .. ":")
 
 local LanguageDropdown = CreateFrame("Frame", nil, LanguageRow, "UIDropDownMenuTemplate")
@@ -472,3 +472,4 @@ PageSettings:SetScript("OnShow", function()
 end)
 
 BeavisQoL.Pages.Settings = PageSettings
+

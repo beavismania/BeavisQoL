@@ -24,9 +24,9 @@ local PageTitle = PageLevelTime:CreateFontString(nil, "OVERLAY")
 PageTitle:SetPoint("TOPLEFT", PageLevelTime, "TOPLEFT", 22, -16)
 PageTitle:SetPoint("RIGHT", PageLevelTime, "RIGHT", -22, 0)
 PageTitle:SetJustifyH("LEFT")
-PageTitle:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-PageTitle:SetTextColor(1, 0.82, 0, 1)
-PageTitle:SetText(L("LEVEL_TIME"))
+PageTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+PageTitle:SetTextColor(1, 0.88, 0.62, 1)
+PageTitle:SetText(BeavisQoL.GetModulePageTitle("LevelTime", L("LEVEL_TIME")))
 
 -- Datenbank sauber anlegen
 if not BeavisQoLCharDB then BeavisQoLCharDB = {} end
@@ -188,13 +188,13 @@ OverviewPanel:SetHeight(138)
 
 local OverviewBg = OverviewPanel:CreateTexture(nil, "BACKGROUND")
 OverviewBg:SetAllPoints()
-OverviewBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+OverviewBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local OverviewBorder = OverviewPanel:CreateTexture(nil, "ARTWORK")
 OverviewBorder:SetPoint("BOTTOMLEFT", OverviewPanel, "BOTTOMLEFT", 0, 0)
 OverviewBorder:SetPoint("BOTTOMRIGHT", OverviewPanel, "BOTTOMRIGHT", 0, 0)
 OverviewBorder:SetHeight(1)
-OverviewBorder:SetColorTexture(1, 0.82, 0, 0.9)
+OverviewBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 -- Der kleine Info-Button erklärt den Tracker, ohne die Seite mit Text vollzupacken.
 local InfoButton = CreateFrame("Button", nil, OverviewPanel)
@@ -208,7 +208,7 @@ InfoCircle:SetDrawLayer("ARTWORK", 1)
 InfoButton.Circle = InfoCircle
 
 local InfoText = InfoButton:CreateFontString(nil, "OVERLAY")
-InfoText:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+InfoText:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
 InfoText:SetTextColor(0.15, 0.6, 1, 1)
 InfoText:SetPoint("CENTER", InfoButton, "CENTER", 0, -1)
 InfoText:SetText("i")
@@ -238,14 +238,14 @@ CurrentLevelCardBg:SetColorTexture(0.10, 0.10, 0.10, 0.95)
 
 local CurrentLevelLabel = CurrentLevelCard:CreateFontString(nil, "OVERLAY")
 CurrentLevelLabel:SetPoint("TOPLEFT", CurrentLevelCard, "TOPLEFT", 10, -8)
-CurrentLevelLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+CurrentLevelLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 CurrentLevelLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 CurrentLevelLabel:SetText(L("CURRENT_LEVEL"))
 
 local CurrentLevelValue = CurrentLevelCard:CreateFontString(nil, "OVERLAY")
 CurrentLevelValue:SetPoint("TOPLEFT", CurrentLevelLabel, "BOTTOMLEFT", 0, -6)
-CurrentLevelValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-CurrentLevelValue:SetTextColor(1, 0.82, 0, 1)
+CurrentLevelValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+CurrentLevelValue:SetTextColor(1, 0.88, 0.62, 1)
 CurrentLevelValue:SetText("1 / 90")
 
 -- Karte 2: Zeit auf aktuellem Level / Status
@@ -259,14 +259,14 @@ CurrentLevelTimeCardBg:SetColorTexture(0.10, 0.10, 0.10, 0.95)
 
 local CurrentLevelTimeLabel = CurrentLevelTimeCard:CreateFontString(nil, "OVERLAY")
 CurrentLevelTimeLabel:SetPoint("TOPLEFT", CurrentLevelTimeCard, "TOPLEFT", 10, -8)
-CurrentLevelTimeLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+CurrentLevelTimeLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 CurrentLevelTimeLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 CurrentLevelTimeLabel:SetText(L("TIME_ON_CURRENT_LEVEL"))
 
 local CurrentLevelTimeValue = CurrentLevelTimeCard:CreateFontString(nil, "OVERLAY")
 CurrentLevelTimeValue:SetPoint("TOPLEFT", CurrentLevelTimeLabel, "BOTTOMLEFT", 0, -6)
-CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-CurrentLevelTimeValue:SetTextColor(1, 1, 1, 1)
+CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+CurrentLevelTimeValue:SetTextColor(0.95, 0.91, 0.85, 1)
 CurrentLevelTimeValue:SetText("0s")
 
 -- Karte 3: Gesamtzeit
@@ -281,14 +281,14 @@ TotalTimeCardBg:SetColorTexture(0.10, 0.10, 0.10, 0.95)
 
 local TotalTimeLabel = TotalTimeCard:CreateFontString(nil, "OVERLAY")
 TotalTimeLabel:SetPoint("TOPLEFT", TotalTimeCard, "TOPLEFT", 10, -8)
-TotalTimeLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+TotalTimeLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 TotalTimeLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 TotalTimeLabel:SetText(L("TOTAL_TIME"))
 
 local TotalTimeValue = TotalTimeCard:CreateFontString(nil, "OVERLAY")
 TotalTimeValue:SetPoint("TOPLEFT", TotalTimeLabel, "BOTTOMLEFT", 0, -6)
-TotalTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-TotalTimeValue:SetTextColor(1, 1, 1, 1)
+TotalTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+TotalTimeValue:SetTextColor(0.95, 0.91, 0.85, 1)
 TotalTimeValue:SetText("0s")
 
 local LevelTimeMinimapContextCheckbox = CreateFrame("CheckButton", nil, OverviewPanel, "UICheckButtonTemplate")
@@ -303,7 +303,7 @@ end)
 local LevelTimeMinimapContextLabel = OverviewPanel:CreateFontString(nil, "OVERLAY")
 LevelTimeMinimapContextLabel:SetPoint("LEFT", LevelTimeMinimapContextCheckbox, "RIGHT", 6, 0)
 LevelTimeMinimapContextLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-LevelTimeMinimapContextLabel:SetTextColor(1, 1, 1, 1)
+LevelTimeMinimapContextLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 LevelTimeMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
 
 local LevelTimeMinimapContextHint = OverviewPanel:CreateFontString(nil, "OVERLAY")
@@ -311,7 +311,7 @@ LevelTimeMinimapContextHint:SetPoint("TOPLEFT", LevelTimeMinimapContextCheckbox,
 LevelTimeMinimapContextHint:SetPoint("RIGHT", OverviewPanel, "RIGHT", -18, 0)
 LevelTimeMinimapContextHint:SetJustifyH("LEFT")
 LevelTimeMinimapContextHint:SetJustifyV("TOP")
-LevelTimeMinimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+LevelTimeMinimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 LevelTimeMinimapContextHint:SetTextColor(0.75, 0.75, 0.75, 1)
 LevelTimeMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
 
@@ -326,13 +326,13 @@ ProgressPanel:SetHeight(72)
 
 local ProgressBg = ProgressPanel:CreateTexture(nil, "BACKGROUND")
 ProgressBg:SetAllPoints()
-ProgressBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+ProgressBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local ProgressBorder = ProgressPanel:CreateTexture(nil, "ARTWORK")
 ProgressBorder:SetPoint("BOTTOMLEFT", ProgressPanel, "BOTTOMLEFT", 0, 0)
 ProgressBorder:SetPoint("BOTTOMRIGHT", ProgressPanel, "BOTTOMRIGHT", 0, 0)
 ProgressBorder:SetHeight(1)
-ProgressBorder:SetColorTexture(1, 0.82, 0, 0.9)
+ProgressBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local ProgressBarBg = ProgressPanel:CreateTexture(nil, "BACKGROUND")
 ProgressBarBg:SetPoint("TOPLEFT", ProgressPanel, "TOPLEFT", 18, -16)
@@ -348,8 +348,8 @@ ProgressBar:SetColorTexture(0.2, 0.8, 0.2, 0.85)
 
 local ProgressPercentText = ProgressPanel:CreateFontString(nil, "OVERLAY")
 ProgressPercentText:SetPoint("CENTER", ProgressBarBg, "CENTER", 0, 0)
-ProgressPercentText:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-ProgressPercentText:SetTextColor(1, 1, 1, 1)
+ProgressPercentText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+ProgressPercentText:SetTextColor(0.95, 0.91, 0.85, 1)
 ProgressPercentText:SetText("0.0%")
 
 -- ========================================
@@ -362,12 +362,12 @@ LevelListContainer:SetPoint("BOTTOMRIGHT", PageLevelTime, "BOTTOMRIGHT", -20, 8)
 
 local LevelListBg = LevelListContainer:CreateTexture(nil, "BACKGROUND")
 LevelListBg:SetAllPoints()
-LevelListBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+LevelListBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local LevelListTitle = LevelListContainer:CreateFontString(nil, "OVERLAY")
 LevelListTitle:SetPoint("TOPLEFT", LevelListContainer, "TOPLEFT", 10, -10)
-LevelListTitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
-LevelListTitle:SetTextColor(1, 0.82, 0, 1)
+LevelListTitle:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+LevelListTitle:SetTextColor(1, 0.88, 0.62, 1)
 LevelListTitle:SetText(L("TRACKED_LEVEL_TIMES"))
 
 local LevelListScrollFrame = CreateFrame("ScrollFrame", nil, LevelListContainer, "UIPanelScrollFrameTemplate")
@@ -393,15 +393,15 @@ for level = 1, MAX_LEVEL do
     local LevelNumText = Row:CreateFontString(nil, "OVERLAY")
     LevelNumText:SetPoint("LEFT", Row, "LEFT", 10, 0)
     LevelNumText:SetWidth(90)
-    LevelNumText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-    LevelNumText:SetTextColor(1, 0.82, 0, 1)
+    LevelNumText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    LevelNumText:SetTextColor(1, 0.88, 0.62, 1)
     LevelNumText:SetJustifyH("LEFT")
     LevelNumText:SetText(L("LEVEL_LABEL"):format(level))
     Row.LevelNumText = LevelNumText
 
     local StatusText = Row:CreateFontString(nil, "OVERLAY")
     StatusText:SetPoint("LEFT", LevelNumText, "RIGHT", 10, 0)
-    StatusText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    StatusText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     StatusText:SetTextColor(0.70, 0.70, 0.70, 1)
     StatusText:SetJustifyH("LEFT")
     StatusText:SetText("")
@@ -409,7 +409,7 @@ for level = 1, MAX_LEVEL do
 
     local TimeText = Row:CreateFontString(nil, "OVERLAY")
     TimeText:SetPoint("RIGHT", Row, "RIGHT", -14, 0)
-    TimeText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    TimeText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     TimeText:SetTextColor(0.85, 0.85, 0.85, 1)
     TimeText:SetJustifyH("RIGHT")
     TimeText:SetText("0s")
@@ -469,10 +469,10 @@ local function RefreshLevelList()
         -- Das aktuelle Level bekommt eine eigene Markierung, damit man es sofort sieht.
         if levelData.level == currentLevel and currentLevel < MAX_LEVEL then
             row.Background:SetColorTexture(0.18, 0.30, 0.18, 0.75)
-            row.LevelNumText:SetTextColor(1, 0.82, 0, 1)
+            row.LevelNumText:SetTextColor(1, 0.88, 0.62, 1)
             row.StatusText:SetText(L("LEVEL_RUNNING"))
             row.StatusText:SetTextColor(0.55, 1.00, 0.55, 1)
-            row.TimeText:SetTextColor(1, 1, 1, 1)
+            row.TimeText:SetTextColor(0.95, 0.91, 0.85, 1)
         else
             if index % 2 == 0 then
                 row.Background:SetColorTexture(0.09, 0.09, 0.09, 0.45)
@@ -480,7 +480,7 @@ local function RefreshLevelList()
                 row.Background:SetColorTexture(0.09, 0.09, 0.09, 0.15)
             end
 
-            row.LevelNumText:SetTextColor(1, 0.82, 0, 1)
+            row.LevelNumText:SetTextColor(1, 0.88, 0.62, 1)
             row.StatusText:SetText("")
             row.TimeText:SetTextColor(0.85, 0.85, 0.85, 1)
         end
@@ -498,21 +498,21 @@ local function RefreshLevelList()
 
     if currentLevel >= MAX_LEVEL then
         CurrentLevelTimeLabel:SetText(L("STATUS"))
-        CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-        CurrentLevelTimeValue:SetTextColor(1, 0.82, 0, 1)
+        CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        CurrentLevelTimeValue:SetTextColor(1, 0.88, 0.62, 1)
         CurrentLevelTimeValue:SetText(L("MAX_LEVEL_REACHED"))
 
-        ProgressPercentText:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-        ProgressPercentText:SetTextColor(1, 0.82, 0, 1)
+        ProgressPercentText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        ProgressPercentText:SetTextColor(1, 0.88, 0.62, 1)
         ProgressPercentText:SetText(L("MAX_LEVEL_CONGRATS"))
     else
         CurrentLevelTimeLabel:SetText(L("TIME_ON_CURRENT_LEVEL"))
-        CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-        CurrentLevelTimeValue:SetTextColor(1, 1, 1, 1)
+        CurrentLevelTimeValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+        CurrentLevelTimeValue:SetTextColor(0.95, 0.91, 0.85, 1)
         CurrentLevelTimeValue:SetText(TimeToString(currentLevelTime))
 
-        ProgressPercentText:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-        ProgressPercentText:SetTextColor(1, 1, 1, 1)
+        ProgressPercentText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        ProgressPercentText:SetTextColor(0.95, 0.91, 0.85, 1)
         ProgressPercentText:SetText(string.format("%.1f%%", GetProgressPercent() * 100))
     end
 
@@ -522,7 +522,7 @@ local function RefreshLevelList()
 end
 
 BeavisQoL.UpdateLevelTime = function()
-    PageTitle:SetText(L("LEVEL_TIME"))
+    PageTitle:SetText(BeavisQoL.GetModulePageTitle("LevelTime", L("LEVEL_TIME")))
     CurrentLevelLabel:SetText(L("CURRENT_LEVEL"))
     CurrentLevelTimeLabel:SetText(L("TIME_ON_CURRENT_LEVEL"))
     TotalTimeLabel:SetText(L("TOTAL_TIME"))
@@ -628,3 +628,4 @@ PageLevelTime:SetScript("OnShow", function()
 end)
 
 BeavisQoL.Pages.LevelTime = PageLevelTime
+

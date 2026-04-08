@@ -218,6 +218,7 @@ PageVersion:Hide()
 local UpdateStatusValue
 local UpdateStatusText
 local UpdateStatusSubText
+local LayoutVersionPage
 
 function PageVersion:RefreshVersionStatus()
     -- Diese Methode schreibt den kompletten UI-Zustand für den Versionsblock
@@ -225,7 +226,7 @@ function PageVersion:RefreshVersionStatus()
     -- geladen haben oder später eine neuere Version entdeckt wurde.
     if VersionCheck.hasNewerVersion then
         UpdateStatusValue:SetText(L("VERSION_CHECK_AVAILABLE"):format(tostring(VersionCheck.newerVersion or L("UNKNOWN"))))
-        UpdateStatusValue:SetTextColor(1, 0.82, 0, 1)
+        UpdateStatusValue:SetTextColor(1, 0.88, 0.62, 1)
         UpdateStatusText:SetText(L("VERSION_CHECK_SEEN_AT"):format(GetShortName(VersionCheck.newerSender), tostring(VersionCheck.newerChannel or L("VERSION_CHECK_CHANNEL")), addonVersion))
         UpdateStatusSubText:SetText(L("VERSION_CHECK_HINT"))
     else
@@ -233,6 +234,10 @@ function PageVersion:RefreshVersionStatus()
         UpdateStatusValue:SetTextColor(0.45, 0.90, 0.45, 1)
         UpdateStatusText:SetText(L("VERSION_CHECK_CURRENT_TEXT"))
         UpdateStatusSubText:SetText(L("VERSION_CHECK_CURRENT_SUBTEXT"):format(addonVersion, tostring(addonReleaseDate)))
+    end
+
+    if LayoutVersionPage then
+        LayoutVersionPage()
     end
 end
 
@@ -359,6 +364,15 @@ local function ShowExternalLink(titleText, urlText)
     end
 end
 
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
 -- ========================================
 -- Header / Intro
 -- ========================================
@@ -370,19 +384,19 @@ IntroPanel:SetHeight(110)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText(L("VERSIONS_INFO_TITLE"):format(addonTitle))
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
+IntroTitle:SetText(L("VERSION"))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -390,8 +404,8 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
-IntroText:SetText(L("VERSIONS_INFO_DESC"))
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
+IntroText:SetText("")
 
 -- ========================================
 -- Info-Karten
@@ -412,19 +426,19 @@ VersionCardBg:SetColorTexture(0.10, 0.10, 0.10, 0.95)
 
 local VersionLabel = VersionCard:CreateFontString(nil, "OVERLAY")
 VersionLabel:SetPoint("TOPLEFT", VersionCard, "TOPLEFT", 12, -10)
-VersionLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+VersionLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 VersionLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 VersionLabel:SetText(L("CURRENT_VERSION"))
 
 local VersionValue = VersionCard:CreateFontString(nil, "OVERLAY")
 VersionValue:SetPoint("TOPLEFT", VersionLabel, "BOTTOMLEFT", 0, -8)
-VersionValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-VersionValue:SetTextColor(1, 0.82, 0, 1)
+VersionValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+VersionValue:SetTextColor(1, 0.88, 0.62, 1)
 VersionValue:SetText(addonVersion)
 
 local VersionSubValue = VersionCard:CreateFontString(nil, "OVERLAY")
 VersionSubValue:SetPoint("TOPLEFT", VersionValue, "BOTTOMLEFT", 0, -4)
-VersionSubValue:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+VersionSubValue:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 VersionSubValue:SetTextColor(0.75, 0.75, 0.75, 1)
 VersionSubValue:SetText(L("RELEASE_DATE") .. ": " .. tostring(addonReleaseDate))
 
@@ -438,14 +452,14 @@ AuthorCardBg:SetColorTexture(0.10, 0.10, 0.10, 0.95)
 
 local AuthorLabel = AuthorCard:CreateFontString(nil, "OVERLAY")
 AuthorLabel:SetPoint("TOPLEFT", AuthorCard, "TOPLEFT", 12, -10)
-AuthorLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+AuthorLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 AuthorLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 AuthorLabel:SetText(L("PROGRAMMER"))
 
 local AuthorValue = AuthorCard:CreateFontString(nil, "OVERLAY")
 AuthorValue:SetPoint("TOPLEFT", AuthorLabel, "BOTTOMLEFT", 0, -8)
-AuthorValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-AuthorValue:SetTextColor(1, 0.82, 0, 1)
+AuthorValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+AuthorValue:SetTextColor(1, 0.88, 0.62, 1)
 AuthorValue:SetText(addonAuthor)
 
 local InterfaceCard = CreateFrame("Frame", nil, InfoRow)
@@ -459,19 +473,19 @@ InterfaceCardBg:SetColorTexture(0.10, 0.10, 0.10, 0.95)
 
 local InterfaceLabel = InterfaceCard:CreateFontString(nil, "OVERLAY")
 InterfaceLabel:SetPoint("TOPLEFT", InterfaceCard, "TOPLEFT", 12, -10)
-InterfaceLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+InterfaceLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 InterfaceLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 InterfaceLabel:SetText(L("SUPPORTED_GAME_VERSION"))
 
 local InterfaceValue = InterfaceCard:CreateFontString(nil, "OVERLAY")
 InterfaceValue:SetPoint("TOPLEFT", InterfaceLabel, "BOTTOMLEFT", 0, -8)
-InterfaceValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-InterfaceValue:SetTextColor(1, 0.82, 0, 1)
+InterfaceValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+InterfaceValue:SetTextColor(1, 0.88, 0.62, 1)
 InterfaceValue:SetText(addonGameVersionLabel)
 
 local InterfaceSubValue = InterfaceCard:CreateFontString(nil, "OVERLAY")
 InterfaceSubValue:SetPoint("TOPLEFT", InterfaceValue, "BOTTOMLEFT", 0, -4)
-InterfaceSubValue:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+InterfaceSubValue:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 InterfaceSubValue:SetTextColor(0.75, 0.75, 0.75, 1)
 InterfaceSubValue:SetText(L("TOC_VERSION") .. ": " .. tostring(addonGameVersion))
 
@@ -486,23 +500,23 @@ UpdatePanel:SetHeight(150)
 
 local UpdateBg = UpdatePanel:CreateTexture(nil, "BACKGROUND")
 UpdateBg:SetAllPoints()
-UpdateBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+UpdateBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local UpdateBorder = UpdatePanel:CreateTexture(nil, "ARTWORK")
 UpdateBorder:SetPoint("BOTTOMLEFT", UpdatePanel, "BOTTOMLEFT", 0, 0)
 UpdateBorder:SetPoint("BOTTOMRIGHT", UpdatePanel, "BOTTOMRIGHT", 0, 0)
 UpdateBorder:SetHeight(1)
-UpdateBorder:SetColorTexture(1, 0.82, 0, 0.9)
+UpdateBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local UpdateTitle = UpdatePanel:CreateFontString(nil, "OVERLAY")
 UpdateTitle:SetPoint("TOPLEFT", UpdatePanel, "TOPLEFT", 18, -14)
-UpdateTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-UpdateTitle:SetTextColor(1, 0.82, 0, 1)
+UpdateTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+UpdateTitle:SetTextColor(1, 0.88, 0.62, 1)
 UpdateTitle:SetText(L("VERSION_CHECK"))
 
 UpdateStatusValue = UpdatePanel:CreateFontString(nil, "OVERLAY")
 UpdateStatusValue:SetPoint("TOPLEFT", UpdateTitle, "BOTTOMLEFT", 0, -12)
-UpdateStatusValue:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
+UpdateStatusValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
 UpdateStatusValue:SetTextColor(0.45, 0.90, 0.45, 1)
 
 UpdateStatusText = UpdatePanel:CreateFontString(nil, "OVERLAY")
@@ -510,15 +524,15 @@ UpdateStatusText:SetPoint("TOPLEFT", UpdateStatusValue, "BOTTOMLEFT", 0, -8)
 UpdateStatusText:SetPoint("RIGHT", UpdatePanel, "RIGHT", -18, 0)
 UpdateStatusText:SetJustifyH("LEFT")
 UpdateStatusText:SetJustifyV("TOP")
-UpdateStatusText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-UpdateStatusText:SetTextColor(1, 1, 1, 1)
+UpdateStatusText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+UpdateStatusText:SetTextColor(0.95, 0.91, 0.85, 1)
 
 UpdateStatusSubText = UpdatePanel:CreateFontString(nil, "OVERLAY")
 UpdateStatusSubText:SetPoint("TOPLEFT", UpdateStatusText, "BOTTOMLEFT", 0, -8)
 UpdateStatusSubText:SetPoint("RIGHT", UpdatePanel, "RIGHT", -18, 0)
 UpdateStatusSubText:SetJustifyH("LEFT")
 UpdateStatusSubText:SetJustifyV("TOP")
-UpdateStatusSubText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+UpdateStatusSubText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 UpdateStatusSubText:SetTextColor(0.75, 0.75, 0.75, 1)
 
 local RefreshVersionsButton = CreateFrame("Button", nil, UpdatePanel, "UIPanelButtonTemplate")
@@ -549,18 +563,18 @@ ActionPanel:SetHeight(160)
 
 local ActionBg = ActionPanel:CreateTexture(nil, "BACKGROUND")
 ActionBg:SetAllPoints()
-ActionBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+ActionBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local ActionBorder = ActionPanel:CreateTexture(nil, "ARTWORK")
 ActionBorder:SetPoint("BOTTOMLEFT", ActionPanel, "BOTTOMLEFT", 0, 0)
 ActionBorder:SetPoint("BOTTOMRIGHT", ActionPanel, "BOTTOMRIGHT", 0, 0)
 ActionBorder:SetHeight(1)
-ActionBorder:SetColorTexture(1, 0.82, 0, 0.9)
+ActionBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local ActionTitle = ActionPanel:CreateFontString(nil, "OVERLAY")
 ActionTitle:SetPoint("TOPLEFT", ActionPanel, "TOPLEFT", 18, -14)
-ActionTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-ActionTitle:SetTextColor(1, 0.82, 0, 1)
+ActionTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+ActionTitle:SetTextColor(1, 0.88, 0.62, 1)
 ActionTitle:SetText(L("CONTACT_TITLE"))
 
 local ActionText = ActionPanel:CreateFontString(nil, "OVERLAY")
@@ -568,8 +582,8 @@ ActionText:SetPoint("TOPLEFT", ActionTitle, "BOTTOMLEFT", 0, -10)
 ActionText:SetPoint("RIGHT", ActionPanel, "RIGHT", -18, 0)
 ActionText:SetJustifyH("LEFT")
 ActionText:SetJustifyV("TOP")
-ActionText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-ActionText:SetTextColor(1, 1, 1, 1)
+ActionText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ActionText:SetTextColor(0.95, 0.91, 0.85, 1)
 ActionText:SetText(L("CONTACT_TEXT"))
 
 local FeedbackButton = CreateFrame("Button", nil, ActionPanel, "UIPanelButtonTemplate")
@@ -590,13 +604,191 @@ end)
 
 local WebsiteHint = ActionPanel:CreateFontString(nil, "OVERLAY")
 WebsiteHint:SetPoint("LEFT", IdeaButton, "RIGHT", 18, 0)
-WebsiteHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+WebsiteHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 WebsiteHint:SetTextColor(0.85, 0.85, 0.85, 1)
 WebsiteHint:SetText("www.beavismania.de")
 
+local PageVersionScrollFrame = CreateFrame("ScrollFrame", nil, PageVersion, "UIPanelScrollFrameTemplate")
+PageVersionScrollFrame:SetPoint("TOPLEFT", PageVersion, "TOPLEFT", 0, 0)
+PageVersionScrollFrame:SetPoint("BOTTOMRIGHT", PageVersion, "BOTTOMRIGHT", -28, 0)
+PageVersionScrollFrame:EnableMouseWheel(true)
+
+local PageVersionContent = CreateFrame("Frame", nil, PageVersionScrollFrame)
+PageVersionContent:SetSize(1, 1)
+PageVersionScrollFrame:SetScrollChild(PageVersionContent)
+
+IntroPanel:SetParent(PageVersionContent)
+IntroPanel:ClearAllPoints()
+IntroPanel:SetPoint("TOPLEFT", PageVersionContent, "TOPLEFT", 20, -18)
+IntroPanel:SetPoint("RIGHT", PageVersionContent, "RIGHT", -20, 0)
+
+InfoRow:SetParent(PageVersionContent)
+InfoRow:ClearAllPoints()
+InfoRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -14)
+InfoRow:SetPoint("RIGHT", PageVersionContent, "RIGHT", -20, 0)
+
+UpdatePanel:SetParent(PageVersionContent)
+UpdatePanel:ClearAllPoints()
+UpdatePanel:SetPoint("TOPLEFT", InfoRow, "BOTTOMLEFT", 0, -14)
+UpdatePanel:SetPoint("RIGHT", PageVersionContent, "RIGHT", -20, 0)
+
+ActionPanel:SetParent(PageVersionContent)
+ActionPanel:ClearAllPoints()
+ActionPanel:SetPoint("TOPLEFT", UpdatePanel, "BOTTOMLEFT", 0, -14)
+ActionPanel:SetPoint("RIGHT", PageVersionContent, "RIGHT", -20, 0)
+
+local function GetCardHeight(label, value, subValue)
+    local subHeight = subValue and GetTextHeight(subValue, 13) or 0
+    local subGap = subHeight > 0 and 4 or 0
+
+    return math.ceil(
+        10
+        + GetTextHeight(label, 13)
+        + 8
+        + GetTextHeight(value, 14)
+        + subGap
+        + subHeight
+        + 12
+    )
+end
+
+LayoutVersionPage = function()
+    local contentWidth = math.max(1, PageVersionScrollFrame:GetWidth())
+    if contentWidth <= 1 then
+        return
+    end
+
+    PageVersionContent:SetWidth(contentWidth)
+
+    local rowWidth = math.max(1, contentWidth - 40)
+    local cardGap = 14
+    local isCompactWidth = rowWidth < 760
+
+    local hasIntroText = IntroText:GetText() ~= nil and IntroText:GetText() ~= ""
+
+    if hasIntroText then
+        IntroText:Show()
+    else
+        IntroText:Hide()
+    end
+
+    local introHeight = math.ceil(
+        16
+        + GetTextHeight(IntroTitle, 24)
+        + (hasIntroText and (8 + GetTextHeight(IntroText, 30)) or 0)
+        + 16
+    )
+    IntroPanel:SetHeight(math.max(hasIntroText and 90 or 58, introHeight))
+
+    local versionCardHeight = math.max(76, GetCardHeight(VersionLabel, VersionValue, VersionSubValue))
+    local authorCardHeight = math.max(76, GetCardHeight(AuthorLabel, AuthorValue, nil))
+    local interfaceCardHeight = math.max(76, GetCardHeight(InterfaceLabel, InterfaceValue, InterfaceSubValue))
+    local infoRowHeight
+
+    VersionCard:ClearAllPoints()
+    AuthorCard:ClearAllPoints()
+    InterfaceCard:ClearAllPoints()
+
+    if isCompactWidth then
+        local compactCardWidth = math.max(150, math.floor((rowWidth - cardGap) / 2))
+
+        VersionCard:SetPoint("TOPLEFT", InfoRow, "TOPLEFT", 0, 0)
+        VersionCard:SetWidth(compactCardWidth)
+
+        AuthorCard:SetPoint("TOPLEFT", VersionCard, "TOPRIGHT", cardGap, 0)
+        AuthorCard:SetPoint("RIGHT", InfoRow, "RIGHT", 0, 0)
+
+        InterfaceCard:SetPoint("TOPLEFT", VersionCard, "BOTTOMLEFT", 0, -cardGap)
+        InterfaceCard:SetPoint("RIGHT", InfoRow, "RIGHT", 0, 0)
+
+        infoRowHeight = math.max(versionCardHeight, authorCardHeight) + cardGap + interfaceCardHeight
+    else
+        local cardWidth = math.max(160, math.floor((rowWidth - (cardGap * 2)) / 3))
+
+        VersionCard:SetPoint("TOPLEFT", InfoRow, "TOPLEFT", 0, 0)
+        VersionCard:SetWidth(cardWidth)
+
+        AuthorCard:SetPoint("TOPLEFT", VersionCard, "TOPRIGHT", cardGap, 0)
+        AuthorCard:SetWidth(cardWidth)
+
+        InterfaceCard:SetPoint("TOPLEFT", AuthorCard, "TOPRIGHT", cardGap, 0)
+        InterfaceCard:SetPoint("RIGHT", InfoRow, "RIGHT", 0, 0)
+
+        infoRowHeight = math.max(versionCardHeight, authorCardHeight, interfaceCardHeight)
+    end
+
+    InfoRow:SetHeight(infoRowHeight)
+    VersionCard:SetHeight(versionCardHeight)
+    AuthorCard:SetHeight(authorCardHeight)
+    InterfaceCard:SetHeight(interfaceCardHeight)
+
+    RefreshVersionsButton:SetSize(144, 28)
+    RefreshVersionsButton:ClearAllPoints()
+    RefreshVersionsButton:SetPoint("BOTTOMLEFT", UpdatePanel, "BOTTOMLEFT", 18, 14)
+
+    ReleasesButton:SetSize(144, 28)
+    ReleasesButton:ClearAllPoints()
+    ReleasesButton:SetPoint("LEFT", RefreshVersionsButton, "RIGHT", 10, 0)
+
+    local updateHeight = math.ceil(
+        14
+        + GetTextHeight(UpdateTitle, 15)
+        + 10
+        + GetTextHeight(UpdateStatusValue, 14)
+        + 6
+        + GetTextHeight(UpdateStatusText, 28)
+        + 6
+        + GetTextHeight(UpdateStatusSubText, 28)
+        + 14
+        + RefreshVersionsButton:GetHeight()
+        + 14
+    )
+    UpdatePanel:SetHeight(math.max(124, updateHeight))
+
+    FeedbackButton:SetSize(172, 28)
+    FeedbackButton:ClearAllPoints()
+    FeedbackButton:SetPoint("BOTTOMLEFT", ActionPanel, "BOTTOMLEFT", 18, 14)
+
+    IdeaButton:SetSize(172, 28)
+    IdeaButton:ClearAllPoints()
+    IdeaButton:SetPoint("LEFT", FeedbackButton, "RIGHT", 12, 0)
+
+    WebsiteHint:ClearAllPoints()
+    if isCompactWidth then
+        WebsiteHint:SetPoint("TOPLEFT", FeedbackButton, "BOTTOMLEFT", 0, -8)
+        WebsiteHint:SetPoint("RIGHT", ActionPanel, "RIGHT", -18, 0)
+        WebsiteHint:SetJustifyH("LEFT")
+    else
+        WebsiteHint:SetPoint("LEFT", IdeaButton, "RIGHT", 16, 0)
+        WebsiteHint:SetPoint("RIGHT", ActionPanel, "RIGHT", -18, 0)
+        WebsiteHint:SetJustifyH("RIGHT")
+    end
+
+    local actionHeight = math.ceil(
+        14
+        + GetTextHeight(ActionTitle, 15)
+        + 8
+        + GetTextHeight(ActionText, 34)
+        + 16
+        + FeedbackButton:GetHeight()
+        + (isCompactWidth and (8 + GetTextHeight(WebsiteHint, 13)) or 0)
+        + 14
+    )
+    ActionPanel:SetHeight(math.max(114, actionHeight))
+
+    local contentHeight = 18
+        + IntroPanel:GetHeight()
+        + 14 + InfoRow:GetHeight()
+        + 14 + UpdatePanel:GetHeight()
+        + 14 + ActionPanel:GetHeight()
+        + 20
+
+    PageVersionContent:SetHeight(math.max(PageVersionScrollFrame:GetHeight(), contentHeight))
+end
+
 BeavisQoL.UpdateVersion = function()
-    IntroTitle:SetText(L("VERSIONS_INFO_TITLE"):format(addonTitle))
-    IntroText:SetText(L("VERSIONS_INFO_DESC"))
+    IntroTitle:SetText(L("VERSION"))
+    IntroText:SetText("")
     VersionLabel:SetText(L("CURRENT_VERSION"))
     VersionSubValue:SetText(L("RELEASE_DATE") .. ": " .. tostring(addonReleaseDate))
     AuthorLabel:SetText(L("PROGRAMMER"))
@@ -610,9 +802,28 @@ BeavisQoL.UpdateVersion = function()
     FeedbackButton:SetText(L("SEND_FEEDBACK"))
     IdeaButton:SetText(L("SUBMIT_IDEA"))
     PageVersion:RefreshVersionStatus()
+    LayoutVersionPage()
 end
 
+PageVersionScrollFrame:SetScript("OnSizeChanged", LayoutVersionPage)
+PageVersionScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageVersionContent:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
 PageVersion:SetScript("OnShow", function()
+    LayoutVersionPage()
+    PageVersionScrollFrame:SetVerticalScroll(0)
     PageVersion:RefreshVersionStatus()
     ScheduleVersionQuery(0.5, true)
 end)
@@ -620,3 +831,4 @@ end)
 PageVersion:RefreshVersionStatus()
 
 BeavisQoL.Pages.Version = PageVersion
+

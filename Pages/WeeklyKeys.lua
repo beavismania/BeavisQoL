@@ -782,14 +782,14 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mo
     slider.High = _G[sliderName .. "High"]
 
     slider.Text:SetText(labelText)
-    slider.Text:SetTextColor(1, 0.82, 0, 1)
+    slider.Text:SetTextColor(1, 0.88, 0.62, 1)
     slider.Low:SetText(FormatSliderValue(minValue, mode))
     slider.High:SetText(FormatSliderValue(maxValue, mode))
 
     slider.ValueText = parent:CreateFontString(nil, "OVERLAY")
     slider.ValueText:SetPoint("BOTTOM", slider, "TOP", 0, 8)
     slider.ValueText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-    slider.ValueText:SetTextColor(1, 1, 1, 1)
+    slider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
 
     slider:SetScript("OnValueChanged", function(self, value)
         self.ValueText:SetText(FormatSliderValue(value, mode))
@@ -810,8 +810,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
 
     local label = parent:CreateFontString(nil, "OVERLAY")
     label:SetPoint("LEFT", checkbox, "RIGHT", 6, 0)
-    label:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-    label:SetTextColor(1, 1, 1, 1)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    label:SetTextColor(0.95, 0.91, 0.85, 1)
     label:SetText(titleText)
 
     local hint = parent:CreateFontString(nil, "OVERLAY")
@@ -819,8 +819,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
     hint:SetPoint("RIGHT", parent, "RIGHT", -18, 0)
     hint:SetJustifyH("LEFT")
     hint:SetJustifyV("TOP")
-    hint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-    hint:SetTextColor(0.80, 0.80, 0.80, 1)
+    hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    hint:SetTextColor(0.78, 0.74, 0.69, 1)
     hint:SetText(hintText)
 
     return checkbox, label, hint
@@ -835,13 +835,13 @@ local function CreateRunRows(parent, targetTable)
 
         local rankText = row:CreateFontString(nil, "OVERLAY")
         rankText:SetJustifyH("LEFT")
-        rankText:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+        rankText:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
         rankText:SetTextColor(DIM_COLOR[1], DIM_COLOR[2], DIM_COLOR[3], 1)
         row.RankText = rankText
 
         local statusText = row:CreateFontString(nil, "OVERLAY")
         statusText:SetJustifyH("LEFT")
-        statusText:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+        statusText:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
         row.StatusText = statusText
 
         local runText = row:CreateFontString(nil, "OVERLAY")
@@ -1302,19 +1302,19 @@ IntroPanel:SetHeight(1)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText(L("WEEKLY_KEYS"))
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
+IntroTitle:SetText(BeavisQoL.GetModulePageTitle("WeeklyKeys", L("WEEKLY_KEYS")))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -1322,7 +1322,7 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 IntroText:SetText(L("WEEKLY_KEYS_DESC"))
 
 local PreviewPanel = CreateFrame("Frame", nil, PageWeeklyKeysContent)
@@ -1331,18 +1331,18 @@ PreviewPanel:SetSize(1, 1)
 
 local PreviewPanelBg = PreviewPanel:CreateTexture(nil, "BACKGROUND")
 PreviewPanelBg:SetAllPoints()
-PreviewPanelBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+PreviewPanelBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local PreviewPanelBorder = PreviewPanel:CreateTexture(nil, "ARTWORK")
 PreviewPanelBorder:SetPoint("BOTTOMLEFT", PreviewPanel, "BOTTOMLEFT", 0, 0)
 PreviewPanelBorder:SetPoint("BOTTOMRIGHT", PreviewPanel, "BOTTOMRIGHT", 0, 0)
 PreviewPanelBorder:SetHeight(1)
-PreviewPanelBorder:SetColorTexture(1, 0.82, 0, 0.9)
+PreviewPanelBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local PreviewPanelTitle = PreviewPanel:CreateFontString(nil, "OVERLAY")
 PreviewPanelTitle:SetPoint("TOPLEFT", PreviewPanel, "TOPLEFT", 18, -14)
-PreviewPanelTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-PreviewPanelTitle:SetTextColor(1, 0.82, 0, 1)
+PreviewPanelTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+PreviewPanelTitle:SetTextColor(1, 0.88, 0.62, 1)
 PreviewPanelTitle:SetText(L("LIVE_PREVIEW"))
 
 local PreviewPanelHint = PreviewPanel:CreateFontString(nil, "OVERLAY")
@@ -1350,8 +1350,8 @@ PreviewPanelHint:SetPoint("TOPLEFT", PreviewPanelTitle, "BOTTOMLEFT", 0, -8)
 PreviewPanelHint:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
 PreviewPanelHint:SetJustifyH("LEFT")
 PreviewPanelHint:SetJustifyV("TOP")
-PreviewPanelHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PreviewPanelHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PreviewPanelHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PreviewPanelHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PreviewPanelHint:SetText(L("WEEKLY_KEYS_PREVIEW_HINT"))
 
 PreviewCard = CreateFrame("Frame", nil, PreviewPanel)
@@ -1376,7 +1376,7 @@ PreviewAccent:SetWidth(2)
 
 PreviewTitle = PreviewCard:CreateFontString(nil, "OVERLAY")
 PreviewTitle:SetPoint("TOPLEFT", PreviewCard, "TOPLEFT", 12, -10)
-PreviewTitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+PreviewTitle:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
 PreviewTitle:SetTextColor(GOLD_COLOR[1], GOLD_COLOR[2], GOLD_COLOR[3], 1)
 PreviewTitle:SetText(L("WEEKLY_KEYS"))
 
@@ -1384,8 +1384,8 @@ PreviewSummary = PreviewCard:CreateFontString(nil, "OVERLAY")
 PreviewSummary:SetPoint("TOPLEFT", PreviewTitle, "BOTTOMLEFT", 0, -4)
 PreviewSummary:SetPoint("RIGHT", PreviewCard, "RIGHT", -12, 0)
 PreviewSummary:SetJustifyH("LEFT")
-PreviewSummary:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-PreviewSummary:SetTextColor(0.80, 0.80, 0.80, 1)
+PreviewSummary:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PreviewSummary:SetTextColor(0.78, 0.74, 0.69, 1)
 
 CreateRunRows(PreviewCard, PreviewRows)
 
@@ -1394,7 +1394,7 @@ PreviewFooter:SetPoint("TOPLEFT", PreviewCard, "BOTTOMLEFT", 0, -14)
 PreviewFooter:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
 PreviewFooter:SetJustifyH("LEFT")
 PreviewFooter:SetJustifyV("TOP")
-PreviewFooter:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+PreviewFooter:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 PreviewFooter:SetTextColor(0.72, 0.72, 0.72, 1)
 PreviewFooter:SetText(L("WEEKLY_KEYS_PREVIEW_FOOTER"))
 
@@ -1404,18 +1404,18 @@ SettingsPanel:SetSize(1, 1)
 
 local SettingsBg = SettingsPanel:CreateTexture(nil, "BACKGROUND")
 SettingsBg:SetAllPoints()
-SettingsBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+SettingsBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local SettingsBorder = SettingsPanel:CreateTexture(nil, "ARTWORK")
 SettingsBorder:SetPoint("BOTTOMLEFT", SettingsPanel, "BOTTOMLEFT", 0, 0)
 SettingsBorder:SetPoint("BOTTOMRIGHT", SettingsPanel, "BOTTOMRIGHT", 0, 0)
 SettingsBorder:SetHeight(1)
-SettingsBorder:SetColorTexture(1, 0.82, 0, 0.9)
+SettingsBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local SettingsTitle = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsTitle:SetPoint("TOPLEFT", SettingsPanel, "TOPLEFT", 18, -14)
-SettingsTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-SettingsTitle:SetTextColor(1, 0.82, 0, 1)
+SettingsTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+SettingsTitle:SetTextColor(1, 0.88, 0.62, 1)
 SettingsTitle:SetText(L("DISPLAY_POSITION"))
 
 local SettingsHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
@@ -1423,8 +1423,8 @@ SettingsHint:SetPoint("TOPLEFT", SettingsTitle, "BOTTOMLEFT", 0, -8)
 SettingsHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsHint:SetJustifyH("LEFT")
 SettingsHint:SetJustifyV("TOP")
-SettingsHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SettingsHint:SetTextColor(0.80, 0.80, 0.80, 1)
+SettingsHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+SettingsHint:SetTextColor(0.78, 0.74, 0.69, 1)
 SettingsHint:SetText(L("WEEKLY_KEYS_SETTINGS_HINT"))
 
 local showOverlayLabel, showOverlayHint
@@ -1472,7 +1472,7 @@ local ResetHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
 ResetHint:SetPoint("LEFT", ResetPositionButton, "RIGHT", 12, 0)
 ResetHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 ResetHint:SetJustifyH("LEFT")
-ResetHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+ResetHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 ResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
 ResetHint:SetText(L("WEEKLY_KEYS_RESET_HINT"))
 
@@ -1636,7 +1636,7 @@ OverlayAccent:SetWidth(2)
 
 OverlayTitle = OverlayFrame:CreateFontString(nil, "OVERLAY")
 OverlayTitle:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 12, -10)
-OverlayTitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+OverlayTitle:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
 OverlayTitle:SetTextColor(GOLD_COLOR[1], GOLD_COLOR[2], GOLD_COLOR[3], 1)
 OverlayTitle:SetText(L("WEEKLY_KEYS"))
 
@@ -1644,8 +1644,8 @@ OverlaySummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
 OverlaySummary:SetPoint("TOPLEFT", OverlayTitle, "BOTTOMLEFT", 0, -4)
 OverlaySummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -12, 0)
 OverlaySummary:SetJustifyH("LEFT")
-OverlaySummary:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-OverlaySummary:SetTextColor(0.80, 0.80, 0.80, 1)
+OverlaySummary:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+OverlaySummary:SetTextColor(0.78, 0.74, 0.69, 1)
 
 CreateRunRows(OverlayFrame, OverlayRows)
 
@@ -1691,7 +1691,7 @@ function PageWeeklyKeys:RefreshState()
     -- in Checkboxen, Slider und Vorschau.
     local settings = GetWeeklyKeysSettings()
 
-    IntroTitle:SetText(L("WEEKLY_KEYS"))
+    IntroTitle:SetText(BeavisQoL.GetModulePageTitle("WeeklyKeys", L("WEEKLY_KEYS")))
     IntroText:SetText(L("WEEKLY_KEYS_DESC"))
     PreviewPanelTitle:SetText(L("LIVE_PREVIEW"))
     PreviewPanelHint:SetText(L("WEEKLY_KEYS_PREVIEW_HINT"))
@@ -1796,3 +1796,4 @@ end)
 PageWeeklyKeys:RefreshState()
 
 BeavisQoL.Pages.WeeklyKeys = PageWeeklyKeys
+

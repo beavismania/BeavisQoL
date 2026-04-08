@@ -59,6 +59,7 @@ local LockOverlayCheckbox
 local FontSizeSlider
 local ScaleSlider
 local BackgroundAlphaSlider
+local LayoutStatsPage
 
 local STAT_DEFINITIONS = {
     { key = "crit", label = "Crit", color = { 1.00, 0.18, 0.18 } },
@@ -82,6 +83,15 @@ local function Clamp(value, minValue, maxValue)
     end
 
     return value
+end
+
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
 end
 
 local function FormatPercent(value)
@@ -278,14 +288,14 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step, mo
     slider.High = _G[sliderName .. "High"]
 
     slider.Text:SetText(labelText)
-    slider.Text:SetTextColor(1, 0.82, 0, 1)
+    slider.Text:SetTextColor(1, 0.88, 0.62, 1)
     slider.Low:SetText(FormatSliderValue(minValue, mode))
     slider.High:SetText(FormatSliderValue(maxValue, mode))
 
     slider.ValueText = parent:CreateFontString(nil, "OVERLAY")
     slider.ValueText:SetPoint("BOTTOM", slider, "TOP", 0, 8)
     slider.ValueText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-    slider.ValueText:SetTextColor(1, 1, 1, 1)
+    slider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
 
     slider:SetScript("OnValueChanged", function(self, value)
         self.ValueText:SetText(FormatSliderValue(value, mode))
@@ -308,8 +318,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
 
     local label = parent:CreateFontString(nil, "OVERLAY")
     label:SetPoint("LEFT", checkbox, "RIGHT", 6, 0)
-    label:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-    label:SetTextColor(1, 1, 1, 1)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    label:SetTextColor(0.95, 0.91, 0.85, 1)
     label:SetText(titleText)
 
     local hint = parent:CreateFontString(nil, "OVERLAY")
@@ -317,8 +327,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
     hint:SetPoint("RIGHT", parent, "RIGHT", -18, 0)
     hint:SetJustifyH("LEFT")
     hint:SetJustifyV("TOP")
-    hint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-    hint:SetTextColor(0.80, 0.80, 0.80, 1)
+    hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    hint:SetTextColor(0.78, 0.74, 0.69, 1)
     hint:SetText(hintText)
 
     return checkbox, label, hint
@@ -347,7 +357,7 @@ local function CreateStatRows(parent, targetTable)
         value:SetShadowColor(0, 0, 0, 1)
         value:SetShadowOffset(1, -1)
         value:SetFont("Fonts\\FRIZQT__.TTF", DEFAULT_FONT_SIZE, "OUTLINE")
-        value:SetTextColor(1, 1, 1, 1)
+        value:SetTextColor(0.95, 0.91, 0.85, 1)
         row.Value = value
 
         targetTable[index] = row
@@ -567,26 +577,35 @@ PageStats = CreateFrame("Frame", nil, Content)
 PageStats:SetAllPoints()
 PageStats:Hide()
 
-local IntroPanel = CreateFrame("Frame", nil, PageStats)
-IntroPanel:SetPoint("TOPLEFT", PageStats, "TOPLEFT", 20, -20)
-IntroPanel:SetPoint("TOPRIGHT", PageStats, "TOPRIGHT", -20, -20)
+local PageStatsScrollFrame = CreateFrame("ScrollFrame", nil, PageStats, "UIPanelScrollFrameTemplate")
+PageStatsScrollFrame:SetPoint("TOPLEFT", PageStats, "TOPLEFT", 0, 0)
+PageStatsScrollFrame:SetPoint("BOTTOMRIGHT", PageStats, "BOTTOMRIGHT", -28, 0)
+PageStatsScrollFrame:EnableMouseWheel(true)
+
+local PageStatsContent = CreateFrame("Frame", nil, PageStatsScrollFrame)
+PageStatsContent:SetSize(1, 1)
+PageStatsScrollFrame:SetScrollChild(PageStatsContent)
+
+local IntroPanel = CreateFrame("Frame", nil, PageStatsContent)
+IntroPanel:SetPoint("TOPLEFT", PageStatsContent, "TOPLEFT", 20, -18)
+IntroPanel:SetPoint("RIGHT", PageStatsContent, "RIGHT", -20, 0)
 IntroPanel:SetHeight(112)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText(L("STATS_TITLE"))
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
+IntroTitle:SetText(BeavisQoL.GetModulePageTitle("Stats", L("STATS_TITLE")))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -594,27 +613,27 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 IntroText:SetText(L("STATS_DESC"))
 
-local PreviewPanel = CreateFrame("Frame", nil, PageStats)
+local PreviewPanel = CreateFrame("Frame", nil, PageStatsContent)
 PreviewPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 PreviewPanel:SetSize(320, 298)
 
 local PreviewBg = PreviewPanel:CreateTexture(nil, "BACKGROUND")
 PreviewBg:SetAllPoints()
-PreviewBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+PreviewBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local PreviewBorder = PreviewPanel:CreateTexture(nil, "ARTWORK")
 PreviewBorder:SetPoint("BOTTOMLEFT", PreviewPanel, "BOTTOMLEFT", 0, 0)
 PreviewBorder:SetPoint("BOTTOMRIGHT", PreviewPanel, "BOTTOMRIGHT", 0, 0)
 PreviewBorder:SetHeight(1)
-PreviewBorder:SetColorTexture(1, 0.82, 0, 0.9)
+PreviewBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local PreviewTitle = PreviewPanel:CreateFontString(nil, "OVERLAY")
 PreviewTitle:SetPoint("TOPLEFT", PreviewPanel, "TOPLEFT", 18, -14)
-PreviewTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-PreviewTitle:SetTextColor(1, 0.82, 0, 1)
+PreviewTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+PreviewTitle:SetTextColor(1, 0.88, 0.62, 1)
 PreviewTitle:SetText(L("LIVE_PREVIEW"))
 
 local PreviewHint = PreviewPanel:CreateFontString(nil, "OVERLAY")
@@ -622,8 +641,8 @@ PreviewHint:SetPoint("TOPLEFT", PreviewTitle, "BOTTOMLEFT", 0, -8)
 PreviewHint:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
 PreviewHint:SetJustifyH("LEFT")
 PreviewHint:SetJustifyV("TOP")
-PreviewHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PreviewHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PreviewHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PreviewHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PreviewHint:SetText(L("STATS_PREVIEW_HINT"))
 
 PreviewCard = CreateFrame("Frame", nil, PreviewPanel, BackdropTemplateMixin and "BackdropTemplate")
@@ -649,31 +668,29 @@ PreviewFooter:SetPoint("TOPLEFT", PreviewCard, "BOTTOMLEFT", 0, -14)
 PreviewFooter:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
 PreviewFooter:SetJustifyH("LEFT")
 PreviewFooter:SetJustifyV("TOP")
-PreviewFooter:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+PreviewFooter:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 PreviewFooter:SetTextColor(0.72, 0.72, 0.72, 1)
 PreviewFooter:SetText(L("STATS_PREVIEW_FOOTER"))
 
-local SettingsPanel = CreateFrame("Frame", nil, PageStats)
+local SettingsPanel = CreateFrame("Frame", nil, PageStatsContent)
 SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "TOPRIGHT", 18, 0)
-SettingsPanel:SetPoint("TOPRIGHT", PageStats, "TOPRIGHT", -20, -150)
--- Etwas mehr Hoehe, damit der Reset-Bereich sauber innerhalb des Panels bleibt
--- und unten sichtbar Luft zur Abschlusslinie hat.
+SettingsPanel:SetPoint("RIGHT", PageStatsContent, "RIGHT", -20, 0)
 SettingsPanel:SetHeight(430)
 
 local SettingsBg = SettingsPanel:CreateTexture(nil, "BACKGROUND")
 SettingsBg:SetAllPoints()
-SettingsBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+SettingsBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local SettingsBorder = SettingsPanel:CreateTexture(nil, "ARTWORK")
 SettingsBorder:SetPoint("BOTTOMLEFT", SettingsPanel, "BOTTOMLEFT", 0, 0)
 SettingsBorder:SetPoint("BOTTOMRIGHT", SettingsPanel, "BOTTOMRIGHT", 0, 0)
 SettingsBorder:SetHeight(1)
-SettingsBorder:SetColorTexture(1, 0.82, 0, 0.9)
+SettingsBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local SettingsTitle = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsTitle:SetPoint("TOPLEFT", SettingsPanel, "TOPLEFT", 18, -14)
-SettingsTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-SettingsTitle:SetTextColor(1, 0.82, 0, 1)
+SettingsTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+SettingsTitle:SetTextColor(1, 0.88, 0.62, 1)
 SettingsTitle:SetText(L("DISPLAY_POSITION"))
 
 local SettingsHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
@@ -681,8 +698,8 @@ SettingsHint:SetPoint("TOPLEFT", SettingsTitle, "BOTTOMLEFT", 0, -8)
 SettingsHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsHint:SetJustifyH("LEFT")
 SettingsHint:SetJustifyV("TOP")
-SettingsHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SettingsHint:SetTextColor(0.80, 0.80, 0.80, 1)
+SettingsHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+SettingsHint:SetTextColor(0.78, 0.74, 0.69, 1)
 SettingsHint:SetText(L("STATS_SETTINGS_HINT"))
 
 local showOverlayLabel, showOverlayHint
@@ -730,7 +747,7 @@ local ResetHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
 ResetHint:SetPoint("LEFT", ResetPositionButton, "RIGHT", 12, 0)
 ResetHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 ResetHint:SetJustifyH("LEFT")
-ResetHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+ResetHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 ResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
 ResetHint:SetText(L("STATS_RESET_HINT"))
 
@@ -772,14 +789,19 @@ CreateStatRows(OverlayFrame, OverlayRows)
 
 FontSizeSlider.ApplyValue = function(_, value)
     StatsModule.SetFontSize(value)
+    RefreshPreviewCard()
+    LayoutStatsPage()
 end
 
 ScaleSlider.ApplyValue = function(_, value)
     StatsModule.SetOverlayScale(value)
+    RefreshPreviewCard()
+    LayoutStatsPage()
 end
 
 BackgroundAlphaSlider.ApplyValue = function(_, value)
     StatsModule.SetBackgroundAlpha(value)
+    RefreshPreviewCard()
 end
 
 ShowOverlayCheckbox:SetScript("OnClick", function(self)
@@ -801,12 +823,177 @@ ResetPositionButton:SetScript("OnClick", function()
     StatsModule.ResetOverlayPosition()
 end)
 
+LayoutStatsPage = function()
+    local contentWidth = math.max(1, PageStatsScrollFrame:GetWidth())
+    if contentWidth <= 1 then
+        return
+    end
+
+    PageStatsContent:SetWidth(contentWidth)
+
+    local innerWidth = math.max(320, contentWidth - 40)
+    local stackPanels = innerWidth < 880
+    local previewWidth = stackPanels and innerWidth or math.max(280, math.min(350, math.floor(innerWidth * 0.30)))
+    local panelGap = 14
+
+    IntroPanel:ClearAllPoints()
+    IntroPanel:SetPoint("TOPLEFT", PageStatsContent, "TOPLEFT", 20, -18)
+    IntroPanel:SetPoint("RIGHT", PageStatsContent, "RIGHT", -20, 0)
+
+    IntroText:ClearAllPoints()
+    IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -8)
+    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+
+    local introHeight = math.ceil(
+        16
+        + GetTextHeight(IntroTitle, 24)
+        + 8
+        + GetTextHeight(IntroText, 34)
+        + 16
+    )
+    IntroPanel:SetHeight(math.max(90, introHeight))
+
+    PreviewPanel:ClearAllPoints()
+    PreviewPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -panelGap)
+    PreviewPanel:SetWidth(previewWidth)
+
+    PreviewTitle:ClearAllPoints()
+    PreviewTitle:SetPoint("TOPLEFT", PreviewPanel, "TOPLEFT", 18, -14)
+
+    PreviewHint:ClearAllPoints()
+    PreviewHint:SetPoint("TOPLEFT", PreviewTitle, "BOTTOMLEFT", 0, -8)
+    PreviewHint:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
+
+    PreviewCard:ClearAllPoints()
+    PreviewCard:SetPoint("TOPLEFT", PreviewHint, "BOTTOMLEFT", 0, -14)
+
+    PreviewFooter:ClearAllPoints()
+    PreviewFooter:SetPoint("TOPLEFT", PreviewCard, "BOTTOMLEFT", 0, -12)
+    PreviewFooter:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
+
+    local previewHeight = math.ceil(
+        14
+        + GetTextHeight(PreviewTitle, 15)
+        + 8
+        + GetTextHeight(PreviewHint, 42)
+        + 14
+        + PreviewCard:GetHeight()
+        + 12
+        + GetTextHeight(PreviewFooter, 42)
+        + 16
+    )
+    PreviewPanel:SetHeight(math.max(208, previewHeight))
+
+    SettingsPanel:ClearAllPoints()
+    if stackPanels then
+        SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "BOTTOMLEFT", 0, -panelGap)
+        SettingsPanel:SetPoint("RIGHT", PageStatsContent, "RIGHT", -20, 0)
+    else
+        SettingsPanel:SetPoint("TOPLEFT", PreviewPanel, "TOPRIGHT", panelGap, 0)
+        SettingsPanel:SetPoint("RIGHT", PageStatsContent, "RIGHT", -20, 0)
+    end
+
+    SettingsTitle:ClearAllPoints()
+    SettingsTitle:SetPoint("TOPLEFT", SettingsPanel, "TOPLEFT", 18, -14)
+
+    SettingsHint:ClearAllPoints()
+    SettingsHint:SetPoint("TOPLEFT", SettingsTitle, "BOTTOMLEFT", 0, -8)
+    SettingsHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+
+    ShowOverlayCheckbox:ClearAllPoints()
+    ShowOverlayCheckbox:SetPoint("TOPLEFT", SettingsHint, "BOTTOMLEFT", -4, -10)
+
+    LockOverlayCheckbox:ClearAllPoints()
+    LockOverlayCheckbox:SetPoint("TOPLEFT", showOverlayHint, "BOTTOMLEFT", -4, -10)
+
+    MinimapContextCheckbox:ClearAllPoints()
+    MinimapContextCheckbox:SetPoint("TOPLEFT", lockOverlayHint, "BOTTOMLEFT", -4, -10)
+
+    local sliderWidth = math.max(240, math.min(360, innerWidth - previewWidth - 82))
+    if stackPanels then
+        sliderWidth = math.max(240, math.min(420, innerWidth - 76))
+    end
+
+    FontSizeSlider:ClearAllPoints()
+    FontSizeSlider:SetPoint("TOPLEFT", minimapContextHint, "BOTTOMLEFT", 18, -26)
+    FontSizeSlider:SetWidth(sliderWidth)
+
+    ScaleSlider:ClearAllPoints()
+    ScaleSlider:SetPoint("TOPLEFT", FontSizeSlider, "BOTTOMLEFT", 0, -36)
+    ScaleSlider:SetWidth(sliderWidth)
+
+    BackgroundAlphaSlider:ClearAllPoints()
+    BackgroundAlphaSlider:SetPoint("TOPLEFT", ScaleSlider, "BOTTOMLEFT", 0, -36)
+    BackgroundAlphaSlider:SetWidth(sliderWidth)
+
+    ResetPositionButton:ClearAllPoints()
+    ResetPositionButton:SetSize(182, 28)
+    ResetPositionButton:SetPoint("TOPLEFT", BackgroundAlphaSlider, "BOTTOMLEFT", -18, -20)
+
+    ResetHint:ClearAllPoints()
+    if stackPanels or sliderWidth < 300 then
+        ResetHint:SetPoint("TOPLEFT", ResetPositionButton, "BOTTOMLEFT", 0, -8)
+        ResetHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+        ResetHint:SetJustifyH("LEFT")
+    else
+        ResetHint:SetPoint("LEFT", ResetPositionButton, "RIGHT", 12, 0)
+        ResetHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+        ResetHint:SetJustifyH("LEFT")
+    end
+
+    local settingsHeight = math.ceil(
+        14
+        + GetTextHeight(SettingsTitle, 15)
+        + 8
+        + GetTextHeight(SettingsHint, 42)
+        + 10
+        + ShowOverlayCheckbox:GetHeight()
+        + 4
+        + GetTextHeight(showOverlayHint, 34)
+        + 10
+        + LockOverlayCheckbox:GetHeight()
+        + 4
+        + GetTextHeight(lockOverlayHint, 34)
+        + 10
+        + MinimapContextCheckbox:GetHeight()
+        + 4
+        + GetTextHeight(minimapContextHint, 34)
+        + 26
+        + 42
+        + 36
+        + 42
+        + 36
+        + 42
+        + 20
+        + ResetPositionButton:GetHeight()
+        + ((stackPanels or sliderWidth < 300) and (8 + GetTextHeight(ResetHint, 32)) or 0)
+        + 16
+    )
+    SettingsPanel:SetHeight(math.max(318, settingsHeight))
+
+    local contentHeight
+    if stackPanels then
+        contentHeight = 18
+            + IntroPanel:GetHeight()
+            + panelGap + PreviewPanel:GetHeight()
+            + panelGap + SettingsPanel:GetHeight()
+            + 20
+    else
+        contentHeight = 18
+            + IntroPanel:GetHeight()
+            + panelGap + math.max(PreviewPanel:GetHeight(), SettingsPanel:GetHeight())
+            + 20
+    end
+
+    PageStatsContent:SetHeight(math.max(PageStatsScrollFrame:GetHeight(), contentHeight))
+end
+
 function PageStats:RefreshState()
     -- Die Seite liest einmal komplett aus den SavedVariables und schreibt den
     -- Zustand gesammelt in Checkboxen, Slider und Vorschau.
     local settings = GetStatsSettings()
 
-    IntroTitle:SetText(L("STATS_TITLE"))
+    IntroTitle:SetText(BeavisQoL.GetModulePageTitle("Stats", L("STATS_TITLE")))
     IntroText:SetText(L("STATS_DESC"))
     PreviewTitle:SetText(L("LIVE_PREVIEW"))
     PreviewHint:SetText(L("STATS_PREVIEW_HINT"))
@@ -835,9 +1022,27 @@ function PageStats:RefreshState()
     isRefreshing = false
 
     RefreshAllDisplays()
+    LayoutStatsPage()
 end
 
+PageStatsScrollFrame:SetScript("OnSizeChanged", LayoutStatsPage)
+PageStatsScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageStatsContent:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
 PageStats:SetScript("OnShow", function()
+    PageStatsScrollFrame:SetVerticalScroll(0)
     PageStats:RefreshState()
     UpdateStatsRefreshTickerState()
 end)
@@ -862,3 +1067,4 @@ end)
 PageStats:RefreshState()
 
 BeavisQoL.Pages.Stats = PageStats
+

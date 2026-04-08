@@ -402,8 +402,8 @@ local function EnsureKeystoneButtons()
     end)
 
     AutoTimerLabel = ButtonsContainer:CreateFontString(nil, "OVERLAY")
-    AutoTimerLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-    AutoTimerLabel:SetTextColor(1, 1, 1, 1)
+    AutoTimerLabel:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    AutoTimerLabel:SetTextColor(0.95, 0.91, 0.85, 1)
     AutoTimerLabel:SetJustifyH("LEFT")
     AutoTimerLabel:SetJustifyV("MIDDLE")
 

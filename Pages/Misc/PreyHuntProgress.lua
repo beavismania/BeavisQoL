@@ -46,8 +46,8 @@ PreyHuntOverlayBg:SetColorTexture(0, 0, 0, 0.55)
 
 local PreyHuntOverlayText = PreyHuntOverlay:CreateFontString(nil, "OVERLAY")
 PreyHuntOverlayText:SetPoint("CENTER", PreyHuntOverlay, "CENTER", 0, 0)
-PreyHuntOverlayText:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-PreyHuntOverlayText:SetTextColor(1, 0.82, 0, 1)
+PreyHuntOverlayText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+PreyHuntOverlayText:SetTextColor(1, 0.88, 0.62, 1)
 PreyHuntOverlayText:SetJustifyH("CENTER")
 PreyHuntOverlayText:SetJustifyV("MIDDLE")
 

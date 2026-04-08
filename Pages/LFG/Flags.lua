@@ -1518,8 +1518,8 @@ local function CreateEasyLFGHeaderButton(parent, width, labelText, onClick, tool
 
     local label = button:CreateFontString(nil, "OVERLAY")
     label:SetPoint("CENTER", button, "CENTER", 0, 0)
-    label:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
-    label:SetTextColor(1, 0.82, 0, 1)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+    label:SetTextColor(1, 0.88, 0.62, 1)
     label:SetText(labelText)
     button.Label = label
 
@@ -1628,8 +1628,8 @@ local function EnsureEasyLFGRow(index)
     toggleButton:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -5)
     toggleButton.Label = toggleButton:CreateFontString(nil, "OVERLAY")
     toggleButton.Label:SetPoint("CENTER", toggleButton, "CENTER", 0, 0)
-    toggleButton.Label:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-    toggleButton.Label:SetTextColor(1, 0.82, 0, 1)
+    toggleButton.Label:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    toggleButton.Label:SetTextColor(1, 0.88, 0.62, 1)
     toggleButton:SetScript("OnClick", function(self)
         if not self.ApplicantID then
             return
@@ -1647,7 +1647,7 @@ local function EnsureEasyLFGRow(index)
     name:SetPoint("RIGHT", flagAnchor, "LEFT", -8, 0)
     name:SetJustifyH("LEFT")
     name:SetWordWrap(false)
-    name:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     row.Name = name
 
     local meta = row:CreateFontString(nil, "OVERLAY")
@@ -1655,8 +1655,8 @@ local function EnsureEasyLFGRow(index)
     meta:SetPoint("RIGHT", flagAnchor, "LEFT", -8, 0)
     meta:SetJustifyH("LEFT")
     meta:SetWordWrap(false)
-    meta:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    meta:SetTextColor(0.80, 0.80, 0.80, 1)
+    meta:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
+    meta:SetTextColor(0.78, 0.74, 0.69, 1)
     row.Meta = meta
 
     local declineButton = CreateEasyLFGActionButton(row)
@@ -1692,7 +1692,7 @@ local function EnsureEasyLFGRow(index)
     local badge = row:CreateFontString(nil, "OVERLAY")
     badge:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -6)
     badge:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
-    badge:SetTextColor(1, 0.82, 0, 1)
+    badge:SetTextColor(1, 0.88, 0.62, 1)
     badge:SetWordWrap(false)
     badge:Hide()
     row.Badge = badge
@@ -1751,8 +1751,8 @@ local function EnsureEasyLFGOverlay()
 
     EasyLFGOverlay.Title = EasyLFGOverlay:CreateFontString(nil, "OVERLAY")
     EasyLFGOverlay.Title:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPLEFT", 18, -16)
-    EasyLFGOverlay.Title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-    EasyLFGOverlay.Title:SetTextColor(1, 0.82, 0, 1)
+    EasyLFGOverlay.Title:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+    EasyLFGOverlay.Title:SetTextColor(1, 0.88, 0.62, 1)
 
     EasyLFGOverlay.CloseButton = CreateEasyLFGHeaderButton(
         EasyLFGOverlay,
@@ -1795,8 +1795,8 @@ local function EnsureEasyLFGOverlay()
     EasyLFGOverlay.Summary:SetPoint("TOPLEFT", EasyLFGOverlay.Title, "BOTTOMLEFT", 0, -4)
     EasyLFGOverlay.Summary:SetPoint("RIGHT", EasyLFGOverlay, "RIGHT", -14, 0)
     EasyLFGOverlay.Summary:SetJustifyH("LEFT")
-    EasyLFGOverlay.Summary:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    EasyLFGOverlay.Summary:SetTextColor(0.80, 0.80, 0.80, 1)
+    EasyLFGOverlay.Summary:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
+    EasyLFGOverlay.Summary:SetTextColor(0.78, 0.74, 0.69, 1)
 
     EasyLFGOverlay.ScrollFrame = CreateFrame("ScrollFrame", nil, EasyLFGOverlay, "UIPanelScrollFrameTemplate")
     EasyLFGOverlay.ScrollFrame:SetPoint("TOPLEFT", EasyLFGOverlay.Summary, "BOTTOMLEFT", -2, -10)
@@ -1825,7 +1825,7 @@ local function EnsureEasyLFGOverlay()
     EasyLFGOverlay.EmptyText:SetPoint("RIGHT", EasyLFGOverlay.ScrollChild, "RIGHT", -2, 0)
     EasyLFGOverlay.EmptyText:SetJustifyH("LEFT")
     EasyLFGOverlay.EmptyText:SetJustifyV("TOP")
-    EasyLFGOverlay.EmptyText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    EasyLFGOverlay.EmptyText:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
     EasyLFGOverlay.EmptyText:SetTextColor(0.78, 0.78, 0.80, 1)
 
     EasyLFGOverlay.Footer = EasyLFGOverlay:CreateFontString(nil, "OVERLAY")
@@ -2137,3 +2137,4 @@ FlagWatcher:SetScript("OnEvent", function(_, event, ...)
         RefreshEasyLFGOverlay()
     end
 end)
+

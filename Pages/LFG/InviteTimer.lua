@@ -359,7 +359,7 @@ local function CreateTimerBar(parentFrame)
     local text = timerBar:CreateFontString(nil, "OVERLAY")
     text:SetPoint("CENTER", timerBar, "CENTER", 0, 0)
     text:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
-    text:SetTextColor(1, 1, 1, 1)
+    text:SetTextColor(0.95, 0.91, 0.85, 1)
     timerBar.Text = text
 
     timerBar.ParentFrame = parentFrame
