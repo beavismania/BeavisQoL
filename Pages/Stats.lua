@@ -463,14 +463,14 @@ local function RefreshPreviewCard()
     local width, height = LayoutStatRows(PreviewCard, PreviewRows, fontSize, scale)
     PreviewCard:SetSize(width, height)
     PreviewCard:SetBackdropColor(0.04, 0.04, 0.05, backgroundAlpha)
-    PreviewCard:SetBackdropBorderColor(1, 0.82, 0, 0.10 + (backgroundAlpha * 0.50))
+    PreviewCard:SetBackdropBorderColor(0.88, 0.72, 0.46, 0.10 + (backgroundAlpha * 0.50))
 
     if PreviewTopLine then
-        PreviewTopLine:SetColorTexture(1, 0.82, 0, 0.70)
+        PreviewTopLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
     end
 
     if PreviewAccent then
-        PreviewAccent:SetColorTexture(1, 0.82, 0, 0.14 + (backgroundAlpha * 0.30))
+        PreviewAccent:SetColorTexture(0.88, 0.72, 0.46, 0.14 + (backgroundAlpha * 0.30))
     end
 
     RefreshStatRows(PreviewRows)
@@ -494,15 +494,15 @@ function StatsModule.RefreshOverlayWindow()
 
     OverlayFrame:SetSize(overlayWidth, overlayHeight)
     OverlayFrame:SetBackdropColor(0.04, 0.04, 0.05, settings.backgroundAlpha)
-    OverlayFrame:SetBackdropBorderColor(1, 0.82, 0, 0.10 + (settings.backgroundAlpha * 0.50))
+    OverlayFrame:SetBackdropBorderColor(0.88, 0.72, 0.46, 0.10 + (settings.backgroundAlpha * 0.50))
     OverlayFrame:EnableMouse(not settings.overlayLocked)
 
     if OverlayTopLine then
-        OverlayTopLine:SetColorTexture(1, 0.82, 0, 0.70)
+        OverlayTopLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
     end
 
     if OverlayAccent then
-        OverlayAccent:SetColorTexture(1, 0.82, 0, 0.14 + (settings.backgroundAlpha * 0.30))
+        OverlayAccent:SetColorTexture(0.88, 0.72, 0.46, 0.14 + (settings.backgroundAlpha * 0.30))
     end
 
     RefreshStatRows(OverlayRows)
@@ -603,7 +603,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(BeavisQoL.GetModulePageTitle("Stats", L("STATS_TITLE")))
 
@@ -653,13 +653,13 @@ PreviewTopLine = PreviewCard:CreateTexture(nil, "ARTWORK")
 PreviewTopLine:SetPoint("TOPLEFT", PreviewCard, "TOPLEFT", 10, -8)
 PreviewTopLine:SetPoint("TOPRIGHT", PreviewCard, "TOPRIGHT", -10, -8)
 PreviewTopLine:SetHeight(1)
-PreviewTopLine:SetColorTexture(1, 0.82, 0, 0.70)
+PreviewTopLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
 
 PreviewAccent = PreviewCard:CreateTexture(nil, "BACKGROUND")
 PreviewAccent:SetPoint("TOPLEFT", PreviewCard, "TOPLEFT", 9, -10)
 PreviewAccent:SetPoint("BOTTOMLEFT", PreviewCard, "BOTTOMLEFT", 9, 10)
 PreviewAccent:SetWidth(2)
-PreviewAccent:SetColorTexture(1, 0.82, 0, 0.18)
+PreviewAccent:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 
 CreateStatRows(PreviewCard, PreviewRows)
 
@@ -777,13 +777,13 @@ OverlayTopLine = OverlayFrame:CreateTexture(nil, "ARTWORK")
 OverlayTopLine:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 10, -8)
 OverlayTopLine:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", -10, -8)
 OverlayTopLine:SetHeight(1)
-OverlayTopLine:SetColorTexture(1, 0.82, 0, 0.70)
+OverlayTopLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
 
 OverlayAccent = OverlayFrame:CreateTexture(nil, "BACKGROUND")
 OverlayAccent:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 9, -10)
 OverlayAccent:SetPoint("BOTTOMLEFT", OverlayFrame, "BOTTOMLEFT", 9, 10)
 OverlayAccent:SetWidth(2)
-OverlayAccent:SetColorTexture(1, 0.82, 0, 0.18)
+OverlayAccent:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 
 CreateStatRows(OverlayFrame, OverlayRows)
 

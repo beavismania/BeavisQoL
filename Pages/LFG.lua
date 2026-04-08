@@ -178,7 +178,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(BeavisQoL.GetModulePageTitle("LFG", L("LFG")))
 

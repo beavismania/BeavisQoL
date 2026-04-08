@@ -1513,7 +1513,7 @@ local function CreateEasyLFGHeaderButton(parent, width, labelText, onClick, tool
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
     button.Border = border
 
     local label = button:CreateFontString(nil, "OVERLAY")
@@ -1527,7 +1527,7 @@ local function CreateEasyLFGHeaderButton(parent, width, labelText, onClick, tool
     button.TooltipText = tooltipText
     button:SetScript("OnEnter", function(self)
         self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
-        self.Border:SetColorTexture(1, 0.90, 0.35, 0.72)
+        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.72)
 
         if self.TooltipTitle and GameTooltip then
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -1540,7 +1540,7 @@ local function CreateEasyLFGHeaderButton(parent, width, labelText, onClick, tool
     end)
     button:SetScript("OnLeave", function(self)
         self.Background:SetColorTexture(0.05, 0.05, 0.06, 0.58)
-        self.Border:SetColorTexture(1, 0.82, 0, 0.34)
+        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
         if GameTooltip then
             GameTooltip:Hide()
         end
@@ -1610,7 +1610,7 @@ local function EnsureEasyLFGRow(index)
     border:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.18)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.18)
     row.Border = border
 
     local actionArea = CreateFrame("Frame", nil, row)
@@ -1741,13 +1741,13 @@ local function EnsureEasyLFGOverlay()
     topLine:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPLEFT", 10, -8)
     topLine:SetPoint("TOPRIGHT", EasyLFGOverlay, "TOPRIGHT", -10, -8)
     topLine:SetHeight(1)
-    topLine:SetColorTexture(1, 0.82, 0, 0.70)
+    topLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
 
     local accent = EasyLFGOverlay:CreateTexture(nil, "BACKGROUND")
     accent:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPLEFT", 9, -10)
     accent:SetPoint("BOTTOMLEFT", EasyLFGOverlay, "BOTTOMLEFT", 9, 10)
     accent:SetWidth(2)
-    accent:SetColorTexture(1, 0.82, 0, 0.18)
+    accent:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 
     EasyLFGOverlay.Title = EasyLFGOverlay:CreateFontString(nil, "OVERLAY")
     EasyLFGOverlay.Title:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPLEFT", 18, -16)

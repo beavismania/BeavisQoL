@@ -25,6 +25,7 @@ local BUILT_IN_TODOS = {
     { id = "weekly_raid", labelKey = "CHECKLIST_TODO_WEEKLY_RAID", cadence = "weekly" },
     { id = "weekly_pvp_quests", labelKey = "CHECKLIST_TODO_WEEKLY_PVP_QUESTS", cadence = "weekly" },
     { id = "weekly_hunts", labelKey = "CHECKLIST_TODO_WEEKLY_HUNTS", cadence = "weekly" },
+    { id = "weekly_optional_hunts", labelKey = "CHECKLIST_TODO_WEEKLY_OPTIONAL_HUNTS", cadence = "weekly" },
     { id = "weekly_soiree", labelKey = "CHECKLIST_TODO_WEEKLY_SOIREE", cadence = "weekly" },
     { id = "weekly_overflow", labelKey = "CHECKLIST_TODO_WEEKLY_OVERFLOW", cadence = "weekly" },
     { id = "weekly_stormarion", labelKey = "CHECKLIST_TODO_WEEKLY_STORMARION", cadence = "weekly" },
@@ -779,7 +780,7 @@ local function CreateTrackerTodoRow(parent)
     divider:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 0)
     divider:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 0)
     divider:SetHeight(1)
-    divider:SetColorTexture(1, 1, 1, 0.04)
+    divider:SetColorTexture(0.88, 0.72, 0.46, 0.16)
     row.Divider = divider
 
     return row
@@ -1544,7 +1545,7 @@ TrackerHeaderBorder = TrackerFrame:CreateTexture(nil, "ARTWORK")
 TrackerHeaderBorder:SetPoint("TOPLEFT", TrackerFrame, "TOPLEFT", 8, -26)
 TrackerHeaderBorder:SetPoint("TOPRIGHT", TrackerFrame, "TOPRIGHT", -8, -26)
 TrackerHeaderBorder:SetHeight(1)
-TrackerHeaderBorder:SetColorTexture(1, 1, 1, 0.10)
+TrackerHeaderBorder:SetColorTexture(0.88, 0.72, 0.46, 0.22)
 
 TrackerScrollFrame = CreateFrame("ScrollFrame", nil, TrackerFrame, "UIPanelScrollFrameTemplate")
 TrackerScrollFrame:SetPoint("TOPLEFT", TrackerFrame, "TOPLEFT", 8, -30)
@@ -1912,7 +1913,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(BeavisQoL.GetModulePageTitle("Checklist", L("CHECKLIST")))
 

@@ -613,7 +613,13 @@ local function GetTextHeight(fontString, minimumHeight)
 end
 
 local function GetMeasuredPanelHeight(panel, bottomObject, padding, minimumHeight)
-    local fallbackHeight = minimumHeight or (panel and panel:GetHeight()) or 0
+    local fallbackHeight
+
+    if type(minimumHeight) == "number" and minimumHeight > 0 then
+        fallbackHeight = minimumHeight
+    else
+        fallbackHeight = (panel and panel:GetHeight()) or 0
+    end
 
     if not panel or not bottomObject or not panel:GetTop() or not bottomObject:GetBottom() then
         return fallbackHeight
@@ -664,11 +670,11 @@ local function LayoutStreamerPlannerSettingsPanel(settingsPanel)
     local sliderWidth = math.max(220, math.min(310, settingsPanel:GetWidth() - 56))
 
     ScaleSlider:ClearAllPoints()
-    ScaleSlider:SetPoint("TOPLEFT", DungeonModeButton, "BOTTOMLEFT", 18, -26)
+    ScaleSlider:SetPoint("TOPLEFT", DungeonModeButton, "BOTTOMLEFT", 18, -30)
     ScaleSlider:SetWidth(sliderWidth)
 
     settingsPanel.ScaleHint:ClearAllPoints()
-    settingsPanel.ScaleHint:SetPoint("TOPLEFT", ScaleSlider, "BOTTOMLEFT", -2, -10)
+    settingsPanel.ScaleHint:SetPoint("TOPLEFT", (ScaleSlider.LowLabel or ScaleSlider), "BOTTOMLEFT", -2, -14)
     settingsPanel.ScaleHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
 
     TimerDurationSlider:ClearAllPoints()
@@ -676,7 +682,7 @@ local function LayoutStreamerPlannerSettingsPanel(settingsPanel)
     TimerDurationSlider:SetWidth(sliderWidth)
 
     settingsPanel.TimerDurationHint:ClearAllPoints()
-    settingsPanel.TimerDurationHint:SetPoint("TOPLEFT", TimerDurationSlider, "BOTTOMLEFT", -2, -10)
+    settingsPanel.TimerDurationHint:SetPoint("TOPLEFT", (TimerDurationSlider.LowLabel or TimerDurationSlider), "BOTTOMLEFT", -2, -14)
     settingsPanel.TimerDurationHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
 
     settingsPanel.ResetPositionButton:ClearAllPoints()
@@ -4344,7 +4350,7 @@ local function CreateIconPickerButton(parent, size, showLabel)
 
     local selected = button:CreateTexture(nil, "BORDER")
     selected:SetAllPoints()
-    selected:SetColorTexture(1, 0.82, 0, 0.22)
+    selected:SetColorTexture(0.88, 0.72, 0.46, 0.22)
     selected:Hide()
     button.Selected = selected
 
@@ -4352,13 +4358,13 @@ local function CreateIconPickerButton(parent, size, showLabel)
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
 
     local borderBottom = button:CreateTexture(nil, "ARTWORK")
     borderBottom:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
     borderBottom:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
     borderBottom:SetHeight(1)
-    borderBottom:SetColorTexture(1, 0.82, 0, 0.22)
+    borderBottom:SetColorTexture(0.88, 0.72, 0.46, 0.22)
 
     local icon = button:CreateTexture(nil, "OVERLAY")
     if showLabel then
@@ -4854,7 +4860,7 @@ PlannerPrivate.EnsureApplicantRow = function(index)
     row.Border:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
     row.Border:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
     row.Border:SetHeight(1)
-    row.Border:SetColorTexture(1, 0.82, 0, 0.18)
+    row.Border:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 
     row.Name = row:CreateFontString(nil, "OVERLAY")
     row.Name:SetPoint("TOPLEFT", row, "TOPLEFT", 10, -5)
@@ -4955,6 +4961,7 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
 
     local maxRows = 10
     local visibleRowCount = math.min(#rowDataList, maxRows)
+    local lastVisibleRow = nil
 
     for index = 1, visibleRowCount do
         local row = PlannerPrivate.EnsureApplicantRow(index)
@@ -5005,6 +5012,7 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
         row.InviteButton.InviteTarget = canInvite and rowData.inviteTarget or nil
         row.InviteButton:SetShown(canInvite)
         row:Show()
+        lastVisibleRow = row
     end
 
     for index = visibleRowCount + 1, #ApplicantRows do
@@ -5014,15 +5022,27 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
     ApplicantPanelEmptyText:SetShown(visibleRowCount == 0)
     ApplicantPanelEmptyText:SetText(L("STREAMER_PLANNER_QUEUE_EMPTY"))
 
+    local bottomObject = visibleRowCount == 0 and ApplicantPanelEmptyText or lastVisibleRow
+
     if ApplicantPanel.MoreText then
         local extraCount = math.max(0, #rowDataList - maxRows)
+        ApplicantPanel.MoreText:ClearAllPoints()
+        if extraCount > 0 and lastVisibleRow then
+            ApplicantPanel.MoreText:SetPoint("TOPLEFT", lastVisibleRow, "BOTTOMLEFT", 0, -8)
+            ApplicantPanel.MoreText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
+        end
         ApplicantPanel.MoreText:SetShown(extraCount > 0)
         ApplicantPanel.MoreText:SetText(extraCount > 0 and L("EASY_LFG_OVERLAY_MORE"):format(extraCount) or "")
+        if extraCount > 0 then
+            bottomObject = ApplicantPanel.MoreText
+        end
     end
 
-    local rowsHeight = visibleRowCount > 0 and ((visibleRowCount * 34) + ((visibleRowCount - 1) * 4)) or 26
-    local extraHeight = ApplicantPanel.MoreText and ApplicantPanel.MoreText:IsShown() and 18 or 0
-    ApplicantPanel:SetHeight(96 + rowsHeight + extraHeight)
+    ApplicantPanel:SetHeight(GetMeasuredPanelHeight(ApplicantPanel, bottomObject, 18, 122))
+
+    if PageStreamerPlanner and PageStreamerPlanner:IsShown() then
+        PageStreamerPlanner:UpdateScrollLayout()
+    end
 end
 
 local function CreateOverlayHeaderButton(parent, width, labelText, onClick, tooltipTitle, tooltipText)
@@ -5038,7 +5058,7 @@ local function CreateOverlayHeaderButton(parent, width, labelText, onClick, tool
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
     button.Border = border
 
     local label = button:CreateFontString(nil, "OVERLAY")
@@ -5050,7 +5070,7 @@ local function CreateOverlayHeaderButton(parent, width, labelText, onClick, tool
 
     button:SetScript("OnEnter", function(self)
         self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
-        self.Border:SetColorTexture(1, 0.90, 0.35, 0.72)
+        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.72)
 
         if tooltipTitle and GameTooltip then
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -5064,7 +5084,7 @@ local function CreateOverlayHeaderButton(parent, width, labelText, onClick, tool
 
     button:SetScript("OnLeave", function(self)
         self.Background:SetColorTexture(0.05, 0.05, 0.06, 0.58)
-        self.Border:SetColorTexture(1, 0.82, 0, 0.34)
+        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
         if GameTooltip then
             GameTooltip:Hide()
         end
@@ -5093,6 +5113,9 @@ local function CreateScaleSlider(parent, nameSuffix)
     local lowLabel = _G[slider:GetName() .. "Low"]
     local highLabel = _G[slider:GetName() .. "High"]
     local textLabel = _G[slider:GetName() .. "Text"]
+    slider.LowLabel = lowLabel
+    slider.HighLabel = highLabel
+    slider.TextLabel = textLabel
 
     if lowLabel then
         lowLabel:SetText(GetSliderPercentText(MIN_OVERLAY_SCALE))
@@ -5126,14 +5149,14 @@ local function CreateSlotButton(parent, width, height, layout, index)
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
     button.Border = border
 
     local accent = button:CreateTexture(nil, "ARTWORK")
     accent:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
     accent:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
     accent:SetHeight(1)
-    accent:SetColorTexture(1, 0.82, 0, 0.22)
+    accent:SetColorTexture(0.88, 0.72, 0.46, 0.22)
     button.Accent = accent
 
     local label = button:CreateFontString(nil, "OVERLAY")
@@ -5182,14 +5205,14 @@ local function CreateSlotButton(parent, width, height, layout, index)
 
     button:SetScript("OnEnter", function(self)
         self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
-        self.Border:SetColorTexture(1, 0.90, 0.35, 0.78)
-        self.Accent:SetColorTexture(1, 0.90, 0.35, 0.62)
+        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.78)
+        self.Accent:SetColorTexture(0.88, 0.72, 0.46, 0.62)
     end)
 
     button:SetScript("OnLeave", function(self)
         self.Background:SetColorTexture(0.05, 0.05, 0.06, 0.60)
-        self.Border:SetColorTexture(1, 0.82, 0, 0.34)
-        self.Accent:SetColorTexture(1, 0.82, 0, 0.22)
+        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
+        self.Accent:SetColorTexture(0.88, 0.72, 0.46, 0.22)
     end)
 
     return button
@@ -5774,13 +5797,13 @@ do
     borderTop:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 0, 0)
     borderTop:SetPoint("TOPRIGHT", WhisperSpecPromptUI.Frame, "TOPRIGHT", 0, 0)
     borderTop:SetHeight(1)
-    borderTop:SetColorTexture(1, 0.82, 0, 0.36)
+    borderTop:SetColorTexture(0.88, 0.72, 0.46, 0.36)
 
     local borderBottom = WhisperSpecPromptUI.Frame:CreateTexture(nil, "ARTWORK")
     borderBottom:SetPoint("BOTTOMLEFT", WhisperSpecPromptUI.Frame, "BOTTOMLEFT", 0, 0)
     borderBottom:SetPoint("BOTTOMRIGHT", WhisperSpecPromptUI.Frame, "BOTTOMRIGHT", 0, 0)
     borderBottom:SetHeight(1)
-    borderBottom:SetColorTexture(1, 0.82, 0, 0.86)
+    borderBottom:SetColorTexture(0.88, 0.72, 0.46, 0.86)
 end
 
 WhisperSpecPromptUI.Title = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
@@ -5907,13 +5930,13 @@ do
     topLine:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 10, -8)
     topLine:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", -10, -8)
     topLine:SetHeight(1)
-    topLine:SetColorTexture(1, 0.82, 0, 0.70)
+    topLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
 
     local accent = OverlayFrame:CreateTexture(nil, "BACKGROUND")
     accent:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 9, -10)
     accent:SetPoint("BOTTOMLEFT", OverlayFrame, "BOTTOMLEFT", 9, 10)
     accent:SetWidth(2)
-    accent:SetColorTexture(1, 0.82, 0, 0.18)
+    accent:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 end
 
 OverlayTitle = OverlayFrame:CreateFontString(nil, "OVERLAY")
@@ -6012,7 +6035,7 @@ do
     border:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
 end
 
 OverlayDestinationLabel = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
@@ -6071,7 +6094,7 @@ do
     border:SetPoint("TOPLEFT", OverlayTimer.Panel, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", OverlayTimer.Panel, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.34)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
 end
 
 OverlayTimer.Label = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
@@ -6217,7 +6240,7 @@ do
         button.Label = button:GetFontString()
         button.Selected = button:CreateTexture(nil, "BORDER")
         button.Selected:SetAllPoints()
-        button.Selected:SetColorTexture(1, 0.82, 0, 0.18)
+        button.Selected:SetColorTexture(0.88, 0.72, 0.46, 0.18)
         button.Selected:Hide()
         button:Hide()
         PlannerPrivate.editRoleButtons[#PlannerPrivate.editRoleButtons + 1] = button
@@ -6531,7 +6554,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 PageStreamerPlanner.IntroTitle = IntroTitle
 
@@ -6836,6 +6859,7 @@ ApplicantPanel.MoreText = ApplicantPanel:CreateFontString(nil, "OVERLAY")
 ApplicantPanel.MoreText:SetPoint("BOTTOMLEFT", ApplicantPanel, "BOTTOMLEFT", 18, 10)
 ApplicantPanel.MoreText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
 ApplicantPanel.MoreText:SetJustifyH("LEFT")
+ApplicantPanel.MoreText:SetJustifyV("TOP")
 ApplicantPanel.MoreText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 ApplicantPanel.MoreText:SetTextColor(0.78, 0.78, 0.80, 1)
 ApplicantPanel.MoreText:Hide()
@@ -6960,8 +6984,8 @@ function PageStreamerPlanner:UpdateScrollLayout()
     end
     local introHeight = GetMeasuredPanelHeight(introPanel, self.UsageHint, 18, 96)
     local previewContent = showRaid and PreviewUI.RaidContainer or PreviewUI.DungeonContainer
-    local previewHeight = GetMeasuredPanelHeight(previewPanel, previewContent, 18, 0)
-    local settingsHeight = GetMeasuredPanelHeight(settingsPanel, settingsPanel and settingsPanel.EditHint, 24, 0)
+    local previewHeight = GetMeasuredPanelHeight(previewPanel, previewContent, 18, 424)
+    local settingsHeight = GetMeasuredPanelHeight(settingsPanel, settingsPanel and settingsPanel.EditHint, 24, 424)
 
     introPanel:SetHeight(introHeight)
     topRowHeight = math.max(previewHeight, settingsHeight)

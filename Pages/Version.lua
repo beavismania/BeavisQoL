@@ -23,6 +23,7 @@ local addonGameVersionLabel = metadata.gameVersionLabel or C_AddOns.GetAddOnMeta
 local addonReleaseDate = metadata.releaseDate or C_AddOns.GetAddOnMetadata(ADDON_NAME, "X-ReleaseDate") or L("UNKNOWN")
 
 local WEBSITE_URL = "https://www.beavismania.de"
+local FEEDBACK_URL = "https://www.beavismania.de/wow-addon"
 local RELEASES_URL = "https://github.com/beavismania/BeavisQoL/releases"
 local VERSION_PREFIX = "BEAVISQOLVER"
 local VERSION_QUERY = "QUERY"
@@ -591,7 +592,7 @@ FeedbackButton:SetSize(180, 30)
 FeedbackButton:SetPoint("BOTTOMLEFT", ActionPanel, "BOTTOMLEFT", 18, 18)
 FeedbackButton:SetText(L("SEND_FEEDBACK"))
 FeedbackButton:SetScript("OnClick", function()
-    ShowExternalLink(L("FEEDBACK_POPUP"), WEBSITE_URL)
+    ShowExternalLink(L("FEEDBACK_POPUP"), FEEDBACK_URL)
 end)
 
 local IdeaButton = CreateFrame("Button", nil, ActionPanel, "UIPanelButtonTemplate")
@@ -599,14 +600,14 @@ IdeaButton:SetSize(180, 30)
 IdeaButton:SetPoint("LEFT", FeedbackButton, "RIGHT", 14, 0)
 IdeaButton:SetText(L("SUBMIT_IDEA"))
 IdeaButton:SetScript("OnClick", function()
-    ShowExternalLink(L("IDEA_POPUP"), WEBSITE_URL)
+    ShowExternalLink(L("IDEA_POPUP"), FEEDBACK_URL)
 end)
 
 local WebsiteHint = ActionPanel:CreateFontString(nil, "OVERLAY")
 WebsiteHint:SetPoint("LEFT", IdeaButton, "RIGHT", 18, 0)
 WebsiteHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 WebsiteHint:SetTextColor(0.85, 0.85, 0.85, 1)
-WebsiteHint:SetText("www.beavismania.de")
+WebsiteHint:SetText("www.beavismania.de/wow-addon")
 
 local PageVersionScrollFrame = CreateFrame("ScrollFrame", nil, PageVersion, "UIPanelScrollFrameTemplate")
 PageVersionScrollFrame:SetPoint("TOPLEFT", PageVersion, "TOPLEFT", 0, 0)

@@ -16,10 +16,12 @@ local ButtonsContainer = nil
 local AutoTimerCheckbox = nil
 local AutoTimerLabel = nil
 local ReadyCheckButton = nil
+local StartButton = nil
 local PullTimerButton = nil
 local PendingStartTimer = nil
 local PendingReadyCheck = nil
 local AutoTimerReadyCheckRequestedAt = 0
+local RefreshKeystoneButtons = nil
 
 local function GetChallengesUILoaded()
     if C_AddOns and C_AddOns.IsAddOnLoaded then
@@ -241,6 +243,29 @@ local function IsActivationReady()
     return type(GetStartChallengeModeAPI()) == "function"
 end
 
+local function StartChallengeModeNow()
+    CancelAutoTimerPreparation()
+
+    if not Misc.IsKeystoneActionsEnabled() or not IsActivationReady() then
+        RefreshKeystoneButtons()
+        return
+    end
+
+    local startChallengeMode = GetStartChallengeModeAPI()
+    if type(startChallengeMode) ~= "function" then
+        RefreshKeystoneButtons()
+        return
+    end
+
+    local startOk, startSuccess = pcall(startChallengeMode)
+    if not startOk or startSuccess == false then
+        RefreshKeystoneButtons()
+        return
+    end
+
+    RefreshKeystoneButtons()
+end
+
 local function UpdateOriginalStartButtonVisibility()
     if not KeystoneFrame or not KeystoneFrame.StartButton then
         return
@@ -254,13 +279,16 @@ local function UpdateOriginalStartButtonVisibility()
 end
 
 local function PositionKeystoneButtons()
-    if not KeystoneFrame or not ButtonsContainer or not AutoTimerCheckbox or not AutoTimerLabel or not ReadyCheckButton or not PullTimerButton then
+    if not KeystoneFrame or not ButtonsContainer or not AutoTimerCheckbox or not AutoTimerLabel or not ReadyCheckButton or not StartButton or not PullTimerButton then
         return
     end
 
     local autoTimerBlockWidth = (AutoTimerCheckbox:GetWidth() or 24) + math.ceil(AutoTimerLabel:GetStringWidth() or 0) + 2
-    local totalWidth = autoTimerBlockWidth + BUTTON_GAP + ReadyCheckButton:GetWidth() + BUTTON_GAP + PullTimerButton:GetWidth()
-    local buttonHeight = math.max(ReadyCheckButton:GetHeight() or 0, PullTimerButton:GetHeight() or 0)
+    local totalWidth = autoTimerBlockWidth
+        + BUTTON_GAP + ReadyCheckButton:GetWidth()
+        + BUTTON_GAP + StartButton:GetWidth()
+        + BUTTON_GAP + PullTimerButton:GetWidth()
+    local buttonHeight = math.max(ReadyCheckButton:GetHeight() or 0, StartButton:GetHeight() or 0, PullTimerButton:GetHeight() or 0)
 
     ButtonsContainer:ClearAllPoints()
     ButtonsContainer:SetSize(totalWidth, buttonHeight)
@@ -269,15 +297,15 @@ local function PositionKeystoneButtons()
     AutoTimerCheckbox:ClearAllPoints()
     AutoTimerLabel:ClearAllPoints()
     ReadyCheckButton:ClearAllPoints()
+    StartButton:ClearAllPoints()
     PullTimerButton:ClearAllPoints()
 
     AutoTimerCheckbox:SetPoint("LEFT", ButtonsContainer, "LEFT", 0, 0)
     AutoTimerLabel:SetPoint("LEFT", AutoTimerCheckbox, "RIGHT", 0, 1)
     ReadyCheckButton:SetPoint("LEFT", ButtonsContainer, "LEFT", autoTimerBlockWidth + BUTTON_GAP, 0)
-    PullTimerButton:SetPoint("LEFT", ReadyCheckButton, "RIGHT", BUTTON_GAP, 0)
+    StartButton:SetPoint("LEFT", ReadyCheckButton, "RIGHT", BUTTON_GAP, 0)
+    PullTimerButton:SetPoint("LEFT", StartButton, "RIGHT", BUTTON_GAP, 0)
 end
-
-local RefreshKeystoneButtons
 
 local function StartAutomaticActivationCountdown()
     PendingReadyCheck = nil
@@ -314,26 +342,14 @@ local function StartAutomaticActivationCountdown()
             return
         end
 
-        local startChallengeMode = GetStartChallengeModeAPI()
-        if type(startChallengeMode) ~= "function" then
-            RefreshKeystoneButtons()
-            return
-        end
-
-        local startOk, startSuccess = pcall(startChallengeMode)
-        if not startOk or startSuccess == false then
-            RefreshKeystoneButtons()
-            return
-        end
-
-        RefreshKeystoneButtons()
+        StartChallengeModeNow()
     end)
 
     RefreshKeystoneButtons()
 end
 
 RefreshKeystoneButtons = function()
-    if not AutoTimerCheckbox or not AutoTimerLabel or not ReadyCheckButton or not PullTimerButton then
+    if not AutoTimerCheckbox or not AutoTimerLabel or not ReadyCheckButton or not StartButton or not PullTimerButton then
         return
     end
 
@@ -350,8 +366,10 @@ RefreshKeystoneButtons = function()
     AutoTimerLabel:SetText(L("KEYSTONE_ACTIONS_AUTOTIMER"))
     AutoTimerCheckbox:SetChecked(Misc.IsKeystoneAutoTimerEnabled())
     ReadyCheckButton:SetText(L("KEYSTONE_ACTIONS_READYCHECK"))
+    StartButton:SetText(L("KEYSTONE_ACTIONS_START"))
     PullTimerButton:SetText(countdownRunning and L("KEYSTONE_ACTIONS_CANCEL") or L("KEYSTONE_ACTIONS_PULLTIMER"))
-    FitButtonWidth(ReadyCheckButton, 84)
+    FitButtonWidth(ReadyCheckButton, 96)
+    FitButtonWidth(StartButton, 72)
     FitButtonWidth(PullTimerButton, countdownRunning and 84 or 108)
     PositionKeystoneButtons()
 
@@ -361,6 +379,7 @@ RefreshKeystoneButtons = function()
         AutoTimerCheckbox:Hide()
         AutoTimerLabel:Hide()
         ReadyCheckButton:Hide()
+        StartButton:Hide()
         PullTimerButton:Hide()
         return
     end
@@ -373,6 +392,7 @@ RefreshKeystoneButtons = function()
     AutoTimerCheckbox:Show()
     AutoTimerLabel:Show()
     ReadyCheckButton:SetEnabled(type(GetReadyCheckAPI()) == "function" and not countdownRunning and ((not groupLockEnabled) or inGroup))
+    StartButton:SetEnabled(not countdownRunning and IsActivationReady() and ((not groupLockEnabled) or inGroup))
     if countdownRunning then
         PullTimerButton:SetEnabled(true)
     else
@@ -380,6 +400,7 @@ RefreshKeystoneButtons = function()
     end
 
     ReadyCheckButton:Show()
+    StartButton:Show()
     PullTimerButton:Show()
 end
 
@@ -388,7 +409,7 @@ local function EnsureKeystoneButtons()
         return false
     end
 
-    if ButtonsContainer and AutoTimerCheckbox and AutoTimerLabel and ReadyCheckButton and PullTimerButton then
+    if ButtonsContainer and AutoTimerCheckbox and AutoTimerLabel and ReadyCheckButton and StartButton and PullTimerButton then
         return true
     end
 
@@ -421,6 +442,12 @@ local function EnsureKeystoneButtons()
         if type(doReadyCheck) == "function" then
             pcall(doReadyCheck)
         end
+    end)
+
+    StartButton = CreateFrame("Button", nil, ButtonsContainer, "UIPanelButtonTemplate")
+    StartButton:SetHeight(24)
+    StartButton:SetScript("OnClick", function()
+        StartChallengeModeNow()
     end)
 
     PullTimerButton = CreateFrame("Button", nil, ButtonsContainer, "UIPanelButtonTemplate")
@@ -462,6 +489,10 @@ local function InitializeChallengesUI()
 
         if ReadyCheckButton then
             ReadyCheckButton:Hide()
+        end
+
+        if StartButton then
+            StartButton:Hide()
         end
 
         if PullTimerButton then

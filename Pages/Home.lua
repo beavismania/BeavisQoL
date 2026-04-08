@@ -8,11 +8,12 @@ local version = metadata.version or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Versi
 local name = metadata.title or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or L("UNKNOWN")
 local TWITCH_URL = "https://www.twitch.tv/beavismania"
 local WEBSITE_URL = "https://www.beavismania.de"
+local FEEDBACK_URL = "https://www.beavismania.de/wow-addon"
 local DONATION_URL = "https://streamelements.com/beavismania/tip"
 local SUPPORT_CARD_TITLE = "BeavisQoL weiterentwickeln"
-local SUPPORT_CARD_BODY = "Wenn dir BeavisQoL den Alltag erleichtert, kannst du die Weiterentwicklung freiwillig unterstuetzen."
-local SUPPORT_CARD_HINT = "Dein Support hilft dabei, Pflege, Updates und neue Funktionen langfristig moeglich zu machen."
-local SUPPORT_CARD_ACTION = "BeavisQoL unterstuetzen"
+local SUPPORT_CARD_BODY = "Wenn dir BeavisQoL den Alltag erleichtert, kannst du die Weiterentwicklung freiwillig unterstützen."
+local SUPPORT_CARD_HINT = "Dein Support hilft dabei, Pflege, Updates und neue Funktionen langfristig möglich zu machen."
+local SUPPORT_CARD_ACTION = "BeavisQoL unterstützen"
 
 local function ApplyTextureGradient(texture, orientation, startR, startG, startB, startA, endR, endG, endB, endA)
     if not texture then
@@ -40,29 +41,15 @@ local function CreatePanelSurface(frame)
     local bg = frame:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
 
-    local detail = frame:CreateTexture(nil, "ARTWORK")
-    detail:SetAllPoints()
-    detail:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background-Dark")
-
     local glow = frame:CreateTexture(nil, "BORDER")
     glow:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     glow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-    glow:SetHeight(30)
-    glow:SetTexture("Interface\\Buttons\\WHITE8X8")
-
-    local vignette = frame:CreateTexture(nil, "ARTWORK")
-    vignette:SetAllPoints()
-    vignette:SetTexture("Interface\\Buttons\\WHITE8X8")
+    glow:SetHeight(34)
 
     local accent = frame:CreateTexture(nil, "ARTWORK")
     accent:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -10)
     accent:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 10)
-    accent:SetWidth(2)
-
-    local topLine = frame:CreateTexture(nil, "ARTWORK")
-    topLine:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-    topLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-    topLine:SetHeight(1)
+    accent:SetWidth(3)
 
     local border = frame:CreateTexture(nil, "ARTWORK")
     border:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
@@ -71,69 +58,51 @@ local function CreatePanelSurface(frame)
 
     return {
         bg = bg,
-        detail = detail,
         glow = glow,
-        vignette = vignette,
         accent = accent,
-        topLine = topLine,
         border = border,
     }
 end
 
 local function ApplyPanelSurface(surface, style, highlighted)
-    local bgR = 0.055
-    local bgG = 0.039
-    local bgB = 0.029
-    local bgA = 0.92
-    local detailA = 0.09
-    local glowA = 0.05
-    local vignetteA = 0.16
-    local accentA = 0.2
-    local topLineA = 0.2
-    local borderA = 0.26
+    local bgR = 0.1
+    local bgG = 0.068
+    local bgB = 0.046
+    local bgA = 0.94
+    local glowA = 0.04
+    local accentA = 0.62
+    local borderA = 0.82
 
     if style == "hero" then
-        bgR = 0.062
-        bgG = 0.044
-        bgB = 0.032
-        bgA = 0.95
-        detailA = 0.12
-        glowA = 0.08
-        vignetteA = 0.2
-        accentA = 0.28
-        topLineA = 0.3
-        borderA = 0.34
+        bgR = 0.1
+        bgG = 0.068
+        bgB = 0.046
+        bgA = 0.94
+        glowA = 0.03
+        accentA = 0.72
+        borderA = 0.82
     elseif style == "footer" then
-        bgR = 0.05
-        bgG = 0.036
-        bgB = 0.026
-        bgA = 0.88
-        detailA = 0.07
-        glowA = 0.035
-        vignetteA = 0.12
-        accentA = 0.14
-        topLineA = 0.14
-        borderA = 0.18
+        bgR = 0.094
+        bgG = 0.064
+        bgB = 0.044
+        bgA = 0.9
+        glowA = 0.02
+        accentA = 0.5
+        borderA = 0.62
     end
 
     if highlighted then
         bgR = math.min(1, bgR + 0.018)
-        bgG = math.min(1, bgG + 0.018)
-        bgB = math.min(1, bgB + 0.018)
-        detailA = detailA + 0.03
+        bgG = math.min(1, bgG + 0.016)
+        bgB = math.min(1, bgB + 0.014)
         glowA = glowA + 0.03
         accentA = math.min(1, accentA + 0.08)
-        topLineA = math.min(1, topLineA + 0.08)
-        borderA = math.min(1, borderA + 0.08)
     end
 
     surface.bg:SetColorTexture(bgR, bgG, bgB, bgA)
-    surface.detail:SetVertexColor(0.96, 0.82, 0.56, detailA)
-    ApplyTextureGradient(surface.glow, "VERTICAL", 1, 0.88, 0.58, glowA, 1, 0.88, 0.58, 0)
-    ApplyTextureGradient(surface.vignette, "HORIZONTAL", 0, 0, 0, 0.02, 0, 0, 0, vignetteA)
-    surface.accent:SetColorTexture(0.9, 0.76, 0.5, accentA)
-    surface.topLine:SetColorTexture(0.92, 0.79, 0.56, topLineA)
-    surface.border:SetColorTexture(0.92, 0.79, 0.56, borderA)
+    surface.glow:SetColorTexture(0.88, 0.72, 0.46, glowA)
+    surface.accent:SetColorTexture(0.88, 0.72, 0.46, accentA)
+    surface.border:SetColorTexture(0.88, 0.72, 0.46, borderA)
 end
 
 local function CreateInfoCard(parent, titleText, bodyText, footerText)
@@ -388,8 +357,8 @@ local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -10)
 IntroTitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -24, 0)
 IntroTitle:SetJustifyH("LEFT")
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 22, "")
-IntroTitle:SetTextColor(0.99, 0.93, 0.84, 1)
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(L("WELCOME_TITLE"):format(name))
 
 local IntroSubtitle = IntroPanel:CreateFontString(nil, "OVERLAY")
@@ -460,7 +429,7 @@ local DiscordCard = CreateActionCard(
     L("HOME_FEEDBACK_BODY"),
     L("HOME_FEEDBACK_FOOTER"),
     L("HOME_FEEDBACK_POPUP"),
-    WEBSITE_URL
+    FEEDBACK_URL
 )
 DiscordCard:SetPoint("TOPRIGHT", ActionRow, "TOPRIGHT", 0, 0)
 DiscordCard:SetPoint("BOTTOMRIGHT", ActionRow, "BOTTOMRIGHT", 0, 0)

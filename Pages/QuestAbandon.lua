@@ -26,6 +26,7 @@ local AbandonStatusText
 local AbandonSelectedButton
 local AbandonSelectAllButton
 local AbandonClearAllButton
+local AbandonListBg
 local AbandonQuestRows = {}
 local AbandonScrollFrame
 local AbandonScrollContent
@@ -266,6 +267,18 @@ local function RefreshAbandonQuestSelectionUI()
             row = CreateFrame("Frame", nil, AbandonScrollContent)
             row:SetHeight(ABANDON_ROW_HEIGHT)
 
+            local background = row:CreateTexture(nil, "BACKGROUND")
+            background:SetAllPoints()
+            background:SetColorTexture(0.08, 0.056, 0.04, 0.08)
+            row.Background = background
+
+            local divider = row:CreateTexture(nil, "ARTWORK")
+            divider:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 0)
+            divider:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 0)
+            divider:SetHeight(1)
+            divider:SetColorTexture(0.88, 0.72, 0.46, 0.12)
+            row.Divider = divider
+
             local checkbox = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
             checkbox:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -4)
             row.checkbox = checkbox
@@ -276,7 +289,7 @@ local function RefreshAbandonQuestSelectionUI()
             title:SetJustifyH("LEFT")
             title:SetJustifyV("TOP")
             title:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-            title:SetTextColor(0.92, 0.92, 0.92, 1)
+            title:SetTextColor(0.95, 0.91, 0.85, 1)
             if title.SetWordWrap then
                 title:SetWordWrap(false)
             end
@@ -288,7 +301,7 @@ local function RefreshAbandonQuestSelectionUI()
             objective:SetJustifyH("LEFT")
             objective:SetJustifyV("TOP")
             objective:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-            objective:SetTextColor(0.74, 0.74, 0.78, 1)
+            objective:SetTextColor(0.78, 0.74, 0.69, 1)
             if objective.SetWordWrap then
                 objective:SetWordWrap(false)
             end
@@ -307,6 +320,7 @@ local function RefreshAbandonQuestSelectionUI()
 
         row:SetPoint("TOPLEFT", AbandonScrollContent, "TOPLEFT", 0, -((index - 1) * ABANDON_ROW_HEIGHT))
         row:SetPoint("TOPRIGHT", AbandonScrollContent, "TOPRIGHT", -6, -((index - 1) * ABANDON_ROW_HEIGHT))
+        row.Background:SetColorTexture(0.08, 0.056, 0.04, index % 2 == 0 and 0.16 or 0.08)
         row.checkbox.questID = questEntry.questID
         row.checkbox:SetChecked(QuestAbandon.selectedQuestIDs[questEntry.questID] == true)
         row.title:SetText(string.format("[%d] %s", questEntry.questID, questEntry.title or L("QUEST_ID_LABEL"):format(questEntry.questID)))
@@ -340,18 +354,18 @@ IntroPanel:SetHeight(154)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.09, 0.05, 0.05, 0.94)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.45, 0.25, 0.95)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.55, 0.35, 1)
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(BeavisQoL.GetModulePageTitle("QuestAbandon", L("QUEST_ABANDON_TITLE")))
 
 IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
@@ -394,18 +408,18 @@ AbandonPanel:SetPoint("BOTTOMRIGHT", PageQuestAbandon, "BOTTOMRIGHT", -20, 8)
 
 local AbandonBg = AbandonPanel:CreateTexture(nil, "BACKGROUND")
 AbandonBg:SetAllPoints()
-AbandonBg:SetColorTexture(0.09, 0.05, 0.05, 0.94)
+AbandonBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local AbandonBorder = AbandonPanel:CreateTexture(nil, "ARTWORK")
 AbandonBorder:SetPoint("BOTTOMLEFT", AbandonPanel, "BOTTOMLEFT", 0, 0)
 AbandonBorder:SetPoint("BOTTOMRIGHT", AbandonPanel, "BOTTOMRIGHT", 0, 0)
 AbandonBorder:SetHeight(1)
-AbandonBorder:SetColorTexture(1, 0.45, 0.25, 0.95)
+AbandonBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 AbandonTitle = AbandonPanel:CreateFontString(nil, "OVERLAY")
 AbandonTitle:SetPoint("TOPLEFT", AbandonPanel, "TOPLEFT", 18, -14)
 AbandonTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-AbandonTitle:SetTextColor(1, 0.55, 0.35, 1)
+AbandonTitle:SetTextColor(1, 0.88, 0.62, 1)
 AbandonTitle:SetText(L("QUEST_ABANDON_LIST_TITLE"))
 
 AbandonHint = AbandonPanel:CreateFontString(nil, "OVERLAY")
@@ -414,7 +428,7 @@ AbandonHint:SetPoint("RIGHT", AbandonPanel, "RIGHT", -18, 0)
 AbandonHint:SetJustifyH("LEFT")
 AbandonHint:SetJustifyV("TOP")
 AbandonHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-AbandonHint:SetTextColor(0.92, 0.82, 0.82, 1)
+AbandonHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AbandonHint:SetText(L("QUEST_ABANDON_DESC"))
 
 AbandonSelectAllButton = CreateFrame("Button", nil, AbandonPanel, "UIPanelButtonTemplate")
@@ -448,9 +462,26 @@ AbandonListContainer:SetPoint("TOPLEFT", AbandonSelectAllButton, "BOTTOMLEFT", 0
 AbandonListContainer:SetPoint("TOPRIGHT", AbandonPanel, "TOPRIGHT", -18, -92)
 AbandonListContainer:SetPoint("BOTTOMLEFT", AbandonPanel, "BOTTOMLEFT", 18, 52)
 
-local AbandonListBg = AbandonListContainer:CreateTexture(nil, "BACKGROUND")
+AbandonListBg = AbandonListContainer:CreateTexture(nil, "BACKGROUND")
 AbandonListBg:SetAllPoints()
-AbandonListBg:SetColorTexture(0.06, 0.06, 0.06, 0.92)
+AbandonListBg:SetColorTexture(0.1, 0.068, 0.046, 0.90)
+
+local AbandonListTexture = AbandonListContainer:CreateTexture(nil, "ARTWORK")
+AbandonListTexture:SetAllPoints()
+AbandonListTexture:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background-Dark")
+AbandonListTexture:SetVertexColor(0.95, 0.78, 0.52, 0.06)
+
+local AbandonListGlow = AbandonListContainer:CreateTexture(nil, "BORDER")
+AbandonListGlow:SetPoint("TOPLEFT", AbandonListContainer, "TOPLEFT", 0, 0)
+AbandonListGlow:SetPoint("TOPRIGHT", AbandonListContainer, "TOPRIGHT", 0, 0)
+AbandonListGlow:SetHeight(18)
+AbandonListGlow:SetColorTexture(0.88, 0.72, 0.46, 0.05)
+
+local AbandonListBorder = AbandonListContainer:CreateTexture(nil, "ARTWORK")
+AbandonListBorder:SetPoint("TOPLEFT", AbandonListContainer, "TOPLEFT", 0, 0)
+AbandonListBorder:SetPoint("TOPRIGHT", AbandonListContainer, "TOPRIGHT", 0, 0)
+AbandonListBorder:SetHeight(1)
+AbandonListBorder:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 
 AbandonScrollFrame = CreateFrame("ScrollFrame", nil, AbandonListContainer, "UIPanelScrollFrameTemplate")
 AbandonScrollFrame:SetPoint("TOPLEFT", AbandonListContainer, "TOPLEFT", 8, -8)

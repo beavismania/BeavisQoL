@@ -24,7 +24,7 @@ local PageTitle = PageLevelTime:CreateFontString(nil, "OVERLAY")
 PageTitle:SetPoint("TOPLEFT", PageLevelTime, "TOPLEFT", 22, -16)
 PageTitle:SetPoint("RIGHT", PageLevelTime, "RIGHT", -22, 0)
 PageTitle:SetJustifyH("LEFT")
-PageTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+PageTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 PageTitle:SetTextColor(1, 0.88, 0.62, 1)
 PageTitle:SetText(BeavisQoL.GetModulePageTitle("LevelTime", L("LEVEL_TIME")))
 
