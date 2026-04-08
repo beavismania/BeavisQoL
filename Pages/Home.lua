@@ -9,6 +9,10 @@ local name = metadata.title or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or
 local TWITCH_URL = "https://www.twitch.tv/beavismania"
 local WEBSITE_URL = "https://www.beavismania.de"
 local DONATION_URL = "https://streamelements.com/beavismania/tip"
+local SUPPORT_CARD_TITLE = "BeavisQoL weiterentwickeln"
+local SUPPORT_CARD_BODY = "Wenn dir BeavisQoL den Alltag erleichtert, kannst du die Weiterentwicklung freiwillig unterstuetzen."
+local SUPPORT_CARD_HINT = "Dein Support hilft dabei, Pflege, Updates und neue Funktionen langfristig moeglich zu machen."
+local SUPPORT_CARD_ACTION = "BeavisQoL unterstuetzen"
 
 local function ApplyTextureGradient(texture, orientation, startR, startG, startB, startA, endR, endG, endB, endA)
     if not texture then
@@ -254,6 +258,14 @@ local function SetOptionalText(fontString, text)
     end
 end
 
+local function OpenDonationLink()
+    if BeavisQoL.ShowLinkPopup then
+        BeavisQoL.ShowLinkPopup(SUPPORT_CARD_ACTION, DONATION_URL)
+    else
+        print(DONATION_URL)
+    end
+end
+
 local function GetActionCardHeight(card)
     local iconHeight = card.Icon and card.Icon.GetHeight and card.Icon:GetHeight() or 40
     local titleBlockHeight = math.max(iconHeight, GetTextHeight(card.Title, 15))
@@ -320,9 +332,9 @@ SpotlightTitle:SetPoint("LEFT", SpotlightLogo, "RIGHT", 12, 0)
 SpotlightTitle:SetPoint("RIGHT", SpotlightHeader, "RIGHT", 0, 0)
 SpotlightTitle:SetPoint("CENTER", SpotlightLogo, "CENTER", 0, 0)
 SpotlightTitle:SetJustifyH("LEFT")
-SpotlightTitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+SpotlightTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "")
 SpotlightTitle:SetTextColor(0.97, 0.9, 0.76, 1)
-SpotlightTitle:SetText(L("HOME_SUPPORT_TITLE"))
+SpotlightTitle:SetText(SUPPORT_CARD_TITLE)
 
 local SpotlightVersion = SpotlightPanel:CreateFontString(nil, "OVERLAY")
 SpotlightVersion:SetPoint("TOPLEFT", SpotlightTitle, "BOTTOMLEFT", 0, -8)
@@ -331,16 +343,16 @@ SpotlightVersion:SetJustifyH("LEFT")
 SpotlightVersion:SetJustifyV("TOP")
 SpotlightVersion:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SpotlightVersion:SetTextColor(0.94, 0.91, 0.86, 1)
-SpotlightVersion:SetText(L("HOME_SUPPORT_BODY"))
+SpotlightVersion:SetText(SUPPORT_CARD_BODY)
 
 local SpotlightState = SpotlightPanel:CreateFontString(nil, "OVERLAY")
 SpotlightState:SetPoint("TOPLEFT", SpotlightVersion, "BOTTOMLEFT", 0, -7)
 SpotlightState:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -16, 0)
 SpotlightState:SetJustifyH("LEFT")
 SpotlightState:SetJustifyV("TOP")
-SpotlightState:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-SpotlightState:SetTextColor(0.94, 0.91, 0.86, 1)
-SpotlightState:SetText(L("HOME_SUPPORT_HINT"))
+SpotlightState:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+SpotlightState:SetTextColor(0.83, 0.8, 0.76, 1)
+SpotlightState:SetText(SUPPORT_CARD_HINT)
 
 local SpotlightFocus = SpotlightPanel:CreateFontString(nil, "OVERLAY")
 SpotlightFocus:SetPoint("TOPLEFT", SpotlightState, "BOTTOMLEFT", 0, -8)
@@ -349,27 +361,28 @@ SpotlightFocus:SetJustifyH("LEFT")
 SpotlightFocus:SetJustifyV("TOP")
 SpotlightFocus:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SpotlightFocus:SetTextColor(0.92, 0.8, 0.58, 1)
-SetOptionalText(SpotlightFocus, L("HOME_SUPPORT_LINK"))
+SpotlightFocus:SetText("")
+SpotlightFocus:Hide()
+
+local SpotlightActionButton = CreateFrame("Button", nil, SpotlightPanel, "UIPanelButtonTemplate")
+SpotlightActionButton:SetSize(196, 24)
+SpotlightActionButton:SetText(SUPPORT_CARD_ACTION)
+SpotlightActionButton:SetScript("OnClick", OpenDonationLink)
 
 SpotlightPanel:SetScript("OnEnter", function()
     ApplyPanelSurface(SpotlightSurface, "card", true)
     SpotlightTitle:SetTextColor(1, 0.94, 0.84, 1)
-    SpotlightFocus:SetTextColor(0.98, 0.86, 0.64, 1)
+    SpotlightActionButton:SetAlpha(1)
 end)
 
 SpotlightPanel:SetScript("OnLeave", function()
     ApplyPanelSurface(SpotlightSurface, "card", false)
     SpotlightTitle:SetTextColor(0.97, 0.9, 0.76, 1)
-    SpotlightFocus:SetTextColor(0.92, 0.8, 0.58, 1)
+    SpotlightActionButton:SetAlpha(0.94)
 end)
 
-SpotlightPanel:SetScript("OnClick", function()
-    if BeavisQoL.ShowLinkPopup then
-        BeavisQoL.ShowLinkPopup(L("HOME_SUPPORT_POPUP"), DONATION_URL)
-    else
-        print(DONATION_URL)
-    end
-end)
+SpotlightActionButton:SetAlpha(0.94)
+SpotlightPanel:SetScript("OnClick", OpenDonationLink)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -10)
@@ -481,6 +494,10 @@ local function LayoutHomePage()
     IntroSubtitle:ClearAllPoints()
     IntroText:ClearAllPoints()
     SpotlightPanel:ClearAllPoints()
+    SpotlightTitle:ClearAllPoints()
+    SpotlightVersion:ClearAllPoints()
+    SpotlightState:ClearAllPoints()
+    SpotlightActionButton:ClearAllPoints()
 
     IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -10)
     IntroTitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
@@ -510,19 +527,28 @@ local function LayoutHomePage()
 
     local headerHeight = math.max(36, SpotlightLogo:GetHeight())
     SpotlightHeader:SetHeight(headerHeight)
+    SpotlightActionButton:SetPoint("BOTTOMRIGHT", SpotlightPanel, "BOTTOMRIGHT", -18, 14)
 
-    local spotlightHeight =
+    SpotlightTitle:SetPoint("TOPLEFT", SpotlightLogo, "TOPRIGHT", 12, -1)
+    SpotlightTitle:SetPoint("RIGHT", SpotlightActionButton, "LEFT", -24, 0)
+
+    SpotlightVersion:SetPoint("TOPLEFT", SpotlightTitle, "BOTTOMLEFT", 0, -8)
+    SpotlightVersion:SetPoint("RIGHT", SpotlightActionButton, "LEFT", -24, 0)
+
+    SpotlightState:SetPoint("TOPLEFT", SpotlightVersion, "BOTTOMLEFT", 0, -6)
+    SpotlightState:SetPoint("RIGHT", SpotlightActionButton, "LEFT", -24, 0)
+
+    local spotlightTextHeight =
         14
         + headerHeight
         + 8
-        + GetTextHeight(SpotlightVersion, 11)
-        + 7
-        + GetTextHeight(SpotlightState, 11)
-        + 12
+        + GetTextHeight(SpotlightVersion, 13)
+        + 6
+        + GetTextHeight(SpotlightState, 12)
+        + 18
 
-    if SpotlightFocus:IsShown() then
-        spotlightHeight = spotlightHeight + 8 + GetTextHeight(SpotlightFocus, 11)
-    end
+    local spotlightActionHeight = 14 + SpotlightActionButton:GetHeight() + 14
+    local spotlightHeight = math.max(spotlightTextHeight, spotlightActionHeight)
 
     SpotlightPanel:SetHeight(math.max(92, math.ceil(spotlightHeight)))
     IntroPanel:SetHeight(math.max(164, math.ceil(leftColumnHeight + 8 + spotlightHeight + 10)))
@@ -543,10 +569,10 @@ BeavisQoL.UpdateHome = function()
     IntroTitle:SetText(L("WELCOME_TITLE"):format(name))
     SetOptionalText(IntroSubtitle, L("WELCOME_SUBTITLE"))
     SetOptionalText(IntroText, L("WELCOME_BODY"))
-    SpotlightTitle:SetText(L("HOME_SUPPORT_TITLE"))
-    SpotlightVersion:SetText(L("HOME_SUPPORT_BODY"))
-    SpotlightState:SetText(L("HOME_SUPPORT_HINT"))
-    SetOptionalText(SpotlightFocus, L("HOME_SUPPORT_LINK"))
+    SpotlightTitle:SetText(SUPPORT_CARD_TITLE)
+    SpotlightVersion:SetText(SUPPORT_CARD_BODY)
+    SpotlightState:SetText(SUPPORT_CARD_HINT)
+    SpotlightActionButton:SetText(SUPPORT_CARD_ACTION)
     ProgressCard.Title:SetText(L("PROGRESS_CARD_TITLE"))
     ProgressCard.Body:SetText(L("PROGRESS_CARD_BODY"))
     ProgressCard.Footer:SetText(L("PROGRESS_CARD_FOOTER"))

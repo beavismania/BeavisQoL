@@ -62,6 +62,7 @@ local CurrencyPanel
 local CleanupPopup
 local HistoryPopup
 local HistoryButton
+local isQuickViewMode = false
 local HistoryTabButtons = {}
 local HistoryActiveTabKey = "income"
 local HistoryLoadedCountByTab = {
@@ -3562,6 +3563,30 @@ RetentionHint:ClearAllPoints()
 RetentionHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -12)
 RetentionHint:SetPoint("RIGHT", IntroPanel.OverviewSearchBox, "LEFT", -14, 0)
 
+local function ApplyLoggingIntroLayout()
+    local showExtendedIntro = not isQuickViewMode
+
+    IntroTitle:SetShown(showExtendedIntro)
+    IntroText:SetShown(showExtendedIntro)
+    CleanupButton:SetShown(showExtendedIntro)
+    HistoryButton:SetShown(showExtendedIntro)
+    RetentionHint:SetShown(showExtendedIntro)
+    LoggingMinimapContextCheckbox:SetShown(showExtendedIntro)
+    LoggingMinimapContextLabel:SetShown(showExtendedIntro)
+
+    IntroPanel:SetHeight(showExtendedIntro and LOGGING_INTRO_PANEL_HEIGHT or 78)
+
+    IntroPanel.OverviewSearchBox:ClearAllPoints()
+    if showExtendedIntro then
+        IntroPanel.OverviewSearchBox:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", -16, 42)
+    else
+        IntroPanel.OverviewSearchBox:SetPoint("TOPRIGHT", IntroPanel, "TOPRIGHT", -16, -34)
+    end
+
+    IntroPanel.OverviewSearchBox.Label:ClearAllPoints()
+    IntroPanel.OverviewSearchBox.Label:SetPoint("BOTTOMLEFT", IntroPanel.OverviewSearchBox, "TOPLEFT", 4, 6)
+end
+
 IncomePanel = CreateLogPanel(
     PageLoggingContent,
     IntroPanel,
@@ -3825,6 +3850,7 @@ function PageLogging:RefreshState()
         RefreshHistoryPopup(true)
     end
 
+    ApplyLoggingIntroLayout()
     self:UpdateScrollLayout()
 end
 
@@ -3867,15 +3893,28 @@ PageLoggingScrollFrame:SetScript("OnMouseWheel", function(self, delta)
     self:SetVerticalScroll(nextScroll)
 end)
 
+function PageLogging:SetQuickViewMode(enabled)
+    isQuickViewMode = enabled == true
+    if isQuickViewMode then
+        CloseCleanupPopup()
+        CloseHistoryPopup()
+    end
+    ApplyLoggingIntroLayout()
+    self:RefreshState()
+end
+
 PageLogging:SetScript("OnShow", function()
+    ApplyLoggingIntroLayout()
     PageLogging:RefreshState()
     PageLoggingScrollFrame:SetVerticalScroll(0)
 end)
 
 PageLogging:HookScript("OnHide", function()
     CloseCleanupPopup()
+    CloseHistoryPopup()
 end)
 
+ApplyLoggingIntroLayout()
 PageLogging:RefreshState()
 
 BeavisQoL.Pages.Logging = PageLogging

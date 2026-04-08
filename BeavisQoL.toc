@@ -63,6 +63,7 @@ Pages\PortalViewer.lua
 MinimapCollector.lua
 Pages\MinimapCollector.lua
 Pages\CategoryTabs.lua
+Pages\QuickView.lua
 Tree.lua
 MinimapButton.lua
 Pages\PerformanceProfiler.lua

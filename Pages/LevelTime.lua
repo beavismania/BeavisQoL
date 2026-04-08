@@ -28,6 +28,8 @@ PageTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
 PageTitle:SetTextColor(1, 0.88, 0.62, 1)
 PageTitle:SetText(BeavisQoL.GetModulePageTitle("LevelTime", L("LEVEL_TIME")))
 
+local isQuickViewMode = false
+
 -- Datenbank sauber anlegen
 if not BeavisQoLCharDB then BeavisQoLCharDB = {} end
 if not BeavisQoLCharDB.LevelTime then BeavisQoLCharDB.LevelTime = {} end
@@ -379,6 +381,26 @@ LevelListContent:SetSize(1, 1)
 LevelListScrollFrame:SetScrollChild(LevelListContent)
 
 local LevelRows = {}
+local function ApplyLevelTimeLayout()
+    PageTitle:SetShown(not isQuickViewMode)
+    InfoButton:SetShown(not isQuickViewMode)
+    LevelTimeMinimapContextCheckbox:SetShown(not isQuickViewMode)
+    LevelTimeMinimapContextLabel:SetShown(not isQuickViewMode)
+    LevelTimeMinimapContextHint:SetShown(not isQuickViewMode)
+
+    OverviewPanel:ClearAllPoints()
+    OverviewPanel:SetPoint("TOPLEFT", PageLevelTime, "TOPLEFT", 20, isQuickViewMode and -20 or -52)
+    OverviewPanel:SetPoint("TOPRIGHT", PageLevelTime, "TOPRIGHT", -20, isQuickViewMode and -20 or -52)
+    OverviewPanel:SetHeight(isQuickViewMode and 90 or 138)
+
+    ProgressPanel:ClearAllPoints()
+    ProgressPanel:SetPoint("TOPLEFT", OverviewPanel, "BOTTOMLEFT", 0, isQuickViewMode and -12 or -14)
+    ProgressPanel:SetPoint("TOPRIGHT", OverviewPanel, "BOTTOMRIGHT", 0, isQuickViewMode and -12 or -14)
+
+    LevelListContainer:ClearAllPoints()
+    LevelListContainer:SetPoint("TOPLEFT", ProgressPanel, "BOTTOMLEFT", 0, isQuickViewMode and -10 or -12)
+    LevelListContainer:SetPoint("BOTTOMRIGHT", PageLevelTime, "BOTTOMRIGHT", -20, 8)
+end
 
 -- Die Zeilen bauen wir einmal und zeigen sie später nur noch an oder aus.
 for level = 1, MAX_LEVEL do
@@ -539,6 +561,12 @@ BeavisQoL.UpdateLevelTime = function()
     RefreshLevelList()
 end
 
+function PageLevelTime:SetQuickViewMode(enabled)
+    isQuickViewMode = enabled == true
+    ApplyLevelTimeLayout()
+    RefreshLevelList()
+end
+
 -- ========================================
 -- Update-Timer
 -- ========================================
@@ -624,8 +652,11 @@ C_Timer.After(0.2, RefreshLevelList)
 
 PageLevelTime:SetScript("OnShow", function()
     LevelTimeMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("levelTime") or true)
+    ApplyLevelTimeLayout()
     RefreshLevelList()
 end)
+
+ApplyLevelTimeLayout()
 
 BeavisQoL.Pages.LevelTime = PageLevelTime
 

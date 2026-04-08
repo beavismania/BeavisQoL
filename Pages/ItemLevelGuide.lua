@@ -148,6 +148,7 @@ local function SetTableHeaders(tableFrame, titles)
 end
 
 local LayoutPage
+local isQuickViewMode = false
 
 local PageItemLevelGuide = CreateFrame("Frame", nil, Content)
 PageItemLevelGuide:SetAllPoints()
@@ -531,6 +532,26 @@ LegendLine:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
 LegendLine:SetTextColor(0.95, 0.91, 0.85, 1)
 LegendLine:SetText(L("ITEM_GUIDE_LEGEND"))
 
+local function ApplyItemLevelGuideModeLayout()
+    HeroEyebrow:SetShown(not isQuickViewMode)
+
+    HeroTitle:ClearAllPoints()
+    if isQuickViewMode then
+        HeroTitle:SetPoint("TOPLEFT", HeroPanel, "TOPLEFT", 22, -16)
+    else
+        HeroTitle:SetPoint("TOPLEFT", HeroEyebrow, "BOTTOMLEFT", 0, -6)
+    end
+    HeroTitle:SetPoint("RIGHT", HeroPanel, "RIGHT", -16, 0)
+
+    HeroSubtitle:ClearAllPoints()
+    HeroSubtitle:SetPoint("TOPLEFT", HeroTitle, "BOTTOMLEFT", 0, isQuickViewMode and -8 or -10)
+    HeroSubtitle:SetPoint("RIGHT", HeroPanel, "RIGHT", -16, 0)
+
+    LegendLine:ClearAllPoints()
+    LegendLine:SetPoint("TOPLEFT", HeroSubtitle, "BOTTOMLEFT", 0, isQuickViewMode and -10 or -14)
+    LegendLine:SetPoint("RIGHT", HeroPanel, "RIGHT", -16, 0)
+end
+
 local function GetTextHeight(fontString, minimumHeight)
     local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
 
@@ -539,12 +560,11 @@ end
 
 local function UpdateHeroHeight(minimumHeight)
     local heroHeight = 16
-        + GetTextHeight(HeroEyebrow, 10)
-        + 6
+        + (HeroEyebrow:IsShown() and (GetTextHeight(HeroEyebrow, 10) + 6) or 0)
         + GetTextHeight(HeroTitle, 22)
-        + 10
+        + (isQuickViewMode and 8 or 10)
         + GetTextHeight(HeroSubtitle, 11)
-        + 14
+        + (isQuickViewMode and 10 or 14)
         + GetTextHeight(LegendLine, 10)
         + 16
 
@@ -746,10 +766,10 @@ local function ResetCardHeights()
 end
 
 local function LayoutWide(contentWidth)
-    local outerGap = 16
-    local columnGap = 12
-    local rowGap = 12
-    local topY = -12
+    local outerGap = isQuickViewMode and 12 or 16
+    local columnGap = isQuickViewMode and 10 or 12
+    local rowGap = isQuickViewMode and 10 or 12
+    local topY = isQuickViewMode and -10 or -12
     local workingWidth = contentWidth - (outerGap * 2)
     local leftWidth = math.floor(workingWidth * 0.34)
     local rightWidth = workingWidth - leftWidth - columnGap
@@ -770,7 +790,7 @@ local function LayoutWide(contentWidth)
 
     HeroPanel:SetPoint("TOPLEFT", PageContent, "TOPLEFT", outerGap, topY)
     HeroPanel:SetPoint("TOPRIGHT", PageContent, "TOPRIGHT", -outerGap, topY)
-    UpdateHeroHeight(104)
+    UpdateHeroHeight(isQuickViewMode and 84 or 104)
 
     UpgradeCard:ClearAllPoints()
     UpgradeCard:SetPoint("TOPLEFT", HeroPanel, "BOTTOMLEFT", 0, -12)
@@ -792,14 +812,14 @@ local function LayoutWide(contentWidth)
     DelveCard:SetPoint("TOPLEFT", RaidCard, "BOTTOMLEFT", 0, -rowGap)
     DelveCard:SetWidth(rightColumnWidth)
 
-    PageContent:SetHeight(HeroPanel:GetHeight() + tallestColumnHeight + 40)
+    PageContent:SetHeight(HeroPanel:GetHeight() + tallestColumnHeight + (isQuickViewMode and 32 or 40))
 end
 
 local function LayoutMedium(contentWidth)
-    local outerGap = 16
-    local columnGap = 12
-    local rowGap = 12
-    local topY = -12
+    local outerGap = isQuickViewMode and 12 or 16
+    local columnGap = isQuickViewMode and 10 or 12
+    local rowGap = isQuickViewMode and 10 or 12
+    local topY = isQuickViewMode and -10 or -12
     local workingWidth = contentWidth - (outerGap * 2)
     local leftWidth = math.floor((workingWidth - columnGap) * 0.50)
     local rightWidth = workingWidth - leftWidth - columnGap
@@ -816,7 +836,7 @@ local function LayoutMedium(contentWidth)
 
     HeroPanel:SetPoint("TOPLEFT", PageContent, "TOPLEFT", outerGap, topY)
     HeroPanel:SetPoint("TOPRIGHT", PageContent, "TOPRIGHT", -outerGap, topY)
-    UpdateHeroHeight(108)
+    UpdateHeroHeight(isQuickViewMode and 88 or 108)
 
     UpgradeCard:ClearAllPoints()
     UpgradeCard:SetPoint("TOPLEFT", HeroPanel, "BOTTOMLEFT", 0, -12)
@@ -842,21 +862,21 @@ local function LayoutMedium(contentWidth)
         HeroPanel:GetHeight()
             + UpgradeCard:GetHeight()
             + stackHeight
-            + 48
+            + (isQuickViewMode and 38 or 48)
     )
 end
 
 local function LayoutNarrow(contentWidth)
-    local outerGap = 16
-    local gap = 12
-    local topY = -12
+    local outerGap = isQuickViewMode and 12 or 16
+    local gap = isQuickViewMode and 10 or 12
+    local topY = isQuickViewMode and -10 or -12
     local workingWidth = contentWidth - (outerGap * 2)
 
     ResetCardHeights()
 
     HeroPanel:SetPoint("TOPLEFT", PageContent, "TOPLEFT", outerGap, topY)
     HeroPanel:SetPoint("TOPRIGHT", PageContent, "TOPRIGHT", -outerGap, topY)
-    UpdateHeroHeight(116)
+    UpdateHeroHeight(isQuickViewMode and 94 or 116)
 
     UpgradeCard:ClearAllPoints()
     UpgradeCard:SetPoint("TOPLEFT", HeroPanel, "BOTTOMLEFT", 0, -gap)
@@ -885,7 +905,7 @@ local function LayoutNarrow(contentWidth)
             + DungeonCard:GetHeight()
             + RaidCard:GetHeight()
             + DelveCard:GetHeight()
-            + 72
+            + (isQuickViewMode and 54 or 72)
     )
 end
 
@@ -893,10 +913,11 @@ end
 function LayoutPage()
     local contentWidth = math.max(1, PageScrollFrame:GetWidth())
     PageContent:SetWidth(contentWidth)
+    ApplyItemLevelGuideModeLayout()
 
-    if contentWidth >= 1120 then
+    if contentWidth >= (isQuickViewMode and 960 or 1120) then
         LayoutWide(contentWidth)
-    elseif contentWidth >= 840 then
+    elseif contentWidth >= (isQuickViewMode and 720 or 840) then
         LayoutMedium(contentWidth)
     else
         LayoutNarrow(contentWidth)
@@ -929,11 +950,20 @@ PageScrollFrame:SetScript("OnMouseWheel", function(self, delta)
     self:SetVerticalScroll(nextScroll)
 end)
 
+function PageItemLevelGuide:SetQuickViewMode(enabled)
+    isQuickViewMode = enabled == true
+    ApplyItemLevelGuideModeLayout()
+    LayoutPage()
+    PageScrollFrame:SetVerticalScroll(0)
+end
+
 PageItemLevelGuide:SetScript("OnShow", function()
     LayoutPage()
 end)
 
 C_Timer.After(0.1, LayoutPage)
+
+ApplyItemLevelGuideModeLayout()
 
 BeavisQoL.Pages.ItemLevelGuide = PageItemLevelGuide
 

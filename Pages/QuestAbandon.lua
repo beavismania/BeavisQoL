@@ -29,6 +29,7 @@ local AbandonClearAllButton
 local AbandonQuestRows = {}
 local AbandonScrollFrame
 local AbandonScrollContent
+local isQuickViewMode = false
 
 local ABANDON_SELECTED_QUESTS_POPUP_KEY = "BEAVISQOL_ABANDON_SELECTED_QUESTS"
 local ABANDON_ROW_HEIGHT = 40
@@ -481,6 +482,41 @@ AbandonSelectedButton:SetPoint("BOTTOMLEFT", AbandonPanel, "BOTTOMLEFT", 18, 16)
 AbandonSelectedButton:SetText(L("QUEST_ABANDON_SELECTED"))
 AbandonSelectedButton:SetScript("OnClick", ConfirmAbandonSelectedQuests)
 
+local function ApplyQuestAbandonLayout()
+    IntroPanel:SetShown(not isQuickViewMode)
+    AbandonTitle:SetShown(not isQuickViewMode)
+    AbandonHint:SetShown(not isQuickViewMode)
+
+    AbandonPanel:ClearAllPoints()
+    if isQuickViewMode then
+        AbandonPanel:SetPoint("TOPLEFT", PageQuestAbandon, "TOPLEFT", 20, -20)
+        AbandonPanel:SetPoint("TOPRIGHT", PageQuestAbandon, "TOPRIGHT", -20, -20)
+    else
+        AbandonPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
+        AbandonPanel:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
+    end
+    AbandonPanel:SetPoint("BOTTOMRIGHT", PageQuestAbandon, "BOTTOMRIGHT", -20, 8)
+
+    AbandonSelectAllButton:ClearAllPoints()
+    if isQuickViewMode then
+        AbandonSelectAllButton:SetPoint("TOPLEFT", AbandonPanel, "TOPLEFT", 18, -16)
+    else
+        AbandonSelectAllButton:SetPoint("TOPLEFT", AbandonHint, "BOTTOMLEFT", 0, -12)
+    end
+
+    AbandonClearAllButton:ClearAllPoints()
+    AbandonClearAllButton:SetPoint("LEFT", AbandonSelectAllButton, "RIGHT", 10, 0)
+
+    AbandonStatusText:ClearAllPoints()
+    AbandonStatusText:SetPoint("LEFT", AbandonClearAllButton, "RIGHT", 14, 0)
+    AbandonStatusText:SetPoint("RIGHT", AbandonPanel, "RIGHT", -18, 0)
+
+    AbandonListContainer:ClearAllPoints()
+    AbandonListContainer:SetPoint("TOPLEFT", AbandonSelectAllButton, "BOTTOMLEFT", 0, -12)
+    AbandonListContainer:SetPoint("TOPRIGHT", AbandonPanel, "TOPRIGHT", -18, isQuickViewMode and -52 or -92)
+    AbandonListContainer:SetPoint("BOTTOMLEFT", AbandonPanel, "BOTTOMLEFT", 18, 52)
+end
+
 BeavisQoL.UpdateQuestAbandon = function()
     IntroTitle:SetText(BeavisQoL.GetModulePageTitle("QuestAbandon", L("QUEST_ABANDON_TITLE")))
     IntroText:SetText(L("QUEST_ABANDON_DESC"))
@@ -495,8 +531,15 @@ BeavisQoL.UpdateQuestAbandon = function()
     RefreshAbandonQuestSelectionUI()
 end
 
+function PageQuestAbandon:SetQuickViewMode(enabled)
+    isQuickViewMode = enabled == true
+    ApplyQuestAbandonLayout()
+    RefreshAbandonQuestSelectionUI()
+end
+
 PageQuestAbandon:SetScript("OnShow", function()
     QuestAbandonMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questAbandon") or true)
+    ApplyQuestAbandonLayout()
     RefreshAbandonQuestSelectionUI()
 end)
 
@@ -506,5 +549,7 @@ QuestAbandonWatcher:RegisterEvent("QUEST_LOG_UPDATE")
 QuestAbandonWatcher:SetScript("OnEvent", function()
     RefreshAbandonQuestSelectionUI()
 end)
+
+ApplyQuestAbandonLayout()
 
 BeavisQoL.Pages.QuestAbandon = PageQuestAbandon

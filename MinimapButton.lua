@@ -78,6 +78,14 @@ local function OpenAddonPage(pageKey)
     end
 end
 
+local function OpenQuickViewPage(pageKey)
+    if BeavisQoL.OpenQuickView and BeavisQoL.OpenQuickView(pageKey) then
+        return
+    end
+
+    OpenAddonPage(pageKey)
+end
+
 local function IsChecklistTrackerEnabled()
     local checklist = BeavisQoL.Checklist
     return checklist and checklist.IsTrackerEnabled and checklist.IsTrackerEnabled() == true
@@ -246,6 +254,7 @@ local function ShowMinimapContextMenu(anchorFrame)
     local hasEasyLFGToggle = BeavisQoL.LFG and BeavisQoL.LFG.IsEasyLFGEnabled and BeavisQoL.LFG.SetEasyLFGEnabled
     local hasPortalViewerToggle = BeavisQoL.PortalViewerModule and BeavisQoL.PortalViewerModule.IsWindowEnabled and BeavisQoL.PortalViewerModule.SetWindowEnabled
     local showLevelTimeEntry = IsMinimapContextEntryVisible("levelTime")
+    local showItemLevelGuideEntry = IsMinimapContextEntryVisible("itemLevelGuide")
     local showQuestCheckEntry = IsMinimapContextEntryVisible("questCheck")
     local showQuestAbandonEntry = IsMinimapContextEntryVisible("questAbandon")
     local showLoggingEntry = IsMinimapContextEntryVisible("logging")
@@ -257,7 +266,7 @@ local function ShowMinimapContextMenu(anchorFrame)
     local showEasyLFGEntry = IsMinimapContextEntryVisible("easyLFG")
     local showPortalViewerEntry = IsMinimapContextEntryVisible("portalViewer")
     local showQuickHideEntry = IsMinimapContextEntryVisible("quickHideOverlays")
-    local hasQuickViewEntries = showLevelTimeEntry or showQuestCheckEntry or showQuestAbandonEntry or showLoggingEntry
+    local hasQuickViewEntries = showLevelTimeEntry or showItemLevelGuideEntry or showQuestCheckEntry or showQuestAbandonEntry or showLoggingEntry
     local hasToggleEntries = (hasChecklistToggle and showChecklistEntry)
         or (hasWeeklyKeysToggle and showWeeklyKeysEntry)
         or (hasStatsToggle and showStatsEntry)
@@ -276,25 +285,31 @@ local function ShowMinimapContextMenu(anchorFrame)
 
                 if showLevelTimeEntry then
                     rootDescription:CreateButton(L("LEVEL_TIME"), function()
-                        OpenAddonPage("LevelTime")
+                        OpenQuickViewPage("LevelTime")
+                    end)
+                end
+
+                if showItemLevelGuideEntry then
+                    rootDescription:CreateButton(L("ITEMLEVEL_GUIDE"), function()
+                        OpenQuickViewPage("ItemLevelGuide")
                     end)
                 end
 
                 if showQuestCheckEntry then
                     rootDescription:CreateButton(L("QUEST_CHECK"), function()
-                        OpenAddonPage("QuestCheck")
+                        OpenQuickViewPage("QuestCheck")
                     end)
                 end
 
                 if showQuestAbandonEntry then
                     rootDescription:CreateButton(L("QUEST_ABANDON"), function()
-                        OpenAddonPage("QuestAbandon")
+                        OpenQuickViewPage("QuestAbandon")
                     end)
                 end
 
                 if showLoggingEntry then
                     rootDescription:CreateButton(L("GOLDAUSWERTUNG"), function()
-                        OpenAddonPage("Logging")
+                        OpenQuickViewPage("Logging")
                     end)
                 end
             end
@@ -439,7 +454,7 @@ local function ShowMinimapContextMenu(anchorFrame)
             text = text,
             notCheckable = true,
             func = function()
-                OpenAddonPage(pageKey)
+                OpenQuickViewPage(pageKey)
             end,
         }
     end
@@ -460,6 +475,7 @@ local function ShowMinimapContextMenu(anchorFrame)
 
     AddSectionTitle(hasQuickViewEntries, L("MINIMAP_CONTEXT_QUICK_VIEW"))
     AddActionEntry(showLevelTimeEntry, L("LEVEL_TIME"), "LevelTime")
+    AddActionEntry(showItemLevelGuideEntry, L("ITEMLEVEL_GUIDE"), "ItemLevelGuide")
     AddActionEntry(showQuestCheckEntry, L("QUEST_CHECK"), "QuestCheck")
     AddActionEntry(showQuestAbandonEntry, L("QUEST_ABANDON"), "QuestAbandon")
     AddActionEntry(showLoggingEntry, L("GOLDAUSWERTUNG"), "Logging")

@@ -50,6 +50,7 @@ local RefreshQuestCheckLayout
 
 local currentWowheadTitle = nil
 local currentWowheadURL = nil
+local isQuickViewMode = false
 
 local function TrimText(text)
     -- Nutzertexte immer zuerst bereinigen.
@@ -830,6 +831,23 @@ ResultListText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 ResultListText:SetTextColor(0.88, 0.88, 0.88, 1)
 ResultListText:SetText("")
 
+local function ApplyQuestCheckModeLayout()
+    IntroPanel:SetShown(not isQuickViewMode)
+
+    SearchPanel:ClearAllPoints()
+    if isQuickViewMode then
+        SearchPanel:SetPoint("TOPLEFT", PageQuestCheck, "TOPLEFT", 20, -20)
+        SearchPanel:SetPoint("TOPRIGHT", PageQuestCheck, "TOPRIGHT", -20, -20)
+    else
+        SearchPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
+        SearchPanel:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
+    end
+
+    ResultPanel:ClearAllPoints()
+    ResultPanel:SetPoint("TOPLEFT", SearchPanel, "BOTTOMLEFT", 0, -18)
+    ResultPanel:SetPoint("TOPRIGHT", SearchPanel, "BOTTOMRIGHT", 0, -18)
+end
+
 local function GetTextBlockHeight(fontString, minimumHeight)
     local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
 
@@ -846,16 +864,20 @@ local function GetVisibleTextHeight(fontString, minimumHeight)
 end
 
 RefreshQuestCheckLayout = function()
-    local introHeight = 16
-        + GetTextBlockHeight(IntroTitle, 24)
-        + 10
-        + GetTextBlockHeight(IntroText, 16)
-        + 12
-        + 24
-        + 2
-        + GetTextBlockHeight(QuestCheckMinimapContextHint, 11)
-        + 16
-    IntroPanel:SetHeight(math.max(82, introHeight))
+    if isQuickViewMode then
+        IntroPanel:SetHeight(0)
+    else
+        local introHeight = 16
+            + GetTextBlockHeight(IntroTitle, 24)
+            + 10
+            + GetTextBlockHeight(IntroText, 16)
+            + 12
+            + 24
+            + 2
+            + GetTextBlockHeight(QuestCheckMinimapContextHint, 11)
+            + 16
+        IntroPanel:SetHeight(math.max(82, introHeight))
+    end
 
     local searchProgressHeight = 0
     if SearchProgressText:GetText() and SearchProgressText:GetText() ~= "" then
@@ -889,6 +911,14 @@ RefreshQuestCheckLayout = function()
     ResultPanel:SetHeight(math.max(72, resultHeight))
 end
 
+function PageQuestCheck:SetQuickViewMode(enabled)
+    isQuickViewMode = enabled == true
+    ApplyQuestCheckModeLayout()
+    if RefreshQuestCheckLayout then
+        RefreshQuestCheckLayout()
+    end
+end
+
 BeavisQoL.UpdateQuestCheck = function()
     IntroTitle:SetText(BeavisQoL.GetModulePageTitle("QuestCheck", L("QUESTCHECK_TITLE")))
     IntroText:SetText(L("QUESTCHECK_DESC"))
@@ -912,7 +942,7 @@ end
 PageQuestCheck:SetScript("OnShow", function()
     CacheQuestLogQuestNames()
     QuestCheckMinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("questCheck") or true)
-
+    ApplyQuestCheckModeLayout()
     RefreshQuestCheckLayout()
 end)
 
@@ -956,6 +986,7 @@ end)
 
 BeavisQoL.Pages.QuestCheck = PageQuestCheck
 
+ApplyQuestCheckModeLayout()
 ShowIdleQuestCheckState()
 RefreshQuestCheckLayout()
 

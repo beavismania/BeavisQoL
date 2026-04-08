@@ -113,6 +113,7 @@ end
 
 local DEFAULT_MINIMAP_CONTEXT_MENU_ENTRY_VISIBILITY = {
     levelTime = true,
+    itemLevelGuide = true,
     questCheck = true,
     questAbandon = true,
     logging = true,
@@ -358,6 +359,10 @@ function BeavisQoL.RefreshLocale()
 
     if BeavisQoL.UpdateMinimapCollectorPage then
         BeavisQoL.UpdateMinimapCollectorPage()
+    end
+
+    if BeavisQoL.UpdateQuickViewUI then
+        BeavisQoL.UpdateQuickViewUI()
     end
 
     local refreshablePages = {
