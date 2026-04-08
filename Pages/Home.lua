@@ -8,6 +8,7 @@ local version = metadata.version or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Versi
 local name = metadata.title or C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or L("UNKNOWN")
 local TWITCH_URL = "https://www.twitch.tv/beavismania"
 local WEBSITE_URL = "https://www.beavismania.de"
+local DONATION_URL = "https://streamelements.com/beavismania/tip"
 
 local function ApplyTextureGradient(texture, orientation, startR, startG, startB, startA, endR, endG, endB, endA)
     if not texture then
@@ -140,7 +141,7 @@ local function CreateInfoCard(parent, titleText, bodyText, footerText)
     title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -14)
     title:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
     title:SetJustifyH("LEFT")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     title:SetTextColor(0.97, 0.9, 0.76, 1)
     title:SetText(titleText)
 
@@ -149,7 +150,7 @@ local function CreateInfoCard(parent, titleText, bodyText, footerText)
     body:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
     body:SetJustifyH("LEFT")
     body:SetJustifyV("TOP")
-    body:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    body:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     body:SetTextColor(0.91, 0.89, 0.86, 1)
     body:SetText(bodyText)
 
@@ -184,7 +185,7 @@ local function CreateActionCard(parent, iconPath, titleText, bodyText, footerTex
     title:SetPoint("LEFT", icon, "RIGHT", 12, 3)
     title:SetPoint("RIGHT", button, "RIGHT", -16, 0)
     title:SetJustifyH("LEFT")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     title:SetTextColor(0.97, 0.9, 0.76, 1)
     title:SetText(titleText)
 
@@ -193,7 +194,7 @@ local function CreateActionCard(parent, iconPath, titleText, bodyText, footerTex
     body:SetPoint("RIGHT", button, "RIGHT", -16, 0)
     body:SetJustifyH("LEFT")
     body:SetJustifyV("TOP")
-    body:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    body:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     body:SetTextColor(0.91, 0.89, 0.86, 1)
     body:SetText(bodyText)
 
@@ -242,6 +243,17 @@ local function GetTextHeight(fontString, minimumHeight)
     return textHeight
 end
 
+local function SetOptionalText(fontString, text)
+    local value = tostring(text or "")
+    fontString:SetText(value)
+
+    if value ~= "" then
+        fontString:Show()
+    else
+        fontString:Hide()
+    end
+end
+
 local function GetActionCardHeight(card)
     local iconHeight = card.Icon and card.Icon.GetHeight and card.Icon:GetHeight() or 40
     local titleBlockHeight = math.max(iconHeight, GetTextHeight(card.Title, 15))
@@ -283,10 +295,12 @@ IntroEyebrow:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
 IntroEyebrow:SetTextColor(0.93, 0.82, 0.62, 1)
 IntroEyebrow:SetText(L("HOME"))
 
-local SpotlightPanel = CreateFrame("Frame", nil, IntroPanel)
+local SpotlightPanel = CreateFrame("Button", nil, IntroPanel)
 SpotlightPanel:SetPoint("TOPRIGHT", IntroPanel, "TOPRIGHT", -18, -20)
 SpotlightPanel:SetWidth(280)
 SpotlightPanel:SetHeight(150)
+SpotlightPanel:SetHitRectInsets(-4, -4, -4, -4)
+SpotlightPanel:RegisterForClicks("LeftButtonUp")
 
 local SpotlightSurface = CreatePanelSurface(SpotlightPanel)
 ApplyPanelSurface(SpotlightSurface, "card", false)
@@ -306,41 +320,62 @@ SpotlightTitle:SetPoint("LEFT", SpotlightLogo, "RIGHT", 12, 0)
 SpotlightTitle:SetPoint("RIGHT", SpotlightHeader, "RIGHT", 0, 0)
 SpotlightTitle:SetPoint("CENTER", SpotlightLogo, "CENTER", 0, 0)
 SpotlightTitle:SetJustifyH("LEFT")
-SpotlightTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+SpotlightTitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SpotlightTitle:SetTextColor(0.97, 0.9, 0.76, 1)
-SpotlightTitle:SetText(L("PROJECT_STATUS"))
+SpotlightTitle:SetText(L("HOME_SUPPORT_TITLE"))
 
 local SpotlightVersion = SpotlightPanel:CreateFontString(nil, "OVERLAY")
 SpotlightVersion:SetPoint("TOPLEFT", SpotlightTitle, "BOTTOMLEFT", 0, -8)
 SpotlightVersion:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -16, 0)
 SpotlightVersion:SetJustifyH("LEFT")
-SpotlightVersion:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SpotlightVersion:SetJustifyV("TOP")
+SpotlightVersion:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SpotlightVersion:SetTextColor(0.94, 0.91, 0.86, 1)
-SpotlightVersion:SetText(L("VERSION") .. ": " .. version)
+SpotlightVersion:SetText(L("HOME_SUPPORT_BODY"))
 
 local SpotlightState = SpotlightPanel:CreateFontString(nil, "OVERLAY")
 SpotlightState:SetPoint("TOPLEFT", SpotlightVersion, "BOTTOMLEFT", 0, -7)
 SpotlightState:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -16, 0)
 SpotlightState:SetJustifyH("LEFT")
-SpotlightState:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SpotlightState:SetJustifyV("TOP")
+SpotlightState:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SpotlightState:SetTextColor(0.94, 0.91, 0.86, 1)
-SpotlightState:SetText(BeavisQoL.GetReleaseStatusText and BeavisQoL.GetReleaseStatusText() or L("STATUS_ALPHA"))
+SpotlightState:SetText(L("HOME_SUPPORT_HINT"))
 
 local SpotlightFocus = SpotlightPanel:CreateFontString(nil, "OVERLAY")
 SpotlightFocus:SetPoint("TOPLEFT", SpotlightState, "BOTTOMLEFT", 0, -8)
 SpotlightFocus:SetPoint("RIGHT", SpotlightPanel, "RIGHT", -16, 0)
 SpotlightFocus:SetJustifyH("LEFT")
 SpotlightFocus:SetJustifyV("TOP")
-SpotlightFocus:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-SpotlightFocus:SetTextColor(0.89, 0.87, 0.84, 1)
-SpotlightFocus:SetText("")
-SpotlightFocus:Hide()
+SpotlightFocus:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+SpotlightFocus:SetTextColor(0.92, 0.8, 0.58, 1)
+SetOptionalText(SpotlightFocus, L("HOME_SUPPORT_LINK"))
+
+SpotlightPanel:SetScript("OnEnter", function()
+    ApplyPanelSurface(SpotlightSurface, "card", true)
+    SpotlightTitle:SetTextColor(1, 0.94, 0.84, 1)
+    SpotlightFocus:SetTextColor(0.98, 0.86, 0.64, 1)
+end)
+
+SpotlightPanel:SetScript("OnLeave", function()
+    ApplyPanelSurface(SpotlightSurface, "card", false)
+    SpotlightTitle:SetTextColor(0.97, 0.9, 0.76, 1)
+    SpotlightFocus:SetTextColor(0.92, 0.8, 0.58, 1)
+end)
+
+SpotlightPanel:SetScript("OnClick", function()
+    if BeavisQoL.ShowLinkPopup then
+        BeavisQoL.ShowLinkPopup(L("HOME_SUPPORT_POPUP"), DONATION_URL)
+    else
+        print(DONATION_URL)
+    end
+end)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -10)
 IntroTitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -24, 0)
 IntroTitle:SetJustifyH("LEFT")
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 22, "")
 IntroTitle:SetTextColor(0.99, 0.93, 0.84, 1)
 IntroTitle:SetText(L("WELCOME_TITLE"):format(name))
 
@@ -348,18 +383,18 @@ local IntroSubtitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -6)
 IntroSubtitle:SetPoint("RIGHT", SpotlightPanel, "LEFT", -24, 0)
 IntroSubtitle:SetJustifyH("LEFT")
-IntroSubtitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+IntroSubtitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroSubtitle:SetTextColor(0.82, 0.79, 0.75, 1)
-IntroSubtitle:SetText(L("WELCOME_SUBTITLE"))
+SetOptionalText(IntroSubtitle, L("WELCOME_SUBTITLE"))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroSubtitle, "BOTTOMLEFT", 0, -12)
 IntroText:SetPoint("RIGHT", SpotlightPanel, "LEFT", -24, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
-IntroText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 IntroText:SetTextColor(0.91, 0.89, 0.86, 1)
-IntroText:SetText(L("WELCOME_BODY"))
+SetOptionalText(IntroText, L("WELCOME_BODY"))
 
 local HighlightsRow = CreateFrame("Frame", nil, PageHomeContent)
 HighlightsRow:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -14)
@@ -407,11 +442,11 @@ TwitchCard:SetPoint("RIGHT", ActionRow, "CENTER", -7, 0)
 
 local DiscordCard = CreateActionCard(
     ActionRow,
-    "Interface\\AddOns\\BeavisQoL\\Media\\discord.tga",
-    L("DISCORD_TITLE"),
-    L("DISCORD_BODY"),
-    L("DISCORD_FOOTER"),
-    L("DISCORD_POPUP"),
+    "Interface\\AddOns\\BeavisQoL\\Media\\logo.tga",
+    L("HOME_FEEDBACK_TITLE"),
+    L("HOME_FEEDBACK_BODY"),
+    L("HOME_FEEDBACK_FOOTER"),
+    L("HOME_FEEDBACK_POPUP"),
     WEBSITE_URL
 )
 DiscordCard:SetPoint("TOPRIGHT", ActionRow, "TOPRIGHT", 0, 0)
@@ -450,28 +485,31 @@ local function LayoutHomePage()
     IntroTitle:SetPoint("TOPLEFT", IntroEyebrow, "BOTTOMLEFT", 0, -10)
     IntroTitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 
-    IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -6)
-    IntroSubtitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+    local previousTextAnchor = IntroTitle
+    local leftColumnHeight = 16 + GetTextHeight(IntroEyebrow, 9) + 10 + GetTextHeight(IntroTitle, 24)
 
-    IntroText:SetPoint("TOPLEFT", IntroSubtitle, "BOTTOMLEFT", 0, -12)
-    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+    if IntroSubtitle:IsShown() then
+        IntroSubtitle:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -6)
+        IntroSubtitle:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+        previousTextAnchor = IntroSubtitle
+        leftColumnHeight = leftColumnHeight + 6 + GetTextHeight(IntroSubtitle, 12)
+    end
 
-    SpotlightPanel:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -10)
+    if IntroText:IsShown() then
+        local introTextTopOffset = previousTextAnchor == IntroSubtitle and -12 or -10
+        IntroText:SetPoint("TOPLEFT", previousTextAnchor, "BOTTOMLEFT", 0, introTextTopOffset)
+        IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+        previousTextAnchor = IntroText
+        leftColumnHeight = leftColumnHeight + math.abs(introTextTopOffset) + GetTextHeight(IntroText, 12)
+    end
+
+    leftColumnHeight = leftColumnHeight + 10
+
+    SpotlightPanel:SetPoint("TOPLEFT", previousTextAnchor, "BOTTOMLEFT", 0, -10)
     SpotlightPanel:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 
     local headerHeight = math.max(36, SpotlightLogo:GetHeight())
     SpotlightHeader:SetHeight(headerHeight)
-
-    local leftColumnHeight =
-        16
-        + GetTextHeight(IntroEyebrow, 9)
-        + 10
-        + GetTextHeight(IntroTitle, 24)
-        + 6
-        + GetTextHeight(IntroSubtitle, 12)
-        + 12
-        + GetTextHeight(IntroText, 12)
-        + 10
 
     local spotlightHeight =
         14
@@ -503,13 +541,12 @@ end
 BeavisQoL.UpdateHome = function()
     IntroEyebrow:SetText(L("HOME"))
     IntroTitle:SetText(L("WELCOME_TITLE"):format(name))
-    IntroSubtitle:SetText(L("WELCOME_SUBTITLE"))
-    IntroText:SetText(L("WELCOME_BODY"))
-    SpotlightTitle:SetText(L("PROJECT_STATUS"))
-    SpotlightVersion:SetText(L("VERSION") .. ": " .. version)
-    SpotlightState:SetText(BeavisQoL.GetReleaseStatusText and BeavisQoL.GetReleaseStatusText() or L("STATUS_ALPHA"))
-    SpotlightFocus:SetText("")
-    SpotlightFocus:Hide()
+    SetOptionalText(IntroSubtitle, L("WELCOME_SUBTITLE"))
+    SetOptionalText(IntroText, L("WELCOME_BODY"))
+    SpotlightTitle:SetText(L("HOME_SUPPORT_TITLE"))
+    SpotlightVersion:SetText(L("HOME_SUPPORT_BODY"))
+    SpotlightState:SetText(L("HOME_SUPPORT_HINT"))
+    SetOptionalText(SpotlightFocus, L("HOME_SUPPORT_LINK"))
     ProgressCard.Title:SetText(L("PROGRESS_CARD_TITLE"))
     ProgressCard.Body:SetText(L("PROGRESS_CARD_BODY"))
     ProgressCard.Footer:SetText(L("PROGRESS_CARD_FOOTER"))
@@ -519,9 +556,9 @@ BeavisQoL.UpdateHome = function()
     TwitchCard.Title:SetText(L("TWITCH_TITLE"))
     TwitchCard.Body:SetText(L("TWITCH_BODY"))
     TwitchCard.Footer:SetText(L("TWITCH_FOOTER"))
-    DiscordCard.Title:SetText(L("DISCORD_TITLE"))
-    DiscordCard.Body:SetText(L("DISCORD_BODY"))
-    DiscordCard.Footer:SetText(L("DISCORD_FOOTER"))
+    DiscordCard.Title:SetText(L("HOME_FEEDBACK_TITLE"))
+    DiscordCard.Body:SetText(L("HOME_FEEDBACK_BODY"))
+    DiscordCard.Footer:SetText(L("HOME_FEEDBACK_FOOTER"))
     WebsiteCard.Title:SetText(L("WEBSITE_CARD_TITLE"))
     WebsiteCard.Body:SetText(L("WEBSITE_CARD_BODY"))
     WebsiteCard.Footer:SetText(L("WEBSITE_CARD_FOOTER"))
@@ -550,3 +587,4 @@ PageHome:SetScript("OnShow", function()
 end)
 
 BeavisQoL.Pages.Home = PageHome
+

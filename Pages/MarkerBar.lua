@@ -39,6 +39,7 @@ local ShowOverlayCheckbox
 local LockOverlayCheckbox
 local ScaleSlider
 local ScaleSliderText
+local LayoutMarkerBarPage
 local isRefreshingPage = false
 local pendingOverlayRefresh = false
 
@@ -52,6 +53,15 @@ local function Clamp(value, minValue, maxValue)
     end
 
     return value
+end
+
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
 end
 
 local function GetSliderPercentText(value)
@@ -342,7 +352,7 @@ local function CreateCheckbox(parent, label, onClick)
 
     local text = parent:CreateFontString(nil, "OVERLAY")
     text:SetPoint("LEFT", checkbox, "RIGHT", 8, 0)
-    text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     text:SetTextColor(0.96, 0.96, 0.96, 1)
     text:SetText(label)
 
@@ -381,25 +391,34 @@ PageMarkerBar = CreateFrame("Frame", nil, Content)
 PageMarkerBar:SetAllPoints()
 PageMarkerBar:Hide()
 
-local IntroPanel = CreateFrame("Frame", nil, PageMarkerBar)
-IntroPanel:SetPoint("TOPLEFT", PageMarkerBar, "TOPLEFT", 20, -20)
-IntroPanel:SetPoint("TOPRIGHT", PageMarkerBar, "TOPRIGHT", -20, -20)
+local PageMarkerBarScrollFrame = CreateFrame("ScrollFrame", nil, PageMarkerBar, "UIPanelScrollFrameTemplate")
+PageMarkerBarScrollFrame:SetPoint("TOPLEFT", PageMarkerBar, "TOPLEFT", 0, 0)
+PageMarkerBarScrollFrame:SetPoint("BOTTOMRIGHT", PageMarkerBar, "BOTTOMRIGHT", -28, 0)
+PageMarkerBarScrollFrame:EnableMouseWheel(true)
+
+local PageMarkerBarContent = CreateFrame("Frame", nil, PageMarkerBarScrollFrame)
+PageMarkerBarContent:SetSize(1, 1)
+PageMarkerBarScrollFrame:SetScrollChild(PageMarkerBarContent)
+
+local IntroPanel = CreateFrame("Frame", nil, PageMarkerBarContent)
+IntroPanel:SetPoint("TOPLEFT", PageMarkerBarContent, "TOPLEFT", 20, -18)
+IntroPanel:SetPoint("RIGHT", PageMarkerBarContent, "RIGHT", -20, 0)
 IntroPanel:SetHeight(128)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -407,36 +426,34 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local UsageHint = IntroPanel:CreateFontString(nil, "OVERLAY")
 UsageHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -12)
 UsageHint:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 UsageHint:SetJustifyH("LEFT")
 UsageHint:SetJustifyV("TOP")
-UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 UsageHint:SetTextColor(0.84, 0.84, 0.86, 1)
 
-local SettingsPanel = CreateFrame("Frame", nil, PageMarkerBar)
+local SettingsPanel = CreateFrame("Frame", nil, PageMarkerBarContent)
 SettingsPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
-SettingsPanel:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
-SettingsPanel:SetPoint("BOTTOMLEFT", PageMarkerBar, "BOTTOMLEFT", 20, 20)
-SettingsPanel:SetPoint("BOTTOMRIGHT", PageMarkerBar, "BOTTOMRIGHT", -20, 20)
+SettingsPanel:SetPoint("RIGHT", PageMarkerBarContent, "RIGHT", -20, 0)
 
 local SettingsBg = SettingsPanel:CreateTexture(nil, "BACKGROUND")
 SettingsBg:SetAllPoints()
-SettingsBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+SettingsBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local SettingsBorder = SettingsPanel:CreateTexture(nil, "ARTWORK")
 SettingsBorder:SetPoint("BOTTOMLEFT", SettingsPanel, "BOTTOMLEFT", 0, 0)
 SettingsBorder:SetPoint("BOTTOMRIGHT", SettingsPanel, "BOTTOMRIGHT", 0, 0)
 SettingsBorder:SetHeight(1)
-SettingsBorder:SetColorTexture(1, 0.82, 0, 0.9)
+SettingsBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local SettingsTitle = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsTitle:SetPoint("TOPLEFT", SettingsPanel, "TOPLEFT", 18, -14)
-SettingsTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-SettingsTitle:SetTextColor(1, 0.82, 0, 1)
+SettingsTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+SettingsTitle:SetTextColor(1, 0.88, 0.62, 1)
 SettingsTitle:SetText(L("DISPLAY"))
 
 ShowOverlayCheckbox = CreateCheckbox(SettingsPanel, L("MARKER_BAR_SHOW_OVERLAY"), function(self)
@@ -473,16 +490,16 @@ MinimapContextHint:SetPoint("TOPLEFT", MinimapContextCheckbox, "BOTTOMLEFT", 34,
 MinimapContextHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 MinimapContextHint:SetJustifyH("LEFT")
 MinimapContextHint:SetJustifyV("TOP")
-MinimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-MinimapContextHint:SetTextColor(0.80, 0.80, 0.80, 1)
+MinimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+MinimapContextHint:SetTextColor(0.78, 0.74, 0.69, 1)
 
 local ScaleHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
 ScaleHint:SetPoint("TOPLEFT", MinimapContextHint, "BOTTOMLEFT", 0, -16)
 ScaleHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 ScaleHint:SetJustifyH("LEFT")
 ScaleHint:SetJustifyV("TOP")
-ScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-ScaleHint:SetTextColor(0.80, 0.80, 0.80, 1)
+ScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ScaleHint:SetTextColor(0.78, 0.74, 0.69, 1)
 
 ScaleSlider, ScaleSliderText = CreateSlider(SettingsPanel)
 ScaleSlider:SetPoint("TOPLEFT", ScaleHint, "BOTTOMLEFT", -16, -24)
@@ -513,13 +530,13 @@ DragHint:SetPoint("TOPLEFT", ResetButton, "BOTTOMLEFT", 2, -12)
 DragHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 DragHint:SetJustifyH("LEFT")
 DragHint:SetJustifyV("TOP")
-DragHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+DragHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 DragHint:SetTextColor(0.72, 0.72, 0.75, 1)
 
 function PageMarkerBar:RefreshState()
     isRefreshingPage = true
 
-    IntroTitle:SetText(L("MARKER_BAR"))
+    IntroTitle:SetText(BeavisQoL.GetModulePageTitle("MarkerBar", L("MARKER_BAR")))
     IntroText:SetText(L("MARKER_BAR_DESC"))
     UsageHint:SetText(L("MARKER_BAR_USAGE_HINT") .. "\n\n" .. L("MARKER_BAR_PERMISSION_HINT"))
     SettingsTitle:SetText(L("DISPLAY"))
@@ -539,10 +556,128 @@ function PageMarkerBar:RefreshState()
     RefreshScaleSliderText()
 
     isRefreshingPage = false
+    LayoutMarkerBarPage()
 end
 
+LayoutMarkerBarPage = function()
+    local contentWidth = math.max(1, PageMarkerBarScrollFrame:GetWidth())
+    if contentWidth <= 1 then
+        return
+    end
+
+    PageMarkerBarContent:SetWidth(contentWidth)
+
+    IntroPanel:ClearAllPoints()
+    IntroPanel:SetPoint("TOPLEFT", PageMarkerBarContent, "TOPLEFT", 20, -18)
+    IntroPanel:SetPoint("RIGHT", PageMarkerBarContent, "RIGHT", -20, 0)
+
+    IntroText:ClearAllPoints()
+    IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -8)
+    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+
+    UsageHint:ClearAllPoints()
+    UsageHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -10)
+    UsageHint:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+
+    local introHeight = math.ceil(
+        16
+        + GetTextHeight(IntroTitle, 24)
+        + 8
+        + GetTextHeight(IntroText, 34)
+        + 10
+        + GetTextHeight(UsageHint, 34)
+        + 16
+    )
+    IntroPanel:SetHeight(math.max(116, introHeight))
+
+    SettingsPanel:ClearAllPoints()
+    SettingsPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -14)
+    SettingsPanel:SetPoint("RIGHT", PageMarkerBarContent, "RIGHT", -20, 0)
+
+    SettingsTitle:ClearAllPoints()
+    SettingsTitle:SetPoint("TOPLEFT", SettingsPanel, "TOPLEFT", 18, -14)
+
+    ShowOverlayCheckbox:ClearAllPoints()
+    ShowOverlayCheckbox:SetPoint("TOPLEFT", SettingsTitle, "BOTTOMLEFT", -4, -12)
+
+    LockOverlayCheckbox:ClearAllPoints()
+    LockOverlayCheckbox:SetPoint("TOPLEFT", ShowOverlayCheckbox, "BOTTOMLEFT", 0, -8)
+
+    MinimapContextCheckbox:ClearAllPoints()
+    MinimapContextCheckbox:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 0, -8)
+
+    MinimapContextHint:ClearAllPoints()
+    MinimapContextHint:SetPoint("TOPLEFT", MinimapContextCheckbox, "BOTTOMLEFT", 34, -8)
+    MinimapContextHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+
+    ScaleHint:ClearAllPoints()
+    ScaleHint:SetPoint("TOPLEFT", MinimapContextHint, "BOTTOMLEFT", 0, -14)
+    ScaleHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+
+    local innerWidth = math.max(320, contentWidth - 40)
+    ScaleSlider:ClearAllPoints()
+    ScaleSlider:SetPoint("TOPLEFT", ScaleHint, "BOTTOMLEFT", -16, -20)
+    ScaleSlider:SetWidth(math.max(240, math.min(360, innerWidth - 92)))
+
+    ResetButton:ClearAllPoints()
+    ResetButton:SetSize(190, 28)
+    ResetButton:SetPoint("TOPLEFT", ScaleSlider, "BOTTOMLEFT", 16, -16)
+
+    DragHint:ClearAllPoints()
+    DragHint:SetPoint("TOPLEFT", ResetButton, "BOTTOMLEFT", 2, -10)
+    DragHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+
+    local settingsHeight = math.ceil(
+        14
+        + GetTextHeight(SettingsTitle, 15)
+        + 12
+        + ShowOverlayCheckbox:GetHeight()
+        + 8
+        + LockOverlayCheckbox:GetHeight()
+        + 8
+        + MinimapContextCheckbox:GetHeight()
+        + 8
+        + GetTextHeight(MinimapContextHint, 34)
+        + 14
+        + GetTextHeight(ScaleHint, 34)
+        + 20
+        + 42
+        + 16
+        + ResetButton:GetHeight()
+        + 10
+        + GetTextHeight(DragHint, 34)
+        + 16
+    )
+    SettingsPanel:SetHeight(math.max(248, settingsHeight))
+
+    local contentHeight = 18
+        + IntroPanel:GetHeight()
+        + 14 + SettingsPanel:GetHeight()
+        + 20
+
+    PageMarkerBarContent:SetHeight(math.max(PageMarkerBarScrollFrame:GetHeight(), contentHeight))
+end
+
+PageMarkerBarScrollFrame:SetScript("OnSizeChanged", LayoutMarkerBarPage)
+PageMarkerBarScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageMarkerBarContent:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
 PageMarkerBar:SetScript("OnShow", function()
+    PageMarkerBarScrollFrame:SetVerticalScroll(0)
     PageMarkerBar:RefreshState()
+    LayoutMarkerBarPage()
 end)
 
 local refreshWatcher = CreateFrame("Frame")

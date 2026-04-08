@@ -1,4 +1,4 @@
-﻿local ADDON_NAME, BeavisQoL = ...
+local ADDON_NAME, BeavisQoL = ...
 
 local Content = BeavisQoL.Content
 local L = BeavisQoL.L
@@ -144,10 +144,10 @@ StreamerPlannerModule.WHISPER_SPEC_ALIAS_HINTS = {
     [70] = { "retribution", "ret", "retri", "vergeltung" },
     [253] = { "bm", "beast mastery", "beastmastery", "beast", "tierherrschaft" },
     [254] = { "mm", "marksmanship", "marksman", "treffsicherheit" },
-    [255] = { "survival", "sv", "surv", "ueberleben", "uberleben", "Ã¼berleben" },
+    [255] = { "survival", "sv", "surv", "ueberleben", "uberleben", "überleben" },
     [259] = { "assassination", "assa", "meucheln" },
     [260] = { "outlaw", "gesetzlosigkeit" },
-    [261] = { "subtlety", "sub", "taeuschung", "tÃ¤uschung" },
+    [261] = { "subtlety", "sub", "taeuschung", "täuschung" },
     [256] = { "discipline", "disc", "diszi", "disziplin" },
     [257] = { "holy", "heilig" },
     [258] = { "shadow", "schatten" },
@@ -155,26 +155,26 @@ StreamerPlannerModule.WHISPER_SPEC_ALIAS_HINTS = {
     [251] = { "frost" },
     [252] = { "unholy", "unheilig" },
     [262] = { "elemental", "ele", "elementar" },
-    [263] = { "enhancement", "enh", "enha", "enhance", "verstaerkung", "verstarkung", "verstÃ¤rkung" },
+    [263] = { "enhancement", "enh", "enha", "enhance", "verstaerkung", "verstarkung", "verstärkung" },
     [264] = { "restoration", "resto", "wiederherstellung" },
     [62] = { "arcane", "arkan" },
     [63] = { "fire", "feuer" },
     [64] = { "frost" },
     [265] = { "affliction", "affli", "gebrechen" },
-    [266] = { "demonology", "demo", "daemonology", "dÃ¤monologie", "daemonologie" },
-    [267] = { "destruction", "destro", "zerstoerung", "zerstÃ¶rung" },
+    [266] = { "demonology", "demo", "daemonology", "dämonologie", "daemonologie" },
+    [267] = { "destruction", "destro", "zerstoerung", "zerstörung" },
     [268] = { "brewmaster", "brew", "braumeister" },
-    [269] = { "windwalker", "ww", "windlaeufer", "windlÃ¤ufer" },
+    [269] = { "windwalker", "ww", "windlaeufer", "windläufer" },
     [270] = { "mistweaver", "mist", "mw", "nebelwirker", "nebel" },
     [102] = { "balance", "boomkin", "boomy", "owlkin", "moonkin", "eule" },
     [103] = { "feral", "cat", "katze" },
-    [104] = { "guardian", "bear", "baer", "bÃ¤r" },
+    [104] = { "guardian", "bear", "baer", "bär" },
     [105] = { "restoration", "resto", "tree", "baum", "wiederherstellung" },
-    [577] = { "havoc", "verwuestung", "verwÃ¼stung" },
+    [577] = { "havoc", "verwuestung", "verwüstung" },
     [581] = { "vengeance", "rache" },
     [1467] = { "devastation", "dev", "verheerung" },
     [1468] = { "preservation", "prev", "bewahrung" },
-    [1473] = { "augmentation", "aug", "verstaerkung", "verstarkung", "verstÃ¤rkung" },
+    [1473] = { "augmentation", "aug", "verstaerkung", "verstarkung", "verstärkung" },
 }
 
 local DUNGEON_SLOT_ROLE_REQUIREMENTS = {
@@ -602,6 +602,16 @@ local function GetTimerDurationText(minutes)
     return string.format(L("STREAMER_PLANNER_TIMER_DURATION_VALUE"), resolvedMinutes)
 end
 
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
 local function GetMeasuredPanelHeight(panel, bottomObject, padding, minimumHeight)
     local fallbackHeight = minimumHeight or (panel and panel:GetHeight()) or 0
 
@@ -610,6 +620,89 @@ local function GetMeasuredPanelHeight(panel, bottomObject, padding, minimumHeigh
     end
 
     return math.max(fallbackHeight, math.ceil((panel:GetTop() - bottomObject:GetBottom()) + (padding or 0)))
+end
+
+local function LayoutStreamerPlannerSettingsPanel(settingsPanel)
+    if not settingsPanel then
+        return
+    end
+
+    settingsPanel.Title:ClearAllPoints()
+    settingsPanel.Title:SetPoint("TOPLEFT", settingsPanel, "TOPLEFT", 18, -14)
+
+    settingsPanel.Hint:ClearAllPoints()
+    settingsPanel.Hint:SetPoint("TOPLEFT", settingsPanel.Title, "BOTTOMLEFT", 0, -8)
+    settingsPanel.Hint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    ShowOverlayCheckbox:ClearAllPoints()
+    ShowOverlayCheckbox:SetPoint("TOPLEFT", settingsPanel.Hint, "BOTTOMLEFT", -4, -14)
+
+    settingsPanel.ShowOverlayHint:ClearAllPoints()
+    settingsPanel.ShowOverlayHint:SetPoint("TOPLEFT", ShowOverlayCheckbox, "BOTTOMLEFT", 34, -2)
+    settingsPanel.ShowOverlayHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    LockOverlayCheckbox:ClearAllPoints()
+    LockOverlayCheckbox:SetPoint("TOPLEFT", settingsPanel.ShowOverlayHint, "BOTTOMLEFT", -34, -12)
+
+    settingsPanel.LockOverlayHint:ClearAllPoints()
+    settingsPanel.LockOverlayHint:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 34, -2)
+    settingsPanel.LockOverlayHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    settingsPanel.ModeTitle:ClearAllPoints()
+    settingsPanel.ModeTitle:SetPoint("TOPLEFT", settingsPanel.LockOverlayHint, "BOTTOMLEFT", 0, -18)
+
+    settingsPanel.ModeHint:ClearAllPoints()
+    settingsPanel.ModeHint:SetPoint("TOPLEFT", settingsPanel.ModeTitle, "BOTTOMLEFT", 0, -6)
+    settingsPanel.ModeHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    DungeonModeButton:ClearAllPoints()
+    DungeonModeButton:SetPoint("TOPLEFT", settingsPanel.ModeHint, "BOTTOMLEFT", 0, -12)
+
+    RaidModeButton:ClearAllPoints()
+    RaidModeButton:SetPoint("LEFT", DungeonModeButton, "RIGHT", 12, 0)
+
+    local sliderWidth = math.max(220, math.min(310, settingsPanel:GetWidth() - 56))
+
+    ScaleSlider:ClearAllPoints()
+    ScaleSlider:SetPoint("TOPLEFT", DungeonModeButton, "BOTTOMLEFT", 18, -26)
+    ScaleSlider:SetWidth(sliderWidth)
+
+    settingsPanel.ScaleHint:ClearAllPoints()
+    settingsPanel.ScaleHint:SetPoint("TOPLEFT", ScaleSlider, "BOTTOMLEFT", -2, -10)
+    settingsPanel.ScaleHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    TimerDurationSlider:ClearAllPoints()
+    TimerDurationSlider:SetPoint("TOPLEFT", settingsPanel.ScaleHint, "BOTTOMLEFT", 0, -26)
+    TimerDurationSlider:SetWidth(sliderWidth)
+
+    settingsPanel.TimerDurationHint:ClearAllPoints()
+    settingsPanel.TimerDurationHint:SetPoint("TOPLEFT", TimerDurationSlider, "BOTTOMLEFT", -2, -10)
+    settingsPanel.TimerDurationHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    settingsPanel.ResetPositionButton:ClearAllPoints()
+    settingsPanel.ResetPositionButton:SetPoint("TOPLEFT", settingsPanel.TimerDurationHint, "BOTTOMLEFT", 0, -16)
+
+    settingsPanel.ResetPositionHint:ClearAllPoints()
+    settingsPanel.ResetPositionHint:SetPoint("TOPLEFT", settingsPanel.ResetPositionButton, "BOTTOMLEFT", 0, -8)
+    settingsPanel.ResetPositionHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    settingsPanel.ClearLayoutButton:ClearAllPoints()
+    settingsPanel.ClearLayoutButton:SetPoint("TOPLEFT", settingsPanel.ResetPositionHint, "BOTTOMLEFT", 0, -16)
+
+    settingsPanel.ClearLayoutHint:ClearAllPoints()
+    settingsPanel.ClearLayoutHint:SetPoint("TOPLEFT", settingsPanel.ClearLayoutButton, "BOTTOMLEFT", 0, -8)
+    settingsPanel.ClearLayoutHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    settingsPanel.ClearAllButton:ClearAllPoints()
+    settingsPanel.ClearAllButton:SetPoint("TOPLEFT", settingsPanel.ClearLayoutHint, "BOTTOMLEFT", 0, -16)
+
+    settingsPanel.ClearAllHint:ClearAllPoints()
+    settingsPanel.ClearAllHint:SetPoint("TOPLEFT", settingsPanel.ClearAllButton, "BOTTOMLEFT", 0, -8)
+    settingsPanel.ClearAllHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
+
+    settingsPanel.EditHint:ClearAllPoints()
+    settingsPanel.EditHint:SetPoint("TOPLEFT", settingsPanel.ClearAllHint, "BOTTOMLEFT", 0, -16)
+    settingsPanel.EditHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
 end
 
 local function GetRaidLayoutRowCount()
@@ -1592,7 +1685,7 @@ PlannerPrivate.RefreshSelectionButton = function(button, selected)
         if selected == true then
             button.Label:SetTextColor(1, 0.92, 0.32, 1)
         else
-            button.Label:SetTextColor(1, 0.82, 0, 1)
+            button.Label:SetTextColor(1, 0.88, 0.62, 1)
         end
     end
 end
@@ -1834,7 +1927,7 @@ PlannerPrivate.IsSelfSlotEntry = function(entry)
     local playerIdentityKey = PlannerPrivate.GetIdentityKey(playerFullName)
     local playerDisplayIdentityKey = PlannerPrivate.GetIdentityKey(playerDisplayName)
 
-    -- PrÃ¼fe alle mÃ¶glichen Namensfelder im Slot-Eintrag
+    -- Prüfe alle möglichen Namensfelder im Slot-Eintrag
     local entryNames = {
         entry.inviteName,
         entry.name,
@@ -2343,7 +2436,7 @@ local function RefreshTimerDisplay()
         if remainingSeconds <= TIMER_WARNING_THRESHOLD_SECONDS then
             OverlayTimer.Value:SetTextColor(1, 0.82, 0.22, 1)
         else
-            OverlayTimer.Value:SetTextColor(1, 1, 1, 1)
+            OverlayTimer.Value:SetTextColor(0.95, 0.91, 0.85, 1)
         end
         OverlayTimer.Status:SetText(L("STREAMER_PLANNER_TIMER_RUNNING"))
         OverlayTimer.Status:SetTextColor(0.78, 0.92, 0.78, 1)
@@ -4311,13 +4404,13 @@ local function CreatePanel(parent, anchor, offsetY, height)
 
     local bg = panel:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
-    bg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+    bg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
     local border = panel:CreateTexture(nil, "ARTWORK")
     border:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 0, 0)
     border:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.9)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
     return panel
 end
@@ -4329,8 +4422,8 @@ local function CreateCheckbox(parent, text, onClick)
 
     local label = parent:CreateFontString(nil, "OVERLAY")
     label:SetPoint("LEFT", checkbox, "RIGHT", 8, 0)
-    label:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-    label:SetTextColor(1, 1, 1, 1)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    label:SetTextColor(0.95, 0.91, 0.85, 1)
     label:SetText(text)
 
     checkbox.Label = label
@@ -4767,7 +4860,7 @@ PlannerPrivate.EnsureApplicantRow = function(index)
     row.Name:SetPoint("TOPLEFT", row, "TOPLEFT", 10, -5)
     row.Name:SetPoint("RIGHT", row, "RIGHT", -168, 0)
     row.Name:SetJustifyH("LEFT")
-    row.Name:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    row.Name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
 
     row.Meta = row:CreateFontString(nil, "OVERLAY")
     row.Meta:SetPoint("TOPLEFT", row.Name, "BOTTOMLEFT", 0, -1)
@@ -4780,7 +4873,7 @@ PlannerPrivate.EnsureApplicantRow = function(index)
     row.Status:SetPoint("RIGHT", row, "RIGHT", -84, 0)
     row.Status:SetJustifyH("RIGHT")
     row.Status:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-    row.Status:SetTextColor(1, 0.82, 0, 1)
+    row.Status:SetTextColor(1, 0.88, 0.62, 1)
 
     row.InviteButton = CreateActionButton(row, 72, "", function(self)
         if self.InviteTarget then
@@ -4950,8 +5043,8 @@ local function CreateOverlayHeaderButton(parent, width, labelText, onClick, tool
 
     local label = button:CreateFontString(nil, "OVERLAY")
     label:SetPoint("CENTER", button, "CENTER", 0, 0)
-    label:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-    label:SetTextColor(1, 0.82, 0, 1)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    label:SetTextColor(1, 0.88, 0.62, 1)
     label:SetText(labelText)
     button.Label = label
 
@@ -5047,8 +5140,8 @@ local function CreateSlotButton(parent, width, height, layout, index)
     label:SetPoint("TOPLEFT", button, "TOPLEFT", 10, -7)
     label:SetPoint("RIGHT", button, "RIGHT", -10, 0)
     label:SetJustifyH("LEFT")
-    label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    label:SetTextColor(1, 0.82, 0, 1)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    label:SetTextColor(1, 0.88, 0.62, 1)
     button.Label = label
 
     local value = button:CreateFontString(nil, "OVERLAY")
@@ -5056,8 +5149,8 @@ local function CreateSlotButton(parent, width, height, layout, index)
     value:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -10, 6)
     value:SetJustifyH("LEFT")
     value:SetJustifyV("TOP")
-    value:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
-    value:SetTextColor(1, 1, 1, 1)
+    value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+    value:SetTextColor(0.95, 0.91, 0.85, 1)
     value:SetWordWrap(false)
     button.Value = value
 
@@ -5079,12 +5172,12 @@ local function CreateSlotButton(parent, width, height, layout, index)
         value:ClearAllPoints()
         value:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, 0)
         value:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -8, 4)
-        value:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+        value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
     elseif height <= 30 then
         value:ClearAllPoints()
         value:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, 0)
         value:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -10, 4)
-        value:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+        value:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     end
 
     button:SetScript("OnEnter", function(self)
@@ -5215,23 +5308,23 @@ local function RefreshSlotButton(button)
 
         button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, 0)
         button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 4)
-        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
     elseif button.SlotHeight <= 30 then
         button.Label:SetPoint("TOPLEFT", button, "TOPLEFT", 10, -7)
         button.Label:SetPoint("RIGHT", rightAnchor, rightPoint, rightOffset, 0)
-        button.Label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+        button.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 
         button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, 0)
         button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 4)
-        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     else
         button.Label:SetPoint("TOPLEFT", button, "TOPLEFT", 10, -7)
         button.Label:SetPoint("RIGHT", rightAnchor, rightPoint, rightOffset, 0)
-        button.Label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+        button.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 
         button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, -3)
         button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 6)
-        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
+        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
     end
 
     button.Label:SetText(slotLabel)
@@ -5363,8 +5456,8 @@ PlannerPrivate.CreateRaidLayout = function(parent, targetButtons, width, slotHei
 
         local title = groupFrame:CreateFontString(nil, "OVERLAY")
         title:SetJustifyH("LEFT")
-        title:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-        title:SetTextColor(1, 0.82, 0, 1)
+        title:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        title:SetTextColor(1, 0.88, 0.62, 1)
         title:SetText(L("STREAMER_PLANNER_RAID_GROUP"):format(groupIndex))
         groupFrame.Title = title
 
@@ -5504,7 +5597,7 @@ PlannerPrivate.RefreshLayoutVisibility = function()
     if OverlayDestinationValue then
         if destinationText ~= "" then
             OverlayDestinationValue:SetText(destinationText)
-            OverlayDestinationValue:SetTextColor(1, 1, 1, 1)
+            OverlayDestinationValue:SetTextColor(0.95, 0.91, 0.85, 1)
         else
             OverlayDestinationValue:SetText(L("STREAMER_PLANNER_DESTINATION_EMPTY"))
             OverlayDestinationValue:SetTextColor(0.62, 0.62, 0.66, 1)
@@ -5693,15 +5786,15 @@ end
 WhisperSpecPromptUI.Title = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
 WhisperSpecPromptUI.Title:SetPoint("TOPLEFT", WhisperSpecPromptUI.Frame, "TOPLEFT", 14, -12)
 WhisperSpecPromptUI.Title:SetJustifyH("LEFT")
-WhisperSpecPromptUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
-WhisperSpecPromptUI.Title:SetTextColor(1, 0.82, 0, 1)
+WhisperSpecPromptUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+WhisperSpecPromptUI.Title:SetTextColor(1, 0.88, 0.62, 1)
 
 WhisperSpecPromptUI.Hint = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
 WhisperSpecPromptUI.Hint:SetPoint("TOPLEFT", WhisperSpecPromptUI.Title, "BOTTOMLEFT", 0, -2)
 WhisperSpecPromptUI.Hint:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
 WhisperSpecPromptUI.Hint:SetJustifyH("LEFT")
 WhisperSpecPromptUI.Hint:SetJustifyV("TOP")
-WhisperSpecPromptUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+WhisperSpecPromptUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 WhisperSpecPromptUI.Hint:SetTextColor(0.82, 0.82, 0.84, 1)
 
 WhisperSpecPromptUI.Name = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
@@ -5719,8 +5812,8 @@ WhisperSpecPromptUI.Class:SetTextColor(1, 0.82, 0, 0.92)
 
 WhisperSpecPromptUI.ClassTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
 WhisperSpecPromptUI.ClassTitle:SetJustifyH("LEFT")
-WhisperSpecPromptUI.ClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-WhisperSpecPromptUI.ClassTitle:SetTextColor(1, 0.82, 0, 1)
+WhisperSpecPromptUI.ClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+WhisperSpecPromptUI.ClassTitle:SetTextColor(1, 0.88, 0.62, 1)
 WhisperSpecPromptUI.ClassTitle:Hide()
 
 WhisperSpecPromptUI.Frame.ClassButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
@@ -5732,8 +5825,8 @@ WhisperSpecPromptUI.RoleTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, 
 WhisperSpecPromptUI.RoleTitle:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -14)
 WhisperSpecPromptUI.RoleTitle:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
 WhisperSpecPromptUI.RoleTitle:SetJustifyH("LEFT")
-WhisperSpecPromptUI.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-WhisperSpecPromptUI.RoleTitle:SetTextColor(1, 0.82, 0, 1)
+WhisperSpecPromptUI.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+WhisperSpecPromptUI.RoleTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 WhisperSpecPromptUI.Frame.RoleButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
 WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.Class, "BOTTOMLEFT", 0, -10)
@@ -5742,8 +5835,8 @@ WhisperSpecPromptUI.Frame.RoleButtonAnchor:SetHeight(1)
 
 WhisperSpecPromptUI.SpecTitle = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
 WhisperSpecPromptUI.SpecTitle:SetJustifyH("LEFT")
-WhisperSpecPromptUI.SpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-WhisperSpecPromptUI.SpecTitle:SetTextColor(1, 0.82, 0, 1)
+WhisperSpecPromptUI.SpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+WhisperSpecPromptUI.SpecTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 WhisperSpecPromptUI.Frame.SpecButtonAnchor = CreateFrame("Frame", nil, WhisperSpecPromptUI.Frame)
 WhisperSpecPromptUI.Frame.SpecButtonAnchor:SetPoint("TOPLEFT", WhisperSpecPromptUI.SpecTitle, "BOTTOMLEFT", 0, -8)
@@ -5827,7 +5920,7 @@ OverlayTitle = OverlayFrame:CreateFontString(nil, "OVERLAY")
 OverlayTitle:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 18, -18)
 OverlayTitle:SetJustifyH("LEFT")
 OverlayTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-OverlayTitle:SetTextColor(1, 0.82, 0, 1)
+OverlayTitle:SetTextColor(1, 0.88, 0.62, 1)
 OverlayTitle:SetWordWrap(false)
 
 OverlayFrame.CloseButton = CreateOverlayHeaderButton(
@@ -5899,7 +5992,7 @@ OverlayRaidSummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
 OverlayRaidSummary:SetPoint("TOPLEFT", OverlayInviteRow, "BOTTOMLEFT", 0, -8)
 OverlayRaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
 OverlayRaidSummary:SetJustifyH("LEFT")
-OverlayRaidSummary:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+OverlayRaidSummary:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
 OverlayRaidSummary:SetTextColor(0.92, 0.92, 0.92, 1)
 OverlayRaidSummary:SetWordWrap(false)
 
@@ -5926,8 +6019,8 @@ OverlayDestinationLabel = OverlayDestinationButton:CreateFontString(nil, "OVERLA
 OverlayDestinationLabel:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 10, -5)
 OverlayDestinationLabel:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", -10, -5)
 OverlayDestinationLabel:SetJustifyH("LEFT")
-OverlayDestinationLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-OverlayDestinationLabel:SetTextColor(1, 0.82, 0, 1)
+OverlayDestinationLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+OverlayDestinationLabel:SetTextColor(1, 0.88, 0.62, 1)
 OverlayDestinationLabel:SetWordWrap(false)
 
 OverlayDestinationValue = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
@@ -5935,7 +6028,7 @@ OverlayDestinationValue:SetPoint("TOPLEFT", OverlayDestinationLabel, "BOTTOMLEFT
 OverlayDestinationValue:SetPoint("BOTTOMRIGHT", OverlayDestinationButton, "BOTTOMRIGHT", -10, 7)
 OverlayDestinationValue:SetJustifyH("LEFT")
 OverlayDestinationValue:SetJustifyV("TOP")
-OverlayDestinationValue:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+OverlayDestinationValue:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
 OverlayDestinationValue:SetWordWrap(true)
 
 OverlayDestinationButton:SetScript("OnEnter", function(self)
@@ -5983,8 +6076,8 @@ end
 
 OverlayTimer.Label = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
 OverlayTimer.Label:SetPoint("TOPLEFT", OverlayTimer.Panel, "TOPLEFT", 10, -5)
-OverlayTimer.Label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-OverlayTimer.Label:SetTextColor(1, 0.82, 0, 1)
+OverlayTimer.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+OverlayTimer.Label:SetTextColor(1, 0.88, 0.62, 1)
 
 OverlayTimer.Status = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
 OverlayTimer.Status:SetPoint("RIGHT", OverlayTimer.Panel, "RIGHT", -10, 0)
@@ -5995,7 +6088,7 @@ OverlayTimer.Status:SetTextColor(0.76, 0.76, 0.80, 1)
 
 OverlayTimer.Value = OverlayTimer.Panel:CreateFontString(nil, "OVERLAY")
 OverlayTimer.Value:SetPoint("TOPLEFT", OverlayTimer.Label, "BOTTOMLEFT", 0, -4)
-OverlayTimer.Value:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+OverlayTimer.Value:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
 OverlayTimer.Value:SetTextColor(0.92, 0.92, 0.92, 1)
 
 OverlayTimer.ClearAllButton = CreateActionButton(OverlayTimer.Panel, 92, "", function()
@@ -6071,22 +6164,22 @@ do
     border:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 0, 0)
     border:SetPoint("BOTTOMRIGHT", EditDialog, "BOTTOMRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.9)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 end
 
 EditDialogTitle = EditDialog:CreateFontString(nil, "OVERLAY")
 EditDialogTitle:SetPoint("TOPLEFT", EditDialog, "TOPLEFT", 16, -14)
 EditDialogTitle:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
 EditDialogTitle:SetJustifyH("LEFT")
-EditDialogTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-EditDialogTitle:SetTextColor(1, 0.82, 0, 1)
+EditDialogTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+EditDialogTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 EditDialogHint = EditDialog:CreateFontString(nil, "OVERLAY")
 EditDialogHint:SetPoint("TOPLEFT", EditDialogTitle, "BOTTOMLEFT", 0, -8)
 EditDialogHint:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
 EditDialogHint:SetJustifyH("LEFT")
 EditDialogHint:SetJustifyV("TOP")
-EditDialogHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+EditDialogHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EditDialogHint:SetTextColor(0.82, 0.82, 0.86, 1)
 
 EditDialogInput = CreateFrame("EditBox", nil, EditDialog, "InputBoxTemplate")
@@ -6099,12 +6192,12 @@ EditDialogTargetLabel = EditDialog:CreateFontString(nil, "OVERLAY")
 EditDialogTargetLabel:SetPoint("BOTTOMLEFT", EditDialogInput, "TOPLEFT", 0, 8)
 EditDialogTargetLabel:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
 EditDialogTargetLabel:SetJustifyH("LEFT")
-EditDialogTargetLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+EditDialogTargetLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EditDialogTargetLabel:SetTextColor(0.78, 0.78, 0.82, 1)
 
 EditDialog.RoleTitle = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDialog.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-EditDialog.RoleTitle:SetTextColor(1, 0.82, 0, 1)
+EditDialog.RoleTitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+EditDialog.RoleTitle:SetTextColor(1, 0.88, 0.62, 1)
 EditDialog.RoleTitle:Hide()
 
 do
@@ -6133,17 +6226,17 @@ end
 
 EditDestinationCategoryLabel = EditDialog:CreateFontString(nil, "OVERLAY")
 EditDestinationCategoryLabel:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -16)
-EditDestinationCategoryLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+EditDestinationCategoryLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EditDestinationCategoryLabel:SetTextColor(0.92, 0.92, 0.92, 1)
 
 EditDestinationSuggestionLabel = EditDialog:CreateFontString(nil, "OVERLAY")
 EditDestinationSuggestionLabel:SetPoint("TOPLEFT", EditDestinationCategoryLabel, "BOTTOMLEFT", 0, -38)
-EditDestinationSuggestionLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+EditDestinationSuggestionLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EditDestinationSuggestionLabel:SetTextColor(0.92, 0.92, 0.92, 1)
 
 EditDestinationKeystoneLabel = EditDialog:CreateFontString(nil, "OVERLAY")
 EditDestinationKeystoneLabel:SetPoint("TOPLEFT", EditDestinationSuggestionLabel, "BOTTOMLEFT", 0, -38)
-EditDestinationKeystoneLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+EditDestinationKeystoneLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EditDestinationKeystoneLabel:SetTextColor(0.92, 0.92, 0.92, 1)
 
 DestinationCategoryDropdown = CreateFrame("Frame", nil, EditDialog, "UIDropDownMenuTemplate")
@@ -6287,8 +6380,8 @@ end)
 
 EditClassTitle = EditDialog:CreateFontString(nil, "OVERLAY")
 EditClassTitle:SetPoint("TOPLEFT", EditDialogInput, "BOTTOMLEFT", 0, -18)
-EditClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-EditClassTitle:SetTextColor(1, 0.82, 0, 1)
+EditClassTitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+EditClassTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local classOptions = BuildClassOptions()
 for _, classInfo in ipairs(classOptions or {}) do
@@ -6309,8 +6402,8 @@ for _, classInfo in ipairs(classOptions or {}) do
 end
 
 EditSpecTitle = EditDialog:CreateFontString(nil, "OVERLAY")
-EditSpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-EditSpecTitle:SetTextColor(1, 0.82, 0, 1)
+EditSpecTitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+EditSpecTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 for _ = 1, 4 do
     local button = CreateIconPickerButton(EditDialog, EDIT_SPEC_BUTTON_SIZE, false)
@@ -6428,18 +6521,18 @@ PageStreamerPlanner.IntroPanel = IntroPanel
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 PageStreamerPlanner.IntroTitle = IntroTitle
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
@@ -6448,7 +6541,7 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 PageStreamerPlanner.IntroText = IntroText
 
 local UsageHint = IntroPanel:CreateFontString(nil, "OVERLAY")
@@ -6456,7 +6549,7 @@ UsageHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -10)
 UsageHint:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 UsageHint:SetJustifyH("LEFT")
 UsageHint:SetJustifyV("TOP")
-UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 UsageHint:SetTextColor(0.84, 0.84, 0.86, 1)
 PageStreamerPlanner.UsageHint = UsageHint
 
@@ -6467,26 +6560,26 @@ PageStreamerPlanner.PreviewPanel = PreviewPanel
 
 local PreviewPanelBg = PreviewPanel:CreateTexture(nil, "BACKGROUND")
 PreviewPanelBg:SetAllPoints()
-PreviewPanelBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+PreviewPanelBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local PreviewPanelBorder = PreviewPanel:CreateTexture(nil, "ARTWORK")
 PreviewPanelBorder:SetPoint("BOTTOMLEFT", PreviewPanel, "BOTTOMLEFT", 0, 0)
 PreviewPanelBorder:SetPoint("BOTTOMRIGHT", PreviewPanel, "BOTTOMRIGHT", 0, 0)
 PreviewPanelBorder:SetHeight(1)
-PreviewPanelBorder:SetColorTexture(1, 0.82, 0, 0.9)
+PreviewPanelBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 PreviewUI.Title = PreviewPanel:CreateFontString(nil, "OVERLAY")
 PreviewUI.Title:SetPoint("TOPLEFT", PreviewPanel, "TOPLEFT", 18, -14)
-PreviewUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-PreviewUI.Title:SetTextColor(1, 0.82, 0, 1)
+PreviewUI.Title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+PreviewUI.Title:SetTextColor(1, 0.88, 0.62, 1)
 
 PreviewUI.Hint = PreviewPanel:CreateFontString(nil, "OVERLAY")
 PreviewUI.Hint:SetPoint("TOPLEFT", PreviewUI.Title, "BOTTOMLEFT", 0, -8)
 PreviewUI.Hint:SetPoint("RIGHT", PreviewPanel, "RIGHT", -18, 0)
 PreviewUI.Hint:SetJustifyH("LEFT")
 PreviewUI.Hint:SetJustifyV("TOP")
-PreviewUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PreviewUI.Hint:SetTextColor(0.80, 0.80, 0.80, 1)
+PreviewUI.Hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PreviewUI.Hint:SetTextColor(0.78, 0.74, 0.69, 1)
 
 PreviewUI.DungeonContainer = CreateFrame("Frame", nil, PreviewPanel)
 PreviewUI.DungeonContainer:SetPoint("TOPLEFT", PreviewUI.Hint, "BOTTOMLEFT", 0, -18)
@@ -6509,26 +6602,26 @@ PageStreamerPlanner.SettingsPanel = SettingsPanel
 
 local SettingsPanelBg = SettingsPanel:CreateTexture(nil, "BACKGROUND")
 SettingsPanelBg:SetAllPoints()
-SettingsPanelBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+SettingsPanelBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local SettingsPanelBorder = SettingsPanel:CreateTexture(nil, "ARTWORK")
 SettingsPanelBorder:SetPoint("BOTTOMLEFT", SettingsPanel, "BOTTOMLEFT", 0, 0)
 SettingsPanelBorder:SetPoint("BOTTOMRIGHT", SettingsPanel, "BOTTOMRIGHT", 0, 0)
 SettingsPanelBorder:SetHeight(1)
-SettingsPanelBorder:SetColorTexture(1, 0.82, 0, 0.9)
+SettingsPanelBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 SettingsPanel.Title = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsPanel.Title:SetPoint("TOPLEFT", SettingsPanel, "TOPLEFT", 18, -14)
-SettingsPanel.Title:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-SettingsPanel.Title:SetTextColor(1, 0.82, 0, 1)
+SettingsPanel.Title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+SettingsPanel.Title:SetTextColor(1, 0.88, 0.62, 1)
 
 SettingsPanel.Hint = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsPanel.Hint:SetPoint("TOPLEFT", SettingsPanel.Title, "BOTTOMLEFT", 0, -8)
 SettingsPanel.Hint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.Hint:SetJustifyH("LEFT")
 SettingsPanel.Hint:SetJustifyV("TOP")
-SettingsPanel.Hint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SettingsPanel.Hint:SetTextColor(0.80, 0.80, 0.80, 1)
+SettingsPanel.Hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+SettingsPanel.Hint:SetTextColor(0.78, 0.74, 0.69, 1)
 
 ShowOverlayCheckbox = CreateCheckbox(SettingsPanel, "", function(self)
     StreamerPlannerModule.SetOverlayEnabled(self:GetChecked())
@@ -6541,7 +6634,7 @@ SettingsPanel.ShowOverlayHint:SetPoint("TOPLEFT", ShowOverlayCheckbox, "BOTTOMLE
 SettingsPanel.ShowOverlayHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ShowOverlayHint:SetJustifyH("LEFT")
 SettingsPanel.ShowOverlayHint:SetJustifyV("TOP")
-SettingsPanel.ShowOverlayHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.ShowOverlayHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ShowOverlayHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 LockOverlayCheckbox = CreateCheckbox(SettingsPanel, "", function(self)
@@ -6554,20 +6647,20 @@ SettingsPanel.LockOverlayHint:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLE
 SettingsPanel.LockOverlayHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.LockOverlayHint:SetJustifyH("LEFT")
 SettingsPanel.LockOverlayHint:SetJustifyV("TOP")
-SettingsPanel.LockOverlayHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.LockOverlayHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.LockOverlayHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 SettingsPanel.ModeTitle = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsPanel.ModeTitle:SetPoint("TOPLEFT", SettingsPanel.LockOverlayHint, "BOTTOMLEFT", 0, -22)
 SettingsPanel.ModeTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-SettingsPanel.ModeTitle:SetTextColor(1, 0.82, 0, 1)
+SettingsPanel.ModeTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 SettingsPanel.ModeHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
 SettingsPanel.ModeHint:SetPoint("TOPLEFT", SettingsPanel.ModeTitle, "BOTTOMLEFT", 0, -6)
 SettingsPanel.ModeHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ModeHint:SetJustifyH("LEFT")
 SettingsPanel.ModeHint:SetJustifyV("TOP")
-SettingsPanel.ModeHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.ModeHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ModeHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 DungeonModeButton = CreateModeButton(SettingsPanel, "", function()
@@ -6621,7 +6714,7 @@ SettingsPanel.ScaleHint:SetPoint("TOPLEFT", ScaleSlider, "BOTTOMLEFT", -2, -12)
 SettingsPanel.ScaleHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ScaleHint:SetJustifyH("LEFT")
 SettingsPanel.ScaleHint:SetJustifyV("TOP")
-SettingsPanel.ScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.ScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ScaleHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 SettingsPanel.TimerDurationHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
@@ -6629,7 +6722,7 @@ SettingsPanel.TimerDurationHint:SetPoint("TOPLEFT", TimerDurationSlider, "BOTTOM
 SettingsPanel.TimerDurationHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.TimerDurationHint:SetJustifyH("LEFT")
 SettingsPanel.TimerDurationHint:SetJustifyV("TOP")
-SettingsPanel.TimerDurationHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.TimerDurationHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.TimerDurationHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 SettingsPanel.ResetPositionButton = CreateActionButton(SettingsPanel, 158, "", function()
@@ -6642,7 +6735,7 @@ SettingsPanel.ResetPositionHint:SetPoint("TOPLEFT", SettingsPanel.ResetPositionB
 SettingsPanel.ResetPositionHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ResetPositionHint:SetJustifyH("LEFT")
 SettingsPanel.ResetPositionHint:SetJustifyV("TOP")
-SettingsPanel.ResetPositionHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.ResetPositionHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ResetPositionHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 SettingsPanel.ClearLayoutButton = CreateActionButton(SettingsPanel, 158, "", function()
@@ -6655,7 +6748,7 @@ SettingsPanel.ClearLayoutHint:SetPoint("TOPLEFT", SettingsPanel.ClearLayoutButto
 SettingsPanel.ClearLayoutHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ClearLayoutHint:SetJustifyH("LEFT")
 SettingsPanel.ClearLayoutHint:SetJustifyV("TOP")
-SettingsPanel.ClearLayoutHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.ClearLayoutHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ClearLayoutHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 SettingsPanel.ClearAllButton = CreateActionButton(SettingsPanel, 158, "", function()
@@ -6668,7 +6761,7 @@ SettingsPanel.ClearAllHint:SetPoint("TOPLEFT", SettingsPanel.ClearAllButton, "BO
 SettingsPanel.ClearAllHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ClearAllHint:SetJustifyH("LEFT")
 SettingsPanel.ClearAllHint:SetJustifyV("TOP")
-SettingsPanel.ClearAllHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+SettingsPanel.ClearAllHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ClearAllHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
 SettingsPanel.EditHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
@@ -6676,7 +6769,7 @@ SettingsPanel.EditHint:SetPoint("TOPLEFT", SettingsPanel.ClearAllHint, "BOTTOMLE
 SettingsPanel.EditHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.EditHint:SetJustifyH("LEFT")
 SettingsPanel.EditHint:SetJustifyV("TOP")
-SettingsPanel.EditHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+SettingsPanel.EditHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.EditHint:SetTextColor(0.84, 0.84, 0.86, 1)
 end
 
@@ -6688,19 +6781,19 @@ ApplicantPanel:SetHeight(116)
 do
     local background = ApplicantPanel:CreateTexture(nil, "BACKGROUND")
     background:SetAllPoints()
-    background:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+    background:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
     local border = ApplicantPanel:CreateTexture(nil, "ARTWORK")
     border:SetPoint("BOTTOMLEFT", ApplicantPanel, "BOTTOMLEFT", 0, 0)
     border:SetPoint("BOTTOMRIGHT", ApplicantPanel, "BOTTOMRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.9)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 end
 
 ApplicantPanelTitle = ApplicantPanel:CreateFontString(nil, "OVERLAY")
 ApplicantPanelTitle:SetPoint("TOPLEFT", ApplicantPanel, "TOPLEFT", 18, -14)
-ApplicantPanelTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-ApplicantPanelTitle:SetTextColor(1, 0.82, 0, 1)
+ApplicantPanelTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+ApplicantPanelTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 ApplicantPanel.FullInviteButton = CreateActionButton(ApplicantPanel, 92, "", function()
     PlannerPrivate.InviteAllApplicantRows(PlannerPrivate.BuildApplicantPanelRowData(), GetCurrentMode())
@@ -6714,8 +6807,8 @@ ApplicantPanelHint:SetPoint("TOPLEFT", ApplicantPanelTitle, "BOTTOMLEFT", 0, -8)
 ApplicantPanelHint:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
 ApplicantPanelHint:SetJustifyH("LEFT")
 ApplicantPanelHint:SetJustifyV("TOP")
-ApplicantPanelHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-ApplicantPanelHint:SetTextColor(0.80, 0.80, 0.80, 1)
+ApplicantPanelHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ApplicantPanelHint:SetTextColor(0.78, 0.74, 0.69, 1)
 
 ApplicantPanel.AutoInviteCheckbox = CreateCheckbox(ApplicantPanel, "", function(self)
     GetStreamerPlannerSettings().whisperCommandAutoInvite = self:GetChecked() == true
@@ -6736,14 +6829,14 @@ ApplicantPanelEmptyText:SetPoint("TOPLEFT", ApplicantPanel.RowAnchor, "TOPLEFT",
 ApplicantPanelEmptyText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
 ApplicantPanelEmptyText:SetJustifyH("LEFT")
 ApplicantPanelEmptyText:SetJustifyV("TOP")
-ApplicantPanelEmptyText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+ApplicantPanelEmptyText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 ApplicantPanelEmptyText:SetTextColor(0.82, 0.82, 0.84, 1)
 
 ApplicantPanel.MoreText = ApplicantPanel:CreateFontString(nil, "OVERLAY")
 ApplicantPanel.MoreText:SetPoint("BOTTOMLEFT", ApplicantPanel, "BOTTOMLEFT", 18, 10)
 ApplicantPanel.MoreText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
 ApplicantPanel.MoreText:SetJustifyH("LEFT")
-ApplicantPanel.MoreText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+ApplicantPanel.MoreText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 ApplicantPanel.MoreText:SetTextColor(0.78, 0.78, 0.80, 1)
 ApplicantPanel.MoreText:Hide()
 
@@ -6761,7 +6854,7 @@ function PageStreamerPlanner:RefreshState()
     local usageHint = self.UsageHint
     local settingsPanel = self.SettingsPanel
 
-    introTitle:SetText(L("STREAMER_PLANNER_TITLE"))
+    introTitle:SetText(BeavisQoL.GetModulePageTitle("StreamerPlanner", L("STREAMER_PLANNER_TITLE")))
     introText:SetText(L("STREAMER_PLANNER_DESC"))
     usageHint:SetText(L("STREAMER_PLANNER_USAGE_HINT"))
     PreviewUI.Title:SetText(L("LIVE_PREVIEW"))
@@ -6851,6 +6944,7 @@ function PageStreamerPlanner:UpdateScrollLayout()
 
     local showRaid = GetCurrentMode() == "raid"
     previewPanel:SetWidth(GetPreviewPanelWidthForMode(showRaid and "raid" or "dungeon"))
+    LayoutStreamerPlannerSettingsPanel(settingsPanel)
     if PreviewUI.RaidContainer and PreviewUI.RaidGroupFrames then
         PreviewUI.RaidContainer:SetSize(
             GetRaidLayoutContainerWidth(PREVIEW_RAID_GROUP_WIDTH),
@@ -7063,3 +7157,4 @@ PageStreamerPlanner:RefreshState()
 PageStreamerPlanner:UpdateScrollLayout()
 
 BeavisQoL.Pages.StreamerPlanner = PageStreamerPlanner
+

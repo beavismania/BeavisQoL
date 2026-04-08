@@ -66,6 +66,15 @@ local function Clamp(value, minValue, maxValue)
     return value
 end
 
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
 local function GetFishingSettings()
     BeavisQoLDB = BeavisQoLDB or {}
     BeavisQoLDB.fishing = BeavisQoLDB.fishing or {}
@@ -535,13 +544,13 @@ local function CreatePanel(parent, anchor, offsetY, height)
 
     local bg = panel:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
-    bg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+    bg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
     local border = panel:CreateTexture(nil, "ARTWORK")
     border:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 0, 0)
     border:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.9)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
     return panel
 end
@@ -553,8 +562,8 @@ local function CreateCheckbox(parent, text, onClick)
 
     local label = parent:CreateFontString(nil, "OVERLAY")
     label:SetPoint("LEFT", checkbox, "RIGHT", 8, 0)
-    label:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-    label:SetTextColor(1, 1, 1, 1)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    label:SetTextColor(0.95, 0.91, 0.85, 1)
     label:SetText(text)
 
     checkbox.Label = label
@@ -620,25 +629,34 @@ PageFishing = CreateFrame("Frame", nil, Content)
 PageFishing:SetAllPoints()
 PageFishing:Hide()
 
-local IntroPanel = CreateFrame("Frame", nil, PageFishing)
-IntroPanel:SetPoint("TOPLEFT", PageFishing, "TOPLEFT", 20, -20)
-IntroPanel:SetPoint("TOPRIGHT", PageFishing, "TOPRIGHT", -20, -20)
+local PageFishingScrollFrame = CreateFrame("ScrollFrame", nil, PageFishing, "UIPanelScrollFrameTemplate")
+PageFishingScrollFrame:SetPoint("TOPLEFT", PageFishing, "TOPLEFT", 0, 0)
+PageFishingScrollFrame:SetPoint("BOTTOMRIGHT", PageFishing, "BOTTOMRIGHT", -28, 0)
+PageFishingScrollFrame:EnableMouseWheel(true)
+
+local PageFishingContent = CreateFrame("Frame", nil, PageFishingScrollFrame)
+PageFishingContent:SetSize(1, 1)
+PageFishingScrollFrame:SetScrollChild(PageFishingContent)
+
+local IntroPanel = CreateFrame("Frame", nil, PageFishingContent)
+IntroPanel:SetPoint("TOPLEFT", PageFishingContent, "TOPLEFT", 20, -18)
+IntroPanel:SetPoint("RIGHT", PageFishingContent, "RIGHT", -20, 0)
 IntroPanel:SetHeight(146)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -646,22 +664,22 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local UsageHint = IntroPanel:CreateFontString(nil, "OVERLAY")
 UsageHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -12)
 UsageHint:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 UsageHint:SetJustifyH("LEFT")
 UsageHint:SetJustifyV("TOP")
-UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+UsageHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 UsageHint:SetTextColor(0.84, 0.84, 0.86, 1)
 
-local ControlPanel = CreatePanel(PageFishing, IntroPanel, -18, 188)
+local ControlPanel = CreatePanel(PageFishingContent, IntroPanel, -18, 188)
 
 local ControlTitle = ControlPanel:CreateFontString(nil, "OVERLAY")
 ControlTitle:SetPoint("TOPLEFT", ControlPanel, "TOPLEFT", 18, -14)
-ControlTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-ControlTitle:SetTextColor(1, 0.82, 0, 1)
+ControlTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+ControlTitle:SetTextColor(1, 0.88, 0.62, 1)
 ControlTitle:SetText(L("DISPLAY"))
 
 EnableCheckbox = CreateCheckbox(ControlPanel, L("FISHING_HELPER_ENABLE"), function(self)
@@ -681,7 +699,7 @@ ClearKeyButton:SetPoint("LEFT", SetKeyButton, "RIGHT", 12, 0)
 
 local CurrentKeyLabel = ControlPanel:CreateFontString(nil, "OVERLAY")
 CurrentKeyLabel:SetPoint("TOPLEFT", SetKeyButton, "BOTTOMLEFT", 0, -16)
-CurrentKeyLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+CurrentKeyLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 CurrentKeyLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 
 CurrentKeyValue = ControlPanel:CreateFontString(nil, "OVERLAY")
@@ -689,11 +707,11 @@ CurrentKeyValue:SetPoint("TOPLEFT", CurrentKeyLabel, "BOTTOMLEFT", 0, -4)
 CurrentKeyValue:SetPoint("RIGHT", ControlPanel, "RIGHT", -18, 0)
 CurrentKeyValue:SetJustifyH("LEFT")
 CurrentKeyValue:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-CurrentKeyValue:SetTextColor(1, 1, 1, 1)
+CurrentKeyValue:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local StatusLabel = ControlPanel:CreateFontString(nil, "OVERLAY")
 StatusLabel:SetPoint("TOPLEFT", CurrentKeyValue, "BOTTOMLEFT", 0, -14)
-StatusLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+StatusLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 StatusLabel:SetTextColor(0.85, 0.85, 0.85, 1)
 
 StatusValue = ControlPanel:CreateFontString(nil, "OVERLAY")
@@ -701,36 +719,37 @@ StatusValue:SetPoint("TOPLEFT", StatusLabel, "BOTTOMLEFT", 0, -4)
 StatusValue:SetPoint("RIGHT", ControlPanel, "RIGHT", -18, 0)
 StatusValue:SetJustifyH("LEFT")
 StatusValue:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-StatusValue:SetTextColor(1, 0.82, 0, 1)
+StatusValue:SetTextColor(1, 0.88, 0.62, 1)
 
-local InteractionPanel = CreatePanel(PageFishing, ControlPanel, -18, 120)
+local InteractionPanel = CreatePanel(PageFishingContent, ControlPanel, -18, 120)
 
 local InteractionTitle = InteractionPanel:CreateFontString(nil, "OVERLAY")
 InteractionTitle:SetPoint("TOPLEFT", InteractionPanel, "TOPLEFT", 18, -14)
-InteractionTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-InteractionTitle:SetTextColor(1, 0.82, 0, 1)
+InteractionTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+InteractionTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 InteractValue = InteractionPanel:CreateFontString(nil, "OVERLAY")
 InteractValue:SetPoint("TOPLEFT", InteractionTitle, "BOTTOMLEFT", 0, -10)
 InteractValue:SetPoint("RIGHT", InteractionPanel, "RIGHT", -18, 0)
 InteractValue:SetJustifyH("LEFT")
-InteractValue:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
-InteractValue:SetTextColor(1, 1, 1, 1)
+InteractValue:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+InteractValue:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local InteractionHint = InteractionPanel:CreateFontString(nil, "OVERLAY")
 InteractionHint:SetPoint("TOPLEFT", InteractValue, "BOTTOMLEFT", 0, -8)
 InteractionHint:SetPoint("RIGHT", InteractionPanel, "RIGHT", -18, 0)
 InteractionHint:SetJustifyH("LEFT")
 InteractionHint:SetJustifyV("TOP")
-InteractionHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-InteractionHint:SetTextColor(0.80, 0.80, 0.80, 1)
+InteractionHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+InteractionHint:SetTextColor(0.78, 0.74, 0.69, 1)
+InteractionHint:Hide()
 
-local SoundPanel = CreatePanel(PageFishing, InteractionPanel, -18, 160)
+local SoundPanel = CreatePanel(PageFishingContent, InteractionPanel, -18, 160)
 
 local SoundTitle = SoundPanel:CreateFontString(nil, "OVERLAY")
 SoundTitle:SetPoint("TOPLEFT", SoundPanel, "TOPLEFT", 18, -14)
-SoundTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-SoundTitle:SetTextColor(1, 0.82, 0, 1)
+SoundTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+SoundTitle:SetTextColor(1, 0.88, 0.62, 1)
 SoundTitle:SetText(SOUND)
 
 SoundCheckbox = CreateCheckbox(SoundPanel, L("FISHING_HELPER_SOUND_ENABLE"), function(self)
@@ -754,8 +773,9 @@ SoundHint:SetPoint("TOPLEFT", SoundSlider, "BOTTOMLEFT", -2, -14)
 SoundHint:SetPoint("RIGHT", SoundPanel, "RIGHT", -18, 0)
 SoundHint:SetJustifyH("LEFT")
 SoundHint:SetJustifyV("TOP")
-SoundHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-SoundHint:SetTextColor(0.80, 0.80, 0.80, 1)
+SoundHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+SoundHint:SetTextColor(0.78, 0.74, 0.69, 1)
+SoundHint:Hide()
 
 CaptureOverlay = CreateFrame("Button", nil, PageFishing)
 CaptureOverlay:SetAllPoints()
@@ -784,14 +804,14 @@ local CapturePanelBorder = CapturePanel:CreateTexture(nil, "ARTWORK")
 CapturePanelBorder:SetPoint("BOTTOMLEFT", CapturePanel, "BOTTOMLEFT", 0, 0)
 CapturePanelBorder:SetPoint("BOTTOMRIGHT", CapturePanel, "BOTTOMRIGHT", 0, 0)
 CapturePanelBorder:SetHeight(1)
-CapturePanelBorder:SetColorTexture(1, 0.82, 0, 0.9)
+CapturePanelBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 CaptureTitle = CapturePanel:CreateFontString(nil, "OVERLAY")
 CaptureTitle:SetPoint("TOPLEFT", CapturePanel, "TOPLEFT", 18, -18)
 CaptureTitle:SetPoint("RIGHT", CapturePanel, "RIGHT", -18, 0)
 CaptureTitle:SetJustifyH("LEFT")
-CaptureTitle:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-CaptureTitle:SetTextColor(1, 0.82, 0, 1)
+CaptureTitle:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+CaptureTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 CaptureHint = CapturePanel:CreateFontString(nil, "OVERLAY")
 CaptureHint:SetPoint("TOPLEFT", CaptureTitle, "BOTTOMLEFT", 0, -12)
@@ -799,7 +819,7 @@ CaptureHint:SetPoint("RIGHT", CapturePanel, "RIGHT", -18, 0)
 CaptureHint:SetJustifyH("LEFT")
 CaptureHint:SetJustifyV("TOP")
 CaptureHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-CaptureHint:SetTextColor(1, 1, 1, 1)
+CaptureHint:SetTextColor(0.95, 0.91, 0.85, 1)
 
 CaptureOverlay:SetScript("OnClick", function()
     StopCaptureMode()
@@ -826,6 +846,170 @@ CaptureOverlay:SetScript("OnKeyDown", function(_, key)
     StopCaptureMode()
 end)
 
+local function LayoutFishingPage()
+    local contentWidth = math.max(1, PageFishingScrollFrame:GetWidth())
+    if contentWidth <= 1 then
+        return
+    end
+
+    PageFishingContent:SetWidth(contentWidth)
+
+    local innerWidth = math.max(320, contentWidth - 40)
+    local isCompactWidth = innerWidth < 760
+    local stackButtons = innerWidth < 620
+
+    IntroPanel:ClearAllPoints()
+    IntroPanel:SetPoint("TOPLEFT", PageFishingContent, "TOPLEFT", 20, -18)
+    IntroPanel:SetPoint("RIGHT", PageFishingContent, "RIGHT", -20, 0)
+
+    IntroText:ClearAllPoints()
+    IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -8)
+    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+
+    local usageHintText = UsageHint:GetText()
+    local hasUsageHint = usageHintText ~= nil and usageHintText ~= ""
+
+    UsageHint:ClearAllPoints()
+    if hasUsageHint then
+        UsageHint:Show()
+        UsageHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -10)
+        UsageHint:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+    else
+        UsageHint:Hide()
+    end
+
+    local introHeight = math.ceil(
+        16
+        + GetTextHeight(IntroTitle, 24)
+        + 8
+        + GetTextHeight(IntroText, 34)
+        + (hasUsageHint and (10 + GetTextHeight(UsageHint, 34)) or 0)
+        + 16
+    )
+    IntroPanel:SetHeight(math.max(hasUsageHint and 104 or 82, introHeight))
+
+    ControlPanel:ClearAllPoints()
+    ControlPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -14)
+    ControlPanel:SetPoint("RIGHT", PageFishingContent, "RIGHT", -20, 0)
+
+    EnableCheckbox:ClearAllPoints()
+    EnableCheckbox:SetPoint("TOPLEFT", ControlTitle, "BOTTOMLEFT", -4, -10)
+
+    SetKeyButton:ClearAllPoints()
+    SetKeyButton:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", 8, -16)
+
+    ClearKeyButton:ClearAllPoints()
+    if stackButtons then
+        ClearKeyButton:SetPoint("TOPLEFT", SetKeyButton, "BOTTOMLEFT", 0, -10)
+    else
+        ClearKeyButton:SetPoint("LEFT", SetKeyButton, "RIGHT", 10, 0)
+    end
+
+    CurrentKeyLabel:ClearAllPoints()
+    CurrentKeyValue:ClearAllPoints()
+    StatusLabel:ClearAllPoints()
+    StatusValue:ClearAllPoints()
+
+    local buttonsBottomAnchor = stackButtons and ClearKeyButton or SetKeyButton
+
+    if isCompactWidth then
+        CurrentKeyLabel:SetPoint("TOPLEFT", buttonsBottomAnchor, "BOTTOMLEFT", 0, -16)
+        CurrentKeyValue:SetPoint("TOPLEFT", CurrentKeyLabel, "BOTTOMLEFT", 0, -4)
+        CurrentKeyValue:SetPoint("RIGHT", ControlPanel, "RIGHT", -18, 0)
+        StatusLabel:SetPoint("TOPLEFT", CurrentKeyValue, "BOTTOMLEFT", 0, -12)
+    else
+        local rightColumnX = math.floor(innerWidth * 0.48)
+        CurrentKeyLabel:SetPoint("TOPLEFT", ControlPanel, "TOPLEFT", rightColumnX, -58)
+        CurrentKeyValue:SetPoint("TOPLEFT", CurrentKeyLabel, "BOTTOMLEFT", 0, -4)
+        CurrentKeyValue:SetPoint("RIGHT", ControlPanel, "RIGHT", -18, 0)
+        StatusLabel:SetPoint("TOPLEFT", CurrentKeyValue, "BOTTOMLEFT", 0, -12)
+    end
+
+    StatusValue:SetPoint("TOPLEFT", StatusLabel, "BOTTOMLEFT", 0, -4)
+    StatusValue:SetPoint("RIGHT", ControlPanel, "RIGHT", -18, 0)
+
+    local controlHeight = math.ceil(
+        14
+        + GetTextHeight(ControlTitle, 15)
+        + 10
+        + EnableCheckbox:GetHeight()
+        + 16
+        + SetKeyButton:GetHeight()
+        + (stackButtons and (10 + ClearKeyButton:GetHeight()) or 0)
+        + (isCompactWidth and (16 + GetTextHeight(CurrentKeyLabel, 13) + 4 + GetTextHeight(CurrentKeyValue, 15) + 12 + GetTextHeight(StatusLabel, 13) + 4 + GetTextHeight(StatusValue, 15)) or 0)
+        + 16
+    )
+
+    if not isCompactWidth then
+        local rightColumnHeight = 58
+            + GetTextHeight(CurrentKeyLabel, 13)
+            + 4
+            + GetTextHeight(CurrentKeyValue, 15)
+            + 12
+            + GetTextHeight(StatusLabel, 13)
+            + 4
+            + GetTextHeight(StatusValue, 15)
+            + 16
+        controlHeight = math.max(controlHeight, rightColumnHeight)
+    end
+
+    ControlPanel:SetHeight(math.max(132, controlHeight))
+
+    InteractionPanel:ClearAllPoints()
+    InteractionPanel:SetPoint("TOPLEFT", ControlPanel, "BOTTOMLEFT", 0, -14)
+    InteractionPanel:SetPoint("RIGHT", PageFishingContent, "RIGHT", -20, 0)
+
+    InteractionTitle:ClearAllPoints()
+    InteractionTitle:SetPoint("TOPLEFT", InteractionPanel, "TOPLEFT", 18, -12)
+
+    InteractValue:ClearAllPoints()
+    InteractValue:SetPoint("TOPLEFT", InteractionTitle, "BOTTOMLEFT", 0, -8)
+    InteractValue:SetPoint("RIGHT", InteractionPanel, "RIGHT", -18, 0)
+
+    local interactionHeight = math.ceil(
+        14
+        + GetTextHeight(InteractionTitle, 15)
+        + 8
+        + GetTextHeight(InteractValue, 10)
+        + 16
+    )
+    InteractionPanel:SetHeight(math.max(60, interactionHeight))
+
+    SoundPanel:ClearAllPoints()
+    SoundPanel:SetPoint("TOPLEFT", InteractionPanel, "BOTTOMLEFT", 0, -14)
+    SoundPanel:SetPoint("RIGHT", PageFishingContent, "RIGHT", -20, 0)
+
+    SoundTitle:ClearAllPoints()
+    SoundTitle:SetPoint("TOPLEFT", SoundPanel, "TOPLEFT", 18, -12)
+
+    SoundCheckbox:ClearAllPoints()
+    SoundCheckbox:SetPoint("TOPLEFT", SoundTitle, "BOTTOMLEFT", -4, -10)
+
+    SoundSlider:ClearAllPoints()
+    SoundSlider:SetPoint("TOPLEFT", SoundCheckbox, "BOTTOMLEFT", 18, -18)
+    SoundSlider:SetWidth(math.max(220, math.min(340, innerWidth - 76)))
+
+    local soundHeight = math.ceil(
+        14
+        + GetTextHeight(SoundTitle, 15)
+        + 10
+        + SoundCheckbox:GetHeight()
+        + 18
+        + 42
+        + 16
+    )
+    SoundPanel:SetHeight(math.max(96, soundHeight))
+
+    local contentHeight = 18
+        + IntroPanel:GetHeight()
+        + 14 + ControlPanel:GetHeight()
+        + 14 + InteractionPanel:GetHeight()
+        + 14 + SoundPanel:GetHeight()
+        + 20
+
+    PageFishingContent:SetHeight(math.max(PageFishingScrollFrame:GetHeight(), contentHeight))
+end
+
 function PageFishing:RefreshState()
     isRefreshingPage = true
 
@@ -849,11 +1033,11 @@ function PageFishing:RefreshState()
 
     InteractionTitle:SetText(L("FISHING_HELPER_INTERACT_BINDING"))
     InteractValue:SetText(GetInteractionBindingText())
-    InteractionHint:SetText(L("FISHING_HELPER_INTERACT_HINT"))
+    InteractionHint:SetText("")
 
     SoundTitle:SetText(SOUND)
     SoundCheckbox.Label:SetText(L("FISHING_HELPER_SOUND_ENABLE"))
-    SoundHint:SetText(L("FISHING_HELPER_SOUND_HINT"))
+    SoundHint:SetText("")
     CaptureTitle:SetText(L("FISHING_HELPER_SET_KEY"))
     CaptureHint:SetText(L("FISHING_HELPER_CAPTURE_HINT"))
 
@@ -868,9 +1052,28 @@ function PageFishing:RefreshState()
     RefreshSoundSliderText()
 
     isRefreshingPage = false
+    LayoutFishingPage()
 end
 
+PageFishingScrollFrame:SetScript("OnSizeChanged", LayoutFishingPage)
+PageFishingScrollFrame:SetScript("OnMouseWheel", function(self, delta)
+    local step = 40
+    local currentScroll = self:GetVerticalScroll()
+    local maxScroll = math.max(0, PageFishingContent:GetHeight() - self:GetHeight())
+    local nextScroll = currentScroll - (delta * step)
+
+    if nextScroll < 0 then
+        nextScroll = 0
+    elseif nextScroll > maxScroll then
+        nextScroll = maxScroll
+    end
+
+    self:SetVerticalScroll(nextScroll)
+end)
+
 PageFishing:SetScript("OnShow", function()
+    LayoutFishingPage()
+    PageFishingScrollFrame:SetVerticalScroll(0)
     PageFishing:RefreshState()
 end)
 
@@ -965,3 +1168,4 @@ RefreshCastButtonAttributes()
 RefreshStateFromGame()
 
 BeavisQoL.Pages.Fishing = PageFishing
+

@@ -425,7 +425,7 @@ local function EnsureReputationSearchUI()
     placeholder:SetPoint("LEFT", searchBox, "LEFT", 6, 0)
     placeholder:SetPoint("RIGHT", searchBox, "RIGHT", -8, 0)
     placeholder:SetJustifyH("LEFT")
-    placeholder:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    placeholder:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
     placeholder:SetTextColor(0.58, 0.58, 0.60, 1)
     placeholder:SetText(L("REPUTATION_SEARCH_PLACEHOLDER"))
 

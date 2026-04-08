@@ -414,7 +414,10 @@
         "UpdateInviteConfirmationDialogs",
         "LOOT_METHOD",
         "LOOT_THRESHOLD",
-        "SECONDS_PER_DAY"
+        "SECONDS_PER_DAY",
+        "ACCOUNT_TRANSFERRABLE_CURRENCY",
+        "ACCOUNT_LEVEL_CURRENCY",
+        "UIDropDownMenu_JustifyText"
     ],
     "Lua.diagnostics.disable": [
         "assign-type-mismatch",

@@ -17,8 +17,8 @@ local FrameWithBackdrop = BackdropTemplateMixin and "BackdropTemplate" or nil
 local NAV_SECTION_HEIGHT = 18
 local NAV_SECTION_STEP = 21
 local NAV_GROUP_GAP = 7
-local NAV_ENTRY_HEIGHT = 24
-local NAV_ENTRY_STEP = 26
+local NAV_ENTRY_HEIGHT = 28
+local NAV_ENTRY_STEP = 30
 local NAV_SECTION_LEFT = 10
 local NAV_ENTRY_LEFT = 6
 local NAV_RIGHT_INSET = 9
@@ -75,31 +75,31 @@ local NAV_ENTRY_BACKDROP = {
 
 local SidebarCaption = SidebarFrame:CreateFontString(nil, "ARTWORK")
 SidebarCaption:SetPoint("TOPLEFT", SidebarFrame, "TOPLEFT", 15, -13)
-SidebarCaption:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-SidebarCaption:SetTextColor(0.98, 0.88, 0.68, 1)
+SidebarCaption:SetFont("Fonts\\FRIZQT__.TTF", 15, "")
+SidebarCaption:SetTextColor(0.98, 0.9, 0.72, 1)
 SidebarCaption:SetText(L("NAVIGATION"))
 
 local SidebarCaptionHint = SidebarFrame:CreateFontString(nil, "ARTWORK")
-SidebarCaptionHint:SetFont("Fonts\\FRIZQT__.TTF", 8, "")
-SidebarCaptionHint:SetTextColor(0.78, 0.74, 0.68, 0.76)
+SidebarCaptionHint:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
+SidebarCaptionHint:SetTextColor(0.78, 0.72, 0.66, 0.72)
 
 local SidebarSearchFrame = CreateFrame("Frame", nil, SidebarFrame, FrameWithBackdrop)
-SidebarSearchFrame:SetHeight(24)
+SidebarSearchFrame:SetHeight(28)
 if SidebarSearchFrame.SetBackdrop then
     SidebarSearchFrame:SetBackdrop(SEARCH_FRAME_BACKDROP)
-    SidebarSearchFrame:SetBackdropColor(0.09, 0.07, 0.05, 0.84)
-    SidebarSearchFrame:SetBackdropBorderColor(0.72, 0.6, 0.4, 0.32)
+    SidebarSearchFrame:SetBackdropColor(0.12, 0.08, 0.055, 0.9)
+    SidebarSearchFrame:SetBackdropBorderColor(0.72, 0.58, 0.38, 0.24)
 end
 
 local SidebarSearchShade = SidebarSearchFrame:CreateTexture(nil, "BACKGROUND")
 SidebarSearchShade:SetAllPoints()
 SidebarSearchShade:SetTexture("Interface\\Buttons\\WHITE8X8")
-ApplyTextureGradient(SidebarSearchShade, "VERTICAL", 0.32, 0.22, 0.12, 0.14, 0.08, 0.05, 0.03, 0.02)
+ApplyTextureGradient(SidebarSearchShade, "VERTICAL", 0.42, 0.27, 0.15, 0.15, 0.1, 0.06, 0.04, 0.03)
 
 local SidebarSearchGlow = SidebarSearchFrame:CreateTexture(nil, "ARTWORK")
 SidebarSearchGlow:SetPoint("TOPLEFT", SidebarSearchFrame, "TOPLEFT", 6, -4)
 SidebarSearchGlow:SetPoint("TOPRIGHT", SidebarSearchFrame, "TOPRIGHT", -6, -4)
-SidebarSearchGlow:SetHeight(5)
+SidebarSearchGlow:SetHeight(7)
 SidebarSearchGlow:SetTexture("Interface\\Buttons\\WHITE8X8")
 ApplyTextureGradient(SidebarSearchGlow, "VERTICAL", 1, 0.95, 0.78, 0.14, 1, 0.95, 0.78, 0)
 SidebarSearchGlow:SetAlpha(0.38)
@@ -116,7 +116,7 @@ local SidebarSearchPlaceholder = SidebarSearchFrame:CreateFontString(nil, "ARTWO
 SidebarSearchPlaceholder:SetPoint("LEFT", SidebarSearchEditBox, "LEFT", 0, 0)
 SidebarSearchPlaceholder:SetPoint("RIGHT", SidebarSearchEditBox, "RIGHT", 0, 0)
 SidebarSearchPlaceholder:SetJustifyH("LEFT")
-SidebarSearchPlaceholder:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+SidebarSearchPlaceholder:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 SidebarSearchPlaceholder:SetTextColor(0.62, 0.58, 0.53, 0.92)
 SidebarSearchPlaceholder:SetText(L("NAVIGATION_SEARCH_PLACEHOLDER"))
 
@@ -124,8 +124,8 @@ local SidebarSearchStatus = SidebarFrame:CreateFontString(nil, "ARTWORK")
 SidebarSearchStatus:SetPoint("TOPLEFT", SidebarSearchFrame, "BOTTOMLEFT", 2, -4)
 SidebarSearchStatus:SetPoint("RIGHT", SidebarFrame, "RIGHT", -16, 0)
 SidebarSearchStatus:SetJustifyH("LEFT")
-SidebarSearchStatus:SetFont("Fonts\\FRIZQT__.TTF", 8, "")
-SidebarSearchStatus:SetTextColor(0.82, 0.76, 0.68, 1)
+SidebarSearchStatus:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+SidebarSearchStatus:SetTextColor(0.82, 0.76, 0.68, 0.95)
 SidebarSearchStatus:Hide()
 
 local SidebarScrollFrame = CreateFrame("ScrollFrame", nil, SidebarFrame, "UIPanelScrollFrameTemplate")
@@ -143,6 +143,10 @@ local GeneralEntries = {}
 local ModuleSectionHeaders = {}
 local ModuleEntries = {}
 local AllEntries = {}
+local CategoryEntries = {}
+local SectionByKey = {}
+local CategoryEntryBySection = {}
+local PageEntriesByKey = {}
 local GeneralSectionHeader
 
 local function NormalizeSearchText(text)
@@ -220,6 +224,10 @@ local function RefreshEntrySearchText(entry)
         AppendSearchText(searchParts, GetLocalizedSearchText(searchTextKey))
     end
 
+    for _, childEntry in ipairs(entry.entries or {}) do
+        AppendSearchText(searchParts, childEntry.searchText)
+    end
+
     entry.searchText = table.concat(searchParts, " ")
 end
 
@@ -243,6 +251,10 @@ local function RefreshSearchIndex()
     end
 
     for _, entry in ipairs(AllEntries) do
+        RefreshEntrySearchText(entry)
+    end
+
+    for _, entry in ipairs(CategoryEntries) do
         RefreshEntrySearchText(entry)
     end
 end
@@ -272,11 +284,11 @@ local function UpdateSearchFrameVisual()
     local isActive = SidebarSearchEditBox:HasFocus() or SidebarSearchEditBox:GetText() ~= ""
 
     if SidebarSearchFrame.SetBackdropColor then
-        SidebarSearchFrame:SetBackdropColor(0.09, 0.07, 0.05, isActive and 0.92 or 0.84)
+        SidebarSearchFrame:SetBackdropColor(0.12, 0.08, 0.055, isActive and 0.96 or 0.9)
     end
 
     if SidebarSearchFrame.SetBackdropBorderColor then
-        SidebarSearchFrame:SetBackdropBorderColor(0.8, 0.67, 0.45, isActive and 0.58 or 0.32)
+        SidebarSearchFrame:SetBackdropBorderColor(0.8, 0.67, 0.45, isActive and 0.5 or 0.24)
     end
 
     SidebarSearchGlow:SetAlpha(isActive and 0.62 or 0.38)
@@ -362,7 +374,7 @@ local function CreateToggleButton(labelTextKey)
 
     local indicator = button:CreateFontString(nil, "OVERLAY")
     indicator:SetPoint("CENTER", indicatorBg, "CENTER", 0, 0)
-    indicator:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    indicator:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
     indicator:SetTextColor(1, 0.92, 0.45, 1)
     indicator:SetText("+")
 
@@ -370,7 +382,7 @@ local function CreateToggleButton(labelTextKey)
     text:SetPoint("LEFT", indicatorBg, "RIGHT", 10, 0)
     text:SetPoint("RIGHT", button, "RIGHT", -8, 0)
     text:SetJustifyH("LEFT")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
     text:SetTextColor(1, 0.82, 0, 1)
     text:SetText(L(labelTextKey))
 
@@ -393,39 +405,39 @@ end
 local function ApplyEntryVisual(entry, hovered)
     if entry.isActive then
         if entry.button.SetBackdropColor then
-            entry.button:SetBackdropColor(0.13, 0.11, 0.09, 0.72)
+            entry.button:SetBackdropColor(0.16, 0.11, 0.075, 0.78)
         end
         if entry.button.SetBackdropBorderColor then
-            entry.button:SetBackdropBorderColor(0.74, 0.63, 0.48, 0.34)
+            entry.button:SetBackdropBorderColor(0.78, 0.64, 0.44, 0.28)
         end
-        entry.button.Sheen:SetAlpha(0.36)
-        entry.button.InnerGlow:SetAlpha(0.04)
-        entry.text:SetTextColor(0.99, 0.96, 0.9, 1)
+        entry.button.Sheen:SetAlpha(0.28)
+        entry.button.InnerGlow:SetAlpha(0.06)
+        entry.text:SetTextColor(1, 0.96, 0.88, 1)
         return
     end
 
     if hovered then
         if entry.button.SetBackdropColor then
-            entry.button:SetBackdropColor(0.11, 0.09, 0.075, 0.28)
+            entry.button:SetBackdropColor(0.14, 0.1, 0.07, 0.34)
         end
         if entry.button.SetBackdropBorderColor then
-            entry.button:SetBackdropBorderColor(0.62, 0.52, 0.4, 0.16)
+            entry.button:SetBackdropBorderColor(0.68, 0.56, 0.4, 0.12)
         end
-        entry.button.Sheen:SetAlpha(0.12)
-        entry.button.InnerGlow:SetAlpha(0.015)
+        entry.button.Sheen:SetAlpha(0.1)
+        entry.button.InnerGlow:SetAlpha(0.02)
         entry.text:SetTextColor(0.98, 0.93, 0.84, 1)
         return
     end
 
     if entry.button.SetBackdropColor then
-        entry.button:SetBackdropColor(0.08, 0.06, 0.045, 0)
+        entry.button:SetBackdropColor(0.1, 0.07, 0.05, 0)
     end
     if entry.button.SetBackdropBorderColor then
         entry.button:SetBackdropBorderColor(0.58, 0.48, 0.38, 0)
     end
     entry.button.Sheen:SetAlpha(0)
     entry.button.InnerGlow:SetAlpha(0)
-    entry.text:SetTextColor(0.93, 0.84, 0.72, 1)
+    entry.text:SetTextColor(0.92, 0.84, 0.72, 1)
 end
 
 local function AttachEntryVisual(entry)
@@ -472,7 +484,7 @@ local function CreateEntryButton(labelTextKey)
     text:SetPoint("LEFT", button, "LEFT", 12, 0)
     text:SetPoint("RIGHT", button, "RIGHT", -10, 0)
     text:SetJustifyH("LEFT")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     text:SetWordWrap(false)
     text:SetShadowOffset(1, -1)
     text:SetShadowColor(0, 0, 0, 0.35)
@@ -497,7 +509,7 @@ local function CreateSectionHeader(labelTextKey)
     text:SetPoint("TOPLEFT", frame, "TOPLEFT", 3, -1)
     text:SetPoint("RIGHT", frame, "RIGHT", -10, 0)
     text:SetJustifyH("LEFT")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
     text:SetWordWrap(false)
     text:SetShadowOffset(1, -1)
     text:SetShadowColor(0, 0, 0, 0.35)
@@ -511,6 +523,7 @@ local function RegisterGeneralEntry(pageKey, labelTextKey, options)
     local button, text = CreateEntryButton(labelTextKey)
     local entry = {
         pageKey = pageKey,
+        labelTextKey = labelTextKey,
         button = button,
         text = text,
         miscSection = nil,
@@ -525,6 +538,7 @@ local function RegisterGeneralEntry(pageKey, labelTextKey, options)
         GeneralSectionHeader.entries[#GeneralSectionHeader.entries + 1] = entry
     end
     AllEntries[#AllEntries + 1] = entry
+    PageEntriesByKey[pageKey] = entry
     AttachEntryVisual(entry)
     return button, text
 end
@@ -532,6 +546,8 @@ end
 local function RegisterModuleSection(labelTextKey)
     local frame, text = CreateSectionHeader(labelTextKey)
     local section = {
+        key = labelTextKey,
+        labelTextKey = labelTextKey,
         frame = frame,
         text = text,
         entries = {},
@@ -539,10 +555,13 @@ local function RegisterModuleSection(labelTextKey)
     }
 
     ModuleSectionHeaders[#ModuleSectionHeaders + 1] = section
+    SectionByKey[section.key] = section
     return section
 end
 
 GeneralSectionHeader = {
+    key = "NAVIGATION_SECTION_ADDON",
+    labelTextKey = "NAVIGATION_SECTION_ADDON",
     frame = nil,
     text = nil,
     entries = {},
@@ -553,12 +572,14 @@ do
     local frame, text = CreateSectionHeader("NAVIGATION_SECTION_ADDON")
     GeneralSectionHeader.frame = frame
     GeneralSectionHeader.text = text
+    SectionByKey[GeneralSectionHeader.key] = GeneralSectionHeader
 end
 
 local function RegisterModuleEntry(section, labelTextKey, pageKey, options)
     local button, text = CreateEntryButton(labelTextKey)
     local entry = {
         pageKey = pageKey,
+        labelTextKey = labelTextKey,
         button = button,
         text = text,
         miscSection = options and options.miscSection or nil,
@@ -571,6 +592,28 @@ local function RegisterModuleEntry(section, labelTextKey, pageKey, options)
     section.entries[#section.entries + 1] = entry
     ModuleEntries[#ModuleEntries + 1] = entry
     AllEntries[#AllEntries + 1] = entry
+    PageEntriesByKey[pageKey] = entry
+    AttachEntryVisual(entry)
+    return entry
+end
+
+local function RegisterCategoryEntry(section, options)
+    local button, text = CreateEntryButton(section.labelTextKey)
+    local entry = {
+        pageKey = nil,
+        labelTextKey = section.labelTextKey,
+        button = button,
+        text = text,
+        miscSection = nil,
+        searchTextKeys = options and options.searchTextKeys or {},
+        searchAliases = options and options.searchAliases or nil,
+        section = section,
+        entries = section.entries,
+        isActive = false,
+    }
+
+    CategoryEntries[#CategoryEntries + 1] = entry
+    CategoryEntryBySection[section] = entry
     AttachEntryVisual(entry)
     return entry
 end
@@ -583,7 +626,7 @@ local TreeVersionButton, TreeVersionText = RegisterGeneralEntry("Version", "VERS
     searchTextKeys = { "VERSIONS_INFO_DESC", "CURRENT_VERSION", "RELEASE_DATE", "SUPPORTED_GAME_VERSION", "VERSION_CHECK_HINT" },
     searchAliases = "release changelog toc update",
 })
-local TreeSettingsButton, TreeSettingsText = RegisterGeneralEntry("Settings", "SETTINGS", {
+local TreeSettingsButton, TreeSettingsText = RegisterGeneralEntry("Settings", "GLOBAL_SETTINGS", {
     searchTextKeys = { "GLOBAL_SETTINGS_DESC", "LOCK_WINDOW", "MINIMAP_BUTTON_HIDE", "QUICK_HIDE_OVERLAYS", "QUICK_HIDE_CHECKLIST_OVERLAY", "QUICK_HIDE_WEEKLY_OVERLAY", "QUICK_HIDE_STATS_OVERLAY", "QUICK_HIDE_OVERLAYS_IN_COMBAT", "RESET_POSITION" },
     searchAliases = "config option minimap window",
 })
@@ -768,11 +811,58 @@ local StreamerPlannerEntry = RegisterModuleEntry(StreamerSection, "STREAMER_PLAN
     searchAliases = "stream streamer planner overlay roster lineup raid dungeon group planning slots",
 })
 
+local AddonCategoryEntry = RegisterCategoryEntry(GeneralSectionHeader, {
+    searchAliases = "home start hub settings version addon",
+})
+local ProgressCategoryEntry = RegisterCategoryEntry(ProgressSection)
+local GoldCategoryEntry = RegisterCategoryEntry(GoldSection)
+local EverydayCategoryEntry = RegisterCategoryEntry(EverydaySection)
+local WindowsCategoryEntry = RegisterCategoryEntry(WindowsSection)
+local WorldCategoryEntry = RegisterCategoryEntry(WorldSection)
+local InterfaceCategoryEntry = RegisterCategoryEntry(InterfaceSection)
+local GroupCategoryEntry = RegisterCategoryEntry(GroupSection)
+local StreamerCategoryEntry = RegisterCategoryEntry(StreamerSection)
+
 local function SetActiveTreeItem(activeText)
-    for _, entry in ipairs(AllEntries) do
+    for _, entry in ipairs(CategoryEntries) do
         entry.isActive = activeText ~= nil and entry.text == activeText
         ApplyEntryVisual(entry, false)
     end
+end
+
+local function ResolvePageFromEntry(entry)
+    if not entry or not Pages then
+        return nil
+    end
+
+    if entry.miscSection then
+        return Pages.Misc
+    end
+
+    return Pages[entry.pageKey]
+end
+
+local function GetCategoryEntryForPageKey(pageKey)
+    local entry = PageEntriesByKey[pageKey]
+    if not entry then
+        return nil
+    end
+
+    return CategoryEntryBySection[entry.section], entry
+end
+
+local function GetSearchMatchedPageKey(section)
+    if not section or not section.entries or not IsSearchActive() then
+        return nil
+    end
+
+    for _, entry in ipairs(section.entries) do
+        if SearchTextContains(entry.searchText, NavigationSearchQuery) then
+            return entry.pageKey
+        end
+    end
+
+    return nil
 end
 
 local function UpdateTreeScrollLayout(contentBottomY)
@@ -815,6 +905,16 @@ local function UpdateTreeLayout()
         entry.button:ClearAllPoints()
     end
 
+    for _, entry in ipairs(ModuleEntries) do
+        entry.button:Hide()
+        entry.button:ClearAllPoints()
+    end
+
+    for _, entry in ipairs(CategoryEntries) do
+        entry.button:Hide()
+        entry.button:ClearAllPoints()
+    end
+
     if GeneralSectionHeader then
         HideSection(GeneralSectionHeader)
     end
@@ -824,79 +924,23 @@ local function UpdateTreeLayout()
     end
 
     local currentY = -4
+    local visibleEntries = CategoryEntries
 
     if IsSearchActive() then
-        local visibleGeneralEntries = BuildVisibleEntriesForSearch(GeneralEntries, NormalizeSearchText(L("NAVIGATION_SECTION_ADDON")))
-        local visibleGeneralCount = #visibleGeneralEntries
-        local visibleModuleCount = 0
-        local visibleModuleSections = {}
+        visibleEntries = BuildVisibleEntriesForSearch(CategoryEntries, "")
 
-        if visibleGeneralCount > 0 then
-            currentY = LayoutSectionFrame(GeneralSectionHeader, currentY)
-
-            for _, entry in ipairs(visibleGeneralEntries) do
-                currentY = LayoutEntryButton(entry, currentY)
-            end
-
-            currentY = currentY - NAV_GROUP_GAP
-        end
-
-        for _, section in ipairs(ModuleSectionHeaders) do
-            local visibleEntries = BuildVisibleEntriesForSearch(section.entries, GetSectionSearchText(section))
-
-            if #visibleEntries > 0 then
-                visibleModuleSections[#visibleModuleSections + 1] = {
-                    section = section,
-                    entries = visibleEntries,
-                }
-                visibleModuleCount = visibleModuleCount + #visibleEntries
-            end
-        end
-
-        if #visibleModuleSections > 0 then
-            for _, sectionState in ipairs(visibleModuleSections) do
-                local section = sectionState.section
-
-                currentY = LayoutSectionFrame(section, currentY)
-
-                for _, entry in ipairs(sectionState.entries) do
-                    currentY = LayoutEntryButton(entry, currentY)
-                end
-
-                currentY = currentY - NAV_GROUP_GAP
-            end
-        end
-
-        local totalVisibleEntries = visibleGeneralCount + visibleModuleCount
-
-        if totalVisibleEntries > 0 then
-            SetSearchStatusText(L("NAVIGATION_SEARCH_RESULTS"):format(totalVisibleEntries), 1, 0.82, 0)
+        if #visibleEntries > 0 then
+            SetSearchStatusText(L("NAVIGATION_SEARCH_RESULTS"):format(#visibleEntries), 1, 0.82, 0)
         else
             SetSearchStatusText(L("NAVIGATION_SEARCH_EMPTY"), 1, 0.45, 0.45)
         end
-
-        UpdateTreeScrollLayout(currentY)
-        return
+    else
+        SetSearchStatusText(L("NAVIGATION_SEARCH_HINT"))
     end
 
-    SetSearchStatusText(L("NAVIGATION_SEARCH_HINT"))
-
-    currentY = LayoutSectionFrame(GeneralSectionHeader, currentY)
-
-    for _, entry in ipairs(GeneralEntries) do
+    for _, entry in ipairs(visibleEntries) do
         currentY = LayoutEntryButton(entry, currentY)
-    end
-
-    currentY = currentY - NAV_GROUP_GAP
-
-    for _, section in ipairs(ModuleSectionHeaders) do
-        currentY = LayoutSectionFrame(section, currentY)
-
-        for _, entry in ipairs(section.entries) do
-            currentY = LayoutEntryButton(entry, currentY)
-        end
-
-        currentY = currentY - NAV_GROUP_GAP
+        currentY = currentY - 2
     end
 
     UpdateTreeScrollLayout(currentY)
@@ -931,7 +975,7 @@ BeavisQoL.UpdateTree = function()
 
     TreeHomeText:SetText(L("HOME"))
     TreeVersionText:SetText(L("VERSION"))
-    TreeSettingsText:SetText(L("SETTINGS"))
+    TreeSettingsText:SetText(L("GLOBAL_SETTINGS"))
 
     ProgressSection.text:SetText(L("PROGRESS_QUESTS"))
     GoldSection.text:SetText(L("GOLD_VENDOR"))
@@ -941,6 +985,16 @@ BeavisQoL.UpdateTree = function()
     InterfaceSection.text:SetText(L("INTERFACE_OVERLAYS"))
     GroupSection.text:SetText(L("GROUP_INSTANCES"))
     StreamerSection.text:SetText(L("STREAMER_TOOLS"))
+
+    AddonCategoryEntry.text:SetText(L("NAVIGATION_SECTION_ADDON"))
+    ProgressCategoryEntry.text:SetText(L("PROGRESS_QUESTS"))
+    GoldCategoryEntry.text:SetText(L("GOLD_VENDOR"))
+    EverydayCategoryEntry.text:SetText(L("EVERYDAY_AUTOMATION"))
+    WindowsCategoryEntry.text:SetText(L("WINDOWS_SEARCH"))
+    WorldCategoryEntry.text:SetText(L("WORLD_TRAVEL"))
+    InterfaceCategoryEntry.text:SetText(L("INTERFACE_OVERLAYS"))
+    GroupCategoryEntry.text:SetText(L("GROUP_INSTANCES"))
+    StreamerCategoryEntry.text:SetText(L("STREAMER_TOOLS"))
 
     LevelTimeEntry.text:SetText(L("LEVEL_TIME"))
     ChecklistEntry.text:SetText(L("CHECKLIST"))
@@ -976,6 +1030,10 @@ BeavisQoL.UpdateTree = function()
     RefreshSearchIndex()
     UpdateSearchPlaceholder()
     UpdateTreeLayout()
+
+    if Pages and Pages.CategoryTabs and Pages.CategoryTabs.RefreshTabLayout and Pages.CategoryTabs:IsShown() then
+        Pages.CategoryTabs:RefreshTabLayout()
+    end
 end
 
 function BeavisQoL.OpenPage(pageKey, activeTextOverride)
@@ -983,56 +1041,15 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         return
     end
 
-    local pageMap = {
-        Home = { page = Pages.Home, text = TreeHomeText, group = "general" },
-        Version = { page = Pages.Version, text = TreeVersionText, group = "general" },
-        Settings = { page = Pages.Settings, text = TreeSettingsText, group = "general" },
-        LevelTime = { page = Pages.LevelTime, text = LevelTimeEntry.text, group = "module" },
-        Checklist = { page = Pages.Checklist, text = ChecklistEntry.text, group = "module" },
-        WeeklyKeys = { page = Pages.WeeklyKeys, text = WeeklyKeysEntry.text, group = "module" },
-        ItemLevelGuide = { page = Pages.ItemLevelGuide, text = ItemLevelGuideEntry.text, group = "module" },
-        Logging = { page = Pages.Logging, text = LoggingEntry.text, group = "module" },
-        QuestCheck = { page = Pages.QuestCheck, text = QuestCheckEntry.text, group = "module" },
-        QuestAbandon = { page = Pages.QuestAbandon, text = QuestAbandonEntry.text, group = "module" },
-        Misc = { page = Pages.Misc, text = nil, group = "module" },
-        AutoSell = { page = Pages.Misc, text = AutoSellEntry.text, group = "module", miscSection = "AutoSell" },
-        AutoRepair = { page = Pages.Misc, text = AutoRepairEntry.text, group = "module", miscSection = "AutoRepair" },
-        FastLoot = { page = Pages.Misc, text = FastLootEntry.text, group = "module", miscSection = "FastLoot" },
-        EasyDelete = { page = Pages.Misc, text = EasyDeleteEntry.text, group = "module", miscSection = "EasyDelete" },
-        CutsceneSkip = { page = Pages.Misc, text = CutsceneSkipEntry.text, group = "module", miscSection = "CutsceneSkip" },
-        AutoRespawnPet = { page = Pages.Misc, text = AutoRespawnPetEntry.text, group = "module", miscSection = "AutoRespawnPet" },
-        FlightMasterTimer = { page = Pages.Misc, text = FlightMasterTimerEntry.text, group = "module", miscSection = "FlightMasterTimer" },
-        TooltipItemLevel = { page = Pages.Misc, text = TooltipItemLevelEntry.text, group = "module", miscSection = "TooltipItemLevel" },
-        CameraDistance = { page = Pages.Misc, text = CameraDistanceEntry.text, group = "module", miscSection = "CameraDistance" },
-        MacroFrame = { page = Pages.Misc, text = MacroFrameEntry.text, group = "module", miscSection = "MacroFrame" },
-        ReputationSearch = { page = Pages.Misc, text = ReputationSearchEntry.text, group = "module", miscSection = "ReputationSearch" },
-        CurrencySearch = { page = Pages.Misc, text = CurrencySearchEntry.text, group = "module", miscSection = "CurrencySearch" },
-        PreyHuntProgress = { page = Pages.Misc, text = PreyHuntProgressEntry.text, group = "module", miscSection = "PreyHuntProgress" },
-        KeystoneActions = { page = Pages.Misc, text = KeystoneActionsEntry.text, group = "module", miscSection = "KeystoneActions" },
-        PortalViewer = { page = Pages.Misc, text = PortalViewerEntry.text, group = "module", miscSection = "PortalViewer" },
-        Fishing = { page = Pages.Fishing, text = FishingEntry.text, group = "module" },
-        Stats = { page = Pages.Stats, text = StatsEntry.text, group = "module" },
-        MarkerBar = { page = Pages.MarkerBar, text = MarkerBarEntry.text, group = "module" },
-        LFG = { page = Pages.LFG, text = LFGEntry.text, group = "module" },
-        StreamerPlanner = { page = Pages.StreamerPlanner, text = StreamerPlannerEntry.text, group = "module" },
-        DamageText = { page = Pages.DamageText, text = CombatTextEntry.text, group = "module" },
-        MouseHelper = { page = Pages.MouseHelper, text = MouseHelperEntry.text, group = "module" },
-        MinimapCollector = { page = Pages.MinimapCollector, text = MinimapCollectorEntry.text, group = "module" },
-        BossGuides = { page = Pages.BossGuides, text = BossGuidesEntry.text, group = "module" },
-    }
-
-    local target = pageMap[pageKey]
-    if not target or not target.page then
-        return
+    local targetPageKey = pageKey
+    if targetPageKey == "Misc" then
+        targetPageKey = "AutoSell"
     end
 
-    local miscPage = Pages and Pages.Misc
-    if miscPage and miscPage.SetStandaloneSection then
-        if target.page == miscPage then
-            miscPage:SetStandaloneSection(target.miscSection)
-        else
-            miscPage:SetStandaloneSection(nil)
-        end
+    local categoryEntry, targetEntry = GetCategoryEntryForPageKey(targetPageKey)
+    local targetPage = ResolvePageFromEntry(targetEntry)
+    if not categoryEntry or not targetEntry or not targetPage then
+        return
     end
 
     UpdateTreeLayout()
@@ -1041,11 +1058,45 @@ function BeavisQoL.OpenPage(pageKey, activeTextOverride)
         BeavisQoL.Frame:Show()
     end
 
-    ShowPage(target.page)
-    SetActiveTreeItem(activeTextOverride or target.text)
+    local categoryTabsPage = Pages.CategoryTabs
+    if categoryTabsPage and categoryTabsPage.OpenCategory then
+        ShowPage(categoryTabsPage)
+        categoryTabsPage:OpenCategory(targetEntry.section, targetEntry.pageKey)
+    else
+        local miscPage = Pages and Pages.Misc
+        if miscPage and miscPage.SetStandaloneSection then
+            if targetPage == miscPage then
+                miscPage:SetStandaloneSection(targetEntry.miscSection)
+            else
+                miscPage:SetStandaloneSection(nil)
+            end
+        end
+
+        ShowPage(targetPage)
+    end
+
+    SetActiveTreeItem(categoryEntry.text)
 end
 
-function BeavisQoL.OpenMiscSection(sectionKey, activeTextOverride)
+function BeavisQoL.OpenCategory(categoryKey, targetPageKey)
+    local section = SectionByKey[categoryKey]
+    local categoryEntry = section and CategoryEntryBySection[section]
+    if not section or not categoryEntry or not Pages or not Pages.CategoryTabs then
+        return
+    end
+
+    UpdateTreeLayout()
+
+    if not BeavisQoL.Frame:IsShown() then
+        BeavisQoL.Frame:Show()
+    end
+
+    ShowPage(Pages.CategoryTabs)
+    Pages.CategoryTabs:OpenCategory(section, targetPageKey)
+    SetActiveTreeItem(categoryEntry.text)
+end
+
+function BeavisQoL.OpenMiscSection(sectionKey)
     local sectionPageMap = {
         AutoSell = "AutoSell",
         AutoRepair = "AutoRepair",
@@ -1064,24 +1115,13 @@ function BeavisQoL.OpenMiscSection(sectionKey, activeTextOverride)
         PortalViewer = "PortalViewer",
     }
 
-    BeavisQoL.OpenPage(sectionPageMap[sectionKey] or "Misc", activeTextOverride)
+    BeavisQoL.OpenPage(sectionPageMap[sectionKey] or "AutoSell")
 end
 
-TreeHomeButton:SetScript("OnClick", function()
-    BeavisQoL.OpenPage("Home")
-end)
-
-TreeVersionButton:SetScript("OnClick", function()
-    BeavisQoL.OpenPage("Version")
-end)
-
-TreeSettingsButton:SetScript("OnClick", function()
-    BeavisQoL.OpenPage("Settings")
-end)
-
-for _, entry in ipairs(ModuleEntries) do
+for _, entry in ipairs(CategoryEntries) do
+    local section = entry.section
     entry.button:SetScript("OnClick", function()
-        BeavisQoL.OpenPage(entry.pageKey, entry.text)
+        BeavisQoL.OpenCategory(section.key, GetSearchMatchedPageKey(section))
     end)
 end
 
@@ -1107,5 +1147,7 @@ end)
 UpdateSidebarHeaderLayout()
 UpdateSearchPlaceholder()
 UpdateTreeLayout()
-ShowPage(Pages.Home)
-SetActiveTreeItem(TreeHomeText)
+ShowPage(Pages.CategoryTabs)
+Pages.CategoryTabs:OpenCategory(GeneralSectionHeader, "Home")
+SetActiveTreeItem(AddonCategoryEntry.text)
+

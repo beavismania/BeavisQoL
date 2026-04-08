@@ -579,7 +579,7 @@ local function BuildPortalViewerFrame()
     TitleText:SetPoint("RIGHT", PortalFrame, "RIGHT", -40, 0)
     TitleText:SetJustifyH("LEFT")
     TitleText:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-    TitleText:SetTextColor(1, 0.82, 0, 1)
+    TitleText:SetTextColor(1, 0.88, 0.62, 1)
 
     local closeButton = CreateFrame("Button", nil, PortalFrame, "UIPanelButtonTemplate")
     closeButton:SetSize(18, 18)
@@ -679,3 +679,4 @@ PortalViewerEvents:RegisterEvent("SPELLS_CHANGED")
 PortalViewerEvents:SetScript("OnEvent", function()
     InvalidatePortalStatusCache()
 end)
+

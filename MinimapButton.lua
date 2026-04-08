@@ -257,129 +257,150 @@ local function ShowMinimapContextMenu(anchorFrame)
     local showEasyLFGEntry = IsMinimapContextEntryVisible("easyLFG")
     local showPortalViewerEntry = IsMinimapContextEntryVisible("portalViewer")
     local showQuickHideEntry = IsMinimapContextEntryVisible("quickHideOverlays")
+    local hasQuickViewEntries = showLevelTimeEntry or showQuestCheckEntry or showQuestAbandonEntry or showLoggingEntry
+    local hasToggleEntries = (hasChecklistToggle and showChecklistEntry)
+        or (hasWeeklyKeysToggle and showWeeklyKeysEntry)
+        or (hasStatsToggle and showStatsEntry)
+        or (hasMarkerBarToggle and showMarkerBarEntry)
+        or (hasStreamerPlannerToggle and showStreamerPlannerEntry)
+        or (hasEasyLFGToggle and showEasyLFGEntry)
+        or (hasPortalViewerToggle and showPortalViewerEntry)
+        or showQuickHideEntry
 
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchorFrame or UIParent, function(_, rootDescription)
             rootDescription:CreateTitle(addonTitle)
             rootDescription:CreateDivider()
-            if showLevelTimeEntry then
-                rootDescription:CreateButton(L("LEVEL_TIME"), function()
-                    OpenAddonPage("LevelTime")
-                end)
+            if hasQuickViewEntries then
+                rootDescription:CreateTitle(L("MINIMAP_CONTEXT_QUICK_VIEW"))
+
+                if showLevelTimeEntry then
+                    rootDescription:CreateButton(L("LEVEL_TIME"), function()
+                        OpenAddonPage("LevelTime")
+                    end)
+                end
+
+                if showQuestCheckEntry then
+                    rootDescription:CreateButton(L("QUEST_CHECK"), function()
+                        OpenAddonPage("QuestCheck")
+                    end)
+                end
+
+                if showQuestAbandonEntry then
+                    rootDescription:CreateButton(L("QUEST_ABANDON"), function()
+                        OpenAddonPage("QuestAbandon")
+                    end)
+                end
+
+                if showLoggingEntry then
+                    rootDescription:CreateButton(L("GOLDAUSWERTUNG"), function()
+                        OpenAddonPage("Logging")
+                    end)
+                end
             end
 
-            if showQuestCheckEntry then
-                rootDescription:CreateButton(L("QUEST_CHECK"), function()
-                    OpenAddonPage("QuestCheck")
-                end)
+            if hasQuickViewEntries and hasToggleEntries then
+                rootDescription:CreateDivider()
             end
 
-            if showQuestAbandonEntry then
-                rootDescription:CreateButton(L("QUEST_ABANDON"), function()
-                    OpenAddonPage("QuestAbandon")
-                end)
-            end
+            if hasToggleEntries then
+                rootDescription:CreateTitle(L("MINIMAP_CONTEXT_TOGGLE_SECTION"))
 
-            if showLoggingEntry then
-                rootDescription:CreateButton(L("LOGGING"), function()
-                    OpenAddonPage("Logging")
-                end)
-            end
+                if hasChecklistToggle and showChecklistEntry then
+                    rootDescription:CreateCheckbox(
+                        L("MINIMAP_TRACKER_SHOW"),
+                        function()
+                            return IsChecklistTrackerEnabled()
+                        end,
+                        function()
+                            ToggleChecklistTracker()
+                        end
+                    )
+                end
 
-            if hasChecklistToggle and showChecklistEntry then
-                rootDescription:CreateCheckbox(
-                    L("MINIMAP_TRACKER_SHOW"),
-                    function()
-                        return IsChecklistTrackerEnabled()
-                    end,
-                    function()
-                        ToggleChecklistTracker()
-                    end
-                )
-            end
+                if hasWeeklyKeysToggle and showWeeklyKeysEntry then
+                    rootDescription:CreateCheckbox(
+                        L("MINIMAP_WEEKLY_KEYS_SHOW"),
+                        function()
+                            return IsWeeklyKeysOverlayEnabled()
+                        end,
+                        function()
+                            ToggleWeeklyKeysOverlay()
+                        end
+                    )
+                end
 
-            if hasWeeklyKeysToggle and showWeeklyKeysEntry then
-                rootDescription:CreateCheckbox(
-                    L("MINIMAP_WEEKLY_KEYS_SHOW"),
-                    function()
-                        return IsWeeklyKeysOverlayEnabled()
-                    end,
-                    function()
-                        ToggleWeeklyKeysOverlay()
-                    end
-                )
-            end
+                if hasStatsToggle and showStatsEntry then
+                    rootDescription:CreateCheckbox(
+                        L("MINIMAP_STATS_SHOW"),
+                        function()
+                            return IsStatsOverlayEnabled()
+                        end,
+                        function()
+                            ToggleStatsOverlay()
+                        end
+                    )
+                end
 
-            if hasStatsToggle and showStatsEntry then
-                rootDescription:CreateCheckbox(
-                    L("MINIMAP_STATS_SHOW"),
-                    function()
-                        return IsStatsOverlayEnabled()
-                    end,
-                    function()
-                        ToggleStatsOverlay()
-                    end
-                )
-            end
+                if hasMarkerBarToggle and showMarkerBarEntry then
+                    rootDescription:CreateCheckbox(
+                        L("MINIMAP_MARKER_BAR_SHOW"),
+                        function()
+                            return IsMarkerBarOverlayEnabled()
+                        end,
+                        function()
+                            ToggleMarkerBarOverlay()
+                        end
+                    )
+                end
 
-            if hasMarkerBarToggle and showMarkerBarEntry then
-                rootDescription:CreateCheckbox(
-                    L("MINIMAP_MARKER_BAR_SHOW"),
-                    function()
-                        return IsMarkerBarOverlayEnabled()
-                    end,
-                    function()
-                        ToggleMarkerBarOverlay()
-                    end
-                )
-            end
+                if hasStreamerPlannerToggle and showStreamerPlannerEntry then
+                    rootDescription:CreateCheckbox(
+                        L("MINIMAP_STREAMER_PLANNER_SHOW"),
+                        function()
+                            return IsStreamerPlannerOverlayEnabled()
+                        end,
+                        function()
+                            ToggleStreamerPlannerOverlay()
+                        end
+                    )
+                end
 
-            if hasStreamerPlannerToggle and showStreamerPlannerEntry then
-                rootDescription:CreateCheckbox(
-                    L("MINIMAP_STREAMER_PLANNER_SHOW"),
-                    function()
-                        return IsStreamerPlannerOverlayEnabled()
-                    end,
-                    function()
-                        ToggleStreamerPlannerOverlay()
-                    end
-                )
-            end
+                if hasEasyLFGToggle and showEasyLFGEntry then
+                    rootDescription:CreateCheckbox(
+                        L("MINIMAP_EASY_LFG_SHOW"),
+                        function()
+                            return IsEasyLFGOverlayEnabled()
+                        end,
+                        function()
+                            ToggleEasyLFGOverlay()
+                        end
+                    )
+                end
 
-            if hasEasyLFGToggle and showEasyLFGEntry then
-                rootDescription:CreateCheckbox(
-                    L("MINIMAP_EASY_LFG_SHOW"),
-                    function()
-                        return IsEasyLFGOverlayEnabled()
-                    end,
-                    function()
-                        ToggleEasyLFGOverlay()
-                    end
-                )
-            end
+                if hasPortalViewerToggle and showPortalViewerEntry then
+                    rootDescription:CreateCheckbox(
+                        L("MINIMAP_PORTAL_VIEWER_SHOW"),
+                        function()
+                            return IsPortalViewerEnabled()
+                        end,
+                        function()
+                            TogglePortalViewer()
+                        end
+                    )
+                end
 
-            if hasPortalViewerToggle and showPortalViewerEntry then
-                rootDescription:CreateCheckbox(
-                    L("MINIMAP_PORTAL_VIEWER_SHOW"),
-                    function()
-                        return IsPortalViewerEnabled()
-                    end,
-                    function()
-                        TogglePortalViewer()
-                    end
-                )
-            end
-
-            if showQuickHideEntry then
-                rootDescription:CreateCheckbox(
-                    L("QUICK_HIDE_OVERLAYS"),
-                    function()
-                        return GetQuickHideOverlaysEnabled()
-                    end,
-                    function()
-                        ToggleQuickHideOverlays()
-                    end
-                )
+                if showQuickHideEntry then
+                    rootDescription:CreateCheckbox(
+                        L("QUICK_HIDE_OVERLAYS"),
+                        function()
+                            return GetQuickHideOverlaysEnabled()
+                        end,
+                        function()
+                            ToggleQuickHideOverlays()
+                        end
+                    )
+                end
             end
         end)
         return
@@ -397,13 +418,25 @@ local function ShowMinimapContextMenu(anchorFrame)
         },
     }
 
-    local function AddActionEntry(visible, textKey, pageKey)
+    local function AddSectionTitle(visible, text)
         if not visible then
             return
         end
 
         menu[#menu + 1] = {
-            text = L(textKey),
+            text = text,
+            isTitle = true,
+            notCheckable = true,
+        }
+    end
+
+    local function AddActionEntry(visible, text, pageKey)
+        if not visible then
+            return
+        end
+
+        menu[#menu + 1] = {
+            text = text,
             notCheckable = true,
             func = function()
                 OpenAddonPage(pageKey)
@@ -425,30 +458,32 @@ local function ShowMinimapContextMenu(anchorFrame)
         }
     end
 
-    AddActionEntry(showLevelTimeEntry, "LEVEL_TIME", "LevelTime")
-    AddActionEntry(showQuestCheckEntry, "QUEST_CHECK", "QuestCheck")
-    AddActionEntry(showQuestAbandonEntry, "QUEST_ABANDON", "QuestAbandon")
-    AddActionEntry(showLoggingEntry, "LOGGING", "Logging")
+    AddSectionTitle(hasQuickViewEntries, L("MINIMAP_CONTEXT_QUICK_VIEW"))
+    AddActionEntry(showLevelTimeEntry, L("LEVEL_TIME"), "LevelTime")
+    AddActionEntry(showQuestCheckEntry, L("QUEST_CHECK"), "QuestCheck")
+    AddActionEntry(showQuestAbandonEntry, L("QUEST_ABANDON"), "QuestAbandon")
+    AddActionEntry(showLoggingEntry, L("GOLDAUSWERTUNG"), "Logging")
 
-    AddToggleEntry(showChecklistEntry, "MINIMAP_TRACKER_SHOW", IsChecklistTrackerEnabled(), not hasChecklistToggle, function()
+    AddSectionTitle(hasToggleEntries, L("MINIMAP_CONTEXT_TOGGLE_SECTION"))
+    AddToggleEntry(hasChecklistToggle and showChecklistEntry, "MINIMAP_TRACKER_SHOW", IsChecklistTrackerEnabled(), not hasChecklistToggle, function()
         ToggleChecklistTracker()
     end)
-    AddToggleEntry(showWeeklyKeysEntry, "MINIMAP_WEEKLY_KEYS_SHOW", IsWeeklyKeysOverlayEnabled(), not hasWeeklyKeysToggle, function()
+    AddToggleEntry(hasWeeklyKeysToggle and showWeeklyKeysEntry, "MINIMAP_WEEKLY_KEYS_SHOW", IsWeeklyKeysOverlayEnabled(), not hasWeeklyKeysToggle, function()
         ToggleWeeklyKeysOverlay()
     end)
-    AddToggleEntry(showStatsEntry, "MINIMAP_STATS_SHOW", IsStatsOverlayEnabled(), not hasStatsToggle, function()
+    AddToggleEntry(hasStatsToggle and showStatsEntry, "MINIMAP_STATS_SHOW", IsStatsOverlayEnabled(), not hasStatsToggle, function()
         ToggleStatsOverlay()
     end)
-    AddToggleEntry(showMarkerBarEntry, "MINIMAP_MARKER_BAR_SHOW", IsMarkerBarOverlayEnabled(), not hasMarkerBarToggle, function()
+    AddToggleEntry(hasMarkerBarToggle and showMarkerBarEntry, "MINIMAP_MARKER_BAR_SHOW", IsMarkerBarOverlayEnabled(), not hasMarkerBarToggle, function()
         ToggleMarkerBarOverlay()
     end)
-    AddToggleEntry(showStreamerPlannerEntry, "MINIMAP_STREAMER_PLANNER_SHOW", IsStreamerPlannerOverlayEnabled(), not hasStreamerPlannerToggle, function()
+    AddToggleEntry(hasStreamerPlannerToggle and showStreamerPlannerEntry, "MINIMAP_STREAMER_PLANNER_SHOW", IsStreamerPlannerOverlayEnabled(), not hasStreamerPlannerToggle, function()
         ToggleStreamerPlannerOverlay()
     end)
-    AddToggleEntry(showEasyLFGEntry, "MINIMAP_EASY_LFG_SHOW", IsEasyLFGOverlayEnabled(), not hasEasyLFGToggle, function()
+    AddToggleEntry(hasEasyLFGToggle and showEasyLFGEntry, "MINIMAP_EASY_LFG_SHOW", IsEasyLFGOverlayEnabled(), not hasEasyLFGToggle, function()
         ToggleEasyLFGOverlay()
     end)
-    AddToggleEntry(showPortalViewerEntry, "MINIMAP_PORTAL_VIEWER_SHOW", IsPortalViewerEnabled(), not hasPortalViewerToggle, function()
+    AddToggleEntry(hasPortalViewerToggle and showPortalViewerEntry, "MINIMAP_PORTAL_VIEWER_SHOW", IsPortalViewerEnabled(), not hasPortalViewerToggle, function()
         TogglePortalViewer()
     end)
     AddToggleEntry(showQuickHideEntry, "QUICK_HIDE_OVERLAYS", GetQuickHideOverlaysEnabled(), false, function()

@@ -3,6 +3,16 @@ local ADDON_NAME, BeavisQoL = ...
 local Content = BeavisQoL.Content
 local L = BeavisQoL.L
 local isRefreshingPage = false
+local PageMinimapCollector
+local GetModeLabel
+
+if not rawget(_G, "UIDropDownMenuTemplate") then
+    if C_AddOns and C_AddOns.LoadAddOn then
+        C_AddOns.LoadAddOn("Blizzard_UIDropDownMenu")
+    elseif UIParentLoadAddOn then
+        UIParentLoadAddOn("Blizzard_UIDropDownMenu")
+    end
+end
 
 local function CreatePanelSurface(frame)
     local bg = frame:CreateTexture(nil, "BACKGROUND")
@@ -70,7 +80,7 @@ local function CreateCheckbox(parent, label, checked, onClick)
     text:SetPoint("LEFT", check, "RIGHT", 8, 0)
     text:SetPoint("RIGHT", parent, "RIGHT", -22, 0)
     text:SetJustifyH("LEFT")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     text:SetTextColor(0.96, 0.96, 0.96, 1)
     text:SetText(label)
 
@@ -79,7 +89,7 @@ local function CreateCheckbox(parent, label, checked, onClick)
     return check
 end
 
-local function CreateCompactModeControl(parent, onModeClick)
+local function CreateCompactModeControl(parent, dropdownName)
     local control = CreateFrame("Frame", nil, parent)
     control:SetSize(1, 1)
 
@@ -87,36 +97,60 @@ local function CreateCompactModeControl(parent, onModeClick)
     text:SetPoint("TOPLEFT", control, "TOPLEFT", 0, 0)
     text:SetJustifyH("LEFT")
     text:SetJustifyV("TOP")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    text:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     text:SetTextColor(0.96, 0.96, 0.96, 1)
     if text.SetWordWrap then
         text:SetWordWrap(true)
     end
     text:SetText("")
 
-    local modeButton = CreateFrame("Button", nil, control, "UIPanelButtonTemplate")
-    modeButton:SetSize(92, 18)
-    modeButton:SetPoint("TOPLEFT", text, "BOTTOMLEFT", 0, -4)
-    modeButton:SetNormalFontObject(GameFontNormalSmall)
-    modeButton:SetHighlightFontObject(GameFontHighlightSmall)
-    modeButton:SetScript("OnClick", function()
-        if onModeClick then
-            onModeClick(control)
+    local modeDropdown = CreateFrame("Frame", dropdownName, control, "UIDropDownMenuTemplate")
+    modeDropdown:SetPoint("TOPLEFT", text, "BOTTOMLEFT", -18, -2)
+    UIDropDownMenu_SetWidth(modeDropdown, 104)
+    UIDropDownMenu_JustifyText(modeDropdown, "LEFT")
+
+    UIDropDownMenu_Initialize(modeDropdown, function(_, level)
+        local options = {
+            { value = "collector", text = L("MINIMAP_COLLECTOR_MODE_COLLECT") },
+            { value = "visible", text = L("MINIMAP_COLLECTOR_MODE_SHOW") },
+            { value = "hidden", text = L("MINIMAP_COLLECTOR_MODE_HIDE") },
+        }
+
+        for _, option in ipairs(options) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = option.text
+            info.value = option.value
+            info.func = function()
+                if BeavisQoL.SetMinimapCollectorButtonMode and control.ButtonKey then
+                    BeavisQoL.SetMinimapCollectorButtonMode(control.ButtonKey, option.value)
+                end
+
+                control:SetMode(option.value)
+            end
+            info.checked = control.Mode == option.value
+            UIDropDownMenu_AddButton(info, level)
         end
     end)
 
     function control:SetLabelWidth(width)
         width = math.max(1, width or 1)
-        text:SetWidth(math.max(1, width or 1))
-        modeButton:SetWidth(math.max(72, math.min(104, width)))
+        text:SetWidth(width)
+        UIDropDownMenu_SetWidth(modeDropdown, math.max(88, math.min(122, width - 26)))
     end
 
     function control:GetContentHeight()
-        return math.max(18, math.ceil(text:GetStringHeight())) + 4 + modeButton:GetHeight()
+        return math.max(18, math.ceil(text:GetStringHeight())) + 6 + math.max(28, modeDropdown:GetHeight())
     end
 
     control.Label = text
-    control.ModeButton = modeButton
+    control.Dropdown = modeDropdown
+
+    function control:SetMode(mode)
+        self.Mode = mode
+        UIDropDownMenu_SetSelectedValue(modeDropdown, mode)
+        UIDropDownMenu_SetText(modeDropdown, GetModeLabel(mode))
+    end
+
     return control
 end
 
@@ -156,7 +190,7 @@ end
 local function CreateSectionHeader(parent, titleText, descriptionText)
     local title = parent:CreateFontString(nil, "OVERLAY")
     title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-    title:SetTextColor(1, 0.82, 0, 1)
+    title:SetTextColor(1, 0.88, 0.62, 1)
     title:SetJustifyH("LEFT")
     title:SetText(titleText)
 
@@ -164,7 +198,7 @@ local function CreateSectionHeader(parent, titleText, descriptionText)
     description:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
     description:SetPoint("RIGHT", parent, "RIGHT", -22, 0)
     description:SetJustifyH("LEFT")
-    description:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    description:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     description:SetTextColor(0.76, 0.76, 0.79, 1)
     description:SetText(descriptionText)
 
@@ -181,7 +215,7 @@ local function CreateSectionHeader(parent, titleText, descriptionText)
     }
 end
 
-local PageMinimapCollector = CreateFrame("Frame", nil, Content)
+PageMinimapCollector = CreateFrame("Frame", nil, Content)
 PageMinimapCollector:SetAllPoints()
 
 local PageScrollFrame = CreateFrame("ScrollFrame", nil, PageMinimapCollector, "UIPanelScrollFrameTemplate")
@@ -204,14 +238,14 @@ ApplyPanelSurface(PanelSurface)
 local Title = Panel:CreateFontString(nil, "OVERLAY")
 Title:SetPoint("TOPLEFT", Panel, "TOPLEFT", 22, -18)
 Title:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-Title:SetTextColor(1, 0.82, 0, 1)
-Title:SetText(L("MINIMAP_COLLECTOR"))
+Title:SetTextColor(1, 0.88, 0.62, 1)
+Title:SetText(BeavisQoL.GetModulePageTitle("MinimapCollector", L("MINIMAP_COLLECTOR")))
 
 local Subtitle = Panel:CreateFontString(nil, "OVERLAY")
 Subtitle:SetPoint("TOPLEFT", Title, "BOTTOMLEFT", 0, -8)
 Subtitle:SetPoint("RIGHT", Panel, "RIGHT", -22, 0)
 Subtitle:SetJustifyH("LEFT")
-Subtitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+Subtitle:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 Subtitle:SetTextColor(0.84, 0.84, 0.86, 1)
 Subtitle:SetText(L("MINIMAP_COLLECTOR_DESC"))
 
@@ -229,7 +263,7 @@ local EnableHint = Panel:CreateFontString(nil, "OVERLAY")
 EnableHint:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", 4, -6)
 EnableHint:SetPoint("RIGHT", Panel, "RIGHT", -22, 0)
 EnableHint:SetJustifyH("LEFT")
-EnableHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+EnableHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EnableHint:SetTextColor(0.82, 0.82, 0.82, 1)
 EnableHint:SetText(L("MINIMAP_COLLECTOR_ENABLE_HINT"))
 
@@ -247,7 +281,7 @@ local LauncherScaleHint = Panel:CreateFontString(nil, "OVERLAY")
 LauncherScaleHint:SetPoint("TOPLEFT", ResetButton, "BOTTOMLEFT", 4, -14)
 LauncherScaleHint:SetPoint("RIGHT", Panel, "RIGHT", -22, 0)
 LauncherScaleHint:SetJustifyH("LEFT")
-LauncherScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+LauncherScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 LauncherScaleHint:SetTextColor(0.82, 0.82, 0.82, 1)
 LauncherScaleHint:SetText(L("MINIMAP_COLLECTOR_LAUNCHER_SCALE_HINT"))
 
@@ -271,7 +305,7 @@ local WindowScaleHint = Panel:CreateFontString(nil, "OVERLAY")
 WindowScaleHint:SetPoint("TOPLEFT", LauncherScaleSlider, "BOTTOMLEFT", SCALE_SLIDER_LEFT_INSET, -12)
 WindowScaleHint:SetPoint("RIGHT", Panel, "RIGHT", -22, 0)
 WindowScaleHint:SetJustifyH("LEFT")
-WindowScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+WindowScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 WindowScaleHint:SetTextColor(0.82, 0.82, 0.82, 1)
 WindowScaleHint:SetText(L("MINIMAP_COLLECTOR_WINDOW_SCALE_HINT"))
 
@@ -298,7 +332,7 @@ local ButtonsHint = Panel:CreateFontString(nil, "OVERLAY")
 ButtonsHint:SetPoint("TOPLEFT", ButtonsSection.Divider, "BOTTOMLEFT", 0, -10)
 ButtonsHint:SetPoint("RIGHT", Panel, "RIGHT", -22, 0)
 ButtonsHint:SetJustifyH("LEFT")
-ButtonsHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+ButtonsHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 ButtonsHint:SetTextColor(0.82, 0.82, 0.82, 1)
 ButtonsHint:SetText(L("MINIMAP_COLLECTOR_BUTTONS_HINT"))
 
@@ -311,13 +345,13 @@ local EmptyStateText = ButtonsContainer:CreateFontString(nil, "OVERLAY")
 EmptyStateText:SetPoint("TOPLEFT", ButtonsContainer, "TOPLEFT", 0, 0)
 EmptyStateText:SetPoint("RIGHT", ButtonsContainer, "RIGHT", 0, 0)
 EmptyStateText:SetJustifyH("LEFT")
-EmptyStateText:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+EmptyStateText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EmptyStateText:SetTextColor(0.82, 0.82, 0.82, 1)
 EmptyStateText:SetText(L("MINIMAP_COLLECTOR_EMPTY"))
 
 local ButtonControls = {}
 
-local function GetModeLabel(mode)
+GetModeLabel = function(mode)
     if mode == "hidden" then
         return L("MINIMAP_COLLECTOR_MODE_HIDE")
     end
@@ -327,18 +361,6 @@ local function GetModeLabel(mode)
     end
 
     return L("MINIMAP_COLLECTOR_MODE_COLLECT")
-end
-
-local function GetNextMode(mode)
-    if mode == "collector" then
-        return "visible"
-    end
-
-    if mode == "visible" then
-        return "hidden"
-    end
-
-    return "collector"
 end
 
 local function GetCollectorButtons()
@@ -355,12 +377,10 @@ local function EnsureButtonControl(index)
         return control
     end
 
-    control = CreateCompactModeControl(ButtonsContainer, function(self)
-        if BeavisQoL.SetMinimapCollectorButtonMode and self.ButtonKey then
-            local nextMode = GetNextMode(self.Mode)
-            BeavisQoL.SetMinimapCollectorButtonMode(self.ButtonKey, nextMode)
-        end
-    end)
+    control = CreateCompactModeControl(
+        ButtonsContainer,
+        string.format("%sMinimapCollectorModeDropdown%d", ADDON_NAME, index)
+    )
 
     ButtonControls[index] = control
     return control
@@ -415,8 +435,8 @@ function PageMinimapCollector:RefreshState()
     local windowScale = BeavisQoL.GetMinimapCollectorWindowScale and BeavisQoL.GetMinimapCollectorWindowScale() or 1
     local buttons = GetCollectorButtons()
     local availableWidth = math.max(ButtonsContainer:GetWidth(), Panel:GetWidth() - 44, 320)
-    local columnSpacing = 8
-    local rowSpacing = 4
+    local columnSpacing = 10
+    local rowSpacing = 8
     local columns = 2
     local rowHeights = {}
     local layoutEntries = {}
@@ -459,9 +479,9 @@ function PageMinimapCollector:RefreshState()
         control:SetLabelWidth(columnWidth)
         control:ClearAllPoints()
         control.Label:SetWidth(columnWidth)
-        control.ModeButton:SetText(GetModeLabel(mode))
+        control:SetMode(mode)
 
-        local entryHeight = math.max(40, control:GetContentHeight())
+        local entryHeight = math.max(52, control:GetContentHeight())
         rowHeights[rowIndex] = math.max(rowHeights[rowIndex] or 0, entryHeight)
         layoutEntries[#layoutEntries + 1] = {
             control = control,
@@ -512,7 +532,7 @@ function PageMinimapCollector:RefreshState()
 end
 
 BeavisQoL.UpdateMinimapCollectorPage = function()
-    Title:SetText(L("MINIMAP_COLLECTOR"))
+    Title:SetText(BeavisQoL.GetModulePageTitle("MinimapCollector", L("MINIMAP_COLLECTOR")))
     Subtitle:SetText(L("MINIMAP_COLLECTOR_DESC"))
     DisplaySection.Title:SetText(L("DISPLAY"))
     DisplaySection.Description:SetText(L("MINIMAP_COLLECTOR_LAUNCHER_DESC"))
@@ -545,3 +565,4 @@ PageMinimapCollector:SetScript("OnShow", function(self)
 end)
 
 BeavisQoL.Pages.MinimapCollector = PageMinimapCollector
+

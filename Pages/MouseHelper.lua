@@ -9,7 +9,7 @@ local function ShowCursorSizeInfoLabel()
 
     if not MouseHelper.CursorSizeInfoLabel then
         MouseHelper.CursorSizeInfoLabel = CursorSizeDropdown:CreateFontString(nil, "OVERLAY")
-        MouseHelper.CursorSizeInfoLabel:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+        MouseHelper.CursorSizeInfoLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
         MouseHelper.CursorSizeInfoLabel:SetTextColor(1, 0.82, 0, 0.85)
         MouseHelper.CursorSizeInfoLabel:SetPoint("TOPLEFT", CursorSizeDropdown, "BOTTOMLEFT", 0, -4)
         MouseHelper.CursorSizeInfoLabel:SetWidth(260)
@@ -1166,14 +1166,14 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step)
     slider.High = _G[sliderName .. "High"]
 
     slider.Text:SetText(labelText)
-    slider.Text:SetTextColor(1, 0.82, 0, 1)
+    slider.Text:SetTextColor(1, 0.88, 0.62, 1)
     slider.Low:SetText(FormatValue(minValue))
     slider.High:SetText(FormatValue(maxValue))
 
     slider.ValueText = parent:CreateFontString(nil, "OVERLAY")
     slider.ValueText:SetPoint("BOTTOM", slider, "TOP", 0, 8)
     slider.ValueText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-    slider.ValueText:SetTextColor(1, 1, 1, 1)
+    slider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
 
     slider:SetScript("OnValueChanged", function(self, value)
         self.ValueText:SetText(FormatValue(value))
@@ -1282,18 +1282,18 @@ IntroPanel:SetHeight(126)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -1301,7 +1301,7 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local GeneralPanel = CreateFrame("Frame", nil, PageContent)
 GeneralPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
@@ -1310,26 +1310,26 @@ GeneralPanel:SetHeight(176)
 
 local GeneralBg = GeneralPanel:CreateTexture(nil, "BACKGROUND")
 GeneralBg:SetAllPoints()
-GeneralBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+GeneralBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local GeneralBorder = GeneralPanel:CreateTexture(nil, "ARTWORK")
 GeneralBorder:SetPoint("BOTTOMLEFT", GeneralPanel, "BOTTOMLEFT", 0, 0)
 GeneralBorder:SetPoint("BOTTOMRIGHT", GeneralPanel, "BOTTOMRIGHT", 0, 0)
 GeneralBorder:SetHeight(1)
-GeneralBorder:SetColorTexture(1, 0.82, 0, 0.9)
+GeneralBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local GeneralTitle = GeneralPanel:CreateFontString(nil, "OVERLAY")
 GeneralTitle:SetPoint("TOPLEFT", GeneralPanel, "TOPLEFT", 18, -14)
-GeneralTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-GeneralTitle:SetTextColor(1, 0.82, 0, 1)
+GeneralTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+GeneralTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local GeneralEnableCheckbox = CreateFrame("CheckButton", nil, GeneralPanel, "UICheckButtonTemplate")
 GeneralEnableCheckbox:SetPoint("TOPLEFT", GeneralTitle, "BOTTOMLEFT", -4, -10)
 
 local GeneralEnableLabel = GeneralPanel:CreateFontString(nil, "OVERLAY")
 GeneralEnableLabel:SetPoint("LEFT", GeneralEnableCheckbox, "RIGHT", 6, 0)
-GeneralEnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-GeneralEnableLabel:SetTextColor(1, 1, 1, 1)
+GeneralEnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+GeneralEnableLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local BlizzardCursorCheckbox = CreateFrame("CheckButton", nil, GeneralPanel, "UICheckButtonTemplate")
 BlizzardCursorCheckbox:SetPoint("TOPLEFT", GeneralEnableCheckbox, "BOTTOMLEFT", 0, -14)
@@ -1337,21 +1337,21 @@ BlizzardCursorCheckbox:Hide()
 
 local BlizzardCursorLabel = GeneralPanel:CreateFontString(nil, "OVERLAY")
 BlizzardCursorLabel:SetPoint("LEFT", BlizzardCursorCheckbox, "RIGHT", 6, 0)
-BlizzardCursorLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-BlizzardCursorLabel:SetTextColor(1, 1, 1, 1)
+BlizzardCursorLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+BlizzardCursorLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local BlizzardCursorHint = GeneralPanel:CreateFontString(nil, "OVERLAY")
 BlizzardCursorHint:SetPoint("TOPLEFT", BlizzardCursorCheckbox, "BOTTOMLEFT", 34, -44)
 BlizzardCursorHint:SetPoint("RIGHT", GeneralPanel, "RIGHT", -18, 0)
 BlizzardCursorHint:SetJustifyH("LEFT")
 BlizzardCursorHint:SetJustifyV("TOP")
-BlizzardCursorHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-BlizzardCursorHint:SetTextColor(0.80, 0.80, 0.80, 1)
+BlizzardCursorHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+BlizzardCursorHint:SetTextColor(0.78, 0.74, 0.69, 1)
 
 local CursorSizeLabel = GeneralPanel:CreateFontString(nil, "OVERLAY")
 CursorSizeLabel:SetPoint("TOPLEFT", GeneralEnableCheckbox, "BOTTOMLEFT", 34, -8)
 CursorSizeLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-CursorSizeLabel:SetTextColor(1, 0.82, 0, 1)
+CursorSizeLabel:SetTextColor(1, 0.88, 0.62, 1)
 
 CursorSizeDropdown = CreateFrame("Frame", "BeavisQoLMouseHelperCursorSizeDropdown", GeneralPanel, "UIDropDownMenuTemplate")
 CursorSizeDropdown:SetPoint("TOPLEFT", CursorSizeLabel, "BOTTOMLEFT", -18, -2)
@@ -1364,50 +1364,50 @@ CirclePanel:SetHeight(362)
 
 local CircleBg = CirclePanel:CreateTexture(nil, "BACKGROUND")
 CircleBg:SetAllPoints()
-CircleBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+CircleBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local CircleBorder = CirclePanel:CreateTexture(nil, "ARTWORK")
 CircleBorder:SetPoint("BOTTOMLEFT", CirclePanel, "BOTTOMLEFT", 0, 0)
 CircleBorder:SetPoint("BOTTOMRIGHT", CirclePanel, "BOTTOMRIGHT", 0, 0)
 CircleBorder:SetHeight(1)
-CircleBorder:SetColorTexture(1, 0.82, 0, 0.9)
+CircleBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local CircleTitle = CirclePanel:CreateFontString(nil, "OVERLAY")
 CircleTitle:SetPoint("TOPLEFT", CirclePanel, "TOPLEFT", 18, -14)
-CircleTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-CircleTitle:SetTextColor(1, 0.82, 0, 1)
+CircleTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+CircleTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local CircleCheckbox = CreateFrame("CheckButton", nil, CirclePanel, "UICheckButtonTemplate")
 CircleCheckbox:SetPoint("TOPLEFT", CircleTitle, "BOTTOMLEFT", -4, -10)
 
 local CircleLabel = CirclePanel:CreateFontString(nil, "OVERLAY")
 CircleLabel:SetPoint("LEFT", CircleCheckbox, "RIGHT", 6, 0)
-CircleLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-CircleLabel:SetTextColor(1, 1, 1, 1)
+CircleLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CircleLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local CircleCombatOnlyCheckbox = CreateFrame("CheckButton", nil, CirclePanel, "UICheckButtonTemplate")
 CircleCombatOnlyCheckbox:SetPoint("TOPLEFT", CircleCheckbox, "BOTTOMLEFT", 0, -10)
 
 local CircleCombatOnlyLabel = CirclePanel:CreateFontString(nil, "OVERLAY")
 CircleCombatOnlyLabel:SetPoint("LEFT", CircleCombatOnlyCheckbox, "RIGHT", 6, 0)
-CircleCombatOnlyLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-CircleCombatOnlyLabel:SetTextColor(1, 1, 1, 1)
+CircleCombatOnlyLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CircleCombatOnlyLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local CastRingCheckbox = CreateFrame("CheckButton", nil, CirclePanel, "UICheckButtonTemplate")
 CastRingCheckbox:SetPoint("TOPLEFT", CircleCombatOnlyCheckbox, "BOTTOMLEFT", 0, -10)
 
 local CastRingLabel = CirclePanel:CreateFontString(nil, "OVERLAY")
 CastRingLabel:SetPoint("LEFT", CastRingCheckbox, "RIGHT", 6, 0)
-CastRingLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-CastRingLabel:SetTextColor(1, 1, 1, 1)
+CastRingLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CastRingLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local CircleClassColorCheckbox = CreateFrame("CheckButton", nil, CirclePanel, "UICheckButtonTemplate")
 CircleClassColorCheckbox:SetPoint("TOPLEFT", CastRingCheckbox, "BOTTOMLEFT", 0, -10)
 
 local CircleClassColorLabel = CirclePanel:CreateFontString(nil, "OVERLAY")
 CircleClassColorLabel:SetPoint("LEFT", CircleClassColorCheckbox, "RIGHT", 6, 0)
-CircleClassColorLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-CircleClassColorLabel:SetTextColor(1, 1, 1, 1)
+CircleClassColorLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CircleClassColorLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local CircleSizeSlider = CreateValueSlider(CirclePanel, "", 24, 180, 1)
 CircleSizeSlider:SetPoint("TOPLEFT", CircleClassColorCheckbox, "BOTTOMLEFT", 10, -24)
@@ -1428,26 +1428,26 @@ TrailPanel:SetHeight(340)
 
 local TrailBg = TrailPanel:CreateTexture(nil, "BACKGROUND")
 TrailBg:SetAllPoints()
-TrailBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+TrailBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local TrailBorder = TrailPanel:CreateTexture(nil, "ARTWORK")
 TrailBorder:SetPoint("BOTTOMLEFT", TrailPanel, "BOTTOMLEFT", 0, 0)
 TrailBorder:SetPoint("BOTTOMRIGHT", TrailPanel, "BOTTOMRIGHT", 0, 0)
 TrailBorder:SetHeight(1)
-TrailBorder:SetColorTexture(1, 0.82, 0, 0.9)
+TrailBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local TrailTitle = TrailPanel:CreateFontString(nil, "OVERLAY")
 TrailTitle:SetPoint("TOPLEFT", TrailPanel, "TOPLEFT", 18, -14)
-TrailTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-TrailTitle:SetTextColor(1, 0.82, 0, 1)
+TrailTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+TrailTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local TrailCheckbox = CreateFrame("CheckButton", nil, TrailPanel, "UICheckButtonTemplate")
 TrailCheckbox:SetPoint("TOPLEFT", TrailTitle, "BOTTOMLEFT", -4, -10)
 
 local TrailLabel = TrailPanel:CreateFontString(nil, "OVERLAY")
 TrailLabel:SetPoint("LEFT", TrailCheckbox, "RIGHT", 6, 0)
-TrailLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TrailLabel:SetTextColor(1, 1, 1, 1)
+TrailLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TrailLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local TrailLengthSlider = CreateValueSlider(TrailPanel, "", 6, 60, 1)
 TrailLengthSlider:SetPoint("TOPLEFT", TrailCheckbox, "BOTTOMLEFT", 10, -24)
@@ -1458,7 +1458,7 @@ TrailSizeSlider:SetPoint("TOPLEFT", TrailLengthSlider, "BOTTOMLEFT", 0, -48)
 local TrailStyleLabel = TrailPanel:CreateFontString(nil, "OVERLAY")
 TrailStyleLabel:SetPoint("TOPLEFT", TrailSizeSlider, "BOTTOMLEFT", -10, -14)
 TrailStyleLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-TrailStyleLabel:SetTextColor(1, 0.82, 0, 1)
+TrailStyleLabel:SetTextColor(1, 0.88, 0.62, 1)
 
 local TrailStyleDropdown = CreateFrame("Frame", "BeavisQoLMouseHelperTrailStyleDropdown", TrailPanel, "UIDropDownMenuTemplate")
 TrailStyleDropdown:SetPoint("TOPLEFT", TrailStyleLabel, "BOTTOMLEFT", -18, -2)
@@ -1469,8 +1469,8 @@ TrailClassColorCheckbox:SetPoint("TOPLEFT", TrailStyleDropdown, "BOTTOMLEFT", 18
 
 local TrailClassColorLabel = TrailPanel:CreateFontString(nil, "OVERLAY")
 TrailClassColorLabel:SetPoint("LEFT", TrailClassColorCheckbox, "RIGHT", 6, 0)
-TrailClassColorLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TrailClassColorLabel:SetTextColor(1, 1, 1, 1)
+TrailClassColorLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TrailClassColorLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
 local TrailColorButton = CreateColorButton(TrailPanel)
 TrailColorButton:SetPoint("TOPLEFT", TrailClassColorCheckbox, "BOTTOMLEFT", 10, -10)
@@ -1506,7 +1506,7 @@ function PageMouseHelper:RefreshState()
     local db = MouseHelper.GetDB()
     isRefreshing = true
 
-    IntroTitle:SetText(L("MOUSE_HELPER"))
+    IntroTitle:SetText(BeavisQoL.GetModulePageTitle("MouseHelper", L("MOUSE_HELPER")))
     IntroText:SetText(L("MOUSE_HELPER_DESC"))
 
     GeneralTitle:SetText(L("MOUSE_HELPER_SETTINGS"))
@@ -1752,3 +1752,4 @@ PageMouseHelper:UpdateScrollLayout()
 PageMouseHelper:RefreshState()
 
 BeavisQoL.Pages.MouseHelper = PageMouseHelper
+

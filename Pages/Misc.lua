@@ -54,19 +54,19 @@ IntroPanel:SetHeight(110)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText(L("MISC_TITLE"))
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
+IntroTitle:SetText(BeavisQoL.GetModulePageTitle("Misc", L("MISC_TITLE")))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -74,7 +74,7 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 IntroText:SetText(L("MISC_DESC"))
 
 -- ========================================
@@ -88,18 +88,18 @@ AutoSellPanel:SetHeight(115)
 
 local AutoSellBg = AutoSellPanel:CreateTexture(nil, "BACKGROUND")
 AutoSellBg:SetAllPoints()
-AutoSellBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+AutoSellBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local AutoSellBorder = AutoSellPanel:CreateTexture(nil, "ARTWORK")
 AutoSellBorder:SetPoint("BOTTOMLEFT", AutoSellPanel, "BOTTOMLEFT", 0, 0)
 AutoSellBorder:SetPoint("BOTTOMRIGHT", AutoSellPanel, "BOTTOMRIGHT", 0, 0)
 AutoSellBorder:SetHeight(1)
-AutoSellBorder:SetColorTexture(1, 0.82, 0, 0.9)
+AutoSellBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local AutoSellTitle = AutoSellPanel:CreateFontString(nil, "OVERLAY")
 AutoSellTitle:SetPoint("TOPLEFT", AutoSellPanel, "TOPLEFT", 18, -14)
-AutoSellTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-AutoSellTitle:SetTextColor(1, 0.82, 0, 1)
+AutoSellTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+AutoSellTitle:SetTextColor(1, 0.88, 0.62, 1)
 AutoSellTitle:SetText(L("AUTOSELL_JUNK"))
 
 local AutoSellCheckbox = CreateFrame("CheckButton", nil, AutoSellPanel, "UICheckButtonTemplate")
@@ -107,8 +107,8 @@ AutoSellCheckbox:SetPoint("TOPLEFT", AutoSellTitle, "BOTTOMLEFT", -4, -12)
 
 local AutoSellLabel = AutoSellPanel:CreateFontString(nil, "OVERLAY")
 AutoSellLabel:SetPoint("LEFT", AutoSellCheckbox, "RIGHT", 6, 0)
-AutoSellLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-AutoSellLabel:SetTextColor(1, 1, 1, 1)
+AutoSellLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoSellLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 AutoSellLabel:SetText(L("ACTIVE"))
 
 local AutoSellHint = AutoSellPanel:CreateFontString(nil, "OVERLAY")
@@ -116,8 +116,8 @@ AutoSellHint:SetPoint("TOPLEFT", AutoSellCheckbox, "BOTTOMLEFT", 34, -2)
 AutoSellHint:SetPoint("RIGHT", AutoSellPanel, "RIGHT", -18, 0)
 AutoSellHint:SetJustifyH("LEFT")
 AutoSellHint:SetJustifyV("TOP")
-AutoSellHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-AutoSellHint:SetTextColor(0.80, 0.80, 0.80, 1)
+AutoSellHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoSellHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AutoSellHint:SetText(L("AUTOSELL_HINT"))
 
 -- ========================================
@@ -131,18 +131,18 @@ AutoRepairPanel:SetHeight(180)
 
 local AutoRepairBg = AutoRepairPanel:CreateTexture(nil, "BACKGROUND")
 AutoRepairBg:SetAllPoints()
-AutoRepairBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+AutoRepairBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local AutoRepairBorder = AutoRepairPanel:CreateTexture(nil, "ARTWORK")
 AutoRepairBorder:SetPoint("BOTTOMLEFT", AutoRepairPanel, "BOTTOMLEFT", 0, 0)
 AutoRepairBorder:SetPoint("BOTTOMRIGHT", AutoRepairPanel, "BOTTOMRIGHT", 0, 0)
 AutoRepairBorder:SetHeight(1)
-AutoRepairBorder:SetColorTexture(1, 0.82, 0, 0.9)
+AutoRepairBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local AutoRepairTitle = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairTitle:SetPoint("TOPLEFT", AutoRepairPanel, "TOPLEFT", 18, -14)
-AutoRepairTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-AutoRepairTitle:SetTextColor(1, 0.82, 0, 1)
+AutoRepairTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+AutoRepairTitle:SetTextColor(1, 0.88, 0.62, 1)
 AutoRepairTitle:SetText(L("AUTOREPAIR"))
 
 local AutoRepairCheckbox = CreateFrame("CheckButton", nil, AutoRepairPanel, "UICheckButtonTemplate")
@@ -150,8 +150,8 @@ AutoRepairCheckbox:SetPoint("TOPLEFT", AutoRepairTitle, "BOTTOMLEFT", -4, -12)
 
 local AutoRepairLabel = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairLabel:SetPoint("LEFT", AutoRepairCheckbox, "RIGHT", 6, 0)
-AutoRepairLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-AutoRepairLabel:SetTextColor(1, 1, 1, 1)
+AutoRepairLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoRepairLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 AutoRepairLabel:SetText(L("ACTIVE"))
 
 local AutoRepairHint = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
@@ -159,8 +159,8 @@ AutoRepairHint:SetPoint("TOPLEFT", AutoRepairCheckbox, "BOTTOMLEFT", 34, -2)
 AutoRepairHint:SetPoint("RIGHT", AutoRepairPanel, "RIGHT", -18, 0)
 AutoRepairHint:SetJustifyH("LEFT")
 AutoRepairHint:SetJustifyV("TOP")
-AutoRepairHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-AutoRepairHint:SetTextColor(0.80, 0.80, 0.80, 1)
+AutoRepairHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoRepairHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AutoRepairHint:SetText(L("AUTOREPAIR_HINT"))
 
 local AutoRepairGuildCheckbox = CreateFrame("CheckButton", nil, AutoRepairPanel, "UICheckButtonTemplate")
@@ -169,8 +169,8 @@ AutoRepairGuildCheckbox:SetScale(0.85)
 
 local AutoRepairGuildLabel = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairGuildLabel:SetPoint("LEFT", AutoRepairGuildCheckbox, "RIGHT", 4, 0)
-AutoRepairGuildLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-AutoRepairGuildLabel:SetTextColor(1, 1, 1, 1)
+AutoRepairGuildLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoRepairGuildLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 AutoRepairGuildLabel:SetText(L("AUTOREPAIR_GUILD"))
 
 local AutoRepairGuildHint = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
@@ -178,8 +178,8 @@ AutoRepairGuildHint:SetPoint("TOPLEFT", AutoRepairGuildCheckbox, "BOTTOMLEFT", 3
 AutoRepairGuildHint:SetPoint("RIGHT", AutoRepairPanel, "RIGHT", -18, 0)
 AutoRepairGuildHint:SetJustifyH("LEFT")
 AutoRepairGuildHint:SetJustifyV("TOP")
-AutoRepairGuildHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-AutoRepairGuildHint:SetTextColor(0.80, 0.80, 0.80, 1)
+AutoRepairGuildHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoRepairGuildHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
 
 -- ========================================
@@ -193,18 +193,18 @@ EasyDeletePanel:SetHeight(115)
 
 local EasyDeleteBg = EasyDeletePanel:CreateTexture(nil, "BACKGROUND")
 EasyDeleteBg:SetAllPoints()
-EasyDeleteBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+EasyDeleteBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local EasyDeleteBorder = EasyDeletePanel:CreateTexture(nil, "ARTWORK")
 EasyDeleteBorder:SetPoint("BOTTOMLEFT", EasyDeletePanel, "BOTTOMLEFT", 0, 0)
 EasyDeleteBorder:SetPoint("BOTTOMRIGHT", EasyDeletePanel, "BOTTOMRIGHT", 0, 0)
 EasyDeleteBorder:SetHeight(1)
-EasyDeleteBorder:SetColorTexture(1, 0.82, 0, 0.9)
+EasyDeleteBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local EasyDeleteTitle = EasyDeletePanel:CreateFontString(nil, "OVERLAY")
 EasyDeleteTitle:SetPoint("TOPLEFT", EasyDeletePanel, "TOPLEFT", 18, -14)
-EasyDeleteTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-EasyDeleteTitle:SetTextColor(1, 0.82, 0, 1)
+EasyDeleteTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+EasyDeleteTitle:SetTextColor(1, 0.88, 0.62, 1)
 EasyDeleteTitle:SetText(L("EASY_DELETE"))
 
 local EasyDeleteCheckbox = CreateFrame("CheckButton", nil, EasyDeletePanel, "UICheckButtonTemplate")
@@ -212,8 +212,8 @@ EasyDeleteCheckbox:SetPoint("TOPLEFT", EasyDeleteTitle, "BOTTOMLEFT", -4, -12)
 
 local EasyDeleteLabel = EasyDeletePanel:CreateFontString(nil, "OVERLAY")
 EasyDeleteLabel:SetPoint("LEFT", EasyDeleteCheckbox, "RIGHT", 6, 0)
-EasyDeleteLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-EasyDeleteLabel:SetTextColor(1, 1, 1, 1)
+EasyDeleteLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+EasyDeleteLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 EasyDeleteLabel:SetText(L("ACTIVE"))
 
 local EasyDeleteHint = EasyDeletePanel:CreateFontString(nil, "OVERLAY")
@@ -221,8 +221,8 @@ EasyDeleteHint:SetPoint("TOPLEFT", EasyDeleteCheckbox, "BOTTOMLEFT", 34, -2)
 EasyDeleteHint:SetPoint("RIGHT", EasyDeletePanel, "RIGHT", -18, 0)
 EasyDeleteHint:SetJustifyH("LEFT")
 EasyDeleteHint:SetJustifyV("TOP")
-EasyDeleteHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-EasyDeleteHint:SetTextColor(0.80, 0.80, 0.80, 1)
+EasyDeleteHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+EasyDeleteHint:SetTextColor(0.78, 0.74, 0.69, 1)
 EasyDeleteHint:SetText(L("EASY_DELETE_HINT"))
 
 -- ========================================
@@ -236,18 +236,18 @@ FastLootPanel:SetHeight(115)
 
 local FastLootBg = FastLootPanel:CreateTexture(nil, "BACKGROUND")
 FastLootBg:SetAllPoints()
-FastLootBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+FastLootBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local FastLootBorder = FastLootPanel:CreateTexture(nil, "ARTWORK")
 FastLootBorder:SetPoint("BOTTOMLEFT", FastLootPanel, "BOTTOMLEFT", 0, 0)
 FastLootBorder:SetPoint("BOTTOMRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, 0)
 FastLootBorder:SetHeight(1)
-FastLootBorder:SetColorTexture(1, 0.82, 0, 0.9)
+FastLootBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local FastLootTitle = FastLootPanel:CreateFontString(nil, "OVERLAY")
 FastLootTitle:SetPoint("TOPLEFT", FastLootPanel, "TOPLEFT", 18, -14)
-FastLootTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-FastLootTitle:SetTextColor(1, 0.82, 0, 1)
+FastLootTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+FastLootTitle:SetTextColor(1, 0.88, 0.62, 1)
 FastLootTitle:SetText(L("FAST_LOOT"))
 
 local FastLootCheckbox = CreateFrame("CheckButton", nil, FastLootPanel, "UICheckButtonTemplate")
@@ -255,8 +255,8 @@ FastLootCheckbox:SetPoint("TOPLEFT", FastLootTitle, "BOTTOMLEFT", -4, -12)
 
 local FastLootLabel = FastLootPanel:CreateFontString(nil, "OVERLAY")
 FastLootLabel:SetPoint("LEFT", FastLootCheckbox, "RIGHT", 6, 0)
-FastLootLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-FastLootLabel:SetTextColor(1, 1, 1, 1)
+FastLootLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FastLootLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 FastLootLabel:SetText(L("ACTIVE"))
 
 local FastLootHint = FastLootPanel:CreateFontString(nil, "OVERLAY")
@@ -264,8 +264,8 @@ FastLootHint:SetPoint("TOPLEFT", FastLootCheckbox, "BOTTOMLEFT", 34, -2)
 FastLootHint:SetPoint("RIGHT", FastLootPanel, "RIGHT", -18, 0)
 FastLootHint:SetJustifyH("LEFT")
 FastLootHint:SetJustifyV("TOP")
-FastLootHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-FastLootHint:SetTextColor(0.80, 0.80, 0.80, 1)
+FastLootHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FastLootHint:SetTextColor(0.78, 0.74, 0.69, 1)
 FastLootHint:SetText(L("FAST_LOOT_HINT"))
 
 -- ========================================
@@ -279,18 +279,18 @@ CutsceneSkipPanel:SetHeight(115)
 
 local CutsceneSkipBg = CutsceneSkipPanel:CreateTexture(nil, "BACKGROUND")
 CutsceneSkipBg:SetAllPoints()
-CutsceneSkipBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+CutsceneSkipBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local CutsceneSkipBorder = CutsceneSkipPanel:CreateTexture(nil, "ARTWORK")
 CutsceneSkipBorder:SetPoint("BOTTOMLEFT", CutsceneSkipPanel, "BOTTOMLEFT", 0, 0)
 CutsceneSkipBorder:SetPoint("BOTTOMRIGHT", CutsceneSkipPanel, "BOTTOMRIGHT", 0, 0)
 CutsceneSkipBorder:SetHeight(1)
-CutsceneSkipBorder:SetColorTexture(1, 0.82, 0, 0.9)
+CutsceneSkipBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local CutsceneSkipTitle = CutsceneSkipPanel:CreateFontString(nil, "OVERLAY")
 CutsceneSkipTitle:SetPoint("TOPLEFT", CutsceneSkipPanel, "TOPLEFT", 18, -14)
-CutsceneSkipTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-CutsceneSkipTitle:SetTextColor(1, 0.82, 0, 1)
+CutsceneSkipTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+CutsceneSkipTitle:SetTextColor(1, 0.88, 0.62, 1)
 CutsceneSkipTitle:SetText(L("CUTSCENE_SKIP"))
 
 local CutsceneSkipCheckbox = CreateFrame("CheckButton", nil, CutsceneSkipPanel, "UICheckButtonTemplate")
@@ -298,8 +298,8 @@ CutsceneSkipCheckbox:SetPoint("TOPLEFT", CutsceneSkipTitle, "BOTTOMLEFT", -4, -1
 
 local CutsceneSkipLabel = CutsceneSkipPanel:CreateFontString(nil, "OVERLAY")
 CutsceneSkipLabel:SetPoint("LEFT", CutsceneSkipCheckbox, "RIGHT", 6, 0)
-CutsceneSkipLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-CutsceneSkipLabel:SetTextColor(1, 1, 1, 1)
+CutsceneSkipLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CutsceneSkipLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 CutsceneSkipLabel:SetText(L("ACTIVE"))
 
 local CutsceneSkipHint = CutsceneSkipPanel:CreateFontString(nil, "OVERLAY")
@@ -307,8 +307,8 @@ CutsceneSkipHint:SetPoint("TOPLEFT", CutsceneSkipCheckbox, "BOTTOMLEFT", 34, -2)
 CutsceneSkipHint:SetPoint("RIGHT", CutsceneSkipPanel, "RIGHT", -18, 0)
 CutsceneSkipHint:SetJustifyH("LEFT")
 CutsceneSkipHint:SetJustifyV("TOP")
-CutsceneSkipHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-CutsceneSkipHint:SetTextColor(0.80, 0.80, 0.80, 1)
+CutsceneSkipHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CutsceneSkipHint:SetTextColor(0.78, 0.74, 0.69, 1)
 CutsceneSkipHint:SetText(L("CUTSCENE_SKIP_HINT"))
 
 -- ========================================
@@ -322,18 +322,18 @@ AutoRespawnPetPanel:SetHeight(128)
 
 local AutoRespawnPetBg = AutoRespawnPetPanel:CreateTexture(nil, "BACKGROUND")
 AutoRespawnPetBg:SetAllPoints()
-AutoRespawnPetBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+AutoRespawnPetBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local AutoRespawnPetBorder = AutoRespawnPetPanel:CreateTexture(nil, "ARTWORK")
 AutoRespawnPetBorder:SetPoint("BOTTOMLEFT", AutoRespawnPetPanel, "BOTTOMLEFT", 0, 0)
 AutoRespawnPetBorder:SetPoint("BOTTOMRIGHT", AutoRespawnPetPanel, "BOTTOMRIGHT", 0, 0)
 AutoRespawnPetBorder:SetHeight(1)
-AutoRespawnPetBorder:SetColorTexture(1, 0.82, 0, 0.9)
+AutoRespawnPetBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local AutoRespawnPetTitle = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
 AutoRespawnPetTitle:SetPoint("TOPLEFT", AutoRespawnPetPanel, "TOPLEFT", 18, -14)
-AutoRespawnPetTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-AutoRespawnPetTitle:SetTextColor(1, 0.82, 0, 1)
+AutoRespawnPetTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+AutoRespawnPetTitle:SetTextColor(1, 0.88, 0.62, 1)
 AutoRespawnPetTitle:SetText(L("AUTO_RESPAWN_PET_TITLE"))
 
 local AutoRespawnPetCheckbox = CreateFrame("CheckButton", nil, AutoRespawnPetPanel, "UICheckButtonTemplate")
@@ -341,8 +341,8 @@ AutoRespawnPetCheckbox:SetPoint("TOPLEFT", AutoRespawnPetTitle, "BOTTOMLEFT", -4
 
 local AutoRespawnPetLabel = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
 AutoRespawnPetLabel:SetPoint("LEFT", AutoRespawnPetCheckbox, "RIGHT", 6, 0)
-AutoRespawnPetLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-AutoRespawnPetLabel:SetTextColor(1, 1, 1, 1)
+AutoRespawnPetLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoRespawnPetLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 AutoRespawnPetLabel:SetText(L("ACTIVE"))
 
 local AutoRespawnPetHint = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
@@ -350,8 +350,8 @@ AutoRespawnPetHint:SetPoint("TOPLEFT", AutoRespawnPetCheckbox, "BOTTOMLEFT", 34,
 AutoRespawnPetHint:SetPoint("RIGHT", AutoRespawnPetPanel, "RIGHT", -18, 0)
 AutoRespawnPetHint:SetJustifyH("LEFT")
 AutoRespawnPetHint:SetJustifyV("TOP")
-AutoRespawnPetHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-AutoRespawnPetHint:SetTextColor(0.80, 0.80, 0.80, 1)
+AutoRespawnPetHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AutoRespawnPetHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AutoRespawnPetHint:SetText(L("AUTO_RESPAWN_PET_HINT"))
 
 -- ========================================
@@ -367,18 +367,18 @@ FlightMasterTimerPanel:SetHeight(FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT)
 
 local FlightMasterTimerBg = FlightMasterTimerPanel:CreateTexture(nil, "BACKGROUND")
 FlightMasterTimerBg:SetAllPoints()
-FlightMasterTimerBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+FlightMasterTimerBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local FlightMasterTimerBorder = FlightMasterTimerPanel:CreateTexture(nil, "ARTWORK")
 FlightMasterTimerBorder:SetPoint("BOTTOMLEFT", FlightMasterTimerPanel, "BOTTOMLEFT", 0, 0)
 FlightMasterTimerBorder:SetPoint("BOTTOMRIGHT", FlightMasterTimerPanel, "BOTTOMRIGHT", 0, 0)
 FlightMasterTimerBorder:SetHeight(1)
-FlightMasterTimerBorder:SetColorTexture(1, 0.82, 0, 0.9)
+FlightMasterTimerBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local FlightMasterTimerTitle = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
 FlightMasterTimerTitle:SetPoint("TOPLEFT", FlightMasterTimerPanel, "TOPLEFT", 18, -14)
-FlightMasterTimerTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-FlightMasterTimerTitle:SetTextColor(1, 0.82, 0, 1)
+FlightMasterTimerTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+FlightMasterTimerTitle:SetTextColor(1, 0.88, 0.62, 1)
 FlightMasterTimerTitle:SetText(L("FLIGHT_MASTER_TIMER"))
 
 local FlightMasterTimerCheckbox = CreateFrame("CheckButton", nil, FlightMasterTimerPanel, "UICheckButtonTemplate")
@@ -386,8 +386,8 @@ FlightMasterTimerCheckbox:SetPoint("TOPLEFT", FlightMasterTimerTitle, "BOTTOMLEF
 
 local FlightMasterTimerLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
 FlightMasterTimerLabel:SetPoint("LEFT", FlightMasterTimerCheckbox, "RIGHT", 6, 0)
-FlightMasterTimerLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-FlightMasterTimerLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FlightMasterTimerLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 FlightMasterTimerLabel:SetText(L("ACTIVE"))
 
 local FlightMasterTimerHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
@@ -395,8 +395,8 @@ FlightMasterTimerHint:SetPoint("TOPLEFT", FlightMasterTimerCheckbox, "BOTTOMLEFT
 FlightMasterTimerHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
 FlightMasterTimerHint:SetJustifyH("LEFT")
 FlightMasterTimerHint:SetJustifyV("TOP")
-FlightMasterTimerHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-FlightMasterTimerHint:SetTextColor(0.80, 0.80, 0.80, 1)
+FlightMasterTimerHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FlightMasterTimerHint:SetTextColor(0.78, 0.74, 0.69, 1)
 FlightMasterTimerHint:SetText(L("FLIGHT_MASTER_TIMER_HINT"))
 
 local FlightMasterTimerSoundCheckbox = CreateFrame("CheckButton", nil, FlightMasterTimerPanel, "UICheckButtonTemplate")
@@ -405,8 +405,8 @@ FlightMasterTimerSoundCheckbox:SetScale(0.85)
 
 local FlightMasterTimerSoundLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
 FlightMasterTimerSoundLabel:SetPoint("LEFT", FlightMasterTimerSoundCheckbox, "RIGHT", 4, 0)
-FlightMasterTimerSoundLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-FlightMasterTimerSoundLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerSoundLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FlightMasterTimerSoundLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 FlightMasterTimerSoundLabel:SetText(L("FLIGHT_MASTER_TIMER_SOUND"))
 
 local FlightMasterTimerSoundHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
@@ -414,14 +414,14 @@ FlightMasterTimerSoundHint:SetPoint("TOPLEFT", FlightMasterTimerSoundCheckbox, "
 FlightMasterTimerSoundHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
 FlightMasterTimerSoundHint:SetJustifyH("LEFT")
 FlightMasterTimerSoundHint:SetJustifyV("TOP")
-FlightMasterTimerSoundHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-FlightMasterTimerSoundHint:SetTextColor(0.80, 0.80, 0.80, 1)
+FlightMasterTimerSoundHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FlightMasterTimerSoundHint:SetTextColor(0.78, 0.74, 0.69, 1)
 FlightMasterTimerSoundHint:SetText(L("FLIGHT_MASTER_TIMER_SOUND_HINT"))
 
 local FlightMasterTimerSoundSelectLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
 FlightMasterTimerSoundSelectLabel:SetPoint("TOPLEFT", FlightMasterTimerSoundHint, "BOTTOMLEFT", 0, -14)
-FlightMasterTimerSoundSelectLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-FlightMasterTimerSoundSelectLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerSoundSelectLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FlightMasterTimerSoundSelectLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 FlightMasterTimerSoundSelectLabel:SetText(L("FLIGHT_MASTER_TIMER_SOUND_SELECT"))
 
 local FlightMasterTimerSoundDropdown = CreateFrame("Frame", "BeavisQoLFlightMasterTimerSoundDropdown", FlightMasterTimerPanel, "UIDropDownMenuTemplate")
@@ -440,8 +440,8 @@ FlightMasterTimerLockCheckbox:SetScale(0.85)
 
 local FlightMasterTimerLockLabel = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
 FlightMasterTimerLockLabel:SetPoint("LEFT", FlightMasterTimerLockCheckbox, "RIGHT", 4, 0)
-FlightMasterTimerLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-FlightMasterTimerLockLabel:SetTextColor(1, 1, 1, 1)
+FlightMasterTimerLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FlightMasterTimerLockLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 FlightMasterTimerLockLabel:SetText(L("FLIGHT_MASTER_TIMER_LOCK_OVERLAY"))
 
 local FlightMasterTimerLockHint = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
@@ -449,8 +449,8 @@ FlightMasterTimerLockHint:SetPoint("TOPLEFT", FlightMasterTimerLockCheckbox, "BO
 FlightMasterTimerLockHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
 FlightMasterTimerLockHint:SetJustifyH("LEFT")
 FlightMasterTimerLockHint:SetJustifyV("TOP")
-FlightMasterTimerLockHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-FlightMasterTimerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+FlightMasterTimerLockHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FlightMasterTimerLockHint:SetTextColor(0.78, 0.74, 0.69, 1)
 FlightMasterTimerLockHint:SetText(L("FLIGHT_MASTER_TIMER_LOCK_OVERLAY_HINT"))
 
 local FlightMasterTimerPreviewButton = CreateFrame("Button", nil, FlightMasterTimerPanel, "UIPanelButtonTemplate")
@@ -463,7 +463,7 @@ FlightMasterTimerPreviewHint:SetPoint("TOPLEFT", FlightMasterTimerPreviewButton,
 FlightMasterTimerPreviewHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
 FlightMasterTimerPreviewHint:SetJustifyH("LEFT")
 FlightMasterTimerPreviewHint:SetJustifyV("TOP")
-FlightMasterTimerPreviewHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+FlightMasterTimerPreviewHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 FlightMasterTimerPreviewHint:SetTextColor(0.72, 0.72, 0.72, 1)
 FlightMasterTimerPreviewHint:SetText(L("FLIGHT_MASTER_TIMER_POSITION_MODE_HINT"))
 
@@ -477,7 +477,7 @@ FlightMasterTimerResetHint:SetPoint("TOPLEFT", FlightMasterTimerResetButton, "TO
 FlightMasterTimerResetHint:SetPoint("RIGHT", FlightMasterTimerPanel, "RIGHT", -18, 0)
 FlightMasterTimerResetHint:SetJustifyH("LEFT")
 FlightMasterTimerResetHint:SetJustifyV("TOP")
-FlightMasterTimerResetHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+FlightMasterTimerResetHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 FlightMasterTimerResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
 FlightMasterTimerResetHint:SetText(L("FLIGHT_MASTER_TIMER_RESET_HINT"))
 
@@ -533,18 +533,18 @@ TooltipItemLevelPanel:SetHeight(115)
 
 local TooltipItemLevelBg = TooltipItemLevelPanel:CreateTexture(nil, "BACKGROUND")
 TooltipItemLevelBg:SetAllPoints()
-TooltipItemLevelBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+TooltipItemLevelBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local TooltipItemLevelBorder = TooltipItemLevelPanel:CreateTexture(nil, "ARTWORK")
 TooltipItemLevelBorder:SetPoint("BOTTOMLEFT", TooltipItemLevelPanel, "BOTTOMLEFT", 0, 0)
 TooltipItemLevelBorder:SetPoint("BOTTOMRIGHT", TooltipItemLevelPanel, "BOTTOMRIGHT", 0, 0)
 TooltipItemLevelBorder:SetHeight(1)
-TooltipItemLevelBorder:SetColorTexture(1, 0.82, 0, 0.9)
+TooltipItemLevelBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local TooltipItemLevelTitle = TooltipItemLevelPanel:CreateFontString(nil, "OVERLAY")
 TooltipItemLevelTitle:SetPoint("TOPLEFT", TooltipItemLevelPanel, "TOPLEFT", 18, -14)
-TooltipItemLevelTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-TooltipItemLevelTitle:SetTextColor(1, 0.82, 0, 1)
+TooltipItemLevelTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+TooltipItemLevelTitle:SetTextColor(1, 0.88, 0.62, 1)
 TooltipItemLevelTitle:SetText(L("TOOLTIP_ITEMLEVEL"))
 
 -- Eine einfache Checkbox reicht hier aus, weil das Modul nur einen klaren
@@ -554,8 +554,8 @@ TooltipItemLevelCheckbox:SetPoint("TOPLEFT", TooltipItemLevelTitle, "BOTTOMLEFT"
 
 local TooltipItemLevelLabel = TooltipItemLevelPanel:CreateFontString(nil, "OVERLAY")
 TooltipItemLevelLabel:SetPoint("LEFT", TooltipItemLevelCheckbox, "RIGHT", 6, 0)
-TooltipItemLevelLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-TooltipItemLevelLabel:SetTextColor(1, 1, 1, 1)
+TooltipItemLevelLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TooltipItemLevelLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 TooltipItemLevelLabel:SetText(L("ACTIVE"))
 
 local TooltipItemLevelHint = TooltipItemLevelPanel:CreateFontString(nil, "OVERLAY")
@@ -563,8 +563,8 @@ TooltipItemLevelHint:SetPoint("TOPLEFT", TooltipItemLevelCheckbox, "BOTTOMLEFT",
 TooltipItemLevelHint:SetPoint("RIGHT", TooltipItemLevelPanel, "RIGHT", -18, 0)
 TooltipItemLevelHint:SetJustifyH("LEFT")
 TooltipItemLevelHint:SetJustifyV("TOP")
-TooltipItemLevelHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-TooltipItemLevelHint:SetTextColor(0.80, 0.80, 0.80, 1)
+TooltipItemLevelHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TooltipItemLevelHint:SetTextColor(0.78, 0.74, 0.69, 1)
 TooltipItemLevelHint:SetText(L("TOOLTIP_ITEMLEVEL_HINT"))
 
 -- ========================================
@@ -581,18 +581,18 @@ CameraDistancePanel:SetHeight(145)
 
 local CameraDistanceBg = CameraDistancePanel:CreateTexture(nil, "BACKGROUND")
 CameraDistanceBg:SetAllPoints()
-CameraDistanceBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+CameraDistanceBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local CameraDistanceBorder = CameraDistancePanel:CreateTexture(nil, "ARTWORK")
 CameraDistanceBorder:SetPoint("BOTTOMLEFT", CameraDistancePanel, "BOTTOMLEFT", 0, 0)
 CameraDistanceBorder:SetPoint("BOTTOMRIGHT", CameraDistancePanel, "BOTTOMRIGHT", 0, 0)
 CameraDistanceBorder:SetHeight(1)
-CameraDistanceBorder:SetColorTexture(1, 0.82, 0, 0.9)
+CameraDistanceBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local CameraDistanceTitle = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
 CameraDistanceTitle:SetPoint("TOPLEFT", CameraDistancePanel, "TOPLEFT", 18, -14)
-CameraDistanceTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-CameraDistanceTitle:SetTextColor(1, 0.82, 0, 1)
+CameraDistanceTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+CameraDistanceTitle:SetTextColor(1, 0.88, 0.62, 1)
 CameraDistanceTitle:SetText(L("CAMERA_DISTANCE"))
 
 local CameraDistanceHint = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
@@ -600,8 +600,8 @@ CameraDistanceHint:SetPoint("TOPLEFT", CameraDistanceTitle, "BOTTOMLEFT", 0, -10
 CameraDistanceHint:SetPoint("RIGHT", CameraDistancePanel, "RIGHT", -18, 0)
 CameraDistanceHint:SetJustifyH("LEFT")
 CameraDistanceHint:SetJustifyV("TOP")
-CameraDistanceHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-CameraDistanceHint:SetTextColor(0.80, 0.80, 0.80, 1)
+CameraDistanceHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CameraDistanceHint:SetTextColor(0.78, 0.74, 0.69, 1)
 CameraDistanceHint:SetText(L("CAMERA_DISTANCE_HINT"))
 
 -- Links steht die feste Beschriftung, rechts daneben der tatsächlich gelesene Status.
@@ -609,13 +609,13 @@ CameraDistanceHint:SetText(L("CAMERA_DISTANCE_HINT"))
 local CameraDistanceStatusLabel = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
 CameraDistanceStatusLabel:SetPoint("TOPLEFT", CameraDistanceHint, "BOTTOMLEFT", 0, -16)
 CameraDistanceStatusLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-CameraDistanceStatusLabel:SetTextColor(1, 1, 1, 1)
+CameraDistanceStatusLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 CameraDistanceStatusLabel:SetText(L("CURRENT_SETTING"))
 
 local CameraDistanceStatusValue = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
 CameraDistanceStatusValue:SetPoint("LEFT", CameraDistanceStatusLabel, "RIGHT", 8, 0)
-CameraDistanceStatusValue:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE")
-CameraDistanceStatusValue:SetTextColor(1, 0.82, 0, 1)
+CameraDistanceStatusValue:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+CameraDistanceStatusValue:SetTextColor(1, 0.88, 0.62, 1)
 CameraDistanceStatusValue:SetText(L("UNKNOWN"))
 
 -- Die Buttons setzen keine lokalen UI-Zustände, sondern geben die Aktion direkt
@@ -642,18 +642,18 @@ MacroFramePanel:SetHeight(115)
 
 local MacroFrameBg = MacroFramePanel:CreateTexture(nil, "BACKGROUND")
 MacroFrameBg:SetAllPoints()
-MacroFrameBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+MacroFrameBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local MacroFrameBorder = MacroFramePanel:CreateTexture(nil, "ARTWORK")
 MacroFrameBorder:SetPoint("BOTTOMLEFT", MacroFramePanel, "BOTTOMLEFT", 0, 0)
 MacroFrameBorder:SetPoint("BOTTOMRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, 0)
 MacroFrameBorder:SetHeight(1)
-MacroFrameBorder:SetColorTexture(1, 0.82, 0, 0.9)
+MacroFrameBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local MacroFrameTitle = MacroFramePanel:CreateFontString(nil, "OVERLAY")
 MacroFrameTitle:SetPoint("TOPLEFT", MacroFramePanel, "TOPLEFT", 18, -14)
-MacroFrameTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-MacroFrameTitle:SetTextColor(1, 0.82, 0, 1)
+MacroFrameTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+MacroFrameTitle:SetTextColor(1, 0.88, 0.62, 1)
 MacroFrameTitle:SetText(L("MACRO_FRAME"))
 
 local MacroFrameCheckbox = CreateFrame("CheckButton", nil, MacroFramePanel, "UICheckButtonTemplate")
@@ -661,8 +661,8 @@ MacroFrameCheckbox:SetPoint("TOPLEFT", MacroFrameTitle, "BOTTOMLEFT", -4, -12)
 
 local MacroFrameLabel = MacroFramePanel:CreateFontString(nil, "OVERLAY")
 MacroFrameLabel:SetPoint("LEFT", MacroFrameCheckbox, "RIGHT", 6, 0)
-MacroFrameLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-MacroFrameLabel:SetTextColor(1, 1, 1, 1)
+MacroFrameLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+MacroFrameLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 MacroFrameLabel:SetText(L("ACTIVE"))
 
 local MacroFrameHint = MacroFramePanel:CreateFontString(nil, "OVERLAY")
@@ -670,8 +670,8 @@ MacroFrameHint:SetPoint("TOPLEFT", MacroFrameCheckbox, "BOTTOMLEFT", 34, -2)
 MacroFrameHint:SetPoint("RIGHT", MacroFramePanel, "RIGHT", -18, 0)
 MacroFrameHint:SetJustifyH("LEFT")
 MacroFrameHint:SetJustifyV("TOP")
-MacroFrameHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-MacroFrameHint:SetTextColor(0.80, 0.80, 0.80, 1)
+MacroFrameHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+MacroFrameHint:SetTextColor(0.78, 0.74, 0.69, 1)
 MacroFrameHint:SetText(L("MACRO_FRAME_HINT"))
 
 -- ========================================
@@ -685,18 +685,18 @@ ReputationSearchPanel:SetHeight(115)
 
 local ReputationSearchBg = ReputationSearchPanel:CreateTexture(nil, "BACKGROUND")
 ReputationSearchBg:SetAllPoints()
-ReputationSearchBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+ReputationSearchBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local ReputationSearchBorder = ReputationSearchPanel:CreateTexture(nil, "ARTWORK")
 ReputationSearchBorder:SetPoint("BOTTOMLEFT", ReputationSearchPanel, "BOTTOMLEFT", 0, 0)
 ReputationSearchBorder:SetPoint("BOTTOMRIGHT", ReputationSearchPanel, "BOTTOMRIGHT", 0, 0)
 ReputationSearchBorder:SetHeight(1)
-ReputationSearchBorder:SetColorTexture(1, 0.82, 0, 0.9)
+ReputationSearchBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local ReputationSearchTitle = ReputationSearchPanel:CreateFontString(nil, "OVERLAY")
 ReputationSearchTitle:SetPoint("TOPLEFT", ReputationSearchPanel, "TOPLEFT", 18, -14)
-ReputationSearchTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-ReputationSearchTitle:SetTextColor(1, 0.82, 0, 1)
+ReputationSearchTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+ReputationSearchTitle:SetTextColor(1, 0.88, 0.62, 1)
 ReputationSearchTitle:SetText(L("REPUTATION_SEARCH"))
 
 local ReputationSearchCheckbox = CreateFrame("CheckButton", nil, ReputationSearchPanel, "UICheckButtonTemplate")
@@ -704,8 +704,8 @@ ReputationSearchCheckbox:SetPoint("TOPLEFT", ReputationSearchTitle, "BOTTOMLEFT"
 
 local ReputationSearchLabel = ReputationSearchPanel:CreateFontString(nil, "OVERLAY")
 ReputationSearchLabel:SetPoint("LEFT", ReputationSearchCheckbox, "RIGHT", 6, 0)
-ReputationSearchLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-ReputationSearchLabel:SetTextColor(1, 1, 1, 1)
+ReputationSearchLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ReputationSearchLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 ReputationSearchLabel:SetText(L("ACTIVE"))
 
 local ReputationSearchHint = ReputationSearchPanel:CreateFontString(nil, "OVERLAY")
@@ -713,8 +713,8 @@ ReputationSearchHint:SetPoint("TOPLEFT", ReputationSearchCheckbox, "BOTTOMLEFT",
 ReputationSearchHint:SetPoint("RIGHT", ReputationSearchPanel, "RIGHT", -18, 0)
 ReputationSearchHint:SetJustifyH("LEFT")
 ReputationSearchHint:SetJustifyV("TOP")
-ReputationSearchHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-ReputationSearchHint:SetTextColor(0.80, 0.80, 0.80, 1)
+ReputationSearchHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ReputationSearchHint:SetTextColor(0.78, 0.74, 0.69, 1)
 ReputationSearchHint:SetText(L("REPUTATION_SEARCH_HINT"))
 
 -- ========================================
@@ -728,18 +728,18 @@ CurrencySearchPanel:SetHeight(115)
 
 local CurrencySearchBg = CurrencySearchPanel:CreateTexture(nil, "BACKGROUND")
 CurrencySearchBg:SetAllPoints()
-CurrencySearchBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+CurrencySearchBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local CurrencySearchBorder = CurrencySearchPanel:CreateTexture(nil, "ARTWORK")
 CurrencySearchBorder:SetPoint("BOTTOMLEFT", CurrencySearchPanel, "BOTTOMLEFT", 0, 0)
 CurrencySearchBorder:SetPoint("BOTTOMRIGHT", CurrencySearchPanel, "BOTTOMRIGHT", 0, 0)
 CurrencySearchBorder:SetHeight(1)
-CurrencySearchBorder:SetColorTexture(1, 0.82, 0, 0.9)
+CurrencySearchBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local CurrencySearchTitle = CurrencySearchPanel:CreateFontString(nil, "OVERLAY")
 CurrencySearchTitle:SetPoint("TOPLEFT", CurrencySearchPanel, "TOPLEFT", 18, -14)
-CurrencySearchTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-CurrencySearchTitle:SetTextColor(1, 0.82, 0, 1)
+CurrencySearchTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+CurrencySearchTitle:SetTextColor(1, 0.88, 0.62, 1)
 CurrencySearchTitle:SetText(L("CURRENCY_SEARCH"))
 
 local CurrencySearchCheckbox = CreateFrame("CheckButton", nil, CurrencySearchPanel, "UICheckButtonTemplate")
@@ -747,8 +747,8 @@ CurrencySearchCheckbox:SetPoint("TOPLEFT", CurrencySearchTitle, "BOTTOMLEFT", -4
 
 local CurrencySearchLabel = CurrencySearchPanel:CreateFontString(nil, "OVERLAY")
 CurrencySearchLabel:SetPoint("LEFT", CurrencySearchCheckbox, "RIGHT", 6, 0)
-CurrencySearchLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-CurrencySearchLabel:SetTextColor(1, 1, 1, 1)
+CurrencySearchLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CurrencySearchLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 CurrencySearchLabel:SetText(L("ACTIVE"))
 
 local CurrencySearchHint = CurrencySearchPanel:CreateFontString(nil, "OVERLAY")
@@ -756,8 +756,8 @@ CurrencySearchHint:SetPoint("TOPLEFT", CurrencySearchCheckbox, "BOTTOMLEFT", 34,
 CurrencySearchHint:SetPoint("RIGHT", CurrencySearchPanel, "RIGHT", -18, 0)
 CurrencySearchHint:SetJustifyH("LEFT")
 CurrencySearchHint:SetJustifyV("TOP")
-CurrencySearchHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-CurrencySearchHint:SetTextColor(0.80, 0.80, 0.80, 1)
+CurrencySearchHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CurrencySearchHint:SetTextColor(0.78, 0.74, 0.69, 1)
 CurrencySearchHint:SetText(L("CURRENCY_SEARCH_HINT"))
 
 -- ========================================
@@ -771,18 +771,18 @@ PreyHuntProgressPanel:SetHeight(115)
 
 local PreyHuntProgressBg = PreyHuntProgressPanel:CreateTexture(nil, "BACKGROUND")
 PreyHuntProgressBg:SetAllPoints()
-PreyHuntProgressBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+PreyHuntProgressBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local PreyHuntProgressBorder = PreyHuntProgressPanel:CreateTexture(nil, "ARTWORK")
 PreyHuntProgressBorder:SetPoint("BOTTOMLEFT", PreyHuntProgressPanel, "BOTTOMLEFT", 0, 0)
 PreyHuntProgressBorder:SetPoint("BOTTOMRIGHT", PreyHuntProgressPanel, "BOTTOMRIGHT", 0, 0)
 PreyHuntProgressBorder:SetHeight(1)
-PreyHuntProgressBorder:SetColorTexture(1, 0.82, 0, 0.9)
+PreyHuntProgressBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local PreyHuntProgressTitle = PreyHuntProgressPanel:CreateFontString(nil, "OVERLAY")
 PreyHuntProgressTitle:SetPoint("TOPLEFT", PreyHuntProgressPanel, "TOPLEFT", 18, -14)
-PreyHuntProgressTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-PreyHuntProgressTitle:SetTextColor(1, 0.82, 0, 1)
+PreyHuntProgressTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+PreyHuntProgressTitle:SetTextColor(1, 0.88, 0.62, 1)
 PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
 
 local PreyHuntProgressCheckbox = CreateFrame("CheckButton", nil, PreyHuntProgressPanel, "UICheckButtonTemplate")
@@ -790,8 +790,8 @@ PreyHuntProgressCheckbox:SetPoint("TOPLEFT", PreyHuntProgressTitle, "BOTTOMLEFT"
 
 local PreyHuntProgressLabel = PreyHuntProgressPanel:CreateFontString(nil, "OVERLAY")
 PreyHuntProgressLabel:SetPoint("LEFT", PreyHuntProgressCheckbox, "RIGHT", 6, 0)
-PreyHuntProgressLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-PreyHuntProgressLabel:SetTextColor(1, 1, 1, 1)
+PreyHuntProgressLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PreyHuntProgressLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 PreyHuntProgressLabel:SetText(L("ACTIVE"))
 
 local PreyHuntProgressHint = PreyHuntProgressPanel:CreateFontString(nil, "OVERLAY")
@@ -799,8 +799,8 @@ PreyHuntProgressHint:SetPoint("TOPLEFT", PreyHuntProgressCheckbox, "BOTTOMLEFT",
 PreyHuntProgressHint:SetPoint("RIGHT", PreyHuntProgressPanel, "RIGHT", -18, 0)
 PreyHuntProgressHint:SetJustifyH("LEFT")
 PreyHuntProgressHint:SetJustifyV("TOP")
-PreyHuntProgressHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PreyHuntProgressHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PreyHuntProgressHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PreyHuntProgressHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
 
 -- ========================================
@@ -814,18 +814,18 @@ KeystoneActionsPanel:SetHeight(250)
 
 local KeystoneActionsBg = KeystoneActionsPanel:CreateTexture(nil, "BACKGROUND")
 KeystoneActionsBg:SetAllPoints()
-KeystoneActionsBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+KeystoneActionsBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local KeystoneActionsBorder = KeystoneActionsPanel:CreateTexture(nil, "ARTWORK")
 KeystoneActionsBorder:SetPoint("BOTTOMLEFT", KeystoneActionsPanel, "BOTTOMLEFT", 0, 0)
 KeystoneActionsBorder:SetPoint("BOTTOMRIGHT", KeystoneActionsPanel, "BOTTOMRIGHT", 0, 0)
 KeystoneActionsBorder:SetHeight(1)
-KeystoneActionsBorder:SetColorTexture(1, 0.82, 0, 0.9)
+KeystoneActionsBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local KeystoneActionsTitle = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
 KeystoneActionsTitle:SetPoint("TOPLEFT", KeystoneActionsPanel, "TOPLEFT", 18, -14)
-KeystoneActionsTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-KeystoneActionsTitle:SetTextColor(1, 0.82, 0, 1)
+KeystoneActionsTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+KeystoneActionsTitle:SetTextColor(1, 0.88, 0.62, 1)
 KeystoneActionsTitle:SetText(L("KEYSTONE_ACTIONS"))
 
 local KeystoneActionsCheckbox = CreateFrame("CheckButton", nil, KeystoneActionsPanel, "UICheckButtonTemplate")
@@ -833,8 +833,8 @@ KeystoneActionsCheckbox:SetPoint("TOPLEFT", KeystoneActionsTitle, "BOTTOMLEFT", 
 
 local KeystoneActionsLabel = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
 KeystoneActionsLabel:SetPoint("LEFT", KeystoneActionsCheckbox, "RIGHT", 6, 0)
-KeystoneActionsLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-KeystoneActionsLabel:SetTextColor(1, 1, 1, 1)
+KeystoneActionsLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+KeystoneActionsLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 KeystoneActionsLabel:SetText(L("ACTIVE"))
 
 local KeystoneActionsHint = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
@@ -842,8 +842,8 @@ KeystoneActionsHint:SetPoint("TOPLEFT", KeystoneActionsCheckbox, "BOTTOMLEFT", 3
 KeystoneActionsHint:SetPoint("RIGHT", KeystoneActionsPanel, "RIGHT", -18, 0)
 KeystoneActionsHint:SetJustifyH("LEFT")
 KeystoneActionsHint:SetJustifyV("TOP")
-KeystoneActionsHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-KeystoneActionsHint:SetTextColor(0.80, 0.80, 0.80, 1)
+KeystoneActionsHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+KeystoneActionsHint:SetTextColor(0.78, 0.74, 0.69, 1)
 KeystoneActionsHint:SetText(L("KEYSTONE_ACTIONS_HINT"))
 
 local KeystoneActionsGroupLockCheckbox = CreateFrame("CheckButton", nil, KeystoneActionsPanel, "UICheckButtonTemplate")
@@ -852,8 +852,8 @@ KeystoneActionsGroupLockCheckbox:SetScale(0.85)
 
 local KeystoneActionsGroupLockLabel = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
 KeystoneActionsGroupLockLabel:SetPoint("LEFT", KeystoneActionsGroupLockCheckbox, "RIGHT", 4, 0)
-KeystoneActionsGroupLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-KeystoneActionsGroupLockLabel:SetTextColor(1, 1, 1, 1)
+KeystoneActionsGroupLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+KeystoneActionsGroupLockLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 KeystoneActionsGroupLockLabel:SetText(L("KEYSTONE_ACTIONS_GROUP_LOCK"))
 
 local KeystoneActionsGroupLockHint = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
@@ -861,14 +861,14 @@ KeystoneActionsGroupLockHint:SetPoint("TOPLEFT", KeystoneActionsGroupLockCheckbo
 KeystoneActionsGroupLockHint:SetPoint("RIGHT", KeystoneActionsPanel, "RIGHT", -18, 0)
 KeystoneActionsGroupLockHint:SetJustifyH("LEFT")
 KeystoneActionsGroupLockHint:SetJustifyV("TOP")
-KeystoneActionsGroupLockHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-KeystoneActionsGroupLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+KeystoneActionsGroupLockHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+KeystoneActionsGroupLockHint:SetTextColor(0.78, 0.74, 0.69, 1)
 KeystoneActionsGroupLockHint:SetText(L("KEYSTONE_ACTIONS_GROUP_LOCK_HINT"))
 
 local KeystoneActionsSecondsLabel = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
 KeystoneActionsSecondsLabel:SetPoint("TOPLEFT", KeystoneActionsGroupLockHint, "BOTTOMLEFT", 0, -14)
-KeystoneActionsSecondsLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-KeystoneActionsSecondsLabel:SetTextColor(1, 1, 1, 1)
+KeystoneActionsSecondsLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+KeystoneActionsSecondsLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 KeystoneActionsSecondsLabel:SetText(L("KEYSTONE_ACTIONS_SECONDS"))
 
 local KeystoneActionsSecondsInput = CreateFrame("EditBox", nil, KeystoneActionsPanel, "InputBoxTemplate")
@@ -884,8 +884,8 @@ KeystoneActionsSecondsHint:SetPoint("TOPLEFT", KeystoneActionsSecondsLabel, "BOT
 KeystoneActionsSecondsHint:SetPoint("RIGHT", KeystoneActionsPanel, "RIGHT", -18, 0)
 KeystoneActionsSecondsHint:SetJustifyH("LEFT")
 KeystoneActionsSecondsHint:SetJustifyV("TOP")
-KeystoneActionsSecondsHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-KeystoneActionsSecondsHint:SetTextColor(0.80, 0.80, 0.80, 1)
+KeystoneActionsSecondsHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+KeystoneActionsSecondsHint:SetTextColor(0.78, 0.74, 0.69, 1)
 KeystoneActionsSecondsHint:SetText(L("KEYSTONE_ACTIONS_SECONDS_HINT"))
 
 -- ========================================
@@ -899,18 +899,18 @@ PortalViewerPanel:SetHeight(PORTAL_VIEWER_PANEL_MIN_HEIGHT)
 
 local PortalViewerBg = PortalViewerPanel:CreateTexture(nil, "BACKGROUND")
 PortalViewerBg:SetAllPoints()
-PortalViewerBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+PortalViewerBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local PortalViewerBorder = PortalViewerPanel:CreateTexture(nil, "ARTWORK")
 PortalViewerBorder:SetPoint("BOTTOMLEFT", PortalViewerPanel, "BOTTOMLEFT", 0, 0)
 PortalViewerBorder:SetPoint("BOTTOMRIGHT", PortalViewerPanel, "BOTTOMRIGHT", 0, 0)
 PortalViewerBorder:SetHeight(1)
-PortalViewerBorder:SetColorTexture(1, 0.82, 0, 0.9)
+PortalViewerBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local PortalViewerTitle = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
 PortalViewerTitle:SetPoint("TOPLEFT", PortalViewerPanel, "TOPLEFT", 18, -14)
-PortalViewerTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-PortalViewerTitle:SetTextColor(1, 0.82, 0, 1)
+PortalViewerTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+PortalViewerTitle:SetTextColor(1, 0.88, 0.62, 1)
 PortalViewerTitle:SetText(L("PORTAL_VIEWER_TITLE"))
 
 local PortalViewerHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
@@ -918,8 +918,8 @@ PortalViewerHint:SetPoint("TOPLEFT", PortalViewerTitle, "BOTTOMLEFT", 0, -10)
 PortalViewerHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
 PortalViewerHint:SetJustifyH("LEFT")
 PortalViewerHint:SetJustifyV("TOP")
-PortalViewerHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PortalViewerHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PortalViewerHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PortalViewerHint:SetText(L("PORTAL_VIEWER_SETTINGS_HINT"))
 
 local PortalViewerEnableCheckbox = CreateFrame("CheckButton", nil, PortalViewerPanel, "UICheckButtonTemplate")
@@ -927,8 +927,8 @@ PortalViewerEnableCheckbox:SetPoint("TOPLEFT", PortalViewerHint, "BOTTOMLEFT", -
 
 local PortalViewerEnableLabel = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
 PortalViewerEnableLabel:SetPoint("LEFT", PortalViewerEnableCheckbox, "RIGHT", 6, 0)
-PortalViewerEnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-PortalViewerEnableLabel:SetTextColor(1, 1, 1, 1)
+PortalViewerEnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PortalViewerEnableLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 PortalViewerEnableLabel:SetText(L("PORTAL_VIEWER_ENABLE_WINDOW"))
 
 local PortalViewerEnableHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
@@ -936,8 +936,8 @@ PortalViewerEnableHint:SetPoint("TOPLEFT", PortalViewerEnableCheckbox, "BOTTOMLE
 PortalViewerEnableHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
 PortalViewerEnableHint:SetJustifyH("LEFT")
 PortalViewerEnableHint:SetJustifyV("TOP")
-PortalViewerEnableHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-PortalViewerEnableHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerEnableHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PortalViewerEnableHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PortalViewerEnableHint:SetText(L("PORTAL_VIEWER_ENABLE_WINDOW_HINT"))
 
 local PortalViewerLockCheckbox = CreateFrame("CheckButton", nil, PortalViewerPanel, "UICheckButtonTemplate")
@@ -946,8 +946,8 @@ PortalViewerLockCheckbox:SetScale(0.85)
 
 local PortalViewerLockLabel = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
 PortalViewerLockLabel:SetPoint("LEFT", PortalViewerLockCheckbox, "RIGHT", 4, 0)
-PortalViewerLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PortalViewerLockLabel:SetTextColor(1, 1, 1, 1)
+PortalViewerLockLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PortalViewerLockLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 PortalViewerLockLabel:SetText(L("PORTAL_VIEWER_LOCK_WINDOW"))
 
 local PortalViewerLockHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
@@ -955,8 +955,8 @@ PortalViewerLockHint:SetPoint("TOPLEFT", PortalViewerLockCheckbox, "BOTTOMLEFT",
 PortalViewerLockHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
 PortalViewerLockHint:SetJustifyH("LEFT")
 PortalViewerLockHint:SetJustifyV("TOP")
-PortalViewerLockHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-PortalViewerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerLockHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PortalViewerLockHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PortalViewerLockHint:SetText(L("PORTAL_VIEWER_LOCK_WINDOW_HINT"))
 
 local PortalViewerMinimapCheckbox = CreateFrame("CheckButton", nil, PortalViewerPanel, "UICheckButtonTemplate")
@@ -964,8 +964,8 @@ PortalViewerMinimapCheckbox:SetPoint("TOPLEFT", PortalViewerLockHint, "BOTTOMLEF
 
 local PortalViewerMinimapLabel = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
 PortalViewerMinimapLabel:SetPoint("LEFT", PortalViewerMinimapCheckbox, "RIGHT", 6, 0)
-PortalViewerMinimapLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-PortalViewerMinimapLabel:SetTextColor(1, 1, 1, 1)
+PortalViewerMinimapLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PortalViewerMinimapLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 PortalViewerMinimapLabel:SetText(L("PORTAL_VIEWER_SHOW_MINIMAP_MENU"))
 
 local PortalViewerMinimapHint = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
@@ -973,17 +973,28 @@ PortalViewerMinimapHint:SetPoint("TOPLEFT", PortalViewerMinimapCheckbox, "BOTTOM
 PortalViewerMinimapHint:SetPoint("RIGHT", PortalViewerPanel, "RIGHT", -18, 0)
 PortalViewerMinimapHint:SetJustifyH("LEFT")
 PortalViewerMinimapHint:SetJustifyV("TOP")
-PortalViewerMinimapHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-PortalViewerMinimapHint:SetTextColor(0.80, 0.80, 0.80, 1)
+PortalViewerMinimapHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+PortalViewerMinimapHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PortalViewerMinimapHint:SetText(L("PORTAL_VIEWER_SHOW_MINIMAP_MENU_HINT"))
 
 local function UpdatePortalViewerPanelLayout()
+    local isStandalonePortalViewer = PageMisc.ActiveStandaloneSection == "PortalViewer"
     local panelTop = PortalViewerPanel:GetTop()
     local lowestBottom = nil
 
     if not panelTop then
         PortalViewerPanel:SetHeight(PORTAL_VIEWER_PANEL_MIN_HEIGHT)
         return false
+    end
+
+    PortalViewerTitle:SetShown(not isStandalonePortalViewer)
+    PortalViewerHint:SetShown(not isStandalonePortalViewer)
+
+    PortalViewerEnableCheckbox:ClearAllPoints()
+    if isStandalonePortalViewer then
+        PortalViewerEnableCheckbox:SetPoint("TOPLEFT", PortalViewerPanel, "TOPLEFT", 14, -12)
+    else
+        PortalViewerEnableCheckbox:SetPoint("TOPLEFT", PortalViewerHint, "BOTTOMLEFT", -4, -12)
     end
 
     for _, region in ipairs({
@@ -1068,7 +1079,7 @@ local SectionMeta = {
     CurrencySearch = { titleKey = "CURRENCY_SEARCH", descKey = "CURRENCY_SEARCH_HINT" },
     PreyHuntProgress = { titleKey = "PREY_HUNT_PROGRESS", descKey = "PREY_HUNT_PROGRESS_HINT" },
     KeystoneActions = { titleKey = "KEYSTONE_ACTIONS", descKey = "KEYSTONE_ACTIONS_HINT" },
-    PortalViewer = { titleKey = "PORTAL_VIEWER_TITLE", descKey = "PORTAL_VIEWER_SETTINGS_HINT" },
+    PortalViewer = { titleKey = "PORTAL_VIEWER_TITLE", descKey = "PORTAL_VIEWER_DESC" },
 }
 
 local function GetVisibleSectionKeys()
@@ -1093,7 +1104,11 @@ local function UpdateIntroPanelContent()
     local titleKey = activeMeta and activeMeta.titleKey or "MISC_TITLE"
     local descKey = activeMeta and activeMeta.descKey or "MISC_DESC"
 
-    IntroTitle:SetText(L(titleKey))
+    if PageMisc.ActiveStandaloneSection == "PortalViewer" then
+        IntroTitle:SetText(L(titleKey))
+    else
+        IntroTitle:SetText(BeavisQoL.GetModulePageTitle(PageMisc.ActiveStandaloneSection or "Misc", L(titleKey)))
+    end
     IntroText:SetText(L(descKey))
     IntroPanel:SetHeight(math.max(
         96,
@@ -1514,8 +1529,8 @@ function PageMisc:RefreshState()
     end
 
     if autoRepairEnabled then
-        widgets.AutoRepairGuildLabel:SetTextColor(1, 1, 1, 1)
-        widgets.AutoRepairGuildHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        widgets.AutoRepairGuildLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.AutoRepairGuildHint:SetTextColor(0.78, 0.74, 0.69, 1)
     else
         widgets.AutoRepairGuildLabel:SetTextColor(0.50, 0.50, 0.50, 1)
         widgets.AutoRepairGuildHint:SetTextColor(0.45, 0.45, 0.45, 1)
@@ -1523,18 +1538,18 @@ function PageMisc:RefreshState()
     end
 
     if flightMasterTimerEnabled then
-        widgets.FlightMasterTimerSoundLabel:SetTextColor(1, 1, 1, 1)
-        widgets.FlightMasterTimerSoundSelectLabel:SetTextColor(1, 1, 1, 1)
+        widgets.FlightMasterTimerSoundLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.FlightMasterTimerSoundSelectLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 
         if flightMasterTimerSoundEnabled then
-            widgets.FlightMasterTimerSoundHint:SetTextColor(0.80, 0.80, 0.80, 1)
+            widgets.FlightMasterTimerSoundHint:SetTextColor(0.78, 0.74, 0.69, 1)
         else
             widgets.FlightMasterTimerSoundHint:SetTextColor(0.55, 0.55, 0.55, 1)
         end
 
-        widgets.FlightMasterTimerLockLabel:SetTextColor(1, 1, 1, 1)
+        widgets.FlightMasterTimerLockLabel:SetTextColor(0.95, 0.91, 0.85, 1)
         widgets.FlightMasterTimerResetHint:SetTextColor(0.72, 0.72, 0.72, 1)
-        widgets.FlightMasterTimerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        widgets.FlightMasterTimerLockHint:SetTextColor(0.78, 0.74, 0.69, 1)
         widgets.FlightMasterTimerPreviewHint:SetTextColor(0.72, 0.72, 0.72, 1)
     else
         widgets.FlightMasterTimerSoundLabel:SetTextColor(0.50, 0.50, 0.50, 1)
@@ -1549,11 +1564,11 @@ function PageMisc:RefreshState()
     end
 
     if keystoneActionsEnabled then
-        widgets.KeystoneActionsGroupLockLabel:SetTextColor(1, 1, 1, 1)
-        widgets.KeystoneActionsGroupLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
-        widgets.KeystoneActionsSecondsLabel:SetTextColor(1, 1, 1, 1)
-        widgets.KeystoneActionsSecondsHint:SetTextColor(0.80, 0.80, 0.80, 1)
-        widgets.KeystoneActionsSecondsInput:SetTextColor(1, 1, 1, 1)
+        widgets.KeystoneActionsGroupLockLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.KeystoneActionsGroupLockHint:SetTextColor(0.78, 0.74, 0.69, 1)
+        widgets.KeystoneActionsSecondsLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.KeystoneActionsSecondsHint:SetTextColor(0.78, 0.74, 0.69, 1)
+        widgets.KeystoneActionsSecondsInput:SetTextColor(0.95, 0.91, 0.85, 1)
     else
         widgets.KeystoneActionsGroupLockLabel:SetTextColor(0.50, 0.50, 0.50, 1)
         widgets.KeystoneActionsGroupLockHint:SetTextColor(0.45, 0.45, 0.45, 1)
@@ -1563,8 +1578,8 @@ function PageMisc:RefreshState()
     end
 
     if portalViewerEnabled then
-        widgets.PortalViewerLockLabel:SetTextColor(1, 1, 1, 1)
-        widgets.PortalViewerLockHint:SetTextColor(0.80, 0.80, 0.80, 1)
+        widgets.PortalViewerLockLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.PortalViewerLockHint:SetTextColor(0.78, 0.74, 0.69, 1)
     else
         widgets.PortalViewerLockLabel:SetTextColor(0.50, 0.50, 0.50, 1)
         widgets.PortalViewerLockHint:SetTextColor(0.45, 0.45, 0.45, 1)
@@ -1910,3 +1925,4 @@ PageMisc:UpdateScrollLayout()
 PageMisc:RefreshState()
 
 BeavisQoL.Pages.Misc = PageMisc
+

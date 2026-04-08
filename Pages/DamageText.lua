@@ -38,6 +38,15 @@ local function FormatValue(value)
     return string.format("%.1f", value)
 end
 
+local function GetTextHeight(fontString, minimumHeight)
+    local textHeight = fontString and fontString.GetStringHeight and fontString:GetStringHeight() or 0
+    if textHeight == nil or textHeight < (minimumHeight or 0) then
+        return minimumHeight or 0
+    end
+
+    return textHeight
+end
+
 local function CreateValueSlider(parent, labelText, minValue, maxValue, step)
     sliderCounter = sliderCounter + 1
 
@@ -58,14 +67,14 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step)
     slider.High = _G[sliderName .. "High"]
 
     slider.Text:SetText(labelText)
-    slider.Text:SetTextColor(1, 0.82, 0, 1)
+    slider.Text:SetTextColor(1, 0.88, 0.62, 1)
     slider.Low:SetText(FormatValue(minValue))
     slider.High:SetText(FormatValue(maxValue))
 
     slider.ValueText = parent:CreateFontString(nil, "OVERLAY")
     slider.ValueText:SetPoint("BOTTOM", slider, "TOP", 0, 8)
     slider.ValueText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-    slider.ValueText:SetTextColor(1, 1, 1, 1)
+    slider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
 
     slider:SetScript("OnValueChanged", function(self, value)
         self.ValueText:SetText(FormatValue(value))
@@ -91,19 +100,19 @@ IntroPanel:SetHeight(145)
 
 local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
 IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
 IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
 IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
 IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(1, 0.82, 0, 0.9)
+IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
 IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
-IntroTitle:SetTextColor(1, 0.82, 0, 1)
-IntroTitle:SetText(L("COMBAT_TEXT"))
+IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
+IntroTitle:SetText(BeavisQoL.GetModulePageTitle("DamageText", L("COMBAT_TEXT")))
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -10)
@@ -111,7 +120,7 @@ IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
 IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-IntroText:SetTextColor(1, 1, 1, 1)
+IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 IntroText:SetText(L("DAMAGE_TEXT_DESC"))
 
 local ConflictWarning = IntroPanel:CreateFontString(nil, "OVERLAY")
@@ -119,7 +128,7 @@ ConflictWarning:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -8)
 ConflictWarning:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
 ConflictWarning:SetJustifyH("LEFT")
 ConflictWarning:SetJustifyV("TOP")
-ConflictWarning:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+ConflictWarning:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
 ConflictWarning:SetTextColor(1, 0.22, 0.22, 1)
 ConflictWarning:SetText(L("DAMAGE_TEXT_CONFLICT"))
 ConflictWarning:Hide()
@@ -135,18 +144,18 @@ EnablePanel:SetHeight(115)
 
 local EnableBg = EnablePanel:CreateTexture(nil, "BACKGROUND")
 EnableBg:SetAllPoints()
-EnableBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+EnableBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local EnableBorder = EnablePanel:CreateTexture(nil, "ARTWORK")
 EnableBorder:SetPoint("BOTTOMLEFT", EnablePanel, "BOTTOMLEFT", 0, 0)
 EnableBorder:SetPoint("BOTTOMRIGHT", EnablePanel, "BOTTOMRIGHT", 0, 0)
 EnableBorder:SetHeight(1)
-EnableBorder:SetColorTexture(1, 0.82, 0, 0.9)
+EnableBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local EnableTitle = EnablePanel:CreateFontString(nil, "OVERLAY")
 EnableTitle:SetPoint("TOPLEFT", EnablePanel, "TOPLEFT", 18, -14)
-EnableTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-EnableTitle:SetTextColor(1, 0.82, 0, 1)
+EnableTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+EnableTitle:SetTextColor(1, 0.88, 0.62, 1)
 EnableTitle:SetText(L("DAMAGE_TEXT_ENABLE_TITLE"))
 
 local EnableCheckbox = CreateFrame("CheckButton", nil, EnablePanel, "UICheckButtonTemplate")
@@ -154,8 +163,8 @@ EnableCheckbox:SetPoint("TOPLEFT", EnableTitle, "BOTTOMLEFT", -4, -12)
 
 local EnableLabel = EnablePanel:CreateFontString(nil, "OVERLAY")
 EnableLabel:SetPoint("LEFT", EnableCheckbox, "RIGHT", 6, 0)
-EnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-EnableLabel:SetTextColor(1, 1, 1, 1)
+EnableLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+EnableLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 EnableLabel:SetText(L("ACTIVE"))
 
 local EnableHint = EnablePanel:CreateFontString(nil, "OVERLAY")
@@ -163,8 +172,8 @@ EnableHint:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", 34, -2)
 EnableHint:SetPoint("RIGHT", EnablePanel, "RIGHT", -18, 0)
 EnableHint:SetJustifyH("LEFT")
 EnableHint:SetJustifyV("TOP")
-EnableHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-EnableHint:SetTextColor(0.80, 0.80, 0.80, 1)
+EnableHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+EnableHint:SetTextColor(0.78, 0.74, 0.69, 1)
 EnableHint:SetText(L("DAMAGE_TEXT_ENABLE_HINT"))
 
 -- ========================================
@@ -178,18 +187,18 @@ AppearancePanel:SetHeight(350)
 
 local AppearanceBg = AppearancePanel:CreateTexture(nil, "BACKGROUND")
 AppearanceBg:SetAllPoints()
-AppearanceBg:SetColorTexture(0.07, 0.07, 0.07, 0.92)
+AppearanceBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
 local AppearanceBorder = AppearancePanel:CreateTexture(nil, "ARTWORK")
 AppearanceBorder:SetPoint("BOTTOMLEFT", AppearancePanel, "BOTTOMLEFT", 0, 0)
 AppearanceBorder:SetPoint("BOTTOMRIGHT", AppearancePanel, "BOTTOMRIGHT", 0, 0)
 AppearanceBorder:SetHeight(1)
-AppearanceBorder:SetColorTexture(1, 0.82, 0, 0.9)
+AppearanceBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local AppearanceTitle = AppearancePanel:CreateFontString(nil, "OVERLAY")
 AppearanceTitle:SetPoint("TOPLEFT", AppearancePanel, "TOPLEFT", 18, -14)
-AppearanceTitle:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-AppearanceTitle:SetTextColor(1, 0.82, 0, 1)
+AppearanceTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+AppearanceTitle:SetTextColor(1, 0.88, 0.62, 1)
 AppearanceTitle:SetText(L("DISPLAY"))
 
 local AppearanceHint = AppearancePanel:CreateFontString(nil, "OVERLAY")
@@ -197,13 +206,13 @@ AppearanceHint:SetPoint("TOPLEFT", AppearanceTitle, "BOTTOMLEFT", 0, -8)
 AppearanceHint:SetPoint("RIGHT", AppearancePanel, "RIGHT", -18, 0)
 AppearanceHint:SetJustifyH("LEFT")
 AppearanceHint:SetJustifyV("TOP")
-AppearanceHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-AppearanceHint:SetTextColor(0.80, 0.80, 0.80, 1)
+AppearanceHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AppearanceHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AppearanceHint:SetText(L("DAMAGE_TEXT_APPEARANCE_HINT"))
 
 local RestartWarningTitle = AppearancePanel:CreateFontString(nil, "OVERLAY")
 RestartWarningTitle:SetPoint("TOPLEFT", AppearanceHint, "BOTTOMLEFT", 0, -10)
-RestartWarningTitle:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+RestartWarningTitle:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
 RestartWarningTitle:SetTextColor(1, 0.22, 0.22, 1)
 RestartWarningTitle:SetText(L("IMPORTANT"))
 
@@ -218,14 +227,14 @@ RestartWarningText:SetPoint("TOPLEFT", RestartWarningUnderline, "BOTTOMLEFT", 0,
 RestartWarningText:SetPoint("RIGHT", AppearancePanel, "RIGHT", -18, 0)
 RestartWarningText:SetJustifyH("LEFT")
 RestartWarningText:SetJustifyV("TOP")
-RestartWarningText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+RestartWarningText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 RestartWarningText:SetTextColor(1, 0.22, 0.22, 1)
 RestartWarningText:SetText(L("DAMAGE_TEXT_RESTART_HINT"))
 
 local FontDropdownLabel = AppearancePanel:CreateFontString(nil, "OVERLAY")
 FontDropdownLabel:SetPoint("TOPLEFT", RestartWarningText, "BOTTOMLEFT", 0, -18)
-FontDropdownLabel:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-FontDropdownLabel:SetTextColor(1, 0.82, 0, 1)
+FontDropdownLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+FontDropdownLabel:SetTextColor(1, 0.88, 0.62, 1)
 FontDropdownLabel:SetText(L("FONT"))
 
 local FontPickerButton = CreateFrame("Button", nil, AppearancePanel, BackdropTemplateMixin and "BackdropTemplate")
@@ -258,14 +267,14 @@ local FontPickerPreviewText = FontPickerButton:CreateFontString(nil, "OVERLAY")
 FontPickerPreviewText:SetPoint("LEFT", FontPickerButton, "LEFT", 12, 0)
 FontPickerPreviewText:SetPoint("RIGHT", FontPickerArrow, "LEFT", -8, 0)
 FontPickerPreviewText:SetJustifyH("LEFT")
-FontPickerPreviewText:SetFont("Fonts\\FRIZQT__.TTF", 15, "")
+FontPickerPreviewText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 if FontPickerPreviewText.SetWordWrap then
     FontPickerPreviewText:SetWordWrap(false)
 end
 if FontPickerPreviewText.SetMaxLines then
     FontPickerPreviewText:SetMaxLines(1)
 end
-FontPickerPreviewText:SetTextColor(1, 1, 1, 1)
+FontPickerPreviewText:SetTextColor(0.95, 0.91, 0.85, 1)
 FontPickerPreviewText:SetShadowOffset(1, -1)
 FontPickerPreviewText:SetShadowColor(0, 0, 0, 1)
 
@@ -406,14 +415,14 @@ local function RefreshFontPickerEntries()
             text:SetPoint("LEFT", check, "RIGHT", 8, 0)
             text:SetPoint("RIGHT", entry, "RIGHT", -8, 0)
             text:SetJustifyH("LEFT")
-            text:SetFont("Fonts\\FRIZQT__.TTF", 18, "")
+            text:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
             if text.SetWordWrap then
                 text:SetWordWrap(false)
             end
             if text.SetMaxLines then
                 text:SetMaxLines(1)
             end
-            text:SetTextColor(1, 1, 1, 1)
+            text:SetTextColor(0.95, 0.91, 0.85, 1)
             text:SetShadowOffset(1, -1)
             text:SetShadowColor(0, 0, 0, 1)
             entry.Text = text
@@ -501,19 +510,19 @@ local function SetControlColors(enabled)
     FontDropdownLabel:SetTextColor(titleColor, enabled and 0.82 or 0.50, 0, 1)
     AppearanceHint:SetTextColor(hintColor, hintColor, hintColor, 1)
     FontPickerButton:Enable()
-    FontPickerPreviewText:SetTextColor(1, 1, 1, 1)
+    FontPickerPreviewText:SetTextColor(0.95, 0.91, 0.85, 1)
     FontPickerButton:SetBackdropBorderColor(0.55, 0.55, 0.55, 0.95)
 
     if enabled then
         ScaleSlider:Enable()
         GravitySlider:Enable()
         RampSlider:Enable()
-        ScaleSlider.Text:SetTextColor(1, 0.82, 0, 1)
-        GravitySlider.Text:SetTextColor(1, 0.82, 0, 1)
-        RampSlider.Text:SetTextColor(1, 0.82, 0, 1)
-        ScaleSlider.ValueText:SetTextColor(1, 1, 1, 1)
-        GravitySlider.ValueText:SetTextColor(1, 1, 1, 1)
-        RampSlider.ValueText:SetTextColor(1, 1, 1, 1)
+        ScaleSlider.Text:SetTextColor(1, 0.88, 0.62, 1)
+        GravitySlider.Text:SetTextColor(1, 0.88, 0.62, 1)
+        RampSlider.Text:SetTextColor(1, 0.88, 0.62, 1)
+        ScaleSlider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
+        GravitySlider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
+        RampSlider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
     else
         HideFontPicker()
         ScaleSlider:Disable()
@@ -568,7 +577,7 @@ function PageDamageText:RefreshState()
     -- Erst alle Werte aus dem Modul lesen, dann gesammelt ins UI schreiben.
     -- So wirkt der Refresh wie ein konsistenter Snapshot.
 
-    IntroTitle:SetText(L("COMBAT_TEXT"))
+    IntroTitle:SetText(BeavisQoL.GetModulePageTitle("DamageText", L("COMBAT_TEXT")))
     IntroText:SetText(L("DAMAGE_TEXT_DESC"))
     ConflictWarning:SetText(L("DAMAGE_TEXT_CONFLICT"))
     EnableTitle:SetText(L("DAMAGE_TEXT_ENABLE_TITLE"))
@@ -596,20 +605,136 @@ function PageDamageText:RefreshState()
     end
 
     SetControlColors(enabled)
+    PageDamageText:UpdateScrollLayout()
 end
 
 -- Die Scroll-Höhe wird aus den sichtbaren Blöcken aufgebaut.
 -- So bleibt der Abschluss unten sauber, auch wenn noch mehr Optionen dazukommen.
 function PageDamageText:UpdateScrollLayout()
     local contentWidth = math.max(1, PageDamageTextScrollFrame:GetWidth())
-    local contentHeight = 20
-        + IntroPanel:GetHeight()
-        + 18 + EnablePanel:GetHeight()
-        + 18 + AppearancePanel:GetHeight()
-        + 20
-
     PageDamageTextContent:SetWidth(contentWidth)
-    PageDamageTextContent:SetHeight(contentHeight)
+
+    IntroPanel:ClearAllPoints()
+    IntroPanel:SetPoint("TOPLEFT", PageDamageTextContent, "TOPLEFT", 20, -18)
+    IntroPanel:SetPoint("RIGHT", PageDamageTextContent, "RIGHT", -20, 0)
+
+    IntroText:ClearAllPoints()
+    IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -8)
+    IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+
+    ConflictWarning:ClearAllPoints()
+    ConflictWarning:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -8)
+    ConflictWarning:SetPoint("RIGHT", IntroPanel, "RIGHT", -18, 0)
+
+    local introHeight = math.ceil(
+        16
+        + GetTextHeight(IntroTitle, 24)
+        + 8
+        + GetTextHeight(IntroText, 34)
+        + (ConflictWarning:IsShown() and (8 + GetTextHeight(ConflictWarning, 18)) or 0)
+        + 16
+    )
+    IntroPanel:SetHeight(math.max(100, introHeight))
+
+    EnablePanel:ClearAllPoints()
+    EnablePanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -14)
+    EnablePanel:SetPoint("RIGHT", PageDamageTextContent, "RIGHT", -20, 0)
+
+    EnableTitle:ClearAllPoints()
+    EnableTitle:SetPoint("TOPLEFT", EnablePanel, "TOPLEFT", 18, -14)
+
+    EnableCheckbox:ClearAllPoints()
+    EnableCheckbox:SetPoint("TOPLEFT", EnableTitle, "BOTTOMLEFT", -4, -10)
+
+    EnableHint:ClearAllPoints()
+    EnableHint:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", 34, -2)
+    EnableHint:SetPoint("RIGHT", EnablePanel, "RIGHT", -18, 0)
+
+    local enableHeight = math.ceil(
+        14
+        + GetTextHeight(EnableTitle, 15)
+        + 10
+        + EnableCheckbox:GetHeight()
+        + 2
+        + GetTextHeight(EnableHint, 34)
+        + 16
+    )
+    EnablePanel:SetHeight(math.max(92, enableHeight))
+
+    AppearancePanel:ClearAllPoints()
+    AppearancePanel:SetPoint("TOPLEFT", EnablePanel, "BOTTOMLEFT", 0, -14)
+    AppearancePanel:SetPoint("RIGHT", PageDamageTextContent, "RIGHT", -20, 0)
+
+    AppearanceTitle:ClearAllPoints()
+    AppearanceTitle:SetPoint("TOPLEFT", AppearancePanel, "TOPLEFT", 18, -14)
+
+    AppearanceHint:ClearAllPoints()
+    AppearanceHint:SetPoint("TOPLEFT", AppearanceTitle, "BOTTOMLEFT", 0, -8)
+    AppearanceHint:SetPoint("RIGHT", AppearancePanel, "RIGHT", -18, 0)
+
+    RestartWarningTitle:ClearAllPoints()
+    RestartWarningTitle:SetPoint("TOPLEFT", AppearanceHint, "BOTTOMLEFT", 0, -10)
+
+    RestartWarningUnderline:ClearAllPoints()
+    RestartWarningUnderline:SetPoint("TOPLEFT", RestartWarningTitle, "BOTTOMLEFT", 0, -3)
+    RestartWarningUnderline:SetPoint("TOPRIGHT", RestartWarningTitle, "BOTTOMRIGHT", 0, -3)
+
+    RestartWarningText:ClearAllPoints()
+    RestartWarningText:SetPoint("TOPLEFT", RestartWarningUnderline, "BOTTOMLEFT", 0, -8)
+    RestartWarningText:SetPoint("RIGHT", AppearancePanel, "RIGHT", -18, 0)
+
+    FontDropdownLabel:ClearAllPoints()
+    FontDropdownLabel:SetPoint("TOPLEFT", RestartWarningText, "BOTTOMLEFT", 0, -16)
+
+    FontPickerButton:ClearAllPoints()
+    FontPickerButton:SetPoint("TOPLEFT", FontDropdownLabel, "BOTTOMLEFT", 0, -8)
+    FontPickerButton:SetSize(260, 34)
+
+    local innerWidth = math.max(320, contentWidth - 40)
+    local sliderWidth = math.max(260, math.min(380, innerWidth - 96))
+
+    ScaleSlider:ClearAllPoints()
+    ScaleSlider:SetPoint("TOPLEFT", FontPickerButton, "BOTTOMLEFT", 20, -18)
+    ScaleSlider:SetWidth(sliderWidth)
+
+    GravitySlider:ClearAllPoints()
+    GravitySlider:SetPoint("TOPLEFT", ScaleSlider, "BOTTOMLEFT", 0, -40)
+    GravitySlider:SetWidth(sliderWidth)
+
+    RampSlider:ClearAllPoints()
+    RampSlider:SetPoint("TOPLEFT", GravitySlider, "BOTTOMLEFT", 0, -40)
+    RampSlider:SetWidth(sliderWidth)
+
+    local appearanceHeight = math.ceil(
+        14
+        + GetTextHeight(AppearanceTitle, 15)
+        + 8
+        + GetTextHeight(AppearanceHint, 34)
+        + 10
+        + GetTextHeight(RestartWarningTitle, 10)
+        + 11
+        + GetTextHeight(RestartWarningText, 42)
+        + 16
+        + GetTextHeight(FontDropdownLabel, 13)
+        + 8
+        + FontPickerButton:GetHeight()
+        + 18
+        + 54
+        + 40
+        + 54
+        + 40
+        + 54
+        + 22
+    )
+    AppearancePanel:SetHeight(math.max(388, appearanceHeight))
+
+    local contentHeight = 18
+        + IntroPanel:GetHeight()
+        + 14 + EnablePanel:GetHeight()
+        + 14 + AppearancePanel:GetHeight()
+        + 28
+
+    PageDamageTextContent:SetHeight(math.max(PageDamageTextScrollFrame:GetHeight(), contentHeight))
 end
 
 PageDamageTextScrollFrame:SetScript("OnSizeChanged", function()
@@ -673,3 +798,4 @@ PageDamageText:UpdateScrollLayout()
 PageDamageText:RefreshState()
 
 BeavisQoL.Pages.DamageText = PageDamageText
+
