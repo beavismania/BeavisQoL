@@ -39,6 +39,7 @@ Pages\Misc\AutoRespawnPet.lua
 Pages\Misc\MacroFrame.lua
 Pages\Misc\ReputationSearch.lua
 Pages\Misc\CurrencySearch.lua
+Pages\Misc\AuctionHouse.lua
 Pages\LFG\Flags.lua
 Pages\LFG\InviteTimer.lua
 Pages\Stats.lua

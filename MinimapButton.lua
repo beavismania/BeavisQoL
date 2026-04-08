@@ -15,6 +15,8 @@ local LDB = LibStub("LibDataBroker-1.1", true)
 local LDBIcon = LibStub("LibDBIcon-1.0", true)
 local L = BeavisQoL.L
 local MenuUtil = _G.MenuUtil
+local MenuTemplates = _G.MenuTemplates
+local MenuVariants = _G.MenuVariants
 local EasyMenu = rawget(_G, "EasyMenu")
 local CloseDropDownMenus = rawget(_G, "CloseDropDownMenus")
 local MinimapContextMenu
@@ -25,6 +27,7 @@ if not LDB or not LDBIcon then
 end
 
 local addonTitle = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Title") or ADDON_NAME
+local addonMenuTitle = string.format("|TInterface\\AddOns\\BeavisQoL\\Media\\logo.tga:16:16:0:0|t %s", addonTitle)
 
 -- Position und Sichtbarkeit sollen zwischen Sessions erhalten bleiben.
 -- Genau diese Struktur erwartet LibDBIcon später für sein internes Speichern.
@@ -86,20 +89,6 @@ local function OpenQuickViewPage(pageKey)
     OpenAddonPage(pageKey)
 end
 
-local function IsChecklistTrackerEnabled()
-    local checklist = BeavisQoL.Checklist
-    return checklist and checklist.IsTrackerEnabled and checklist.IsTrackerEnabled() == true
-end
-
-local function ToggleChecklistTracker()
-    local checklist = BeavisQoL.Checklist
-    if not checklist or not checklist.IsTrackerEnabled or not checklist.SetTrackerEnabled then
-        return
-    end
-
-    checklist.SetTrackerEnabled(not checklist.IsTrackerEnabled())
-end
-
 local function IsStatsOverlayEnabled()
     local statsModule = BeavisQoL.StatsModule
     return statsModule and statsModule.IsOverlayEnabled and statsModule.IsOverlayEnabled() == true
@@ -143,11 +132,6 @@ local function IsEasyLFGOverlayEnabled()
     return lfgModule and lfgModule.IsEasyLFGEnabled and lfgModule.IsEasyLFGEnabled() == true
 end
 
-local function IsPortalViewerEnabled()
-    local portalViewerModule = BeavisQoL.PortalViewerModule
-    return portalViewerModule and portalViewerModule.IsWindowEnabled and portalViewerModule.IsWindowEnabled() == true
-end
-
 local function ToggleMarkerBarOverlay()
     local markerBarModule = BeavisQoL.MarkerBarModule
     if not markerBarModule or not markerBarModule.IsOverlayEnabled or not markerBarModule.SetOverlayEnabled then
@@ -187,15 +171,6 @@ local function ToggleEasyLFGOverlay()
     end
 end
 
-local function TogglePortalViewer()
-    local portalViewerModule = BeavisQoL.PortalViewerModule
-    if not portalViewerModule or not portalViewerModule.ToggleWindow then
-        return
-    end
-
-    portalViewerModule.ToggleWindow()
-end
-
 local function GetQuickHideOverlaysEnabled()
     return BeavisQoL.GetQuickHideOverlaysEnabled and BeavisQoL.GetQuickHideOverlaysEnabled() == true
 end
@@ -206,6 +181,116 @@ local function ToggleQuickHideOverlays()
     end
 
     BeavisQoL.SetQuickHideOverlaysEnabled(not GetQuickHideOverlaysEnabled())
+end
+
+local function OpenQuickHideSettings()
+    OpenAddonPage("Settings")
+end
+
+local function OpenPortalViewerWindow()
+    local portalViewerModule = BeavisQoL.PortalViewerModule
+    if not portalViewerModule then
+        OpenAddonPage("PortalViewer")
+        return
+    end
+
+    if portalViewerModule.SetWindowEnabled then
+        portalViewerModule.SetWindowEnabled(true)
+        return
+    end
+
+    if portalViewerModule.RefreshWindow then
+        portalViewerModule.RefreshWindow()
+        return
+    end
+
+    OpenAddonPage("PortalViewer")
+end
+
+local function OpenPortalViewerSettings()
+    OpenAddonPage("PortalViewer")
+end
+
+local function OpenStreamerPlannerOverlay()
+    local streamerPlannerModule = BeavisQoL.StreamerPlannerModule
+    if not streamerPlannerModule then
+        OpenAddonPage("StreamerPlanner")
+        return
+    end
+
+    if streamerPlannerModule.SetOverlayEnabled then
+        streamerPlannerModule.SetOverlayEnabled(true)
+        return
+    end
+
+    if streamerPlannerModule.RefreshOverlayWindow then
+        streamerPlannerModule.RefreshOverlayWindow()
+        return
+    end
+
+    OpenAddonPage("StreamerPlanner")
+end
+
+local function OpenStreamerPlannerSettings()
+    OpenAddonPage("StreamerPlanner")
+end
+
+local function OpenChecklistTracker()
+    local checklistModule = BeavisQoL.Checklist
+    if not checklistModule then
+        OpenAddonPage("Checklist")
+        return
+    end
+
+    if checklistModule.SetTrackerEnabled then
+        checklistModule.SetTrackerEnabled(true)
+        return
+    end
+
+    if checklistModule.RefreshTrackerWindow then
+        checklistModule.RefreshTrackerWindow()
+        return
+    end
+
+    OpenAddonPage("Checklist")
+end
+
+local function OpenChecklistSettings()
+    OpenAddonPage("Checklist")
+end
+
+local QUICK_HIDE_SETTINGS_ICON = "|TInterface\\Buttons\\UI-OptionsButton:14:14:0:0:64:64:0:64:0:64|t"
+local MENU_ITEM_ICONS = {
+    portalViewer = "Interface\\ICONS\\INV_Misc_Rune_01",
+    checklist = "Interface\\ICONS\\INV_Misc_Note_01",
+    streamerPlanner = "Interface\\ICONS\\INV_Misc_GroupNeedMore",
+    levelTime = "Interface\\ICONS\\INV_Misc_PocketWatch_01",
+    itemLevelGuide = "Interface\\ICONS\\INV_Helmet_06",
+    questCheck = "Interface\\ICONS\\INV_Misc_Note_05",
+    questAbandon = "Interface\\ICONS\\Ability_Rogue_FeignDeath",
+    logging = "Interface\\ICONS\\INV_Misc_Coin_01",
+    weeklyKeys = "Interface\\ICONS\\INV_Relics_Hourglass",
+    stats = "Interface\\ICONS\\Ability_Hunter_MasterMarksman",
+    markerBar = "Interface\\ICONS\\INV_Misc_Map_01",
+    easyLFG = "Interface\\ICONS\\INV_Misc_GroupLooking",
+    quickHide = "Interface\\ICONS\\Ability_Spy",
+}
+
+local function CreateMenuTextureTag(texturePath)
+    if not texturePath or texturePath == "" then
+        return ""
+    end
+
+    return string.format("|T%s:14:14:0:0|t", texturePath)
+end
+
+local function WithMenuIcon(iconKey, text)
+    local textureTag = CreateMenuTextureTag(MENU_ITEM_ICONS[iconKey])
+    if textureTag == "" then
+        return text
+    end
+
+    return string.format("%s %s", textureTag, text)
 end
 
 local function IsMinimapContextEntryVisible(entryKey)
@@ -246,13 +331,13 @@ local function ShowMinimapContextMenu(anchorFrame)
     -- Falls das im Client nicht vorhanden ist, fällt der Code darunter sauber
     -- auf das ältere EasyMenu zurück.
     MenuUtil = _G.MenuUtil
-    local hasChecklistToggle = BeavisQoL.Checklist and BeavisQoL.Checklist.IsTrackerEnabled and BeavisQoL.Checklist.SetTrackerEnabled
+    MenuTemplates = _G.MenuTemplates
+    MenuVariants = _G.MenuVariants
     local hasStatsToggle = BeavisQoL.StatsModule and BeavisQoL.StatsModule.IsOverlayEnabled and BeavisQoL.StatsModule.SetOverlayEnabled
     local hasWeeklyKeysToggle = BeavisQoL.WeeklyKeysModule and BeavisQoL.WeeklyKeysModule.IsOverlayEnabled and BeavisQoL.WeeklyKeysModule.SetOverlayEnabled
     local hasMarkerBarToggle = BeavisQoL.MarkerBarModule and BeavisQoL.MarkerBarModule.IsOverlayEnabled and BeavisQoL.MarkerBarModule.SetOverlayEnabled
     local hasStreamerPlannerToggle = BeavisQoL.StreamerPlannerModule and BeavisQoL.StreamerPlannerModule.IsOverlayEnabled and BeavisQoL.StreamerPlannerModule.SetOverlayEnabled
     local hasEasyLFGToggle = BeavisQoL.LFG and BeavisQoL.LFG.IsEasyLFGEnabled and BeavisQoL.LFG.SetEasyLFGEnabled
-    local hasPortalViewerToggle = BeavisQoL.PortalViewerModule and BeavisQoL.PortalViewerModule.IsWindowEnabled and BeavisQoL.PortalViewerModule.SetWindowEnabled
     local showLevelTimeEntry = IsMinimapContextEntryVisible("levelTime")
     local showItemLevelGuideEntry = IsMinimapContextEntryVisible("itemLevelGuide")
     local showQuestCheckEntry = IsMinimapContextEntryVisible("questCheck")
@@ -266,49 +351,148 @@ local function ShowMinimapContextMenu(anchorFrame)
     local showEasyLFGEntry = IsMinimapContextEntryVisible("easyLFG")
     local showPortalViewerEntry = IsMinimapContextEntryVisible("portalViewer")
     local showQuickHideEntry = IsMinimapContextEntryVisible("quickHideOverlays")
-    local hasQuickViewEntries = showLevelTimeEntry or showItemLevelGuideEntry or showQuestCheckEntry or showQuestAbandonEntry or showLoggingEntry
-    local hasToggleEntries = (hasChecklistToggle and showChecklistEntry)
-        or (hasWeeklyKeysToggle and showWeeklyKeysEntry)
+    local hasQuickViewEntries = showPortalViewerEntry or showChecklistEntry or showStreamerPlannerEntry or showLevelTimeEntry or showItemLevelGuideEntry or showQuestCheckEntry or showQuestAbandonEntry or showLoggingEntry
+    local hasToggleEntries = (hasWeeklyKeysToggle and showWeeklyKeysEntry)
         or (hasStatsToggle and showStatsEntry)
         or (hasMarkerBarToggle and showMarkerBarEntry)
-        or (hasStreamerPlannerToggle and showStreamerPlannerEntry)
         or (hasEasyLFGToggle and showEasyLFGEntry)
-        or (hasPortalViewerToggle and showPortalViewerEntry)
         or showQuickHideEntry
 
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchorFrame or UIParent, function(_, rootDescription)
-            rootDescription:CreateTitle(addonTitle)
+            rootDescription:CreateTitle(addonMenuTitle)
             rootDescription:CreateDivider()
             if hasQuickViewEntries then
                 rootDescription:CreateTitle(L("MINIMAP_CONTEXT_QUICK_VIEW"))
 
+                if showPortalViewerEntry then
+                    local portalViewerDescription = rootDescription:CreateButton(WithMenuIcon("portalViewer", L("PORTAL_VIEWER_TITLE")), function()
+                        OpenPortalViewerWindow()
+                    end)
+
+                    if portalViewerDescription and portalViewerDescription.AddInitializer and MenuTemplates and MenuVariants then
+                        portalViewerDescription:AddInitializer(function(button, _, menu)
+                            if not button then
+                                return
+                            end
+
+                            local gearButton = button.BeavisPortalViewerGearButton
+                            if not gearButton then
+                                gearButton = MenuTemplates.AttachAutoHideGearButton(button)
+                                button.BeavisPortalViewerGearButton = gearButton
+                            end
+
+                            if not gearButton then
+                                return
+                            end
+
+                            MenuTemplates.SetUtilityButtonTooltipText(gearButton, L("SETTINGS"))
+                            MenuTemplates.SetUtilityButtonAnchor(gearButton, MenuVariants.GearButtonAnchor, button)
+                            MenuTemplates.SetUtilityButtonClickHandler(gearButton, function()
+                                OpenPortalViewerSettings()
+                                if menu and menu.Close then
+                                    menu:Close()
+                                end
+                            end)
+                            gearButton:Show()
+                        end)
+                    end
+                end
+
+                if showChecklistEntry then
+                    local checklistDescription = rootDescription:CreateButton(WithMenuIcon("checklist", L("CHECKLIST")), function()
+                        OpenChecklistTracker()
+                    end)
+
+                    if checklistDescription and checklistDescription.AddInitializer and MenuTemplates and MenuVariants then
+                        checklistDescription:AddInitializer(function(button, _, menu)
+                            if not button then
+                                return
+                            end
+
+                            local gearButton = button.BeavisChecklistGearButton
+                            if not gearButton then
+                                gearButton = MenuTemplates.AttachAutoHideGearButton(button)
+                                button.BeavisChecklistGearButton = gearButton
+                            end
+
+                            if not gearButton then
+                                return
+                            end
+
+                            MenuTemplates.SetUtilityButtonTooltipText(gearButton, L("CHECKLIST_SETTINGS_TOOLTIP"))
+                            MenuTemplates.SetUtilityButtonAnchor(gearButton, MenuVariants.GearButtonAnchor, button)
+                            MenuTemplates.SetUtilityButtonClickHandler(gearButton, function()
+                                OpenChecklistSettings()
+                                if menu and menu.Close then
+                                    menu:Close()
+                                end
+                            end)
+                            gearButton:Show()
+                        end)
+                    end
+                end
+
+                if showStreamerPlannerEntry then
+                    local streamerPlannerDescription = rootDescription:CreateButton(WithMenuIcon("streamerPlanner", L("STREAMER_PLANNER_TITLE")), function()
+                        OpenStreamerPlannerOverlay()
+                    end)
+
+                    if streamerPlannerDescription and streamerPlannerDescription.AddInitializer and MenuTemplates and MenuVariants then
+                        streamerPlannerDescription:AddInitializer(function(button, _, menu)
+                            if not button then
+                                return
+                            end
+
+                            local gearButton = button.BeavisStreamerPlannerGearButton
+                            if not gearButton then
+                                gearButton = MenuTemplates.AttachAutoHideGearButton(button)
+                                button.BeavisStreamerPlannerGearButton = gearButton
+                            end
+
+                            if not gearButton then
+                                return
+                            end
+
+                            MenuTemplates.SetUtilityButtonTooltipText(gearButton, L("SETTINGS"))
+                            MenuTemplates.SetUtilityButtonAnchor(gearButton, MenuVariants.GearButtonAnchor, button)
+                            MenuTemplates.SetUtilityButtonClickHandler(gearButton, function()
+                                OpenStreamerPlannerSettings()
+                                if menu and menu.Close then
+                                    menu:Close()
+                                end
+                            end)
+                            gearButton:Show()
+                        end)
+                    end
+                end
+
                 if showLevelTimeEntry then
-                    rootDescription:CreateButton(L("LEVEL_TIME"), function()
+                    rootDescription:CreateButton(WithMenuIcon("levelTime", L("LEVEL_TIME")), function()
                         OpenQuickViewPage("LevelTime")
                     end)
                 end
 
                 if showItemLevelGuideEntry then
-                    rootDescription:CreateButton(L("ITEMLEVEL_GUIDE"), function()
+                    rootDescription:CreateButton(WithMenuIcon("itemLevelGuide", L("ITEMLEVEL_GUIDE")), function()
                         OpenQuickViewPage("ItemLevelGuide")
                     end)
                 end
 
                 if showQuestCheckEntry then
-                    rootDescription:CreateButton(L("QUEST_CHECK"), function()
+                    rootDescription:CreateButton(WithMenuIcon("questCheck", L("QUEST_CHECK")), function()
                         OpenQuickViewPage("QuestCheck")
                     end)
                 end
 
                 if showQuestAbandonEntry then
-                    rootDescription:CreateButton(L("QUEST_ABANDON"), function()
+                    rootDescription:CreateButton(WithMenuIcon("questAbandon", L("QUEST_ABANDON")), function()
                         OpenQuickViewPage("QuestAbandon")
                     end)
                 end
 
                 if showLoggingEntry then
-                    rootDescription:CreateButton(L("GOLDAUSWERTUNG"), function()
+                    rootDescription:CreateButton(WithMenuIcon("logging", L("GOLDAUSWERTUNG")), function()
                         OpenQuickViewPage("Logging")
                     end)
                 end
@@ -321,21 +505,9 @@ local function ShowMinimapContextMenu(anchorFrame)
             if hasToggleEntries then
                 rootDescription:CreateTitle(L("MINIMAP_CONTEXT_TOGGLE_SECTION"))
 
-                if hasChecklistToggle and showChecklistEntry then
-                    rootDescription:CreateCheckbox(
-                        L("MINIMAP_TRACKER_SHOW"),
-                        function()
-                            return IsChecklistTrackerEnabled()
-                        end,
-                        function()
-                            ToggleChecklistTracker()
-                        end
-                    )
-                end
-
                 if hasWeeklyKeysToggle and showWeeklyKeysEntry then
                     rootDescription:CreateCheckbox(
-                        L("MINIMAP_WEEKLY_KEYS_SHOW"),
+                        WithMenuIcon("weeklyKeys", L("MINIMAP_WEEKLY_KEYS_SHOW")),
                         function()
                             return IsWeeklyKeysOverlayEnabled()
                         end,
@@ -347,7 +519,7 @@ local function ShowMinimapContextMenu(anchorFrame)
 
                 if hasStatsToggle and showStatsEntry then
                     rootDescription:CreateCheckbox(
-                        L("MINIMAP_STATS_SHOW"),
+                        WithMenuIcon("stats", L("MINIMAP_STATS_SHOW")),
                         function()
                             return IsStatsOverlayEnabled()
                         end,
@@ -359,7 +531,7 @@ local function ShowMinimapContextMenu(anchorFrame)
 
                 if hasMarkerBarToggle and showMarkerBarEntry then
                     rootDescription:CreateCheckbox(
-                        L("MINIMAP_MARKER_BAR_SHOW"),
+                        WithMenuIcon("markerBar", L("MINIMAP_MARKER_BAR_SHOW")),
                         function()
                             return IsMarkerBarOverlayEnabled()
                         end,
@@ -369,21 +541,9 @@ local function ShowMinimapContextMenu(anchorFrame)
                     )
                 end
 
-                if hasStreamerPlannerToggle and showStreamerPlannerEntry then
-                    rootDescription:CreateCheckbox(
-                        L("MINIMAP_STREAMER_PLANNER_SHOW"),
-                        function()
-                            return IsStreamerPlannerOverlayEnabled()
-                        end,
-                        function()
-                            ToggleStreamerPlannerOverlay()
-                        end
-                    )
-                end
-
                 if hasEasyLFGToggle and showEasyLFGEntry then
                     rootDescription:CreateCheckbox(
-                        L("MINIMAP_EASY_LFG_SHOW"),
+                        WithMenuIcon("easyLFG", L("MINIMAP_EASY_LFG_SHOW")),
                         function()
                             return IsEasyLFGOverlayEnabled()
                         end,
@@ -393,21 +553,9 @@ local function ShowMinimapContextMenu(anchorFrame)
                     )
                 end
 
-                if hasPortalViewerToggle and showPortalViewerEntry then
-                    rootDescription:CreateCheckbox(
-                        L("MINIMAP_PORTAL_VIEWER_SHOW"),
-                        function()
-                            return IsPortalViewerEnabled()
-                        end,
-                        function()
-                            TogglePortalViewer()
-                        end
-                    )
-                end
-
                 if showQuickHideEntry then
-                    rootDescription:CreateCheckbox(
-                        L("QUICK_HIDE_OVERLAYS"),
+                    local quickHideDescription = rootDescription:CreateCheckbox(
+                        WithMenuIcon("quickHide", L("MINIMAP_QUICK_HIDE_SHOW")),
                         function()
                             return GetQuickHideOverlaysEnabled()
                         end,
@@ -415,6 +563,41 @@ local function ShowMinimapContextMenu(anchorFrame)
                             ToggleQuickHideOverlays()
                         end
                     )
+
+                    if quickHideDescription and quickHideDescription.AddInitializer and MenuTemplates and MenuVariants then
+                        quickHideDescription:AddInitializer(function(button, _, menu)
+                            if not button then
+                                return
+                            end
+
+                            local gearButton = button.BeavisQuickHideGearButton
+                            if not gearButton then
+                                gearButton = MenuTemplates.AttachAutoHideGearButton(button)
+                                button.BeavisQuickHideGearButton = gearButton
+                            end
+
+                            if not gearButton then
+                                return
+                            end
+
+                            MenuTemplates.SetUtilityButtonTooltipText(gearButton, L("MINIMAP_QUICK_HIDE_SETTINGS"))
+                            MenuTemplates.SetUtilityButtonAnchor(gearButton, MenuVariants.GearButtonAnchor, button)
+                            MenuTemplates.SetUtilityButtonClickHandler(gearButton, function()
+                                OpenQuickHideSettings()
+                                if menu and menu.Close then
+                                    menu:Close()
+                                end
+                            end)
+                            gearButton:Show()
+                        end)
+                    else
+                        rootDescription:CreateButton(
+                            string.format("%s %s", QUICK_HIDE_SETTINGS_ICON, L("MINIMAP_QUICK_HIDE_SETTINGS")),
+                            function()
+                                OpenQuickHideSettings()
+                            end
+                        )
+                    end
                 end
             end
         end)
@@ -427,7 +610,7 @@ local function ShowMinimapContextMenu(anchorFrame)
 
     local menu = {
         {
-            text = addonTitle,
+            text = addonMenuTitle,
             isTitle = true,
             notCheckable = true,
         },
@@ -459,13 +642,79 @@ local function ShowMinimapContextMenu(anchorFrame)
         }
     end
 
-    local function AddToggleEntry(visible, textKey, checked, disabled, callback)
+    local function AddPortalViewerEntries(visible)
         if not visible then
             return
         end
 
         menu[#menu + 1] = {
-            text = L(textKey),
+            text = WithMenuIcon("portalViewer", L("PORTAL_VIEWER_TITLE")),
+            notCheckable = true,
+            func = function()
+                OpenPortalViewerWindow()
+            end,
+        }
+
+        menu[#menu + 1] = {
+            text = string.format("%s %s", QUICK_HIDE_SETTINGS_ICON, L("SETTINGS")),
+            notCheckable = true,
+            func = function()
+                OpenPortalViewerSettings()
+            end,
+        }
+    end
+
+    local function AddChecklistEntries(visible)
+        if not visible then
+            return
+        end
+
+        menu[#menu + 1] = {
+            text = WithMenuIcon("checklist", L("CHECKLIST")),
+            notCheckable = true,
+            func = function()
+                OpenChecklistTracker()
+            end,
+        }
+
+        menu[#menu + 1] = {
+            text = string.format("%s %s", QUICK_HIDE_SETTINGS_ICON, L("CHECKLIST_SETTINGS_TOOLTIP")),
+            notCheckable = true,
+            func = function()
+                OpenChecklistSettings()
+            end,
+        }
+    end
+
+    local function AddStreamerPlannerEntries(visible)
+        if not visible then
+            return
+        end
+
+        menu[#menu + 1] = {
+            text = WithMenuIcon("streamerPlanner", L("STREAMER_PLANNER_TITLE")),
+            notCheckable = true,
+            func = function()
+                OpenStreamerPlannerOverlay()
+            end,
+        }
+
+        menu[#menu + 1] = {
+            text = string.format("%s %s", QUICK_HIDE_SETTINGS_ICON, L("SETTINGS")),
+            notCheckable = true,
+            func = function()
+                OpenStreamerPlannerSettings()
+            end,
+        }
+    end
+
+    local function AddToggleEntry(visible, text, checked, disabled, callback)
+        if not visible then
+            return
+        end
+
+        menu[#menu + 1] = {
+            text = text,
             checked = checked,
             isNotRadio = true,
             disabled = disabled,
@@ -473,38 +722,53 @@ local function ShowMinimapContextMenu(anchorFrame)
         }
     end
 
+    local function AddQuickHideEntries(visible)
+        if not visible then
+            return
+        end
+
+        menu[#menu + 1] = {
+            text = WithMenuIcon("quickHide", L("MINIMAP_QUICK_HIDE_SHOW")),
+            checked = GetQuickHideOverlaysEnabled(),
+            isNotRadio = true,
+            func = function()
+                ToggleQuickHideOverlays()
+            end,
+        }
+
+        menu[#menu + 1] = {
+            text = string.format("%s %s", QUICK_HIDE_SETTINGS_ICON, L("MINIMAP_QUICK_HIDE_SETTINGS")),
+            notCheckable = true,
+            func = function()
+                OpenQuickHideSettings()
+            end,
+        }
+    end
+
     AddSectionTitle(hasQuickViewEntries, L("MINIMAP_CONTEXT_QUICK_VIEW"))
-    AddActionEntry(showLevelTimeEntry, L("LEVEL_TIME"), "LevelTime")
-    AddActionEntry(showItemLevelGuideEntry, L("ITEMLEVEL_GUIDE"), "ItemLevelGuide")
-    AddActionEntry(showQuestCheckEntry, L("QUEST_CHECK"), "QuestCheck")
-    AddActionEntry(showQuestAbandonEntry, L("QUEST_ABANDON"), "QuestAbandon")
-    AddActionEntry(showLoggingEntry, L("GOLDAUSWERTUNG"), "Logging")
+    AddPortalViewerEntries(showPortalViewerEntry)
+    AddChecklistEntries(showChecklistEntry)
+    AddStreamerPlannerEntries(showStreamerPlannerEntry)
+    AddActionEntry(showLevelTimeEntry, WithMenuIcon("levelTime", L("LEVEL_TIME")), "LevelTime")
+    AddActionEntry(showItemLevelGuideEntry, WithMenuIcon("itemLevelGuide", L("ITEMLEVEL_GUIDE")), "ItemLevelGuide")
+    AddActionEntry(showQuestCheckEntry, WithMenuIcon("questCheck", L("QUEST_CHECK")), "QuestCheck")
+    AddActionEntry(showQuestAbandonEntry, WithMenuIcon("questAbandon", L("QUEST_ABANDON")), "QuestAbandon")
+    AddActionEntry(showLoggingEntry, WithMenuIcon("logging", L("GOLDAUSWERTUNG")), "Logging")
 
     AddSectionTitle(hasToggleEntries, L("MINIMAP_CONTEXT_TOGGLE_SECTION"))
-    AddToggleEntry(hasChecklistToggle and showChecklistEntry, "MINIMAP_TRACKER_SHOW", IsChecklistTrackerEnabled(), not hasChecklistToggle, function()
-        ToggleChecklistTracker()
-    end)
-    AddToggleEntry(hasWeeklyKeysToggle and showWeeklyKeysEntry, "MINIMAP_WEEKLY_KEYS_SHOW", IsWeeklyKeysOverlayEnabled(), not hasWeeklyKeysToggle, function()
+    AddToggleEntry(hasWeeklyKeysToggle and showWeeklyKeysEntry, WithMenuIcon("weeklyKeys", L("MINIMAP_WEEKLY_KEYS_SHOW")), IsWeeklyKeysOverlayEnabled(), not hasWeeklyKeysToggle, function()
         ToggleWeeklyKeysOverlay()
     end)
-    AddToggleEntry(hasStatsToggle and showStatsEntry, "MINIMAP_STATS_SHOW", IsStatsOverlayEnabled(), not hasStatsToggle, function()
+    AddToggleEntry(hasStatsToggle and showStatsEntry, WithMenuIcon("stats", L("MINIMAP_STATS_SHOW")), IsStatsOverlayEnabled(), not hasStatsToggle, function()
         ToggleStatsOverlay()
     end)
-    AddToggleEntry(hasMarkerBarToggle and showMarkerBarEntry, "MINIMAP_MARKER_BAR_SHOW", IsMarkerBarOverlayEnabled(), not hasMarkerBarToggle, function()
+    AddToggleEntry(hasMarkerBarToggle and showMarkerBarEntry, WithMenuIcon("markerBar", L("MINIMAP_MARKER_BAR_SHOW")), IsMarkerBarOverlayEnabled(), not hasMarkerBarToggle, function()
         ToggleMarkerBarOverlay()
     end)
-    AddToggleEntry(hasStreamerPlannerToggle and showStreamerPlannerEntry, "MINIMAP_STREAMER_PLANNER_SHOW", IsStreamerPlannerOverlayEnabled(), not hasStreamerPlannerToggle, function()
-        ToggleStreamerPlannerOverlay()
-    end)
-    AddToggleEntry(hasEasyLFGToggle and showEasyLFGEntry, "MINIMAP_EASY_LFG_SHOW", IsEasyLFGOverlayEnabled(), not hasEasyLFGToggle, function()
+    AddToggleEntry(hasEasyLFGToggle and showEasyLFGEntry, WithMenuIcon("easyLFG", L("MINIMAP_EASY_LFG_SHOW")), IsEasyLFGOverlayEnabled(), not hasEasyLFGToggle, function()
         ToggleEasyLFGOverlay()
     end)
-    AddToggleEntry(hasPortalViewerToggle and showPortalViewerEntry, "MINIMAP_PORTAL_VIEWER_SHOW", IsPortalViewerEnabled(), not hasPortalViewerToggle, function()
-        TogglePortalViewer()
-    end)
-    AddToggleEntry(showQuickHideEntry, "QUICK_HIDE_OVERLAYS", GetQuickHideOverlaysEnabled(), false, function()
-        ToggleQuickHideOverlays()
-    end)
+    AddQuickHideEntries(showQuickHideEntry)
 
     if CloseDropDownMenus then
         CloseDropDownMenus()

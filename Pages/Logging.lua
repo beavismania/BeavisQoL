@@ -38,14 +38,21 @@ local OVERVIEW_LOG_ENTRY_COUNT = 10
 local OVERVIEW_SEARCH_MATCH_LIMIT = 25
 local HISTORY_PAGE_SIZE = 100
 local HISTORY_CONTENT_WIDTH = 680
-local LOGGING_INTRO_PANEL_HEIGHT = 154
+local LOGGING_INTRO_PANEL_HEIGHT = 166
 local LOGGING_PANEL_GAP = 12
-local LOGGING_PANEL_ROW_START_Y = -44
+local LOGGING_PANEL_ROW_START_Y = -50
 local LOGGING_MIN_ROW_HEIGHT = 12
 local LOGGING_ROW_SPACING = 2
 local LOGGING_ROW_TEXT_GAP = 10
 local LOGGING_ROW_RIGHT_TEXT_MIN_WIDTH = 44
 local LOGGING_ROW_RIGHT_TEXT_MAX_WIDTH_FACTOR = 0.38
+local LOGGING_INTRO_TITLE_FONT_SIZE = 25
+local LOGGING_INTRO_TEXT_FONT_SIZE = 15
+local LOGGING_PANEL_TITLE_FONT_SIZE = 12
+local LOGGING_PANEL_HINT_FONT_SIZE = 12
+local LOGGING_PANEL_SUMMARY_FONT_SIZE = 15
+local LOGGING_PANEL_ROW_FONT_SIZE = 12
+local LOGGING_PANEL_DETAIL_FONT_SIZE = 11
 local HISTORY_TAB_KEYS = {
     "income",
     "expense",
@@ -2007,7 +2014,7 @@ local function CreateLogPanel(parent, anchorFrame, titleText, hintText)
 
     local title = panel:CreateFontString(nil, "OVERLAY")
     title:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -12)
-    title:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    title:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_TITLE_FONT_SIZE, "OUTLINE")
     title:SetTextColor(1, 0.88, 0.62, 1)
     title:SetWordWrap(false)
     title:SetText(titleText)
@@ -2018,7 +2025,7 @@ local function CreateLogPanel(parent, anchorFrame, titleText, hintText)
     hint:SetPoint("RIGHT", panel, "RIGHT", -16, 0)
     hint:SetJustifyH("LEFT")
     hint:SetJustifyV("TOP")
-    hint:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    hint:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_HINT_FONT_SIZE, "")
     hint:SetTextColor(0.78, 0.74, 0.69, 1)
     hint:SetWordWrap(false)
     hint:SetText(hintText)
@@ -2030,7 +2037,7 @@ local function CreateLogPanel(parent, anchorFrame, titleText, hintText)
     local emptyText = panel:CreateFontString(nil, "OVERLAY")
     emptyText:SetJustifyH("LEFT")
     emptyText:SetJustifyV("TOP")
-    emptyText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    emptyText:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_SUMMARY_FONT_SIZE, "")
     emptyText:SetTextColor(0.75, 0.75, 0.75, 1)
     emptyText:SetText(L("NO_ENTRIES"))
     emptyText:Hide()
@@ -2048,7 +2055,7 @@ local function GetOrCreateSummaryLine(panel, index)
     line = panel:CreateFontString(nil, "OVERLAY")
     line:SetJustifyH("LEFT")
     line:SetJustifyV("TOP")
-    line:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    line:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_SUMMARY_FONT_SIZE, "")
     line:SetTextColor(0.88, 0.88, 0.88, 1)
     panel.SummaryLines[index] = line
     return line
@@ -2068,7 +2075,7 @@ local function GetOrCreateLogRow(panel, index)
     leftText:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
     leftText:SetJustifyH("LEFT")
     leftText:SetJustifyV("TOP")
-    leftText:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    leftText:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_ROW_FONT_SIZE, "")
     leftText:SetTextColor(0.95, 0.91, 0.85, 1)
     leftText:SetWordWrap(false)
     if leftText.SetNonSpaceWrap then
@@ -2080,7 +2087,7 @@ local function GetOrCreateLogRow(panel, index)
     rightText:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
     rightText:SetJustifyH("RIGHT")
     rightText:SetJustifyV("TOP")
-    rightText:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    rightText:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_ROW_FONT_SIZE, "")
     rightText:SetTextColor(1, 0.88, 0.62, 1)
     rightText:SetWordWrap(false)
     if rightText.SetNonSpaceWrap then
@@ -2091,7 +2098,7 @@ local function GetOrCreateLogRow(panel, index)
     local detailText = row:CreateFontString(nil, "OVERLAY")
     detailText:SetJustifyH("LEFT")
     detailText:SetJustifyV("TOP")
-    detailText:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
+    detailText:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_DETAIL_FONT_SIZE, "")
     detailText:SetTextColor(0.78, 0.78, 0.78, 1)
     detailText:Hide()
     row.DetailText = detailText
@@ -2106,7 +2113,7 @@ local function GetOrCreateLogRow(panel, index)
     divider:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
     divider:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
     divider:SetHeight(1)
-    divider:SetColorTexture(1, 1, 1, 0.04)
+    divider:SetColorTexture(0.88, 0.72, 0.46, 0.16)
     row.Divider = divider
 
     row:SetScript("OnMouseUp", function(self)
@@ -2145,7 +2152,7 @@ function Logging._GetOrCreateDetailItemButton(parent, buttonStore, index)
     text:SetPoint("RIGHT", button, "RIGHT", 0, 0)
     text:SetJustifyH("LEFT")
     text:SetJustifyV("TOP")
-    text:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
+    text:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_PANEL_DETAIL_FONT_SIZE, "")
     text:SetTextColor(0.80, 0.80, 0.82, 1)
     text:SetWordWrap(false)
     if text.SetNonSpaceWrap then
@@ -2860,7 +2867,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 16, -12)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_INTRO_TITLE_FONT_SIZE, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(BeavisQoL.GetModulePageTitle("Logging", L("GOLDAUSWERTUNG")))
 
@@ -2869,7 +2876,7 @@ IntroText:SetPoint("TOPLEFT", IntroTitle, "BOTTOMLEFT", 0, -6)
 IntroText:SetPoint("RIGHT", IntroPanel, "RIGHT", -16, 0)
 IntroText:SetJustifyH("LEFT")
 IntroText:SetJustifyV("TOP")
-IntroText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+IntroText:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_INTRO_TEXT_FONT_SIZE, "")
 IntroText:SetTextColor(0.95, 0.91, 0.85, 1)
 IntroText:SetText(L("LOGGING_DESC"))
 
@@ -2883,7 +2890,7 @@ RetentionHint:SetPoint("TOPLEFT", IntroText, "BOTTOMLEFT", 0, -12)
 RetentionHint:SetPoint("RIGHT", CleanupButton, "LEFT", -12, 0)
 RetentionHint:SetJustifyH("LEFT")
 RetentionHint:SetJustifyV("TOP")
-RetentionHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+RetentionHint:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_INTRO_TEXT_FONT_SIZE, "")
 RetentionHint:SetTextColor(0.78, 0.74, 0.69, 1)
 RetentionHint:SetText(L("LOGGING_RETENTION_HINT"))
 
@@ -2898,7 +2905,7 @@ end)
 
 local LoggingMinimapContextLabel = IntroPanel:CreateFontString(nil, "OVERLAY")
 LoggingMinimapContextLabel:SetPoint("LEFT", LoggingMinimapContextCheckbox, "RIGHT", 6, 0)
-LoggingMinimapContextLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+LoggingMinimapContextLabel:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_INTRO_TEXT_FONT_SIZE, "")
 LoggingMinimapContextLabel:SetTextColor(0.95, 0.91, 0.85, 1)
 LoggingMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
 
@@ -2916,7 +2923,7 @@ end)
 
 IntroPanel.OverviewSearchBox.Label = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroPanel.OverviewSearchBox.Label:SetPoint("BOTTOMLEFT", IntroPanel.OverviewSearchBox, "TOPLEFT", 4, 6)
-IntroPanel.OverviewSearchBox.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+IntroPanel.OverviewSearchBox.Label:SetFont("Fonts\\FRIZQT__.TTF", LOGGING_INTRO_TEXT_FONT_SIZE, "")
 IntroPanel.OverviewSearchBox.Label:SetTextColor(1, 0.88, 0.62, 1)
 
 local function CreateCleanupChoiceButton(parent, text, onClick)
@@ -3268,7 +3275,7 @@ local function GetOrCreateHistoryRow(index)
     divider:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 0)
     divider:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 0)
     divider:SetHeight(1)
-    divider:SetColorTexture(1, 1, 1, 0.05)
+    divider:SetColorTexture(0.88, 0.72, 0.46, 0.18)
     row.Divider = divider
 
     HistoryPopup.Rows[index] = row

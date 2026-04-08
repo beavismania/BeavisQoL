@@ -334,7 +334,7 @@ end
 
 local function CreateSectionDivider(parent)
     local divider = parent:CreateTexture(nil, "ARTWORK")
-    divider:SetColorTexture(1, 0.82, 0, 0.16)
+    divider:SetColorTexture(0.88, 0.72, 0.46, 0.16)
     return divider
 end
 
@@ -553,26 +553,26 @@ local function BuildPortalViewerFrame()
         },
     })
     PortalFrame:SetBackdropColor(0.03, 0.03, 0.04, 0.78)
-    PortalFrame:SetBackdropBorderColor(1.00, 0.82, 0.00, 0.42)
+    PortalFrame:SetBackdropBorderColor(0.88, 0.72, 0.46, 0.42)
     PortalFrame:Hide()
 
     local topGlow = PortalFrame:CreateTexture(nil, "BORDER")
     topGlow:SetPoint("TOPLEFT", PortalFrame, "TOPLEFT", 0, 0)
     topGlow:SetPoint("TOPRIGHT", PortalFrame, "TOPRIGHT", 0, 0)
     topGlow:SetHeight(28)
-    topGlow:SetColorTexture(1, 0.82, 0, 0.08)
+    topGlow:SetColorTexture(0.88, 0.72, 0.46, 0.08)
 
     local accent = PortalFrame:CreateTexture(nil, "ARTWORK")
     accent:SetPoint("TOPLEFT", PortalFrame, "TOPLEFT", 10, -10)
     accent:SetPoint("BOTTOMLEFT", PortalFrame, "BOTTOMLEFT", 10, 10)
     accent:SetWidth(2)
-    accent:SetColorTexture(1, 0.82, 0, 0.14)
+    accent:SetColorTexture(0.88, 0.72, 0.46, 0.14)
 
     local topLine = PortalFrame:CreateTexture(nil, "ARTWORK")
     topLine:SetPoint("TOPLEFT", PortalFrame, "TOPLEFT", 12, -10)
     topLine:SetPoint("TOPRIGHT", PortalFrame, "TOPRIGHT", -12, -10)
     topLine:SetHeight(1)
-    topLine:SetColorTexture(1, 0.82, 0, 0.70)
+    topLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
 
     TitleText = PortalFrame:CreateFontString(nil, "OVERLAY")
     TitleText:SetPoint("TOPLEFT", PortalFrame, "TOPLEFT", 18, -18)

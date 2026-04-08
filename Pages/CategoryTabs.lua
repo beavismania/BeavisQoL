@@ -47,7 +47,7 @@ local HeaderBorder = HeaderPanel:CreateTexture(nil, "ARTWORK")
 HeaderBorder:SetPoint("BOTTOMLEFT", HeaderPanel, "BOTTOMLEFT", 0, 0)
 HeaderBorder:SetPoint("BOTTOMRIGHT", HeaderPanel, "BOTTOMRIGHT", 0, 0)
 HeaderBorder:SetHeight(1)
-HeaderBorder:SetColorTexture(0.86, 0.72, 0.46, 0.36)
+HeaderBorder:SetColorTexture(0.88, 0.72, 0.46, 0.28)
 
 local CategoryCaption = HeaderPanel:CreateFontString(nil, "OVERLAY")
 CategoryCaption:SetPoint("TOPLEFT", HeaderPanel, "TOPLEFT", 16, -6)
@@ -244,7 +244,7 @@ end
 local function RefreshTabButtonTexts()
     for _, button in ipairs(TabButtons) do
         if button.tabData then
-            button.Label:SetText(GetTextForKey(button.tabData.labelTextKey, button.tabData.pageKey))
+            button.Label:SetText(GetTextForKey(button.tabData.tabLabelTextKey or button.tabData.labelTextKey, button.tabData.pageKey))
         end
     end
 end
@@ -343,7 +343,7 @@ function PageCategoryTabs:OpenCategory(category, pageKey)
         end
 
         button.tabData = currentTab
-        button.Label:SetText(GetTextForKey(currentTab.labelTextKey, currentTab.pageKey))
+        button.Label:SetText(GetTextForKey(currentTab.tabLabelTextKey or currentTab.labelTextKey, currentTab.pageKey))
         button:SetScript("OnClick", function()
             PageCategoryTabs:SelectTab(currentTab.pageKey)
         end)

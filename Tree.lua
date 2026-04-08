@@ -584,6 +584,7 @@ local function RegisterModuleEntry(section, labelTextKey, pageKey, options)
     local entry = {
         pageKey = pageKey,
         labelTextKey = labelTextKey,
+        tabLabelTextKey = options and options.tabLabelTextKey or labelTextKey,
         button = button,
         text = text,
         miscSection = options and options.miscSection or nil,
@@ -685,6 +686,11 @@ local AutoRepairEntry = RegisterModuleEntry(GoldSection, "AUTOREPAIR", "AutoRepa
     searchTextKeys = { "AUTOREPAIR_HINT", "AUTOREPAIR_GUILD_HINT" },
     searchAliases = "repair merchant guild gear",
 })
+local AuctionHouseEntry = RegisterModuleEntry(GoldSection, "AUCTION_HOUSE_MODULE", "AuctionHouse", {
+    miscSection = "AuctionHouse",
+    searchTextKeys = { "AUCTION_HOUSE_DESC", "AUCTION_HOUSE_CURRENT_EXPANSION_FILTER", "AUCTION_HOUSE_CURRENT_EXPANSION_FILTER_HINT" },
+    searchAliases = "auction house ah browse filter current expansion retail trade market",
+})
 
 local FastLootEntry = RegisterModuleEntry(EverydaySection, "FAST_LOOT", "FastLoot", {
     miscSection = "FastLoot",
@@ -712,6 +718,7 @@ local FlightMasterTimerEntry = RegisterModuleEntry(WorldSection, "FLIGHT_MASTER_
     searchAliases = "flight taxi gryphon wyvern flightmaster travel timer arrival countdown",
 })
 local TooltipItemLevelEntry = RegisterModuleEntry(WindowsSection, "TOOLTIP_ITEMLEVEL", "TooltipItemLevel", {
+    tabLabelTextKey = "TOOLTIP_SETTINGS",
     miscSection = "TooltipItemLevel",
     searchTextKeys = { "TOOLTIP_ITEMLEVEL_HINT", "TOOLTIP_ITEMLEVEL_LABEL" },
     searchAliases = "tooltip inspect ilvl itemlevel mouseover",
@@ -832,6 +839,64 @@ local WorldCategoryEntry = RegisterCategoryEntry(WorldSection)
 local InterfaceCategoryEntry = RegisterCategoryEntry(InterfaceSection)
 local GroupCategoryEntry = RegisterCategoryEntry(GroupSection)
 local StreamerCategoryEntry = RegisterCategoryEntry(StreamerSection)
+
+local TreeLocalizedTextTargets = {
+    { target = SidebarCaption, textKey = "NAVIGATION" },
+    { target = SidebarCaptionHint, textKey = "NAVIGATION_HINT" },
+    { target = SidebarSearchPlaceholder, textKey = "NAVIGATION_SEARCH_PLACEHOLDER" },
+    { target = GeneralSectionHeader.text, textKey = "NAVIGATION_SECTION_ADDON" },
+    { target = TreeHomeText, textKey = "HOME" },
+    { target = TreeVersionText, textKey = "VERSION" },
+    { target = TreeSettingsText, textKey = "GLOBAL_SETTINGS" },
+    { target = ProgressSection.text, textKey = "PROGRESS_QUESTS" },
+    { target = GoldSection.text, textKey = "GOLD_VENDOR" },
+    { target = EverydaySection.text, textKey = "EVERYDAY_AUTOMATION" },
+    { target = WindowsSection.text, textKey = "WINDOWS_SEARCH" },
+    { target = WorldSection.text, textKey = "WORLD_TRAVEL" },
+    { target = InterfaceSection.text, textKey = "INTERFACE_OVERLAYS" },
+    { target = GroupSection.text, textKey = "GROUP_INSTANCES" },
+    { target = StreamerSection.text, textKey = "STREAMER_TOOLS" },
+    { target = AddonCategoryEntry.text, textKey = "NAVIGATION_SECTION_ADDON" },
+    { target = ProgressCategoryEntry.text, textKey = "PROGRESS_QUESTS" },
+    { target = GoldCategoryEntry.text, textKey = "GOLD_VENDOR" },
+    { target = EverydayCategoryEntry.text, textKey = "EVERYDAY_AUTOMATION" },
+    { target = WindowsCategoryEntry.text, textKey = "WINDOWS_SEARCH" },
+    { target = WorldCategoryEntry.text, textKey = "WORLD_TRAVEL" },
+    { target = InterfaceCategoryEntry.text, textKey = "INTERFACE_OVERLAYS" },
+    { target = GroupCategoryEntry.text, textKey = "GROUP_INSTANCES" },
+    { target = StreamerCategoryEntry.text, textKey = "STREAMER_TOOLS" },
+    { target = LevelTimeEntry.text, textKey = "LEVEL_TIME" },
+    { target = ChecklistEntry.text, textKey = "CHECKLIST" },
+    { target = WeeklyKeysEntry.text, textKey = "WEEKLY_KEYS" },
+    { target = ItemLevelGuideEntry.text, textKey = "ITEMLEVEL_GUIDE" },
+    { target = QuestCheckEntry.text, textKey = "QUEST_CHECK" },
+    { target = QuestAbandonEntry.text, textKey = "QUEST_ABANDON" },
+    { target = LoggingEntry.text, textKey = "GOLDAUSWERTUNG" },
+    { target = AutoSellEntry.text, textKey = "AUTOSELL_JUNK" },
+    { target = AutoRepairEntry.text, textKey = "AUTOREPAIR" },
+    { target = AuctionHouseEntry.text, textKey = "AUCTION_HOUSE_MODULE" },
+    { target = FastLootEntry.text, textKey = "FAST_LOOT" },
+    { target = EasyDeleteEntry.text, textKey = "EASY_DELETE" },
+    { target = CutsceneSkipEntry.text, textKey = "CUTSCENE_SKIP" },
+    { target = AutoRespawnPetEntry.text, textKey = "AUTO_RESPAWN_PET_TITLE" },
+    { target = TooltipItemLevelEntry.text, textKey = "TOOLTIP_ITEMLEVEL" },
+    { target = CameraDistanceEntry.text, textKey = "CAMERA_DISTANCE" },
+    { target = MacroFrameEntry.text, textKey = "MACRO_FRAME" },
+    { target = ReputationSearchEntry.text, textKey = "REPUTATION_SEARCH" },
+    { target = CurrencySearchEntry.text, textKey = "CURRENCY_SEARCH" },
+    { target = PreyHuntProgressEntry.text, textKey = "PREY_HUNT_PROGRESS" },
+    { target = KeystoneActionsEntry.text, textKey = "KEYSTONE_ACTIONS" },
+    { target = PortalViewerEntry.text, textKey = "PORTAL_VIEWER_TITLE" },
+    { target = FishingEntry.text, textKey = "FISHING_HELPER" },
+    { target = StatsEntry.text, textKey = "STATS" },
+    { target = MarkerBarEntry.text, textKey = "MARKER_BAR" },
+    { target = CombatTextEntry.text, textKey = "COMBAT_TEXT" },
+    { target = MouseHelperEntry.text, textKey = "MOUSE_HELPER" },
+    { target = MinimapCollectorEntry.text, textKey = "MINIMAP_COLLECTOR" },
+    { target = BossGuidesEntry.text, textKey = "BOSS_GUIDES" },
+    { target = LFGEntry.text, textKey = "LFG" },
+    { target = StreamerPlannerEntry.text, textKey = "STREAMER_PLANNER" },
+}
 
 local function SetActiveTreeItem(activeText)
     for _, entry in ipairs(CategoryEntries) do
@@ -976,66 +1041,11 @@ SidebarScrollFrame:SetScript("OnMouseWheel", function(self, delta)
 end)
 
 BeavisQoL.UpdateTree = function()
-    SidebarCaption:SetText(L("NAVIGATION"))
-    SidebarCaptionHint:SetText(L("NAVIGATION_HINT"))
-    SidebarSearchPlaceholder:SetText(L("NAVIGATION_SEARCH_PLACEHOLDER"))
+    for _, textTarget in ipairs(TreeLocalizedTextTargets) do
+        textTarget.target:SetText(L(textTarget.textKey))
+    end
+
     UpdateSidebarHeaderLayout()
-
-    GeneralSectionHeader.text:SetText(L("NAVIGATION_SECTION_ADDON"))
-
-    TreeHomeText:SetText(L("HOME"))
-    TreeVersionText:SetText(L("VERSION"))
-    TreeSettingsText:SetText(L("GLOBAL_SETTINGS"))
-
-    ProgressSection.text:SetText(L("PROGRESS_QUESTS"))
-    GoldSection.text:SetText(L("GOLD_VENDOR"))
-    EverydaySection.text:SetText(L("EVERYDAY_AUTOMATION"))
-    WindowsSection.text:SetText(L("WINDOWS_SEARCH"))
-    WorldSection.text:SetText(L("WORLD_TRAVEL"))
-    InterfaceSection.text:SetText(L("INTERFACE_OVERLAYS"))
-    GroupSection.text:SetText(L("GROUP_INSTANCES"))
-    StreamerSection.text:SetText(L("STREAMER_TOOLS"))
-
-    AddonCategoryEntry.text:SetText(L("NAVIGATION_SECTION_ADDON"))
-    ProgressCategoryEntry.text:SetText(L("PROGRESS_QUESTS"))
-    GoldCategoryEntry.text:SetText(L("GOLD_VENDOR"))
-    EverydayCategoryEntry.text:SetText(L("EVERYDAY_AUTOMATION"))
-    WindowsCategoryEntry.text:SetText(L("WINDOWS_SEARCH"))
-    WorldCategoryEntry.text:SetText(L("WORLD_TRAVEL"))
-    InterfaceCategoryEntry.text:SetText(L("INTERFACE_OVERLAYS"))
-    GroupCategoryEntry.text:SetText(L("GROUP_INSTANCES"))
-    StreamerCategoryEntry.text:SetText(L("STREAMER_TOOLS"))
-
-    LevelTimeEntry.text:SetText(L("LEVEL_TIME"))
-    ChecklistEntry.text:SetText(L("CHECKLIST"))
-    WeeklyKeysEntry.text:SetText(L("WEEKLY_KEYS"))
-    ItemLevelGuideEntry.text:SetText(L("ITEMLEVEL_GUIDE"))
-    QuestCheckEntry.text:SetText(L("QUEST_CHECK"))
-    QuestAbandonEntry.text:SetText(L("QUEST_ABANDON"))
-    LoggingEntry.text:SetText(L("GOLDAUSWERTUNG"))
-    AutoSellEntry.text:SetText(L("AUTOSELL_JUNK"))
-    AutoRepairEntry.text:SetText(L("AUTOREPAIR"))
-    FastLootEntry.text:SetText(L("FAST_LOOT"))
-    EasyDeleteEntry.text:SetText(L("EASY_DELETE"))
-    CutsceneSkipEntry.text:SetText(L("CUTSCENE_SKIP"))
-    AutoRespawnPetEntry.text:SetText(L("AUTO_RESPAWN_PET_TITLE"))
-    TooltipItemLevelEntry.text:SetText(L("TOOLTIP_ITEMLEVEL"))
-    CameraDistanceEntry.text:SetText(L("CAMERA_DISTANCE"))
-    MacroFrameEntry.text:SetText(L("MACRO_FRAME"))
-    ReputationSearchEntry.text:SetText(L("REPUTATION_SEARCH"))
-    CurrencySearchEntry.text:SetText(L("CURRENCY_SEARCH"))
-    PreyHuntProgressEntry.text:SetText(L("PREY_HUNT_PROGRESS"))
-    KeystoneActionsEntry.text:SetText(L("KEYSTONE_ACTIONS"))
-    PortalViewerEntry.text:SetText(L("PORTAL_VIEWER_TITLE"))
-    FishingEntry.text:SetText(L("FISHING_HELPER"))
-    StatsEntry.text:SetText(L("STATS"))
-    MarkerBarEntry.text:SetText(L("MARKER_BAR"))
-    CombatTextEntry.text:SetText(L("COMBAT_TEXT"))
-    MouseHelperEntry.text:SetText(L("MOUSE_HELPER"))
-    MinimapCollectorEntry.text:SetText(L("MINIMAP_COLLECTOR"))
-    BossGuidesEntry.text:SetText(L("BOSS_GUIDES"))
-    LFGEntry.text:SetText(L("LFG"))
-    StreamerPlannerEntry.text:SetText(L("STREAMER_PLANNER"))
 
     RefreshSearchIndex()
     UpdateSearchPlaceholder()
@@ -1126,6 +1136,7 @@ function BeavisQoL.OpenMiscSection(sectionKey)
     local sectionPageMap = {
         AutoSell = "AutoSell",
         AutoRepair = "AutoRepair",
+        AuctionHouse = "AuctionHouse",
         FastLoot = "FastLoot",
         EasyDelete = "EasyDelete",
         CutsceneSkip = "CutsceneSkip",

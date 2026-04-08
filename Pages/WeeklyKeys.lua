@@ -885,8 +885,8 @@ local function ApplyOverlaySurface(frame, backgroundTexture, glowTexture, accent
     -- keine volle Tooltip-Umrandung, sondern nur ein dezenter Hintergrund,
     -- Glow und eine linke Akzentlinie.
     backgroundTexture:SetColorTexture(0.03, 0.03, 0.05, alpha)
-    glowTexture:SetColorTexture(1, 1, 1, 0.05 + (alpha * 0.12))
-    accentTexture:SetColorTexture(1, 0.82, 0, 0.12 + (alpha * 0.30))
+    glowTexture:SetColorTexture(0.88, 0.72, 0.46, 0.05 + (alpha * 0.12))
+    accentTexture:SetColorTexture(0.88, 0.72, 0.46, 0.12 + (alpha * 0.30))
 end
 
 local function GetSlotDisplayInfo(slotLookup, threshold)
@@ -1312,7 +1312,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(BeavisQoL.GetModulePageTitle("WeeklyKeys", L("WEEKLY_KEYS")))
 

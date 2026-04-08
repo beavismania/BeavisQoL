@@ -228,19 +228,19 @@ local function CreateSecureMarkerButton(parent, markerData, anchorTo)
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
     border:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(1, 0.82, 0, 0.35)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.35)
     button.BorderTop = border
 
     local borderBottom = button:CreateTexture(nil, "ARTWORK")
     borderBottom:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
     borderBottom:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
     borderBottom:SetHeight(1)
-    borderBottom:SetColorTexture(1, 0.82, 0, 0.25)
+    borderBottom:SetColorTexture(0.88, 0.72, 0.46, 0.25)
     button.BorderBottom = borderBottom
 
     local hoverGlow = button:CreateTexture(nil, "BORDER")
     hoverGlow:SetAllPoints()
-    hoverGlow:SetColorTexture(1, 0.82, 0, 0)
+    hoverGlow:SetColorTexture(0.88, 0.72, 0.46, 0)
     button.HoverGlow = hoverGlow
 
     local icon = button:CreateTexture(nil, "OVERLAY")
@@ -253,16 +253,16 @@ local function CreateSecureMarkerButton(parent, markerData, anchorTo)
 
     button:SetScript("OnEnter", function()
         background:SetColorTexture(0.20, 0.20, 0.22, 0.92)
-        border:SetColorTexture(1, 0.90, 0.35, 0.85)
-        borderBottom:SetColorTexture(1, 0.90, 0.35, 0.72)
-        hoverGlow:SetColorTexture(1, 0.82, 0, 0.14)
+        border:SetColorTexture(0.88, 0.72, 0.46, 0.85)
+        borderBottom:SetColorTexture(0.88, 0.72, 0.46, 0.72)
+        hoverGlow:SetColorTexture(0.88, 0.72, 0.46, 0.14)
     end)
 
     button:SetScript("OnLeave", function()
         background:SetColorTexture(0.04, 0.04, 0.05, 0.54)
-        border:SetColorTexture(1, 0.82, 0, 0.35)
-        borderBottom:SetColorTexture(1, 0.82, 0, 0.25)
-        hoverGlow:SetColorTexture(1, 0.82, 0, 0)
+        border:SetColorTexture(0.88, 0.72, 0.46, 0.35)
+        borderBottom:SetColorTexture(0.88, 0.72, 0.46, 0.25)
+        hoverGlow:SetColorTexture(0.88, 0.72, 0.46, 0)
     end)
 
     return button
@@ -306,25 +306,25 @@ local function CreateOverlayFrame()
     glow:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 0, 0)
     glow:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", 0, 0)
     glow:SetHeight(20)
-    glow:SetColorTexture(1, 0.82, 0, 0.05)
+    glow:SetColorTexture(0.88, 0.72, 0.46, 0.05)
 
     local borderTop = OverlayFrame:CreateTexture(nil, "ARTWORK")
     borderTop:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 0, 0)
     borderTop:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", 0, 0)
     borderTop:SetHeight(1)
-    borderTop:SetColorTexture(1, 0.82, 0, 0.34)
+    borderTop:SetColorTexture(0.88, 0.72, 0.46, 0.34)
 
     local borderBottom = OverlayFrame:CreateTexture(nil, "ARTWORK")
     borderBottom:SetPoint("BOTTOMLEFT", OverlayFrame, "BOTTOMLEFT", 0, 0)
     borderBottom:SetPoint("BOTTOMRIGHT", OverlayFrame, "BOTTOMRIGHT", 0, 0)
     borderBottom:SetHeight(1)
-    borderBottom:SetColorTexture(1, 0.82, 0, 0.22)
+    borderBottom:SetColorTexture(0.88, 0.72, 0.46, 0.22)
 
     local accent = OverlayFrame:CreateTexture(nil, "ARTWORK")
     accent:SetPoint("TOPLEFT", OverlayFrame, "TOPLEFT", 0, 0)
     accent:SetPoint("BOTTOMLEFT", OverlayFrame, "BOTTOMLEFT", 0, 0)
     accent:SetWidth(2)
-    accent:SetColorTexture(1, 0.82, 0, 0.55)
+    accent:SetColorTexture(0.88, 0.72, 0.46, 0.55)
 
     local previousButton
     for _, markerData in ipairs(MARKER_BUTTONS) do
@@ -417,7 +417,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 
 local IntroText = IntroPanel:CreateFontString(nil, "OVERLAY")

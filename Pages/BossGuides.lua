@@ -3280,7 +3280,7 @@ local function CreateSettingsPage()
 
     local introTitle = introPanel:CreateFontString(nil, "OVERLAY")
     introTitle:SetPoint("TOPLEFT", introPanel, "TOPLEFT", 18, -14)
-    introTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+    introTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
     introTitle:SetTextColor(1, 0.88, 0.62, 1)
     introTitle:SetText(BeavisQoL.GetModulePageTitle("BossGuides", L("BOSS_GUIDES")))
 

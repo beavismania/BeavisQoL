@@ -164,8 +164,6 @@ PageContent:SetSize(1, 1)
 PageScrollFrame:SetScrollChild(PageContent)
 
 local function CreatePanelSurface(frame, accentKey, isHero)
-    local r, g, b = GetColor(accentKey)
-
     local bg = frame:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetColorTexture(0.075, 0.08, 0.09, isHero and 0.98 or 0.94)
@@ -174,25 +172,25 @@ local function CreatePanelSurface(frame, accentKey, isHero)
     topGlow:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     topGlow:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
     topGlow:SetHeight(isHero and 34 or 26)
-    topGlow:SetColorTexture(r, g, b, isHero and 0.12 or 0.08)
+    topGlow:SetColorTexture(0.88, 0.72, 0.46, isHero and 0.12 or 0.08)
 
     local accent = frame:CreateTexture(nil, "ARTWORK")
     accent:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     accent:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
     accent:SetHeight(2)
-    accent:SetColorTexture(r, g, b, 0.95)
+    accent:SetColorTexture(0.88, 0.72, 0.46, 0.95)
 
     local border = frame:CreateTexture(nil, "ARTWORK")
     border:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
     border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
     border:SetHeight(1)
-    border:SetColorTexture(r, g, b, 0.55)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.55)
 
     local sideAccent = frame:CreateTexture(nil, "ARTWORK")
     sideAccent:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -14)
     sideAccent:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 14)
     sideAccent:SetWidth(3)
-    sideAccent:SetColorTexture(r, g, b, 0.72)
+    sideAccent:SetColorTexture(0.88, 0.72, 0.46, 0.72)
 end
 
 local function CreateCard(parent, accentKey, eyebrowText, titleText, subtitleText)
@@ -277,13 +275,13 @@ local function CreateTable(parent, columns, rows, options)
     headerBg:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     headerBg:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
     headerBg:SetHeight(frame.HeaderHeight)
-    headerBg:SetColorTexture(1, 1, 1, 0.04)
+    headerBg:SetColorTexture(0.88, 0.72, 0.46, 0.07)
 
     local headerBorder = frame:CreateTexture(nil, "ARTWORK")
     headerBorder:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -frame.HeaderHeight)
     headerBorder:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -frame.HeaderHeight)
     headerBorder:SetHeight(1)
-    headerBorder:SetColorTexture(1, 1, 1, 0.08)
+    headerBorder:SetColorTexture(0.88, 0.72, 0.46, 0.18)
 
     frame.Headers = {}
     for index, column in ipairs(columns) do
@@ -314,7 +312,7 @@ local function CreateTable(parent, columns, rows, options)
         rowBorder:SetPoint("BOTTOMLEFT", rowFrame, "BOTTOMLEFT", 0, 0)
         rowBorder:SetPoint("BOTTOMRIGHT", rowFrame, "BOTTOMRIGHT", 0, 0)
         rowBorder:SetHeight(1)
-        rowBorder:SetColorTexture(1, 1, 1, 0.03)
+        rowBorder:SetColorTexture(0.88, 0.72, 0.46, 0.10)
 
         rowFrame.Cells = {}
         for columnIndex = 1, #columns do
@@ -462,7 +460,7 @@ HeroTitle:SetPoint("TOPLEFT", HeroEyebrow, "BOTTOMLEFT", 0, -6)
 HeroTitle:SetPoint("RIGHT", HeroPanel, "RIGHT", -16, 0)
 HeroTitle:SetJustifyH("LEFT")
 HeroTitle:SetJustifyV("TOP")
-HeroTitle:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
+HeroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 HeroTitle:SetTextColor(0.95, 0.91, 0.85, 1)
 HeroTitle:SetText(BeavisQoL.GetModulePageTitle("ItemLevelGuide", L("ITEM_GUIDE_TITLE")))
 

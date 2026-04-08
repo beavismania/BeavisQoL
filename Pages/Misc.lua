@@ -64,7 +64,7 @@ IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
-IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+IntroTitle:SetFont("Fonts\\FRIZQT__.TTF", 23, "OUTLINE")
 IntroTitle:SetTextColor(1, 0.88, 0.62, 1)
 IntroTitle:SetText(BeavisQoL.GetModulePageTitle("Misc", L("MISC_TITLE")))
 
@@ -183,12 +183,55 @@ AutoRepairGuildHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
 
 -- ========================================
+-- Bereich: Auction House
+-- ========================================
+
+local AuctionHousePanel = CreateFrame("Frame", nil, PageMiscContent)
+AuctionHousePanel:SetPoint("TOPLEFT", AutoRepairPanel, "BOTTOMLEFT", 0, -18)
+AuctionHousePanel:SetPoint("TOPRIGHT", AutoRepairPanel, "BOTTOMRIGHT", 0, -18)
+AuctionHousePanel:SetHeight(132)
+
+local AuctionHouseBg = AuctionHousePanel:CreateTexture(nil, "BACKGROUND")
+AuctionHouseBg:SetAllPoints()
+AuctionHouseBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+
+local AuctionHouseBorder = AuctionHousePanel:CreateTexture(nil, "ARTWORK")
+AuctionHouseBorder:SetPoint("BOTTOMLEFT", AuctionHousePanel, "BOTTOMLEFT", 0, 0)
+AuctionHouseBorder:SetPoint("BOTTOMRIGHT", AuctionHousePanel, "BOTTOMRIGHT", 0, 0)
+AuctionHouseBorder:SetHeight(1)
+AuctionHouseBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+
+local AuctionHouseTitle = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
+AuctionHouseTitle:SetPoint("TOPLEFT", AuctionHousePanel, "TOPLEFT", 18, -14)
+AuctionHouseTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+AuctionHouseTitle:SetTextColor(1, 0.88, 0.62, 1)
+AuctionHouseTitle:SetText(L("AUCTION_HOUSE_MODULE"))
+
+local AuctionHouseCheckbox = CreateFrame("CheckButton", nil, AuctionHousePanel, "UICheckButtonTemplate")
+AuctionHouseCheckbox:SetPoint("TOPLEFT", AuctionHouseTitle, "BOTTOMLEFT", -4, -12)
+
+local AuctionHouseLabel = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
+AuctionHouseLabel:SetPoint("LEFT", AuctionHouseCheckbox, "RIGHT", 6, 0)
+AuctionHouseLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AuctionHouseLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+AuctionHouseLabel:SetText(L("AUCTION_HOUSE_CURRENT_EXPANSION_FILTER"))
+
+local AuctionHouseHint = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
+AuctionHouseHint:SetPoint("TOPLEFT", AuctionHouseCheckbox, "BOTTOMLEFT", 34, -2)
+AuctionHouseHint:SetPoint("RIGHT", AuctionHousePanel, "RIGHT", -18, 0)
+AuctionHouseHint:SetJustifyH("LEFT")
+AuctionHouseHint:SetJustifyV("TOP")
+AuctionHouseHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AuctionHouseHint:SetTextColor(0.78, 0.74, 0.69, 1)
+AuctionHouseHint:SetText(L("AUCTION_HOUSE_CURRENT_EXPANSION_FILTER_HINT"))
+
+-- ========================================
 -- Bereich: Easy Delete
 -- ========================================
 
 local EasyDeletePanel = CreateFrame("Frame", nil, PageMiscContent)
-EasyDeletePanel:SetPoint("TOPLEFT", AutoRepairPanel, "BOTTOMLEFT", 0, -18)
-EasyDeletePanel:SetPoint("TOPRIGHT", AutoRepairPanel, "BOTTOMRIGHT", 0, -18)
+EasyDeletePanel:SetPoint("TOPLEFT", AuctionHousePanel, "BOTTOMLEFT", 0, -18)
+EasyDeletePanel:SetPoint("TOPRIGHT", AuctionHousePanel, "BOTTOMRIGHT", 0, -18)
 EasyDeletePanel:SetHeight(115)
 
 local EasyDeleteBg = EasyDeletePanel:CreateTexture(nil, "BACKGROUND")
@@ -978,7 +1021,6 @@ PortalViewerMinimapHint:SetTextColor(0.78, 0.74, 0.69, 1)
 PortalViewerMinimapHint:SetText(L("PORTAL_VIEWER_SHOW_MINIMAP_MENU_HINT"))
 
 local function UpdatePortalViewerPanelLayout()
-    local isStandalonePortalViewer = PageMisc.ActiveStandaloneSection == "PortalViewer"
     local panelTop = PortalViewerPanel:GetTop()
     local lowestBottom = nil
 
@@ -987,15 +1029,11 @@ local function UpdatePortalViewerPanelLayout()
         return false
     end
 
-    PortalViewerTitle:SetShown(not isStandalonePortalViewer)
-    PortalViewerHint:SetShown(not isStandalonePortalViewer)
+    PortalViewerTitle:SetShown(true)
+    PortalViewerHint:SetShown(true)
 
     PortalViewerEnableCheckbox:ClearAllPoints()
-    if isStandalonePortalViewer then
-        PortalViewerEnableCheckbox:SetPoint("TOPLEFT", PortalViewerPanel, "TOPLEFT", 14, -12)
-    else
-        PortalViewerEnableCheckbox:SetPoint("TOPLEFT", PortalViewerHint, "BOTTOMLEFT", -4, -12)
-    end
+    PortalViewerEnableCheckbox:SetPoint("TOPLEFT", PortalViewerHint, "BOTTOMLEFT", -4, -12)
 
     for _, region in ipairs({
         PortalViewerMinimapCheckbox,
@@ -1029,6 +1067,7 @@ end
 local SectionPanels = {
     AutoSell = AutoSellPanel,
     AutoRepair = AutoRepairPanel,
+    AuctionHouse = AuctionHousePanel,
     EasyDelete = EasyDeletePanel,
     FastLoot = FastLootPanel,
     CutsceneSkip = CutsceneSkipPanel,
@@ -1049,6 +1088,7 @@ local SectionPanels = {
 local SectionOrder = {
     "AutoSell",
     "AutoRepair",
+    "AuctionHouse",
     "EasyDelete",
     "FastLoot",
     "CutsceneSkip",
@@ -1067,6 +1107,7 @@ local SectionOrder = {
 local SectionMeta = {
     AutoSell = { titleKey = "AUTOSELL_JUNK", descKey = "AUTOSELL_HINT" },
     AutoRepair = { titleKey = "AUTOREPAIR", descKey = "AUTOREPAIR_HINT" },
+    AuctionHouse = { titleKey = "AUCTION_HOUSE_MODULE", descKey = "AUCTION_HOUSE_DESC" },
     EasyDelete = { titleKey = "EASY_DELETE", descKey = "EASY_DELETE_HINT" },
     FastLoot = { titleKey = "FAST_LOOT", descKey = "FAST_LOOT_HINT" },
     CutsceneSkip = { titleKey = "CUTSCENE_SKIP", descKey = "CUTSCENE_SKIP_HINT" },
@@ -1130,6 +1171,10 @@ PageMisc.Widgets = {
     AutoRepairGuildLabel = AutoRepairGuildLabel,
     AutoRepairGuildHint = AutoRepairGuildHint,
     AutoRepairGuildCheckbox = AutoRepairGuildCheckbox,
+    AuctionHouseTitle = AuctionHouseTitle,
+    AuctionHouseLabel = AuctionHouseLabel,
+    AuctionHouseHint = AuctionHouseHint,
+    AuctionHouseCheckbox = AuctionHouseCheckbox,
     EasyDeleteTitle = EasyDeleteTitle,
     EasyDeleteLabel = EasyDeleteLabel,
     EasyDeleteHint = EasyDeleteHint,
@@ -1276,6 +1321,7 @@ function PageMisc:RefreshState()
     local autoSellEnabled = false
     local autoRepairEnabled = false
     local autoRepairGuildEnabled = false
+    local auctionHouseCurrentExpansionFilterEnabled = false
     local easyDeleteEnabled = false
     local fastLootEnabled = false
     local cutsceneSkipEnabled = false
@@ -1311,6 +1357,10 @@ function PageMisc:RefreshState()
 
     if Misc.IsAutoRepairGuildEnabled then
         autoRepairGuildEnabled = Misc.IsAutoRepairGuildEnabled()
+    end
+
+    if Misc.IsAuctionHouseCurrentExpansionFilterEnabled then
+        auctionHouseCurrentExpansionFilterEnabled = Misc.IsAuctionHouseCurrentExpansionFilterEnabled()
     end
 
     if Misc.IsEasyDeleteEnabled then
@@ -1411,6 +1461,9 @@ function PageMisc:RefreshState()
     widgets.AutoRepairHint:SetText(L("AUTOREPAIR_HINT"))
     widgets.AutoRepairGuildLabel:SetText(L("AUTOREPAIR_GUILD"))
     widgets.AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
+    widgets.AuctionHouseTitle:SetText(L("AUCTION_HOUSE_MODULE"))
+    widgets.AuctionHouseLabel:SetText(L("AUCTION_HOUSE_CURRENT_EXPANSION_FILTER"))
+    widgets.AuctionHouseHint:SetText(L("AUCTION_HOUSE_CURRENT_EXPANSION_FILTER_HINT"))
     widgets.EasyDeleteTitle:SetText(L("EASY_DELETE"))
     widgets.EasyDeleteLabel:SetText(L("ACTIVE"))
     widgets.EasyDeleteHint:SetText(L("EASY_DELETE_HINT"))
@@ -1482,6 +1535,7 @@ function PageMisc:RefreshState()
     widgets.AutoSellCheckbox:SetChecked(autoSellEnabled)
     widgets.AutoRepairCheckbox:SetChecked(autoRepairEnabled)
     widgets.AutoRepairGuildCheckbox:SetChecked(autoRepairGuildEnabled)
+    widgets.AuctionHouseCheckbox:SetChecked(auctionHouseCurrentExpansionFilterEnabled)
     widgets.EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
     widgets.FastLootCheckbox:SetChecked(fastLootEnabled)
     widgets.CutsceneSkipCheckbox:SetChecked(cutsceneSkipEnabled)
@@ -1594,8 +1648,11 @@ function PageMisc:UpdateScrollLayout()
     local contentWidth = math.max(1, PageMiscScrollFrame:GetWidth())
     local visibleSectionKeys = GetVisibleSectionKeys()
     local visibleLookup = {}
-    local previousFrame = IntroPanel
-    local contentHeight = 20 + IntroPanel:GetHeight()
+    local showIntroPanel = PageMisc.ActiveStandaloneSection == nil
+    local previousFrame = showIntroPanel and IntroPanel or nil
+    local contentHeight = showIntroPanel and (20 + IntroPanel:GetHeight()) or 20
+
+    IntroPanel:SetShown(showIntroPanel)
 
     for _, sectionKey in ipairs(visibleSectionKeys) do
         visibleLookup[sectionKey] = true
@@ -1606,8 +1663,13 @@ function PageMisc:UpdateScrollLayout()
         panel:ClearAllPoints()
 
         if visibleLookup[sectionKey] then
-            panel:SetPoint("TOPLEFT", previousFrame, "BOTTOMLEFT", 0, -18)
-            panel:SetPoint("TOPRIGHT", previousFrame, "BOTTOMRIGHT", 0, -18)
+            if previousFrame then
+                panel:SetPoint("TOPLEFT", previousFrame, "BOTTOMLEFT", 0, -18)
+                panel:SetPoint("TOPRIGHT", previousFrame, "BOTTOMRIGHT", 0, -18)
+            else
+                panel:SetPoint("TOPLEFT", PageMiscContent, "TOPLEFT", 20, -20)
+                panel:SetPoint("TOPRIGHT", PageMiscContent, "TOPRIGHT", -20, -20)
+            end
             panel:Show()
             previousFrame = panel
         else
@@ -1676,6 +1738,14 @@ end)
 AutoRepairGuildCheckbox:SetScript("OnClick", function(self)
     if Misc.SetAutoRepairGuildEnabled then
         Misc.SetAutoRepairGuildEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+AuctionHouseCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetAuctionHouseCurrentExpansionFilterEnabled then
+        Misc.SetAuctionHouseCurrentExpansionFilterEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()
