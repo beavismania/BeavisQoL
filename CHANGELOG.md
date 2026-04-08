@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.30.0 - 2026-04-08
+
+### Versionshinweis
+
+- `0.30.0` ist der nächste veröffentlichte Feature-Stand nach `0.29.0`
+- dieser Release bündelt ein neues Modul, eine größere Navigation-/Schnellansicht-Überarbeitung und einen breiten UI-Polish über viele bestehende Seiten
+- die mittlere Zahl steigt damit auf `30`, der Hotfix-Zähler startet für diesen Stand wieder bei `0`
+
+### Neu
+
+- neues Modul `Auktionshaus` ergänzt
+- `Auktionshaus` besitzt die Option `Nur aktuelle Erweiterung automatisch aktivieren`
+- `Schnellansicht` öffnet jetzt in einem eigenen Fenster mit Tabs für `Levelzeit`, `Itemlevel Guide`, `Quest Check`, `Quest-Abbruch` und `Goldauswertung`
+- das Minimap-Kontextmenü ist in `Schnellansicht` und `An/Aus` gegliedert und besitzt passende Icons
+
+### Verbessert
+
+- die Hauptnavigation zeigt jetzt nur noch Kategorien; Module werden innerhalb der Kategorien über Tabs geöffnet
+- `Saison Portale`, `Checkliste` und `Gruppenplaner` öffnen aus dem Minimap-Kontextmenü jetzt direkt ihr Fenster oder Overlay; die Einstellungen liegen jeweils am Zahnrad
+- `Minimap-Sammler` wurde auf ein Drei-Spalten-Board mit Drag & Drop zwischen Sammler, Minimap und Ausblenden umgestellt
+- Startseite, globale Einstellungen, Schnellansicht und viele Modulseiten nutzen jetzt einen gemeinsamen warmen Stil mit einheitlicheren Linien, Titeln und Abständen
+- zahlreiche Modulnamen, Hinweise und Enduser-Texte wurden klarer und deutschsprachig überarbeitet
+
 ## 0.29.0 - 2026-04-07
 
 ### Versionshinweis

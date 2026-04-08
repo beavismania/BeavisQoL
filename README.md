@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.29.0`
-- Release-Datum: `2026-04-07`
+- Version: `0.30.0`
+- Release-Datum: `2026-04-08`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Rufsuche` und `Währungssuche` haben jetzt jeweils einen eigenen Schalter im `Misc`-Bereich
-  - beide Suchhilfen lassen sich bei Bedarf separat aktivieren oder deaktivieren
-  - Sidebar und Suche können jetzt direkt zu `Rufsuche` und `Währungssuche` im `Misc`-Bereich springen
+  - neues Modul `Auktionshaus` ergänzt mit automatischem Filter für `Nur aktuelle Erweiterung`
+  - die `Schnellansicht` läuft jetzt in einem eigenen Fenster mit Tabs und überarbeitetem Minimap-Kontextmenü
+  - Navigation, Modulseiten und `Minimap-Sammler` wurden optisch und strukturell deutlich überarbeitet
 
 ## Download
 
