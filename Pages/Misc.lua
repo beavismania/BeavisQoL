@@ -10,10 +10,12 @@ local function GetPortalViewerModule()
 end
 
 if not rawget(_G, "UIDropDownMenuTemplate") then
-    if C_AddOns and C_AddOns.LoadAddOn then
-        C_AddOns.LoadAddOn("Blizzard_UIDropDownMenu")
-    elseif UIParentLoadAddOn then
-        UIParentLoadAddOn("Blizzard_UIDropDownMenu")
+    local dropdownAddonName = "Blizzard_UIDropDownMenu"
+    local dropdownAddonExists = not C_AddOns or not C_AddOns.DoesAddOnExist or C_AddOns.DoesAddOnExist(dropdownAddonName)
+    if dropdownAddonExists and C_AddOns and C_AddOns.LoadAddOn then
+        pcall(C_AddOns.LoadAddOn, dropdownAddonName)
+    elseif dropdownAddonExists and UIParentLoadAddOn then
+        pcall(UIParentLoadAddOn, dropdownAddonName)
     end
 end
 
@@ -189,7 +191,7 @@ AutoRepairGuildHint:SetText(L("AUTOREPAIR_GUILD_HINT"))
 local AuctionHousePanel = CreateFrame("Frame", nil, PageMiscContent)
 AuctionHousePanel:SetPoint("TOPLEFT", AutoRepairPanel, "BOTTOMLEFT", 0, -18)
 AuctionHousePanel:SetPoint("TOPRIGHT", AutoRepairPanel, "BOTTOMRIGHT", 0, -18)
-AuctionHousePanel:SetHeight(132)
+AuctionHousePanel:SetHeight(232)
 
 local AuctionHouseBg = AuctionHousePanel:CreateTexture(nil, "BACKGROUND")
 AuctionHouseBg:SetAllPoints()
@@ -224,6 +226,44 @@ AuctionHouseHint:SetJustifyV("TOP")
 AuctionHouseHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 AuctionHouseHint:SetTextColor(0.78, 0.74, 0.69, 1)
 AuctionHouseHint:SetText(L("AUCTION_HOUSE_CURRENT_EXPANSION_FILTER_HINT"))
+
+local AuctionHousePoorCheckbox = CreateFrame("CheckButton", nil, AuctionHousePanel, "UICheckButtonTemplate")
+AuctionHousePoorCheckbox:SetPoint("TOPLEFT", AuctionHouseHint, "BOTTOMLEFT", -30, -18)
+AuctionHousePoorCheckbox:SetScale(0.85)
+
+local AuctionHousePoorLabel = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
+AuctionHousePoorLabel:SetPoint("LEFT", AuctionHousePoorCheckbox, "RIGHT", 4, 0)
+AuctionHousePoorLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AuctionHousePoorLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+AuctionHousePoorLabel:SetText(L("AUCTION_HOUSE_POOR_QUALITY_FILTER"))
+
+local AuctionHousePoorHint = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
+AuctionHousePoorHint:SetPoint("TOPLEFT", AuctionHousePoorCheckbox, "BOTTOMLEFT", 30, -4)
+AuctionHousePoorHint:SetPoint("RIGHT", AuctionHousePanel, "RIGHT", -18, 0)
+AuctionHousePoorHint:SetJustifyH("LEFT")
+AuctionHousePoorHint:SetJustifyV("TOP")
+AuctionHousePoorHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AuctionHousePoorHint:SetTextColor(0.78, 0.74, 0.69, 1)
+AuctionHousePoorHint:SetText(L("AUCTION_HOUSE_POOR_QUALITY_FILTER_HINT"))
+
+local AuctionHouseCommonCheckbox = CreateFrame("CheckButton", nil, AuctionHousePanel, "UICheckButtonTemplate")
+AuctionHouseCommonCheckbox:SetPoint("TOPLEFT", AuctionHousePoorHint, "BOTTOMLEFT", -30, -12)
+AuctionHouseCommonCheckbox:SetScale(0.85)
+
+local AuctionHouseCommonLabel = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
+AuctionHouseCommonLabel:SetPoint("LEFT", AuctionHouseCommonCheckbox, "RIGHT", 4, 0)
+AuctionHouseCommonLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AuctionHouseCommonLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+AuctionHouseCommonLabel:SetText(L("AUCTION_HOUSE_COMMON_QUALITY_FILTER"))
+
+local AuctionHouseCommonHint = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
+AuctionHouseCommonHint:SetPoint("TOPLEFT", AuctionHouseCommonCheckbox, "BOTTOMLEFT", 30, -4)
+AuctionHouseCommonHint:SetPoint("RIGHT", AuctionHousePanel, "RIGHT", -18, 0)
+AuctionHouseCommonHint:SetJustifyH("LEFT")
+AuctionHouseCommonHint:SetJustifyV("TOP")
+AuctionHouseCommonHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+AuctionHouseCommonHint:SetTextColor(0.78, 0.74, 0.69, 1)
+AuctionHouseCommonHint:SetText(L("AUCTION_HOUSE_COMMON_QUALITY_FILTER_HINT"))
 
 -- ========================================
 -- Bereich: Easy Delete
@@ -1175,6 +1215,12 @@ PageMisc.Widgets = {
     AuctionHouseLabel = AuctionHouseLabel,
     AuctionHouseHint = AuctionHouseHint,
     AuctionHouseCheckbox = AuctionHouseCheckbox,
+    AuctionHousePoorLabel = AuctionHousePoorLabel,
+    AuctionHousePoorHint = AuctionHousePoorHint,
+    AuctionHousePoorCheckbox = AuctionHousePoorCheckbox,
+    AuctionHouseCommonLabel = AuctionHouseCommonLabel,
+    AuctionHouseCommonHint = AuctionHouseCommonHint,
+    AuctionHouseCommonCheckbox = AuctionHouseCommonCheckbox,
     EasyDeleteTitle = EasyDeleteTitle,
     EasyDeleteLabel = EasyDeleteLabel,
     EasyDeleteHint = EasyDeleteHint,
@@ -1322,6 +1368,8 @@ function PageMisc:RefreshState()
     local autoRepairEnabled = false
     local autoRepairGuildEnabled = false
     local auctionHouseCurrentExpansionFilterEnabled = false
+    local auctionHousePoorQualityFilterAutoDisabled = false
+    local auctionHouseCommonQualityFilterAutoDisabled = false
     local easyDeleteEnabled = false
     local fastLootEnabled = false
     local cutsceneSkipEnabled = false
@@ -1361,6 +1409,14 @@ function PageMisc:RefreshState()
 
     if Misc.IsAuctionHouseCurrentExpansionFilterEnabled then
         auctionHouseCurrentExpansionFilterEnabled = Misc.IsAuctionHouseCurrentExpansionFilterEnabled()
+    end
+
+    if Misc.IsAuctionHousePoorQualityFilterAutoDisabled then
+        auctionHousePoorQualityFilterAutoDisabled = Misc.IsAuctionHousePoorQualityFilterAutoDisabled()
+    end
+
+    if Misc.IsAuctionHouseCommonQualityFilterAutoDisabled then
+        auctionHouseCommonQualityFilterAutoDisabled = Misc.IsAuctionHouseCommonQualityFilterAutoDisabled()
     end
 
     if Misc.IsEasyDeleteEnabled then
@@ -1464,6 +1520,10 @@ function PageMisc:RefreshState()
     widgets.AuctionHouseTitle:SetText(L("AUCTION_HOUSE_MODULE"))
     widgets.AuctionHouseLabel:SetText(L("AUCTION_HOUSE_CURRENT_EXPANSION_FILTER"))
     widgets.AuctionHouseHint:SetText(L("AUCTION_HOUSE_CURRENT_EXPANSION_FILTER_HINT"))
+    widgets.AuctionHousePoorLabel:SetText(L("AUCTION_HOUSE_POOR_QUALITY_FILTER"))
+    widgets.AuctionHousePoorHint:SetText(L("AUCTION_HOUSE_POOR_QUALITY_FILTER_HINT"))
+    widgets.AuctionHouseCommonLabel:SetText(L("AUCTION_HOUSE_COMMON_QUALITY_FILTER"))
+    widgets.AuctionHouseCommonHint:SetText(L("AUCTION_HOUSE_COMMON_QUALITY_FILTER_HINT"))
     widgets.EasyDeleteTitle:SetText(L("EASY_DELETE"))
     widgets.EasyDeleteLabel:SetText(L("ACTIVE"))
     widgets.EasyDeleteHint:SetText(L("EASY_DELETE_HINT"))
@@ -1536,6 +1596,8 @@ function PageMisc:RefreshState()
     widgets.AutoRepairCheckbox:SetChecked(autoRepairEnabled)
     widgets.AutoRepairGuildCheckbox:SetChecked(autoRepairGuildEnabled)
     widgets.AuctionHouseCheckbox:SetChecked(auctionHouseCurrentExpansionFilterEnabled)
+    widgets.AuctionHousePoorCheckbox:SetChecked(auctionHousePoorQualityFilterAutoDisabled)
+    widgets.AuctionHouseCommonCheckbox:SetChecked(auctionHouseCommonQualityFilterAutoDisabled)
     widgets.EasyDeleteCheckbox:SetChecked(easyDeleteEnabled)
     widgets.FastLootCheckbox:SetChecked(fastLootEnabled)
     widgets.CutsceneSkipCheckbox:SetChecked(cutsceneSkipEnabled)
@@ -1746,6 +1808,22 @@ end)
 AuctionHouseCheckbox:SetScript("OnClick", function(self)
     if Misc.SetAuctionHouseCurrentExpansionFilterEnabled then
         Misc.SetAuctionHouseCurrentExpansionFilterEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+AuctionHousePoorCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetAuctionHousePoorQualityFilterAutoDisabled then
+        Misc.SetAuctionHousePoorQualityFilterAutoDisabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+AuctionHouseCommonCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetAuctionHouseCommonQualityFilterAutoDisabled then
+        Misc.SetAuctionHouseCommonQualityFilterAutoDisabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

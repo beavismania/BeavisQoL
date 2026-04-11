@@ -314,7 +314,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
     -- Viele Addon-Seiten nutzen denselben Aufbau:
     -- Checkbox links, Titel daneben, Hinweissatz darunter.
     local checkbox = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-    checkbox:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", -4, -14)
+    local anchorOffsetX = anchor and anchor.BeavisNextCheckboxOffsetX or -4
+    checkbox:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", anchorOffsetX, -14)
 
     local label = parent:CreateFontString(nil, "OVERLAY")
     label:SetPoint("LEFT", checkbox, "RIGHT", 6, 0)
@@ -330,6 +331,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
     hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     hint:SetTextColor(0.78, 0.74, 0.69, 1)
     hint:SetText(hintText)
+    hint.BeavisNextCheckboxOffsetX = -34
+    checkbox.BeavisNextCheckboxOffsetX = 0
 
     return checkbox, label, hint
 end
@@ -519,32 +522,20 @@ function StatsModule.RefreshOverlayWindow()
 end
 
 local RefreshTicker = CreateFrame("Frame")
-RefreshTicker.elapsed = 0
-local HandleStatsRefreshTicker
-local function StatsRefreshTickerOnUpdate(self, elapsed)
+local RefreshTickerHandle = nil
+local function RunStatsRefreshTicker()
     local profiler = BeavisQoL.PerformanceProfiler
     local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
-    HandleStatsRefreshTicker(self, elapsed)
-    if profiler and profiler.EndSample then
-        profiler.EndSample("Stats.RefreshTicker", sampleToken)
-    end
-end
-
-HandleStatsRefreshTicker = function(self, elapsed)
-    -- Der Ticker läuft nur dann sinnvoll weiter, wenn wenigstens Vorschau oder
-    -- Overlay gerade sichtbar sind. Sonst setzen wir ihn direkt wieder ruhig.
     local needsRefresh = (PageStats and PageStats:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
     if not needsRefresh then
-        self.elapsed = 0
+        if UpdateStatsRefreshTickerState then
+            UpdateStatsRefreshTickerState()
+        end
+        if profiler and profiler.EndSample then
+            profiler.EndSample("Stats.RefreshTicker", sampleToken)
+        end
         return
     end
-
-    self.elapsed = self.elapsed + elapsed
-    if self.elapsed < REFRESH_INTERVAL then
-        return
-    end
-
-    self.elapsed = 0
 
     if PageStats and PageStats:IsShown() then
         RefreshPreviewCard()
@@ -553,16 +544,37 @@ HandleStatsRefreshTicker = function(self, elapsed)
     if OverlayFrame and OverlayFrame:IsShown() then
         RefreshStatRows(OverlayRows)
     end
+
+    if profiler and profiler.EndSample then
+        profiler.EndSample("Stats.RefreshTicker", sampleToken)
+    end
 end
 
 UpdateStatsRefreshTickerState = function()
     local shouldRefresh = (PageStats and PageStats:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
 
-    RefreshTicker.elapsed = 0
-
     if shouldRefresh then
-        RefreshTicker:SetScript("OnUpdate", StatsRefreshTickerOnUpdate)
+        if RefreshTickerHandle == nil and C_Timer and C_Timer.NewTicker then
+            RefreshTickerHandle = C_Timer.NewTicker(REFRESH_INTERVAL, RunStatsRefreshTicker)
+        elseif RefreshTickerHandle == nil then
+            RefreshTicker.elapsed = 0
+            RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
+                self.elapsed = (self.elapsed or 0) + elapsed
+                if self.elapsed < REFRESH_INTERVAL then
+                    return
+                end
+
+                self.elapsed = 0
+                RunStatsRefreshTicker()
+            end)
+        end
     else
+        if RefreshTickerHandle then
+            RefreshTickerHandle:Cancel()
+            RefreshTickerHandle = nil
+        end
+
+        RefreshTicker.elapsed = 0
         RefreshTicker:SetScript("OnUpdate", nil)
     end
 end

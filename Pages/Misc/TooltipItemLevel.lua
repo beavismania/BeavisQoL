@@ -22,6 +22,10 @@ local tooltipItemLevelLines = setmetatable({}, { __mode = "k" })
 -- Auch hier vermeiden wir absichtlich GUIDs im Laufweg dieses Moduls.
 local pendingInspectUnit = nil
 local lastInspectRequestTime = 0
+local inspectFrameProtectionUntil = 0
+local inspectFrameHooksInstalled = false
+local inspectPVPSafetyInstalled = false
+local originalInspectPVPFrameUpdate = nil
 
 -- Diese festen Unit-Tokens sind in Tooltip-Kontexten am verlässlichsten.
 -- Wir arbeiten bewusst nur mit bekannten Tokens, um Taint-Probleme zu vermeiden.
@@ -90,6 +94,95 @@ local function GetNow()
     end
 
     return GetTime and GetTime() or 0
+end
+
+local function MarkInspectFrameProtected(durationSeconds)
+    local duration = tonumber(durationSeconds) or 0
+    if duration <= 0 then
+        duration = 1
+    end
+
+    inspectFrameProtectionUntil = math.max(inspectFrameProtectionUntil, GetNow() + duration)
+end
+
+local function EnsureInspectFrameHooks()
+    if inspectFrameHooksInstalled then
+        return
+    end
+
+    local inspectFrame = rawget(_G, "InspectFrame")
+    if not inspectFrame or not inspectFrame.HookScript then
+        return
+    end
+
+    inspectFrame:HookScript("OnShow", function()
+        MarkInspectFrameProtected(2)
+    end)
+
+    inspectFrame:HookScript("OnHide", function()
+        MarkInspectFrameProtected(1)
+    end)
+
+    inspectFrameHooksInstalled = true
+end
+
+local function IsBlizzardInspectFrameActive()
+    EnsureInspectFrameHooks()
+
+    local inspectFrame = rawget(_G, "InspectFrame")
+    if inspectFrame then
+        if inspectFrame.IsVisible and inspectFrame:IsVisible() then
+            MarkInspectFrameProtected(2)
+            return true
+        end
+
+        if inspectFrame.IsShown and inspectFrame:IsShown() then
+            MarkInspectFrameProtected(2)
+            return true
+        end
+    end
+
+    return inspectFrameProtectionUntil > GetNow()
+end
+
+local function HasValidInspectFrameUnit(parent)
+    local inspectParent = parent
+    if type(inspectParent) ~= "table" or inspectParent.unit == nil then
+        inspectParent = rawget(_G, "InspectFrame")
+    end
+
+    local unit = inspectParent and inspectParent.unit or nil
+    if type(unit) ~= "string" or unit == "" then
+        return false
+    end
+
+    if UnitExists and not UnitExists(unit) then
+        return false
+    end
+
+    return true
+end
+
+local function InstallInspectPVPSafetyHook()
+    if inspectPVPSafetyInstalled then
+        return
+    end
+
+    local inspectPVPFrameUpdate = rawget(_G, "InspectPVPFrame_Update")
+    if type(inspectPVPFrameUpdate) ~= "function" then
+        return
+    end
+
+    originalInspectPVPFrameUpdate = inspectPVPFrameUpdate
+    _G.InspectPVPFrame_Update = function(parent, ...)
+        if not HasValidInspectFrameUnit(parent) then
+            return
+        end
+
+        return originalInspectPVPFrameUpdate(parent, ...)
+    end
+
+    inspectPVPSafetyInstalled = true
 end
 
 -- Formatiert das Itemlevel so, wie es im Tooltip lesbar wirken soll.
@@ -212,10 +305,6 @@ end
 -- Das ist wichtig, damit keine alte Anfrage später falsche Tooltips verändert.
 local function ClearPendingInspect()
     pendingInspectUnit = nil
-
-    if ClearInspectPlayer then
-        ClearInspectPlayer()
-    end
 end
 
 -- Zeigt ein Itemlevel sofort aus dem Cache an.
@@ -262,6 +351,10 @@ local function RequestInspectForTooltip(tooltip, unit)
         return
     end
 
+    if IsBlizzardInspectFrameActive() then
+        return
+    end
+
     if not NotifyInspect or not CanInspect or not C_PaperDollInfo or not C_PaperDollInfo.GetInspectItemLevel then
         return
     end
@@ -292,6 +385,12 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
         return
     end
 
+    if IsBlizzardInspectFrameActive() then
+        lastInspectRequestTime = GetNow()
+        pendingInspectUnit = nil
+        return
+    end
+
     local unit = pendingInspectUnit
     if not unit or not UnitExists or not UnitExists(unit) or not C_PaperDollInfo or not C_PaperDollInfo.GetInspectItemLevel then
         ClearPendingInspect()
@@ -319,6 +418,20 @@ end)
 
 -- Retail bietet einen modernen Tooltip-Callback über TooltipDataProcessor.
 -- Den nutzen wir zuerst. Der alte Hook bleibt nur als vorsichtiger Fallback.
+local inspectSafetyFrame = CreateFrame("Frame")
+inspectSafetyFrame:RegisterEvent("PLAYER_LOGIN")
+inspectSafetyFrame:RegisterEvent("ADDON_LOADED")
+inspectSafetyFrame:SetScript("OnEvent", function(_, event, addonName)
+    if event == "PLAYER_LOGIN" then
+        InstallInspectPVPSafetyHook()
+        return
+    end
+
+    if event == "ADDON_LOADED" and addonName == "Blizzard_InspectUI" then
+        InstallInspectPVPSafetyHook()
+    end
+end)
+
 if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType and Enum.TooltipDataType.Unit then
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tooltip, tooltipData)
         local unit = ResolveTooltipUnit(tooltip, tooltipData)

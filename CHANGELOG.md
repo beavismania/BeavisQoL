@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.35.0 - 2026-04-11
+
+### Versionshinweis
+
+- `0.35.0` ist der aktuelle Feature-Stand nach `0.30.0`
+- seit `0.30.0` sind fünf neue Module hinzugekommen: `Listing-Presets`, `Auktionshaus-Favoriten`, `Auktionshaus-Filter`, `Performance-Profiler` und `Chonky Loadout-Dropdown`
+- die mittlere Zahl steigt damit auf `35`, der Hotfix-Zähler steht für diesen Stand auf `0`
+
+### Neue Module
+
+- neues Modul `Listing-Presets` für die Gruppensuche ergänzt
+- neues Modul `Auktionshaus-Favoriten` ergänzt
+- neues Modul `Auktionshaus-Filter` ergänzt
+- neues Modul `Erweiterter CPU/Performance-Profiler` ergänzt
+- neues Modul `Chonky Loadout-Dropdown` ergänzt
+
+### Qualitätsverbesserungen
+
+- Performance-Verbesserungen am `Maus-Helfer` vorgenommen
+- Verbesserungen an `Weekly Keys`, `Easy LFG` und weiteren Overlay-Bereichen vorgenommen
+- Bedienung und Darstellung in bestehenden Fenstern und Menüs weiter vereinheitlicht
+- mehrere bestehende Module in Performance, Stabilität und Kompatibilität weiter überarbeitet
+
+### Hotfixes
+
+- Fehlerbehebungen im `Organisierte Gruppen`-/`LFG`-Bereich ergänzt
+- Korrekturen bei Dropdowns, Menüs und Fensterverhalten vorgenommen
+- Kompatibilitätsfixes für Blizzard-Frames, Inspect-Ansichten und Tooltips ergänzt
+- mehrere Lua-Fehler sowie kleinere Stabilitätsprobleme behoben
+
 ## 0.30.0 - 2026-04-08
 
 ### Versionshinweis

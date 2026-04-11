@@ -265,11 +265,6 @@ local PageContentFrame
 local OverlayFrame
 local OverlayTitle
 local OverlayDestinationButton
-local OverlayDestinationLabel
-local OverlayDestinationValue
-local OverlayRaidSummary
-local OverlayDungeonModeButton
-local OverlayRaidModeButton
 local OverlayInviteRow
 local OverlayFullInviteButton
 local OverlayAutoInviteCheckbox
@@ -277,9 +272,6 @@ local OverlayDungeonContainer
 local OverlayRaidContainer
 local OverlayTimer = {}
 local ApplicantPanel
-local ApplicantPanelTitle
-local ApplicantPanelHint
-local ApplicantPanelEmptyText
 local WhisperSpecPromptUI = {
     Buttons = {},
     ClassButtons = {},
@@ -289,21 +281,13 @@ local PreviewUI = {
     DungeonButtons = {},
     RaidButtons = {},
 }
-local ShowOverlayCheckbox
-local LockOverlayCheckbox
 local ScaleSlider
-local ScaleSliderText
 local TimerDurationSlider
-local TimerDurationSliderText
-local DungeonModeButton
-local RaidModeButton
 local DestinationInput
 local DestinationCategoryDropdown
 local DestinationSuggestionDropdown
 local DestinationKeystoneDropdown
 local EditDialog
-local EditDialogTitle
-local EditDialogHint
 local EditDialogInput
 local EditDialogTargetLabel
 local EditClassTitle
@@ -357,10 +341,9 @@ local PlannerPrivate = {
     cancelSlotButton = nil,
     timerRefreshElapsed = 0,
     watcher = nil,
+    whisperSpecAliasLookupByClass = nil,
+    whisperSpecAliasLookupGlobal = nil,
 }
-
-local WhisperSpecAliasLookupByClass = nil
-local WhisperSpecAliasLookupGlobal = nil
 
 local function Clamp(value, minValue, maxValue)
     if value < minValue then
@@ -382,11 +365,71 @@ local function GetCurrentTimestamp()
     return time()
 end
 
-PlannerPrivate.ClearPendingInspectRequest = function()
-    if PlannerPrivate.pendingInspectGUID ~= nil and type(ClearInspectPlayer) == "function" then
-        ClearInspectPlayer()
+local function GetInspectGuardTimestamp()
+    if GetTimePreciseSec then
+        return GetTimePreciseSec()
     end
 
+    if GetTime then
+        return GetTime()
+    end
+
+    return time()
+end
+
+local inspectFrameProtectionUntil = 0
+local inspectFrameHooksInstalled = false
+
+local function MarkInspectFrameProtected(durationSeconds)
+    local duration = tonumber(durationSeconds) or 0
+    if duration <= 0 then
+        duration = 1
+    end
+
+    inspectFrameProtectionUntil = math.max(inspectFrameProtectionUntil, GetInspectGuardTimestamp() + duration)
+end
+
+local function EnsureInspectFrameHooks()
+    if inspectFrameHooksInstalled then
+        return
+    end
+
+    local inspectFrame = rawget(_G, "InspectFrame")
+    if not inspectFrame or not inspectFrame.HookScript then
+        return
+    end
+
+    inspectFrame:HookScript("OnShow", function()
+        MarkInspectFrameProtected(2)
+    end)
+
+    inspectFrame:HookScript("OnHide", function()
+        MarkInspectFrameProtected(1)
+    end)
+
+    inspectFrameHooksInstalled = true
+end
+
+local function IsBlizzardInspectFrameActive()
+    EnsureInspectFrameHooks()
+
+    local inspectFrame = rawget(_G, "InspectFrame")
+    if inspectFrame then
+        if inspectFrame.IsVisible and inspectFrame:IsVisible() then
+            MarkInspectFrameProtected(2)
+            return true
+        end
+
+        if inspectFrame.IsShown and inspectFrame:IsShown() then
+            MarkInspectFrameProtected(2)
+            return true
+        end
+    end
+
+    return inspectFrameProtectionUntil > GetInspectGuardTimestamp()
+end
+
+PlannerPrivate.ClearPendingInspectRequest = function()
     PlannerPrivate.pendingInspectGUID = nil
     PlannerPrivate.pendingInspectUnit = nil
     PlannerPrivate.pendingInspectFullName = nil
@@ -569,6 +612,10 @@ PlannerPrivate.QueueInspectForUnit = function(unit, fullName, classFile)
         return false
     end
 
+    if IsBlizzardInspectFrameActive() then
+        return false
+    end
+
     if PlannerPrivate.pendingInspectGUID ~= nil then
         return PlannerPrivate.pendingInspectGUID == unitGUID
     end
@@ -640,18 +687,18 @@ local function LayoutStreamerPlannerSettingsPanel(settingsPanel)
     settingsPanel.Hint:SetPoint("TOPLEFT", settingsPanel.Title, "BOTTOMLEFT", 0, -8)
     settingsPanel.Hint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
 
-    ShowOverlayCheckbox:ClearAllPoints()
-    ShowOverlayCheckbox:SetPoint("TOPLEFT", settingsPanel.Hint, "BOTTOMLEFT", -4, -14)
+    settingsPanel.ShowOverlayCheckbox:ClearAllPoints()
+    settingsPanel.ShowOverlayCheckbox:SetPoint("TOPLEFT", settingsPanel.Hint, "BOTTOMLEFT", -4, -14)
 
     settingsPanel.ShowOverlayHint:ClearAllPoints()
-    settingsPanel.ShowOverlayHint:SetPoint("TOPLEFT", ShowOverlayCheckbox, "BOTTOMLEFT", 34, -2)
+    settingsPanel.ShowOverlayHint:SetPoint("TOPLEFT", settingsPanel.ShowOverlayCheckbox, "BOTTOMLEFT", 34, -2)
     settingsPanel.ShowOverlayHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
 
-    LockOverlayCheckbox:ClearAllPoints()
-    LockOverlayCheckbox:SetPoint("TOPLEFT", settingsPanel.ShowOverlayHint, "BOTTOMLEFT", -34, -12)
+    settingsPanel.LockOverlayCheckbox:ClearAllPoints()
+    settingsPanel.LockOverlayCheckbox:SetPoint("TOPLEFT", settingsPanel.ShowOverlayHint, "BOTTOMLEFT", -34, -12)
 
     settingsPanel.LockOverlayHint:ClearAllPoints()
-    settingsPanel.LockOverlayHint:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 34, -2)
+    settingsPanel.LockOverlayHint:SetPoint("TOPLEFT", settingsPanel.LockOverlayCheckbox, "BOTTOMLEFT", 34, -2)
     settingsPanel.LockOverlayHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
 
     settingsPanel.ModeTitle:ClearAllPoints()
@@ -661,16 +708,16 @@ local function LayoutStreamerPlannerSettingsPanel(settingsPanel)
     settingsPanel.ModeHint:SetPoint("TOPLEFT", settingsPanel.ModeTitle, "BOTTOMLEFT", 0, -6)
     settingsPanel.ModeHint:SetPoint("RIGHT", settingsPanel, "RIGHT", -18, 0)
 
-    DungeonModeButton:ClearAllPoints()
-    DungeonModeButton:SetPoint("TOPLEFT", settingsPanel.ModeHint, "BOTTOMLEFT", 0, -12)
+    settingsPanel.DungeonModeButton:ClearAllPoints()
+    settingsPanel.DungeonModeButton:SetPoint("TOPLEFT", settingsPanel.ModeHint, "BOTTOMLEFT", 0, -12)
 
-    RaidModeButton:ClearAllPoints()
-    RaidModeButton:SetPoint("LEFT", DungeonModeButton, "RIGHT", 12, 0)
+    settingsPanel.RaidModeButton:ClearAllPoints()
+    settingsPanel.RaidModeButton:SetPoint("LEFT", settingsPanel.DungeonModeButton, "RIGHT", 12, 0)
 
     local sliderWidth = math.max(220, math.min(310, settingsPanel:GetWidth() - 56))
 
     ScaleSlider:ClearAllPoints()
-    ScaleSlider:SetPoint("TOPLEFT", DungeonModeButton, "BOTTOMLEFT", 18, -30)
+    ScaleSlider:SetPoint("TOPLEFT", settingsPanel.DungeonModeButton, "BOTTOMLEFT", 18, -30)
     ScaleSlider:SetWidth(sliderWidth)
 
     settingsPanel.ScaleHint:ClearAllPoints()
@@ -799,16 +846,29 @@ PlannerPrivate.IsSecretValue = function(value)
     return ok and isSecret == true
 end
 
-PlannerPrivate.IsUsablePlainString = function(value)
+
+-- Schutz vor zu langen Strings und Endlosschleifen
+local MAX_STRING_LENGTH = 1000
+local MAX_RECURSION_DEPTH = 5
+
+local function IsUsablePlainStringInternal(value, depth)
+    if depth > MAX_RECURSION_DEPTH then
+        return false
+    end
     if type(value) ~= "string" then
         return false
     end
-
+    if #value > MAX_STRING_LENGTH then
+        return false
+    end
     if PlannerPrivate.IsSecretValue(value) then
         return false
     end
-
     return value ~= ""
+end
+
+PlannerPrivate.IsUsablePlainString = function(value)
+    return IsUsablePlainStringInternal(value, 1)
 end
 
 PlannerPrivate.NormalizePlannerRoleKey = function(roleKey)
@@ -900,8 +960,8 @@ local function AddWhisperSpecAlias(target, aliasText, specID)
 end
 
 local function BuildWhisperSpecAliasLookups()
-    if WhisperSpecAliasLookupByClass ~= nil and WhisperSpecAliasLookupGlobal ~= nil then
-        return WhisperSpecAliasLookupByClass, WhisperSpecAliasLookupGlobal
+    if PlannerPrivate.whisperSpecAliasLookupByClass ~= nil and PlannerPrivate.whisperSpecAliasLookupGlobal ~= nil then
+        return PlannerPrivate.whisperSpecAliasLookupByClass, PlannerPrivate.whisperSpecAliasLookupGlobal
     end
 
     local byClass = {}
@@ -932,9 +992,9 @@ local function BuildWhisperSpecAliasLookups()
         end
     end
 
-    WhisperSpecAliasLookupByClass = byClass
-    WhisperSpecAliasLookupGlobal = global
-    return WhisperSpecAliasLookupByClass, WhisperSpecAliasLookupGlobal
+    PlannerPrivate.whisperSpecAliasLookupByClass = byClass
+    PlannerPrivate.whisperSpecAliasLookupGlobal = global
+    return PlannerPrivate.whisperSpecAliasLookupByClass, PlannerPrivate.whisperSpecAliasLookupGlobal
 end
 
 local function PayloadContainsAlias(payloadText, aliasText)
@@ -1057,7 +1117,10 @@ PlannerPrivate.ResolveWhisperSpecHint = function(messageText, classFile)
     end
 
     local lookupByClass, globalLookup = BuildWhisperSpecAliasLookups()
-    local aliasLookup = classFile and lookupByClass[classFile] or globalLookup
+    local aliasLookup = globalLookup
+    if classFile and type(lookupByClass) == "table" then
+        aliasLookup = lookupByClass[classFile] or aliasLookup
+    end
     if type(aliasLookup) ~= "table" then
         return nil
     end
@@ -1079,21 +1142,28 @@ PlannerPrivate.GetIdentityKey = function(value)
     return PlannerPrivate.NormalizeCompareText(value)
 end
 
+
+-- Schutz vor Endlosschleifen und zu vielen Iterationen
+local MAX_IDENTITY_KEYS = 10
+
 PlannerPrivate.GetIdentityKeys = function(value)
     local identityKeys = {}
     local seen = {}
+    local count = 0
 
     local function AddCandidate(candidate)
+        if count >= MAX_IDENTITY_KEYS then return end
         local identityKey = PlannerPrivate.GetIdentityKey(candidate)
         if identityKey ~= nil and not seen[identityKey] then
             seen[identityKey] = true
             identityKeys[#identityKeys + 1] = identityKey
+            count = count + 1
         end
     end
 
     AddCandidate(value)
 
-    if PlannerPrivate.IsUsablePlainString(value) then
+    if PlannerPrivate.IsUsablePlainString(value) and count < MAX_IDENTITY_KEYS then
         AddCandidate(PlannerPrivate.GetDisplayNameFromFullName(value))
     end
 
@@ -1267,25 +1337,35 @@ PlannerPrivate.ResolveDestinationFromCandidates = function(textCandidates)
 end
 
 PlannerPrivate.GetActiveEntryInfoTable = function()
-    if not C_LFGList or not C_LFGList.GetActiveEntryInfo then
+    if not C_LFGList then
         return nil
     end
 
-    local activeEntryInfo = C_LFGList.GetActiveEntryInfo()
-    if type(activeEntryInfo) == "table" then
-        return activeEntryInfo
+    local hasActiveEntry = false
+
+    if C_LFGList.HasActiveEntryInfo then
+        hasActiveEntry = C_LFGList.HasActiveEntryInfo() == true
+    elseif C_LFGList.GetActiveEntryInfo then
+        hasActiveEntry = C_LFGList.GetActiveEntryInfo() ~= nil
     end
 
-    local activityID, _, _, name, comment = C_LFGList.GetActiveEntryInfo()
-    if activityID == nil and name == nil and comment == nil then
+    if not hasActiveEntry then
         return nil
     end
 
-    return {
-        activityID = activityID,
-        name = name,
-        comment = comment,
+    local activeEntryInfo = {
+        hasActiveEntry = true,
     }
+
+    if LFGListFrame and LFGListFrame.EntryCreation then
+        local entryCreation = LFGListFrame.EntryCreation
+        local selectedActivityID = tonumber(entryCreation.selectedActivityID or entryCreation.selectedActivity)
+        if selectedActivityID then
+            activeEntryInfo.activityID = selectedActivityID
+        end
+    end
+
+    return activeEntryInfo
 end
 
 PlannerPrivate.GetActiveEntryActivityID = function(activeEntryInfo)
@@ -1315,10 +1395,6 @@ PlannerPrivate.GetEntryCreationTextCandidates = function()
         return candidates, nil, nil
     end
 
-    PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activeEntryInfo.name)
-    PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activeEntryInfo.comment)
-    PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, activeEntryInfo["title"])
-
     local activityInfo = nil
     local activityID = PlannerPrivate.GetActiveEntryActivityID(activeEntryInfo)
     if activityID and C_LFGList then
@@ -1343,6 +1419,24 @@ PlannerPrivate.GetEntryCreationTextCandidates = function()
 
         if LFGListFrame.EntryCreation.Description and LFGListFrame.EntryCreation.Description.GetText then
             PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, LFGListFrame.EntryCreation.Description:GetText())
+        end
+    end
+
+    if LFGListFrame and LFGListFrame.ApplicationViewer then
+        if LFGListFrame.ApplicationViewer.EntryName and LFGListFrame.ApplicationViewer.EntryName.GetText then
+            PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, LFGListFrame.ApplicationViewer.EntryName:GetText())
+        end
+
+        if LFGListFrame.ApplicationViewer.DescriptionFrame then
+            local descriptionFrame = LFGListFrame.ApplicationViewer.DescriptionFrame
+
+            if descriptionFrame.Description and descriptionFrame.Description.GetText then
+                PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, descriptionFrame.Description:GetText())
+            end
+
+            if descriptionFrame.Text and descriptionFrame.Text.GetText then
+                PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, descriptionFrame.Text:GetText())
+            end
         end
     end
 
@@ -2859,21 +2953,20 @@ PlannerPrivate.GetApplicantSnapshot = function()
     end
 
     local orderedApplicants = {}
-    for _, applicantID in ipairs(C_LFGList.GetApplicants() or {}) do
+    for applicantOrderIndex, applicantID in ipairs(C_LFGList.GetApplicants() or {}) do
         local applicantInfo = C_LFGList.GetApplicantInfo(applicantID)
         if type(applicantInfo) == "table" then
             orderedApplicants[#orderedApplicants + 1] = {
                 applicantID = applicantID,
-                displayOrderID = tonumber(applicantInfo.displayOrderID) or applicantID,
+                -- Blizzard can expose `displayOrderID` as a protected secret value.
+                -- We only need a stable local order for planner sorting, so we keep the
+                -- order returned by `GetApplicants()` instead of carrying the protected value.
+                displayOrderID = applicantOrderIndex,
                 applicationStatus = applicantInfo.applicationStatus,
                 numMembers = tonumber(applicantInfo.numMembers) or 0,
             }
         end
     end
-
-    table.sort(orderedApplicants, function(left, right)
-        return left.displayOrderID < right.displayOrderID
-    end)
 
     for _, applicant in ipairs(orderedApplicants) do
         if PlannerPrivate.IsVisibleApplicantStatus(applicant.applicationStatus) then
@@ -3928,19 +4021,19 @@ local function ApplyOverlayGeometry()
 end
 
 local function RefreshScaleSliderText()
-    if not ScaleSlider or not ScaleSliderText then
+    if not ScaleSlider or not ScaleSlider.TextLabel then
         return
     end
 
-    ScaleSliderText:SetText(string.format("%s: %s", L("STREAMER_PLANNER_SCALE"), GetSliderPercentText(ScaleSlider:GetValue())))
+    ScaleSlider.TextLabel:SetText(string.format("%s: %s", L("STREAMER_PLANNER_SCALE"), GetSliderPercentText(ScaleSlider:GetValue())))
 end
 
 local function RefreshTimerDurationSliderText()
-    if not TimerDurationSlider or not TimerDurationSliderText then
+    if not TimerDurationSlider or not TimerDurationSlider.TextLabel then
         return
     end
 
-    TimerDurationSliderText:SetText(string.format("%s: %s", L("STREAMER_PLANNER_TIMER_DURATION"), GetTimerDurationText(TimerDurationSlider:GetValue())))
+    TimerDurationSlider.TextLabel:SetText(string.format("%s: %s", L("STREAMER_PLANNER_TIMER_DURATION"), GetTimerDurationText(TimerDurationSlider:GetValue())))
 end
 
 local function RefreshDestinationCategoryDropdown()
@@ -4224,7 +4317,7 @@ LayoutEditDialogOptionButtons = function()
 
     if PlannerPrivate.editingUsesSelfRoleOverride == true and EditDialog and EditDialog.RoleTitle then
         EditDialog.RoleTitle:ClearAllPoints()
-        EditDialog.RoleTitle:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -18)
+        EditDialog.RoleTitle:SetPoint("TOPLEFT", EditDialog.Hint, "BOTTOMLEFT", 0, -18)
 
         for index, button in ipairs(visibleRoleButtons) do
             button:ClearAllPoints()
@@ -4904,7 +4997,7 @@ PlannerPrivate.EnsureApplicantRow = function(index)
 end
 
 PlannerPrivate.RefreshApplicantPanel = function(snapshot)
-    if not ApplicantPanel or not ApplicantPanelTitle or not ApplicantPanelHint or not ApplicantPanelEmptyText then
+    if not ApplicantPanel or not ApplicantPanel.Title or not ApplicantPanel.Hint or not ApplicantPanel.EmptyText then
         return
     end
 
@@ -4919,8 +5012,8 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
         return
     end
 
-    ApplicantPanelTitle:SetText(L("STREAMER_PLANNER_QUEUE_TITLE"))
-    ApplicantPanelHint:SetText(L("STREAMER_PLANNER_QUEUE_HINT"))
+    ApplicantPanel.Title:SetText(L("STREAMER_PLANNER_QUEUE_TITLE"))
+    ApplicantPanel.Hint:SetText(L("STREAMER_PLANNER_QUEUE_HINT"))
 
     if ApplicantPanel and ApplicantPanel.AutoInviteCheckbox then
         ApplicantPanel.AutoInviteCheckbox.Label:SetText(L("STREAMER_PLANNER_AUTO_INVITE_WHISPER"))
@@ -5019,10 +5112,10 @@ PlannerPrivate.RefreshApplicantPanel = function(snapshot)
         ApplicantRows[index]:Hide()
     end
 
-    ApplicantPanelEmptyText:SetShown(visibleRowCount == 0)
-    ApplicantPanelEmptyText:SetText(L("STREAMER_PLANNER_QUEUE_EMPTY"))
+    ApplicantPanel.EmptyText:SetShown(visibleRowCount == 0)
+    ApplicantPanel.EmptyText:SetText(L("STREAMER_PLANNER_QUEUE_EMPTY"))
 
-    local bottomObject = visibleRowCount == 0 and ApplicantPanelEmptyText or lastVisibleRow
+    local bottomObject = visibleRowCount == 0 and ApplicantPanel.EmptyText or lastVisibleRow
 
     if ApplicantPanel.MoreText then
         local extraCount = math.max(0, #rowDataList - maxRows)
@@ -5129,7 +5222,7 @@ local function CreateScaleSlider(parent, nameSuffix)
         textLabel:SetText("")
     end
 
-    return slider, textLabel
+    return slider
 end
 
 local function CreateSlotButton(parent, width, height, layout, index)
@@ -5235,8 +5328,8 @@ local function OpenEditor(layout, index, forceSelfRoleEditor)
 
     if PlannerPrivate.editingUsesSelfRoleOverride then
         EditDialog:SetSize(EDIT_DIALOG_WIDTH, 244)
-        EditDialogTitle:SetText(L("STREAMER_PLANNER_SELF_ROLE_TITLE"))
-        EditDialogHint:SetText(L("STREAMER_PLANNER_SELF_ROLE_HINT"))
+        EditDialog.Title:SetText(L("STREAMER_PLANNER_SELF_ROLE_TITLE"))
+        EditDialog.Hint:SetText(L("STREAMER_PLANNER_SELF_ROLE_HINT"))
         PlannerPrivate.saveSlotButton:SetText(L("STREAMER_PLANNER_APPLY"))
         PlannerPrivate.clearSlotButton:SetText(L("STREAMER_PLANNER_ROLE_AUTO"))
         PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
@@ -5250,8 +5343,8 @@ local function OpenEditor(layout, index, forceSelfRoleEditor)
     PlannerPrivate.clearSlotButton:SetText(L("STREAMER_PLANNER_CLEAR_SLOT"))
     PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
 
-    EditDialogTitle:SetText(string.format("%s: %s", L("STREAMER_PLANNER_SLOT_EDIT"), GetSlotLabel(layout, index)))
-    EditDialogHint:SetText(L("STREAMER_PLANNER_SLOT_EDIT_HINT"))
+    EditDialog.Title:SetText(string.format("%s: %s", L("STREAMER_PLANNER_SLOT_EDIT"), GetSlotLabel(layout, index)))
+    EditDialog.Hint:SetText(L("STREAMER_PLANNER_SLOT_EDIT_HINT"))
     EditDialogTargetLabel:SetText("")
     EditDialogInput:SetText(slotEntry.name)
     RefreshClassSpecButtons()
@@ -5277,8 +5370,8 @@ local function OpenDestinationEditor()
     PlannerPrivate.clearSlotButton:SetText(L("STREAMER_PLANNER_CLEAR_SLOT"))
     PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
 
-    EditDialogTitle:SetText(L("STREAMER_PLANNER_DESTINATION_EDIT"))
-    EditDialogHint:SetText(L("STREAMER_PLANNER_DESTINATION_EDIT_HINT"))
+    EditDialog.Title:SetText(L("STREAMER_PLANNER_DESTINATION_EDIT"))
+    EditDialog.Hint:SetText(L("STREAMER_PLANNER_DESTINATION_EDIT_HINT"))
     DestinationInput:SetText(GetDestinationBaseText())
     RefreshDestinationCategoryDropdown()
     RefreshDestinationSuggestionDropdown()
@@ -5504,29 +5597,30 @@ PlannerPrivate.RefreshModeButtons = function()
     local mode = GetCurrentMode()
     local dungeonActive = mode == "dungeon"
     local raidActive = mode == "raid"
+    local settingsPanel = PageStreamerPlanner and PageStreamerPlanner.SettingsPanel
 
-    if DungeonModeButton then
-        DungeonModeButton:SetEnabled(not dungeonActive)
+    if settingsPanel and settingsPanel.DungeonModeButton then
+        settingsPanel.DungeonModeButton:SetEnabled(not dungeonActive)
     end
 
-    if RaidModeButton then
-        RaidModeButton:SetEnabled(not raidActive)
+    if settingsPanel and settingsPanel.RaidModeButton then
+        settingsPanel.RaidModeButton:SetEnabled(not raidActive)
     end
 
-    if OverlayDungeonModeButton then
-        OverlayDungeonModeButton:SetEnabled(not dungeonActive)
+    if OverlayFrame and OverlayFrame.DungeonModeButton then
+        OverlayFrame.DungeonModeButton:SetEnabled(not dungeonActive)
     end
 
-    if OverlayRaidModeButton then
-        OverlayRaidModeButton:SetEnabled(not raidActive)
+    if OverlayFrame and OverlayFrame.RaidModeButton then
+        OverlayFrame.RaidModeButton:SetEnabled(not raidActive)
     end
 
-    if OverlayDungeonModeButton and OverlayDungeonModeButton.Text then
-        OverlayDungeonModeButton.Text:SetTextColor(dungeonActive and 1 or 0.82, dungeonActive and 0.82 or 0.82, dungeonActive and 0 or 0.82)
+    if OverlayFrame and OverlayFrame.DungeonModeButton and OverlayFrame.DungeonModeButton.Text then
+        OverlayFrame.DungeonModeButton.Text:SetTextColor(dungeonActive and 1 or 0.82, dungeonActive and 0.82 or 0.82, dungeonActive and 0 or 0.82)
     end
 
-    if OverlayRaidModeButton and OverlayRaidModeButton.Text then
-        OverlayRaidModeButton.Text:SetTextColor(raidActive and 1 or 0.82, raidActive and 0.82 or 0.82, raidActive and 0 or 0.82)
+    if OverlayFrame and OverlayFrame.RaidModeButton and OverlayFrame.RaidModeButton.Text then
+        OverlayFrame.RaidModeButton.Text:SetTextColor(raidActive and 1 or 0.82, raidActive and 0.82 or 0.82, raidActive and 0 or 0.82)
     end
 end
 
@@ -5572,24 +5666,24 @@ PlannerPrivate.RefreshLayoutVisibility = function()
         OverlayInviteRow:SetShown(showRaid)
     end
 
-    if OverlayDestinationLabel then
-        OverlayDestinationLabel:SetText(L("STREAMER_PLANNER_DESTINATION"))
+    if OverlayDestinationButton and OverlayDestinationButton.Label then
+        OverlayDestinationButton.Label:SetText(L("STREAMER_PLANNER_DESTINATION"))
     end
 
-    if OverlayRaidSummary then
-        OverlayRaidSummary:ClearAllPoints()
+    if OverlayFrame and OverlayFrame.RaidSummary then
+        OverlayFrame.RaidSummary:ClearAllPoints()
         if OverlayTimer.Panel then
-            OverlayRaidSummary:SetPoint("TOPLEFT", OverlayTimer.Panel, "BOTTOMLEFT", 0, -8)
+            OverlayFrame.RaidSummary:SetPoint("TOPLEFT", OverlayTimer.Panel, "BOTTOMLEFT", 0, -8)
         else
-            OverlayRaidSummary:SetPoint("TOPLEFT", (showRaid and OverlayInviteRow) or OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
+            OverlayFrame.RaidSummary:SetPoint("TOPLEFT", (showRaid and OverlayInviteRow) or OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -8)
         end
-        OverlayRaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
+        OverlayFrame.RaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
 
         if showRaid then
-            OverlayRaidSummary:SetText(GetRaidSummaryText())
-            OverlayRaidSummary:Show()
+            OverlayFrame.RaidSummary:SetText(GetRaidSummaryText())
+            OverlayFrame.RaidSummary:Show()
         else
-            OverlayRaidSummary:Hide()
+            OverlayFrame.RaidSummary:Hide()
         end
     end
 
@@ -5606,8 +5700,8 @@ PlannerPrivate.RefreshLayoutVisibility = function()
 
     if OverlayDestinationButton then
         OverlayDestinationButton:ClearAllPoints()
-        if showRaid and OverlayRaidSummary then
-            OverlayDestinationButton:SetPoint("TOPLEFT", OverlayRaidSummary, "BOTTOMLEFT", 0, -8)
+        if showRaid and OverlayFrame and OverlayFrame.RaidSummary then
+            OverlayDestinationButton:SetPoint("TOPLEFT", OverlayFrame.RaidSummary, "BOTTOMLEFT", 0, -8)
         elseif OverlayTimer.Panel then
             OverlayDestinationButton:SetPoint("TOPLEFT", OverlayTimer.Panel, "BOTTOMLEFT", 0, -12)
         else
@@ -5617,16 +5711,16 @@ PlannerPrivate.RefreshLayoutVisibility = function()
         OverlayDestinationButton:SetHeight(showRaid and OVERLAY_DESTINATION_HEIGHT_RAID or OVERLAY_DESTINATION_HEIGHT_DUNGEON)
     end
 
-    if OverlayDestinationValue then
+    if OverlayDestinationButton and OverlayDestinationButton.Value then
         if destinationText ~= "" then
-            OverlayDestinationValue:SetText(destinationText)
-            OverlayDestinationValue:SetTextColor(0.95, 0.91, 0.85, 1)
+            OverlayDestinationButton.Value:SetText(destinationText)
+            OverlayDestinationButton.Value:SetTextColor(0.95, 0.91, 0.85, 1)
         else
-            OverlayDestinationValue:SetText(L("STREAMER_PLANNER_DESTINATION_EMPTY"))
-            OverlayDestinationValue:SetTextColor(0.62, 0.62, 0.66, 1)
+            OverlayDestinationButton.Value:SetText(L("STREAMER_PLANNER_DESTINATION_EMPTY"))
+            OverlayDestinationButton.Value:SetTextColor(0.62, 0.62, 0.66, 1)
         end
 
-        OverlayDestinationValue:SetWordWrap(showRaid)
+        OverlayDestinationButton.Value:SetWordWrap(showRaid)
     end
 
     if OverlayDungeonContainer and OverlayDestinationButton then
@@ -5977,19 +6071,19 @@ OverlayFrame.ModeRow:SetPoint("TOPLEFT", OverlayTitle, "BOTTOMLEFT", 0, -8)
 OverlayFrame.ModeRow:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
 OverlayFrame.ModeRow:SetHeight(22)
 
-OverlayDungeonModeButton = CreateModeButton(OverlayFrame, "", function()
+OverlayFrame.DungeonModeButton = CreateModeButton(OverlayFrame, "", function()
     StreamerPlannerModule.SetMode("dungeon")
 end)
-OverlayDungeonModeButton:SetParent(OverlayFrame.ModeRow)
-OverlayDungeonModeButton:SetSize(78, 22)
-OverlayDungeonModeButton:SetPoint("TOPRIGHT", OverlayFrame.ModeRow, "TOPRIGHT", 0, 0)
+OverlayFrame.DungeonModeButton:SetParent(OverlayFrame.ModeRow)
+OverlayFrame.DungeonModeButton:SetSize(78, 22)
+OverlayFrame.DungeonModeButton:SetPoint("TOPRIGHT", OverlayFrame.ModeRow, "TOPRIGHT", 0, 0)
 
-OverlayRaidModeButton = CreateModeButton(OverlayFrame, "", function()
+OverlayFrame.RaidModeButton = CreateModeButton(OverlayFrame, "", function()
     StreamerPlannerModule.SetMode("raid")
 end)
-OverlayRaidModeButton:SetParent(OverlayFrame.ModeRow)
-OverlayRaidModeButton:SetSize(78, 22)
-OverlayRaidModeButton:SetPoint("RIGHT", OverlayDungeonModeButton, "LEFT", -6, 0)
+OverlayFrame.RaidModeButton:SetParent(OverlayFrame.ModeRow)
+OverlayFrame.RaidModeButton:SetSize(78, 22)
+OverlayFrame.RaidModeButton:SetPoint("RIGHT", OverlayFrame.DungeonModeButton, "LEFT", -6, 0)
 
 OverlayInviteRow = CreateFrame("Frame", nil, OverlayFrame)
 OverlayInviteRow:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -6)
@@ -6003,6 +6097,9 @@ OverlayFullInviteButton:SetPoint("RIGHT", OverlayInviteRow, "RIGHT", 0, 0)
 
 OverlayAutoInviteCheckbox = CreateCheckbox(OverlayInviteRow, "", function(self)
     GetStreamerPlannerSettings().whisperCommandAutoInvite = self:GetChecked() == true
+    if PlannerPrivate.UpdateWatcherPollingState then
+        PlannerPrivate.UpdateWatcherPollingState()
+    end
     PlannerPrivate.RefreshApplicantPanel()
 end)
 OverlayAutoInviteCheckbox:SetPoint("LEFT", OverlayInviteRow, "LEFT", -4, 0)
@@ -6011,13 +6108,13 @@ OverlayAutoInviteCheckbox.Label:SetPoint("LEFT", OverlayAutoInviteCheckbox, "RIG
 OverlayAutoInviteCheckbox.Label:SetPoint("RIGHT", OverlayFullInviteButton, "LEFT", -8, 0)
 OverlayAutoInviteCheckbox.Label:SetJustifyH("LEFT")
 
-OverlayRaidSummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
-OverlayRaidSummary:SetPoint("TOPLEFT", OverlayInviteRow, "BOTTOMLEFT", 0, -8)
-OverlayRaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
-OverlayRaidSummary:SetJustifyH("LEFT")
-OverlayRaidSummary:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
-OverlayRaidSummary:SetTextColor(0.92, 0.92, 0.92, 1)
-OverlayRaidSummary:SetWordWrap(false)
+OverlayFrame.RaidSummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
+OverlayFrame.RaidSummary:SetPoint("TOPLEFT", OverlayInviteRow, "BOTTOMLEFT", 0, -8)
+OverlayFrame.RaidSummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -18, 0)
+OverlayFrame.RaidSummary:SetJustifyH("LEFT")
+OverlayFrame.RaidSummary:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+OverlayFrame.RaidSummary:SetTextColor(0.92, 0.92, 0.92, 1)
+OverlayFrame.RaidSummary:SetWordWrap(false)
 
 OverlayDestinationButton = CreateFrame("Button", nil, OverlayFrame)
 OverlayDestinationButton:SetPoint("TOPLEFT", OverlayFrame.ModeRow, "BOTTOMLEFT", 0, -12)
@@ -6038,21 +6135,21 @@ do
     border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
 end
 
-OverlayDestinationLabel = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
-OverlayDestinationLabel:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 10, -5)
-OverlayDestinationLabel:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", -10, -5)
-OverlayDestinationLabel:SetJustifyH("LEFT")
-OverlayDestinationLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-OverlayDestinationLabel:SetTextColor(1, 0.88, 0.62, 1)
-OverlayDestinationLabel:SetWordWrap(false)
+OverlayDestinationButton.Label = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
+OverlayDestinationButton.Label:SetPoint("TOPLEFT", OverlayDestinationButton, "TOPLEFT", 10, -5)
+OverlayDestinationButton.Label:SetPoint("TOPRIGHT", OverlayDestinationButton, "TOPRIGHT", -10, -5)
+OverlayDestinationButton.Label:SetJustifyH("LEFT")
+OverlayDestinationButton.Label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+OverlayDestinationButton.Label:SetTextColor(1, 0.88, 0.62, 1)
+OverlayDestinationButton.Label:SetWordWrap(false)
 
-OverlayDestinationValue = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
-OverlayDestinationValue:SetPoint("TOPLEFT", OverlayDestinationLabel, "BOTTOMLEFT", 0, -2)
-OverlayDestinationValue:SetPoint("BOTTOMRIGHT", OverlayDestinationButton, "BOTTOMRIGHT", -10, 7)
-OverlayDestinationValue:SetJustifyH("LEFT")
-OverlayDestinationValue:SetJustifyV("TOP")
-OverlayDestinationValue:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
-OverlayDestinationValue:SetWordWrap(true)
+OverlayDestinationButton.Value = OverlayDestinationButton:CreateFontString(nil, "OVERLAY")
+OverlayDestinationButton.Value:SetPoint("TOPLEFT", OverlayDestinationButton.Label, "BOTTOMLEFT", 0, -2)
+OverlayDestinationButton.Value:SetPoint("BOTTOMRIGHT", OverlayDestinationButton, "BOTTOMRIGHT", -10, 7)
+OverlayDestinationButton.Value:SetJustifyH("LEFT")
+OverlayDestinationButton.Value:SetJustifyV("TOP")
+OverlayDestinationButton.Value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+OverlayDestinationButton.Value:SetWordWrap(true)
 
 OverlayDestinationButton:SetScript("OnEnter", function(self)
     self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
@@ -6190,24 +6287,24 @@ do
     border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 end
 
-EditDialogTitle = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDialogTitle:SetPoint("TOPLEFT", EditDialog, "TOPLEFT", 16, -14)
-EditDialogTitle:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
-EditDialogTitle:SetJustifyH("LEFT")
-EditDialogTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-EditDialogTitle:SetTextColor(1, 0.88, 0.62, 1)
+EditDialog.Title = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDialog.Title:SetPoint("TOPLEFT", EditDialog, "TOPLEFT", 16, -14)
+EditDialog.Title:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
+EditDialog.Title:SetJustifyH("LEFT")
+EditDialog.Title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+EditDialog.Title:SetTextColor(1, 0.88, 0.62, 1)
 
-EditDialogHint = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDialogHint:SetPoint("TOPLEFT", EditDialogTitle, "BOTTOMLEFT", 0, -8)
-EditDialogHint:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
-EditDialogHint:SetJustifyH("LEFT")
-EditDialogHint:SetJustifyV("TOP")
-EditDialogHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-EditDialogHint:SetTextColor(0.82, 0.82, 0.86, 1)
+EditDialog.Hint = EditDialog:CreateFontString(nil, "OVERLAY")
+EditDialog.Hint:SetPoint("TOPLEFT", EditDialog.Title, "BOTTOMLEFT", 0, -8)
+EditDialog.Hint:SetPoint("RIGHT", EditDialog, "RIGHT", -16, 0)
+EditDialog.Hint:SetJustifyH("LEFT")
+EditDialog.Hint:SetJustifyV("TOP")
+EditDialog.Hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+EditDialog.Hint:SetTextColor(0.82, 0.82, 0.86, 1)
 
 EditDialogInput = CreateFrame("EditBox", nil, EditDialog, "InputBoxTemplate")
 EditDialogInput:SetSize(484, 28)
-EditDialogInput:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -12)
+EditDialogInput:SetPoint("TOPLEFT", EditDialog.Hint, "BOTTOMLEFT", 0, -12)
 EditDialogInput:SetAutoFocus(false)
 EditDialogInput:SetMaxLetters(64)
 
@@ -6248,7 +6345,7 @@ do
 end
 
 EditDestinationCategoryLabel = EditDialog:CreateFontString(nil, "OVERLAY")
-EditDestinationCategoryLabel:SetPoint("TOPLEFT", EditDialogHint, "BOTTOMLEFT", 0, -16)
+EditDestinationCategoryLabel:SetPoint("TOPLEFT", EditDialog.Hint, "BOTTOMLEFT", 0, -16)
 EditDestinationCategoryLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 EditDestinationCategoryLabel:SetTextColor(0.92, 0.92, 0.92, 1)
 
@@ -6646,27 +6743,27 @@ SettingsPanel.Hint:SetJustifyV("TOP")
 SettingsPanel.Hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.Hint:SetTextColor(0.78, 0.74, 0.69, 1)
 
-ShowOverlayCheckbox = CreateCheckbox(SettingsPanel, "", function(self)
+SettingsPanel.ShowOverlayCheckbox = CreateCheckbox(SettingsPanel, "", function(self)
     StreamerPlannerModule.SetOverlayEnabled(self:GetChecked())
     PageStreamerPlanner:RefreshState()
 end)
-ShowOverlayCheckbox:SetPoint("TOPLEFT", SettingsPanel.Hint, "BOTTOMLEFT", -4, -18)
+SettingsPanel.ShowOverlayCheckbox:SetPoint("TOPLEFT", SettingsPanel.Hint, "BOTTOMLEFT", -4, -18)
 
 SettingsPanel.ShowOverlayHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
-SettingsPanel.ShowOverlayHint:SetPoint("TOPLEFT", ShowOverlayCheckbox, "BOTTOMLEFT", 34, -2)
+SettingsPanel.ShowOverlayHint:SetPoint("TOPLEFT", SettingsPanel.ShowOverlayCheckbox, "BOTTOMLEFT", 34, -2)
 SettingsPanel.ShowOverlayHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.ShowOverlayHint:SetJustifyH("LEFT")
 SettingsPanel.ShowOverlayHint:SetJustifyV("TOP")
 SettingsPanel.ShowOverlayHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ShowOverlayHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
-LockOverlayCheckbox = CreateCheckbox(SettingsPanel, "", function(self)
+SettingsPanel.LockOverlayCheckbox = CreateCheckbox(SettingsPanel, "", function(self)
     StreamerPlannerModule.SetOverlayLocked(self:GetChecked())
 end)
-LockOverlayCheckbox:SetPoint("TOPLEFT", SettingsPanel.ShowOverlayHint, "BOTTOMLEFT", -34, -14)
+SettingsPanel.LockOverlayCheckbox:SetPoint("TOPLEFT", SettingsPanel.ShowOverlayHint, "BOTTOMLEFT", -34, -14)
 
 SettingsPanel.LockOverlayHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
-SettingsPanel.LockOverlayHint:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 34, -2)
+SettingsPanel.LockOverlayHint:SetPoint("TOPLEFT", SettingsPanel.LockOverlayCheckbox, "BOTTOMLEFT", 34, -2)
 SettingsPanel.LockOverlayHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
 SettingsPanel.LockOverlayHint:SetJustifyH("LEFT")
 SettingsPanel.LockOverlayHint:SetJustifyV("TOP")
@@ -6686,18 +6783,18 @@ SettingsPanel.ModeHint:SetJustifyV("TOP")
 SettingsPanel.ModeHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 SettingsPanel.ModeHint:SetTextColor(0.74, 0.74, 0.74, 1)
 
-DungeonModeButton = CreateModeButton(SettingsPanel, "", function()
+SettingsPanel.DungeonModeButton = CreateModeButton(SettingsPanel, "", function()
     StreamerPlannerModule.SetMode("dungeon")
 end)
-DungeonModeButton:SetPoint("TOPLEFT", SettingsPanel.ModeHint, "BOTTOMLEFT", 0, -14)
+SettingsPanel.DungeonModeButton:SetPoint("TOPLEFT", SettingsPanel.ModeHint, "BOTTOMLEFT", 0, -14)
 
-RaidModeButton = CreateModeButton(SettingsPanel, "", function()
+SettingsPanel.RaidModeButton = CreateModeButton(SettingsPanel, "", function()
     StreamerPlannerModule.SetMode("raid")
 end)
-RaidModeButton:SetPoint("LEFT", DungeonModeButton, "RIGHT", 12, 0)
+SettingsPanel.RaidModeButton:SetPoint("LEFT", SettingsPanel.DungeonModeButton, "RIGHT", 12, 0)
 
-ScaleSlider, ScaleSliderText = CreateScaleSlider(SettingsPanel, "Scale")
-ScaleSlider:SetPoint("TOPLEFT", DungeonModeButton, "BOTTOMLEFT", 18, -28)
+ScaleSlider = CreateScaleSlider(SettingsPanel, "Scale")
+ScaleSlider:SetPoint("TOPLEFT", SettingsPanel.DungeonModeButton, "BOTTOMLEFT", 18, -28)
 ScaleSlider:SetScript("OnValueChanged", function(self, value)
     if PlannerPrivate.isRefreshingPage then
         return
@@ -6707,7 +6804,7 @@ ScaleSlider:SetScript("OnValueChanged", function(self, value)
     RefreshScaleSliderText()
 end)
 
-TimerDurationSlider, TimerDurationSliderText = CreateScaleSlider(SettingsPanel, "TimerDuration")
+TimerDurationSlider = CreateScaleSlider(SettingsPanel, "TimerDuration")
 TimerDurationSlider:SetMinMaxValues(MIN_TIMER_DURATION_MINUTES, MAX_TIMER_DURATION_MINUTES)
 TimerDurationSlider:SetValueStep(1)
 TimerDurationSlider:SetObeyStepOnDrag(true)
@@ -6813,30 +6910,33 @@ do
     border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
 end
 
-ApplicantPanelTitle = ApplicantPanel:CreateFontString(nil, "OVERLAY")
-ApplicantPanelTitle:SetPoint("TOPLEFT", ApplicantPanel, "TOPLEFT", 18, -14)
-ApplicantPanelTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
-ApplicantPanelTitle:SetTextColor(1, 0.88, 0.62, 1)
+ApplicantPanel.Title = ApplicantPanel:CreateFontString(nil, "OVERLAY")
+ApplicantPanel.Title:SetPoint("TOPLEFT", ApplicantPanel, "TOPLEFT", 18, -14)
+ApplicantPanel.Title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+ApplicantPanel.Title:SetTextColor(1, 0.88, 0.62, 1)
 
 ApplicantPanel.FullInviteButton = CreateActionButton(ApplicantPanel, 92, "", function()
     PlannerPrivate.InviteAllApplicantRows(PlannerPrivate.BuildApplicantPanelRowData(), GetCurrentMode())
 end)
 ApplicantPanel.FullInviteButton:SetPoint("TOPRIGHT", ApplicantPanel, "TOPRIGHT", -18, -12)
 
-ApplicantPanelTitle:SetPoint("RIGHT", ApplicantPanel.FullInviteButton, "LEFT", -12, 0)
+ApplicantPanel.Title:SetPoint("RIGHT", ApplicantPanel.FullInviteButton, "LEFT", -12, 0)
 
-ApplicantPanelHint = ApplicantPanel:CreateFontString(nil, "OVERLAY")
-ApplicantPanelHint:SetPoint("TOPLEFT", ApplicantPanelTitle, "BOTTOMLEFT", 0, -8)
-ApplicantPanelHint:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
-ApplicantPanelHint:SetJustifyH("LEFT")
-ApplicantPanelHint:SetJustifyV("TOP")
-ApplicantPanelHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-ApplicantPanelHint:SetTextColor(0.78, 0.74, 0.69, 1)
+ApplicantPanel.Hint = ApplicantPanel:CreateFontString(nil, "OVERLAY")
+ApplicantPanel.Hint:SetPoint("TOPLEFT", ApplicantPanel.Title, "BOTTOMLEFT", 0, -8)
+ApplicantPanel.Hint:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
+ApplicantPanel.Hint:SetJustifyH("LEFT")
+ApplicantPanel.Hint:SetJustifyV("TOP")
+ApplicantPanel.Hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ApplicantPanel.Hint:SetTextColor(0.78, 0.74, 0.69, 1)
 
 ApplicantPanel.AutoInviteCheckbox = CreateCheckbox(ApplicantPanel, "", function(self)
     GetStreamerPlannerSettings().whisperCommandAutoInvite = self:GetChecked() == true
+    if PlannerPrivate.UpdateWatcherPollingState then
+        PlannerPrivate.UpdateWatcherPollingState()
+    end
 end)
-ApplicantPanel.AutoInviteCheckbox:SetPoint("TOPLEFT", ApplicantPanelHint, "BOTTOMLEFT", 0, -10)
+ApplicantPanel.AutoInviteCheckbox:SetPoint("TOPLEFT", ApplicantPanel.Hint, "BOTTOMLEFT", 0, -10)
 ApplicantPanel.AutoInviteCheckbox.Label:ClearAllPoints()
 ApplicantPanel.AutoInviteCheckbox.Label:SetPoint("LEFT", ApplicantPanel.AutoInviteCheckbox, "RIGHT", 4, 0)
 ApplicantPanel.AutoInviteCheckbox.Label:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
@@ -6847,13 +6947,13 @@ ApplicantPanel.RowAnchor:SetPoint("TOPLEFT", ApplicantPanel.AutoInviteCheckbox, 
 ApplicantPanel.RowAnchor:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -14, 0)
 ApplicantPanel.RowAnchor:SetHeight(1)
 
-ApplicantPanelEmptyText = ApplicantPanel:CreateFontString(nil, "OVERLAY")
-ApplicantPanelEmptyText:SetPoint("TOPLEFT", ApplicantPanel.RowAnchor, "TOPLEFT", 0, 0)
-ApplicantPanelEmptyText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
-ApplicantPanelEmptyText:SetJustifyH("LEFT")
-ApplicantPanelEmptyText:SetJustifyV("TOP")
-ApplicantPanelEmptyText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
-ApplicantPanelEmptyText:SetTextColor(0.82, 0.82, 0.84, 1)
+ApplicantPanel.EmptyText = ApplicantPanel:CreateFontString(nil, "OVERLAY")
+ApplicantPanel.EmptyText:SetPoint("TOPLEFT", ApplicantPanel.RowAnchor, "TOPLEFT", 0, 0)
+ApplicantPanel.EmptyText:SetPoint("RIGHT", ApplicantPanel, "RIGHT", -18, 0)
+ApplicantPanel.EmptyText:SetJustifyH("LEFT")
+ApplicantPanel.EmptyText:SetJustifyV("TOP")
+ApplicantPanel.EmptyText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ApplicantPanel.EmptyText:SetTextColor(0.82, 0.82, 0.84, 1)
 
 ApplicantPanel.MoreText = ApplicantPanel:CreateFontString(nil, "OVERLAY")
 ApplicantPanel.MoreText:SetPoint("BOTTOMLEFT", ApplicantPanel, "BOTTOMLEFT", 18, 10)
@@ -6885,14 +6985,14 @@ function PageStreamerPlanner:RefreshState()
     PreviewUI.Hint:SetText(L("STREAMER_PLANNER_PREVIEW_HINT"))
     settingsPanel.Title:SetText(L("STREAMER_TOOLS"))
     settingsPanel.Hint:SetText(L("STREAMER_PLANNER_SETTINGS_HINT"))
-    ShowOverlayCheckbox.Label:SetText(L("STREAMER_PLANNER_SHOW_OVERLAY"))
+    settingsPanel.ShowOverlayCheckbox.Label:SetText(L("STREAMER_PLANNER_SHOW_OVERLAY"))
     settingsPanel.ShowOverlayHint:SetText(L("STREAMER_PLANNER_SHOW_OVERLAY_HINT"))
-    LockOverlayCheckbox.Label:SetText(L("STREAMER_PLANNER_LOCK_OVERLAY"))
+    settingsPanel.LockOverlayCheckbox.Label:SetText(L("STREAMER_PLANNER_LOCK_OVERLAY"))
     settingsPanel.LockOverlayHint:SetText(L("STREAMER_PLANNER_LOCK_OVERLAY_HINT"))
     settingsPanel.ModeTitle:SetText(L("STREAMER_PLANNER_MODE"))
     settingsPanel.ModeHint:SetText(L("STREAMER_PLANNER_MODE_HINT"))
-    DungeonModeButton:SetText(L("STREAMER_PLANNER_MODE_DUNGEON"))
-    RaidModeButton:SetText(L("STREAMER_PLANNER_MODE_RAID"))
+    settingsPanel.DungeonModeButton:SetText(L("STREAMER_PLANNER_MODE_DUNGEON"))
+    settingsPanel.RaidModeButton:SetText(L("STREAMER_PLANNER_MODE_RAID"))
     EditDestinationCategoryLabel:SetText(L("STREAMER_PLANNER_DESTINATION_CATEGORY"))
     EditDestinationSuggestionLabel:SetText(L("STREAMER_PLANNER_DESTINATION_SUGGESTION"))
     EditDestinationKeystoneLabel:SetText(L("STREAMER_PLANNER_DESTINATION_KEYSTONE"))
@@ -6906,8 +7006,8 @@ function PageStreamerPlanner:RefreshState()
     settingsPanel.ClearAllHint:SetText(L("STREAMER_PLANNER_CLEAR_ALL_HINT"))
     settingsPanel.EditHint:SetText(L("STREAMER_PLANNER_EDIT_HINT"))
     OverlayTitle:SetText(L("STREAMER_PLANNER_OVERLAY_TITLE"))
-    OverlayDungeonModeButton:SetText(L("STREAMER_PLANNER_MODE_DUNGEON"))
-    OverlayRaidModeButton:SetText(L("STREAMER_PLANNER_MODE_RAID"))
+    OverlayFrame.DungeonModeButton:SetText(L("STREAMER_PLANNER_MODE_DUNGEON"))
+    OverlayFrame.RaidModeButton:SetText(L("STREAMER_PLANNER_MODE_RAID"))
     OverlayFrame.SettingsButton.Label:SetText(L("STREAMER_PLANNER_OVERLAY_SETTINGS_BUTTON"))
     if OverlayFullInviteButton then
         OverlayFullInviteButton:SetText(L("STREAMER_PLANNER_FULL_INVITE"))
@@ -6931,8 +7031,8 @@ function PageStreamerPlanner:RefreshState()
     PlannerPrivate.cancelSlotButton:SetText(L("CANCEL"))
 
     PlannerPrivate.isRefreshingPage = true
-    ShowOverlayCheckbox:SetChecked(settings.overlayEnabled)
-    LockOverlayCheckbox:SetChecked(settings.overlayLocked)
+    settingsPanel.ShowOverlayCheckbox:SetChecked(settings.overlayEnabled)
+    settingsPanel.LockOverlayCheckbox:SetChecked(settings.overlayLocked)
     ScaleSlider:SetValue(settings.overlayScale)
     TimerDurationSlider:SetValue(GetTimerDurationMinutes())
     if DestinationInput and PlannerPrivate.editingField ~= "destination" then
@@ -7044,8 +7144,6 @@ PlannerPrivate.watcher:RegisterEvent("PLAYER_ROLES_ASSIGNED")
 PlannerPrivate.watcher:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
 PlannerPrivate.watcher:RegisterEvent("LFG_LIST_APPLICANT_LIST_UPDATED")
 PlannerPrivate.watcher:RegisterEvent("LFG_LIST_APPLICANT_UPDATED")
-PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_WHISPER")
-PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_BN_WHISPER")
 PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_ADDON")
 PlannerPrivate.watcher:RegisterEvent("INSPECT_READY")
 PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
@@ -7060,6 +7158,16 @@ PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
     end
 
     if event == "INSPECT_READY" then
+        if IsBlizzardInspectFrameActive() then
+            PlannerPrivate.pendingInspectGUID = nil
+            PlannerPrivate.pendingInspectUnit = nil
+            PlannerPrivate.pendingInspectFullName = nil
+            PlannerPrivate.pendingInspectClassFile = nil
+            PlannerPrivate.pendingInspectExpiresAt = 0
+            PlannerPrivate.nextInspectAllowedAt = GetCurrentTimestamp() + INSPECT_REQUEST_INTERVAL_SECONDS
+            return
+        end
+
         local inspectedGUID = select(1, ...)
         if PlannerPrivate.IsUsablePlainString(inspectedGUID) and inspectedGUID == PlannerPrivate.pendingInspectGUID then
             local inspectedUnit = PlannerPrivate.FindGroupUnitByGUID(inspectedGUID) or PlannerPrivate.pendingInspectUnit
@@ -7136,32 +7244,80 @@ PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
     PlannerPrivate.lastDungeonSyncSignature = nil
     PlannerPrivate.SyncDynamicPlannerState(true)
 end)
-local function HandleStreamerPlannerWatcherUpdate(_, elapsed)
-    PlannerPrivate.periodicSyncElapsed = PlannerPrivate.periodicSyncElapsed + elapsed
-    if PlannerPrivate.periodicSyncElapsed < 1 then
-        return
-    end
-
-    PlannerPrivate.periodicSyncElapsed = 0
+local function RunStreamerPlannerWatcherUpdate()
     PlannerPrivate.SyncDynamicPlannerState(false)
 end
 
-local function StreamerPlannerWatcherOnUpdate(_, elapsed)
-    local profiler = BeavisQoL.PerformanceProfiler
-    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
-    HandleStreamerPlannerWatcherUpdate(_, elapsed)
-    if profiler and profiler.EndSample then
-        profiler.EndSample("StreamerPlanner.WatcherOnUpdate", sampleToken)
+-- Only watch whisper traffic when the planner UI or auto-invite actually needs it.
+PlannerPrivate.ShouldListenForWhispers = function()
+    local settings = GetStreamerPlannerSettings()
+    if settings.whisperCommandAutoInvite == true then
+        return true
+    end
+
+    if PageStreamerPlanner and PageStreamerPlanner:IsShown() then
+        return true
+    end
+
+    if OverlayFrame and OverlayFrame:IsShown() then
+        return true
+    end
+
+    return false
+end
+
+PlannerPrivate.UpdateWhisperEventRegistration = function()
+    if not PlannerPrivate.watcher then
+        return
+    end
+
+    if PlannerPrivate.ShouldListenForWhispers() then
+        PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_WHISPER")
+        PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_BN_WHISPER")
+    else
+        PlannerPrivate.watcher:UnregisterEvent("CHAT_MSG_WHISPER")
+        PlannerPrivate.watcher:UnregisterEvent("CHAT_MSG_BN_WHISPER")
     end
 end
 
 PlannerPrivate.UpdateWatcherPollingState = function()
+    PlannerPrivate.UpdateWhisperEventRegistration()
+
     local shouldPoll = (PageStreamerPlanner and PageStreamerPlanner:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
     PlannerPrivate.periodicSyncElapsed = 0
 
     if shouldPoll then
-        PlannerPrivate.watcher:SetScript("OnUpdate", StreamerPlannerWatcherOnUpdate)
+        if PlannerPrivate.watcherTicker == nil and C_Timer and C_Timer.NewTicker then
+            PlannerPrivate.watcherTicker = C_Timer.NewTicker(1, function()
+                local profiler = BeavisQoL.PerformanceProfiler
+                local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+                RunStreamerPlannerWatcherUpdate()
+                if profiler and profiler.EndSample then
+                    profiler.EndSample("StreamerPlanner.WatcherOnUpdate", sampleToken)
+                end
+            end)
+        elseif PlannerPrivate.watcherTicker == nil then
+            PlannerPrivate.watcher:SetScript("OnUpdate", function(_, elapsed)
+                PlannerPrivate.periodicSyncElapsed = PlannerPrivate.periodicSyncElapsed + elapsed
+                if PlannerPrivate.periodicSyncElapsed < 1 then
+                    return
+                end
+
+                PlannerPrivate.periodicSyncElapsed = 0
+                local profiler = BeavisQoL.PerformanceProfiler
+                local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
+                RunStreamerPlannerWatcherUpdate()
+                if profiler and profiler.EndSample then
+                    profiler.EndSample("StreamerPlanner.WatcherOnUpdate", sampleToken)
+                end
+            end)
+        end
     else
+        if PlannerPrivate.watcherTicker then
+            PlannerPrivate.watcherTicker:Cancel()
+            PlannerPrivate.watcherTicker = nil
+        end
+
         PlannerPrivate.watcher:SetScript("OnUpdate", nil)
     end
 end
