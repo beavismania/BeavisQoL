@@ -21,7 +21,8 @@ local PullTimerButton = nil
 local PendingStartTimer = nil
 local PendingReadyCheck = nil
 local AutoTimerReadyCheckRequestedAt = 0
-local RefreshKeystoneButtons = nil
+local RefreshKeystoneButtons = function()
+end
 
 local function GetChallengesUILoaded()
     if C_AddOns and C_AddOns.IsAddOnLoaded then

@@ -161,39 +161,39 @@ local function FilterFactionList(factionList, query, selectedFactionIndex)
         return group
     end
 
+    local function EnsureCurrentTopGroup()
+        if currentTopGroup then
+            return currentTopGroup
+        end
+
+        return EnsureTopGroup(nil)
+    end
+
     for _, entry in ipairs(factionList) do
         if entry.isHeader and not entry.isChild then
             EnsureTopGroup(entry)
         elseif entry.isHeader and entry.isChild then
-            if not currentTopGroup then
-                EnsureTopGroup(nil)
-            end
-
+            local topGroup = EnsureCurrentTopGroup()
             currentChildBlock = {
                 subHeader = entry,
                 items = {},
             }
-            currentTopGroup.blocks[#currentTopGroup.blocks + 1] = currentChildBlock
+            topGroup.blocks[#topGroup.blocks + 1] = currentChildBlock
         elseif entry.isChild then
-            if not currentTopGroup then
-                EnsureTopGroup(nil)
-            end
+            local topGroup = EnsureCurrentTopGroup()
 
             if not currentChildBlock then
                 currentChildBlock = {
                     subHeader = nil,
                     items = {},
                 }
-                currentTopGroup.blocks[#currentTopGroup.blocks + 1] = currentChildBlock
+                topGroup.blocks[#topGroup.blocks + 1] = currentChildBlock
             end
 
             currentChildBlock.items[#currentChildBlock.items + 1] = entry
         else
-            if not currentTopGroup then
-                EnsureTopGroup(nil)
-            end
-
-            currentTopGroup.blocks[#currentTopGroup.blocks + 1] = {
+            local topGroup = EnsureCurrentTopGroup()
+            topGroup.blocks[#topGroup.blocks + 1] = {
                 entry = entry,
             }
             currentChildBlock = nil

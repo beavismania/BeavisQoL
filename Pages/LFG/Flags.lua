@@ -16,6 +16,9 @@ local searchResultHookInstalled = false
 local DEFAULT_EASY_LFG_SCALE = 0.90
 local MIN_EASY_LFG_SCALE = 0.70
 local MAX_EASY_LFG_SCALE = 1.15
+local DEFAULT_EASY_LFG_TEXT_SCALE = 1.00
+local MIN_EASY_LFG_TEXT_SCALE = 0.75
+local MAX_EASY_LFG_TEXT_SCALE = 1.50
 local DEFAULT_EASY_LFG_ALPHA = 0.58
 local MIN_EASY_LFG_ALPHA = 0.25
 local MAX_EASY_LFG_ALPHA = 0.85
@@ -29,11 +32,67 @@ local MIN_EASY_LFG_WIDTH = 328
 local MAX_EASY_LFG_WIDTH = 520
 local MIN_EASY_LFG_HEIGHT = 144
 local MAX_EASY_LFG_HEIGHT = 640
+local EASY_LFG_REMOVAL_GRACE_SECONDS = 2.0
+local EASY_LFG_HOVER_REMOVAL_RECHECK_SECONDS = 0.25
+local LISTING_TEXT_PRESET_COUNT = 5
 local EasyLFGOverlay = nil
 local EasyLFGRows = {}
 local EasyLFGExpandedApplicants = {}
 local EasyLFGSuppressed = false
 local EasyLFGWasActiveListing = false
+local EasyLFGApplicantStates = {}
+local EasyLFGNextApplicantOrder = 1
+local EasyLFGRemovalRefreshAt = nil
+local EasyLFGRemovalRefreshSerial = 0
+
+local function NormalizeListingPresetLineEndings(text)
+    if type(text) ~= "string" then
+        return ""
+    end
+
+    return text:gsub("\r\n", "\n"):gsub("\r", "\n")
+end
+
+local function NormalizeListingSingleLinePreset(text)
+    text = NormalizeListingPresetLineEndings(text)
+    text = text:gsub("^%s+", "")
+    text = text:gsub("%s+$", "")
+    text = text:gsub("%s*\n%s*", " ")
+    text = text:gsub("%s+", " ")
+    return text
+end
+
+local function NormalizeListingMultiLinePreset(text)
+    text = NormalizeListingPresetLineEndings(text)
+    text = text:gsub("^%s+", "")
+    text = text:gsub("%s+$", "")
+    text = text:gsub("[ \t]+\n", "\n")
+    text = text:gsub("\n[ \t]+", "\n")
+    return text
+end
+
+local function EnsureListingPresetSlots(db, listKey, legacyKey, normalizeFunc)
+    local slots = {}
+    local existingSlots = type(db[listKey]) == "table" and db[listKey] or nil
+
+    for index = 1, LISTING_TEXT_PRESET_COUNT do
+        slots[index] = existingSlots and normalizeFunc(existingSlots[index]) or ""
+    end
+
+    local legacyValue = normalizeFunc(db[legacyKey])
+    if slots[1] == "" and legacyValue ~= "" then
+        slots[1] = legacyValue
+    end
+
+    db[listKey] = slots
+    db[legacyKey] = ""
+    for index = 1, LISTING_TEXT_PRESET_COUNT do
+        if slots[index] ~= "" then
+            db[legacyKey] = slots[index]
+            break
+        end
+    end
+end
 
 -- Realm -> Flagge.
 -- Blizzard liefert uns kein direktes "Land", also leiten wir es hier über den Realm ab.
@@ -289,6 +348,11 @@ function LFG.GetLFGDB()
     end
     BeavisQoLDB.lfg.easyLFGScale = math.max(MIN_EASY_LFG_SCALE, math.min(MAX_EASY_LFG_SCALE, BeavisQoLDB.lfg.easyLFGScale))
 
+    if type(BeavisQoLDB.lfg.easyLFGTextScale) ~= "number" then
+        BeavisQoLDB.lfg.easyLFGTextScale = DEFAULT_EASY_LFG_TEXT_SCALE
+    end
+    BeavisQoLDB.lfg.easyLFGTextScale = math.max(MIN_EASY_LFG_TEXT_SCALE, math.min(MAX_EASY_LFG_TEXT_SCALE, BeavisQoLDB.lfg.easyLFGTextScale))
+
     if type(BeavisQoLDB.lfg.easyLFGAlpha) ~= "number" then
         BeavisQoLDB.lfg.easyLFGAlpha = DEFAULT_EASY_LFG_ALPHA
     end
@@ -319,6 +383,25 @@ function LFG.GetLFGDB()
         BeavisQoLDB.lfg.easyLFGHeight = DEFAULT_EASY_LFG_HEIGHT
     end
     BeavisQoLDB.lfg.easyLFGHeight = math.max(MIN_EASY_LFG_HEIGHT, math.min(MAX_EASY_LFG_HEIGHT, BeavisQoLDB.lfg.easyLFGHeight))
+
+    if BeavisQoLDB.lfg.listingAutoFillEnabled == nil then
+        BeavisQoLDB.lfg.listingAutoFillEnabled = true
+    end
+
+    if type(BeavisQoLDB.lfg.listingNameSuffix) ~= "string" then
+        BeavisQoLDB.lfg.listingNameSuffix = ""
+    end
+    EnsureListingPresetSlots(BeavisQoLDB.lfg, "listingNamePresets", "listingNameSuffix", NormalizeListingSingleLinePreset)
+
+    if type(BeavisQoLDB.lfg.listingDetailsPreset) ~= "string" then
+        BeavisQoLDB.lfg.listingDetailsPreset = ""
+    end
+    EnsureListingPresetSlots(BeavisQoLDB.lfg, "listingDetailsPresets", "listingDetailsPreset", NormalizeListingMultiLinePreset)
+
+    if type(BeavisQoLDB.lfg.listingPlaystylePreset) ~= "number" then
+        BeavisQoLDB.lfg.listingPlaystylePreset = 0
+    end
+    BeavisQoLDB.lfg.listingPlaystylePreset = math.max(0, math.floor(BeavisQoLDB.lfg.listingPlaystylePreset + 0.5))
 
     return BeavisQoLDB.lfg
 end
@@ -1358,6 +1441,121 @@ local function CanInviteApplicantStatus(status)
     return status == "applied"
 end
 
+local function ResetEasyLFGApplicantState()
+    EasyLFGApplicantStates = {}
+    EasyLFGExpandedApplicants = {}
+    EasyLFGNextApplicantOrder = 1
+    EasyLFGRemovalRefreshAt = nil
+    EasyLFGRemovalRefreshSerial = EasyLFGRemovalRefreshSerial + 1
+end
+
+local function ScheduleEasyLFGRefreshAt(refreshAt)
+    if type(refreshAt) ~= "number" then
+        return
+    end
+
+    if EasyLFGRemovalRefreshAt and EasyLFGRemovalRefreshAt <= refreshAt then
+        return
+    end
+
+    EasyLFGRemovalRefreshAt = refreshAt
+    EasyLFGRemovalRefreshSerial = EasyLFGRemovalRefreshSerial + 1
+    local refreshSerial = EasyLFGRemovalRefreshSerial
+    local now = type(GetTime) == "function" and GetTime() or 0
+    local delay = math.max(0.05, refreshAt - now)
+
+    if not C_Timer or type(C_Timer.After) ~= "function" then
+        return
+    end
+
+    C_Timer.After(delay, function()
+        if refreshSerial ~= EasyLFGRemovalRefreshSerial then
+            return
+        end
+
+        EasyLFGRemovalRefreshAt = nil
+
+        if LFG.IsEasyLFGEnabled and LFG.IsEasyLFGEnabled() and LFG.RefreshEasyLFGOverlay then
+            LFG.RefreshEasyLFGOverlay()
+        end
+    end)
+end
+
+local function IsEasyLFGOverlayHovered()
+    if not EasyLFGOverlay then
+        return false
+    end
+
+    local mouseIsOver = rawget(_G, "MouseIsOver")
+    if type(mouseIsOver) == "function" then
+        return mouseIsOver(EasyLFGOverlay) == true
+    end
+
+    if EasyLFGOverlay.IsMouseOver then
+        return EasyLFGOverlay:IsMouseOver() == true
+    end
+
+    return false
+end
+
+local function GetEasyLFGApplicantState(applicantID)
+    if not applicantID then
+        return nil
+    end
+
+    local applicantState = EasyLFGApplicantStates[applicantID]
+    if applicantState then
+        return applicantState
+    end
+
+    applicantState = {
+        order = EasyLFGNextApplicantOrder,
+        removedAt = nil,
+        snapshot = nil,
+    }
+    EasyLFGApplicantStates[applicantID] = applicantState
+    EasyLFGNextApplicantOrder = EasyLFGNextApplicantOrder + 1
+    return applicantState
+end
+
+local function CreateEasyLFGInactiveApplicantEntry(applicantID, applicantState)
+    local snapshot = applicantState and applicantState.snapshot or nil
+    local leaderSnapshot = snapshot and snapshot.members and snapshot.members[1] or nil
+    if type(leaderSnapshot) ~= "table" then
+        return nil
+    end
+
+    return {
+        applicantID = applicantID,
+        applicationStatus = "cancelled",
+        memberCount = 0,
+        isInactivePlaceholder = true,
+        slotOrder = applicantState.order or applicantID or 0,
+        members = {
+            {
+                applicantID = applicantID,
+                memberIndex = leaderSnapshot.memberIndex,
+                fullName = leaderSnapshot.fullName,
+                displayName = leaderSnapshot.displayName,
+                classFile = leaderSnapshot.classFile,
+                localizedClass = leaderSnapshot.localizedClass,
+                itemLevel = leaderSnapshot.itemLevel,
+                dungeonScore = leaderSnapshot.dungeonScore,
+                assignedRole = leaderSnapshot.assignedRole,
+                specID = leaderSnapshot.specID,
+                canTank = leaderSnapshot.canTank,
+                canHealer = leaderSnapshot.canHealer,
+                canDamage = leaderSnapshot.canDamage,
+                applicationStatus = "cancelled",
+                isPrimary = true,
+                memberCount = 0,
+                isLeaver = true,
+                isInactivePlaceholder = true,
+            },
+        },
+    }
+end
+
 local function SaveEasyLFGOverlayGeometry()
     if not EasyLFGOverlay then
         return
@@ -1395,83 +1593,173 @@ local function ApplyEasyLFGOverlayStyle()
     end
 end
 
+local function ApplyEasyLFGOverlayTextScale()
+    if not EasyLFGOverlay then
+        return
+    end
+
+    local db = LFG.GetLFGDB()
+    local textScale = db.easyLFGTextScale or DEFAULT_EASY_LFG_TEXT_SCALE
+
+    local function ApplyScaledFont(fontString, baseSize, flags)
+        if not fontString or not fontString.SetFont then
+            return
+        end
+
+        fontString:SetFont("Fonts\\FRIZQT__.TTF", math.max(1, math.floor((baseSize * textScale) + 0.5)), flags or "")
+    end
+
+    ApplyScaledFont(EasyLFGOverlay.Title, 11, "OUTLINE")
+    ApplyScaledFont(EasyLFGOverlay.Summary, 9, "")
+    ApplyScaledFont(EasyLFGOverlay.EmptyText, 10, "")
+    ApplyScaledFont(EasyLFGOverlay.Footer, 10, "")
+
+    if EasyLFGOverlay.CloseButton and EasyLFGOverlay.CloseButton.Label then
+        ApplyScaledFont(EasyLFGOverlay.CloseButton.Label, 9, "OUTLINE")
+    end
+
+    if EasyLFGOverlay.PinButton and EasyLFGOverlay.PinButton.Label then
+        ApplyScaledFont(EasyLFGOverlay.PinButton.Label, 9, "OUTLINE")
+    end
+
+    for _, row in ipairs(EasyLFGRows) do
+        ApplyScaledFont(row.ToggleButton and row.ToggleButton.Label, 10, "OUTLINE")
+        ApplyScaledFont(row.Name, 10, "OUTLINE")
+        ApplyScaledFont(row.Meta, 9, "")
+        ApplyScaledFont(row.Badge, 9, "OUTLINE")
+
+        local declineButtonText = row.DeclineButton and row.DeclineButton.GetFontString and row.DeclineButton:GetFontString() or nil
+        if declineButtonText then
+            ApplyScaledFont(declineButtonText, 9, "OUTLINE")
+        end
+
+        local inviteButtonText = row.InviteButton and row.InviteButton.GetFontString and row.InviteButton:GetFontString() or nil
+        if inviteButtonText then
+            ApplyScaledFont(inviteButtonText, 9, "OUTLINE")
+        end
+    end
+end
+
 local function GetEasyLFGApplicants()
     local applicantsByGroup = {}
     local applicantCount = 0
     local memberCount = 0
+    local visibleApplicantIDs = {}
+    local now = type(GetTime) == "function" and GetTime() or 0
+    local nextScheduledRefreshAt = nil
 
     if not C_LFGList or not C_LFGList.GetApplicants or not C_LFGList.GetApplicantInfo or not C_LFGList.GetApplicantMemberInfo then
         return applicantsByGroup, applicantCount, memberCount
     end
 
     local applicants = C_LFGList.GetApplicants() or {}
-    local orderedApplicants = {}
 
     -- Blizzard liefert hier inzwischen Secret-Werte mit. Wir behalten deshalb
     -- keine Applicant-Tabellen, sondern nur die Felder, die das Overlay braucht.
     for _, applicantID in ipairs(applicants) do
         local applicantData = C_LFGList.GetApplicantInfo(applicantID)
         if type(applicantData) == "table" then
-            orderedApplicants[#orderedApplicants + 1] = {
-                applicantID = applicantID,
-                displayOrderID = tonumber(applicantData.displayOrderID) or applicantID,
-                applicationStatus = applicantData.applicationStatus,
-                numMembers = tonumber(applicantData.numMembers) or 0,
-            }
+            local applicantState = GetEasyLFGApplicantState(applicantID)
+            local applicationStatus = applicantData.applicationStatus
+
+            if not IsEasyLFGVisibleStatus(applicationStatus) then
+                EasyLFGExpandedApplicants[applicantID] = nil
+                if applicantState and applicantState.snapshot then
+                    applicantState.removedAt = applicantState.removedAt or now
+                else
+                    EasyLFGApplicantStates[applicantID] = nil
+                end
+            else
+                local numMembers = math.max(0, tonumber(applicantData.numMembers) or 0)
+                local applicantEntry = {
+                    applicantID = applicantID,
+                    applicationStatus = applicationStatus,
+                    memberCount = numMembers,
+                    members = {},
+                    slotOrder = (applicantState and applicantState.order) or applicantID or 0,
+                }
+
+                applicantState.removedAt = nil
+                visibleApplicantIDs[applicantID] = true
+
+                for memberIndex = 1, numMembers do
+                    local fullName, classFile, localizedClass, level, itemLevel, honorLevel, canTank, canHealer, canDamage, assignedRole, relationship, dungeonScore, pvpItemLevel, factionGroup, raceID, specID, isLeaver = C_LFGList.GetApplicantMemberInfo(applicantID, memberIndex)
+
+                    memberCount = memberCount + 1
+                    applicantEntry.members[#applicantEntry.members + 1] = {
+                        applicantID = applicantID,
+                        memberIndex = memberIndex,
+                        fullName = fullName,
+                        displayName = GetEasyLFGShortName(fullName),
+                        classFile = classFile,
+                        localizedClass = localizedClass,
+                        itemLevel = itemLevel,
+                        dungeonScore = dungeonScore,
+                        assignedRole = assignedRole,
+                        specID = specID,
+                        canTank = canTank,
+                        canHealer = canHealer,
+                        canDamage = canDamage,
+                        applicationStatus = applicationStatus,
+                        isPrimary = memberIndex == 1,
+                        memberCount = numMembers,
+                        isLeaver = isLeaver == true,
+                    }
+                end
+
+                applicantState.snapshot = applicantEntry
+                applicantCount = applicantCount + 1
+                applicantsByGroup[#applicantsByGroup + 1] = applicantEntry
+            end
         end
     end
 
-    table.sort(orderedApplicants, function(left, right)
-        return left.displayOrderID < right.displayOrderID
+    for applicantID, applicantState in pairs(EasyLFGApplicantStates) do
+        if not visibleApplicantIDs[applicantID] then
+            local inactiveApplicantEntry = CreateEasyLFGInactiveApplicantEntry(applicantID, applicantState)
+
+            if not inactiveApplicantEntry then
+                EasyLFGApplicantStates[applicantID] = nil
+                EasyLFGExpandedApplicants[applicantID] = nil
+            else
+                local removedAt = applicantState.removedAt or now
+                local expiresAt = removedAt + EASY_LFG_REMOVAL_GRACE_SECONDS
+
+                applicantState.removedAt = removedAt
+
+                if now < expiresAt then
+                    applicantsByGroup[#applicantsByGroup + 1] = inactiveApplicantEntry
+                    if nextScheduledRefreshAt == nil or expiresAt < nextScheduledRefreshAt then
+                        nextScheduledRefreshAt = expiresAt
+                    end
+                elseif IsEasyLFGOverlayHovered() then
+                    applicantsByGroup[#applicantsByGroup + 1] = inactiveApplicantEntry
+                    local recheckAt = now + EASY_LFG_HOVER_REMOVAL_RECHECK_SECONDS
+                    if nextScheduledRefreshAt == nil or recheckAt < nextScheduledRefreshAt then
+                        nextScheduledRefreshAt = recheckAt
+                    end
+                else
+                    EasyLFGApplicantStates[applicantID] = nil
+                    EasyLFGExpandedApplicants[applicantID] = nil
+                end
+            end
+        end
+    end
+
+    table.sort(applicantsByGroup, function(left, right)
+        local leftOrder = tonumber(left and left.slotOrder) or tonumber(left and left.applicantID) or 0
+        local rightOrder = tonumber(right and right.slotOrder) or tonumber(right and right.applicantID) or 0
+        if leftOrder ~= rightOrder then
+            return leftOrder < rightOrder
+        end
+
+        return (tonumber(left and left.applicantID) or 0) < (tonumber(right and right.applicantID) or 0)
     end)
 
-    applicantCount = #orderedApplicants
-
-    local visibleApplicantCount = 0
-
-    for _, applicant in ipairs(orderedApplicants) do
-        if not IsEasyLFGVisibleStatus(applicant.applicationStatus) then
-            EasyLFGExpandedApplicants[applicant.applicantID] = nil
-        else
-            local numMembers = math.max(0, applicant.numMembers or 0)
-            local applicantEntry = {
-                applicantID = applicant.applicantID,
-                applicationStatus = applicant.applicationStatus,
-                memberCount = numMembers,
-                members = {},
-            }
-
-            for memberIndex = 1, numMembers do
-                local fullName, classFile, localizedClass, level, itemLevel, honorLevel, canTank, canHealer, canDamage, assignedRole, relationship, dungeonScore, pvpItemLevel, factionGroup, raceID, specID, isLeaver = C_LFGList.GetApplicantMemberInfo(applicant.applicantID, memberIndex)
-
-                memberCount = memberCount + 1
-                applicantEntry.members[#applicantEntry.members + 1] = {
-                    applicantID = applicant.applicantID,
-                    memberIndex = memberIndex,
-                    fullName = fullName,
-                    displayName = GetEasyLFGShortName(fullName),
-                    classFile = classFile,
-                    localizedClass = localizedClass,
-                    itemLevel = itemLevel,
-                    dungeonScore = dungeonScore,
-                    assignedRole = assignedRole,
-                    specID = specID,
-                    canTank = canTank,
-                    canHealer = canHealer,
-                    canDamage = canDamage,
-                    applicationStatus = applicant.applicationStatus,
-                    isPrimary = memberIndex == 1,
-                    memberCount = numMembers,
-                    isLeaver = isLeaver == true,
-                }
-            end
-
-            visibleApplicantCount = visibleApplicantCount + 1
-            applicantsByGroup[#applicantsByGroup + 1] = applicantEntry
-        end
+    if nextScheduledRefreshAt ~= nil then
+        ScheduleEasyLFGRefreshAt(nextScheduledRefreshAt)
     end
 
-    applicantCount = visibleApplicantCount
     return applicantsByGroup, applicantCount, memberCount
 end
 
@@ -1859,6 +2147,7 @@ local function EnsureEasyLFGOverlay()
     ApplyEasyLFGOverlayStyle()
     ApplyEasyLFGOverlaySize()
     ApplyEasyLFGOverlayGeometry()
+    ApplyEasyLFGOverlayTextScale()
     UpdateEasyLFGHeaderButtons()
     EasyLFGOverlay:Hide()
     return EasyLFGOverlay
@@ -1911,6 +2200,7 @@ local function RefreshEasyLFGOverlay()
     ApplyEasyLFGOverlayStyle()
     ApplyEasyLFGOverlaySize()
     ApplyEasyLFGOverlayGeometry()
+    ApplyEasyLFGOverlayTextScale()
 
     overlay.Title:SetText(L("EASY_LFG_OVERLAY_TITLE"))
     UpdateEasyLFGHeaderButtons()
@@ -1925,8 +2215,10 @@ local function RefreshEasyLFGOverlay()
     local controllableListing = activeListing and IsPlayerListingLeader()
     if controllableListing and not EasyLFGWasActiveListing then
         EasyLFGSuppressed = false
+        ResetEasyLFGApplicantState()
     elseif not controllableListing then
         EasyLFGSuppressed = false
+        ResetEasyLFGApplicantState()
     end
     EasyLFGWasActiveListing = controllableListing
 
@@ -1986,6 +2278,7 @@ local function RefreshEasyLFGOverlay()
         local roleIcon = GetEasyLFGRoleIconMarkup(rowData.assignedRole)
         local specIcon = GetEasyLFGSpecIconMarkup(rowData.specID, rowData.classFile, rowData.assignedRole)
         local nameLeft = 8
+        local isInactivePlaceholder = rowData.isInactivePlaceholder == true
 
         if rowData.isExpandable then
             nameLeft = 26
@@ -2001,56 +2294,88 @@ local function RefreshEasyLFGOverlay()
         row.Meta:SetPoint("TOPLEFT", row.Name, "BOTTOMLEFT", 0, -1)
         row.Meta:SetPoint("RIGHT", row.FlagAnchor, "LEFT", -8, 0)
 
-        if roleIcon then
-            metaParts[#metaParts + 1] = roleIcon
-        end
+        if isInactivePlaceholder then
+            row.Background:SetColorTexture(0.10, 0.045, 0.045, 0.70)
+            row.Border:SetColorTexture(0.88, 0.32, 0.32, 0.26)
 
-        if specIcon then
-            metaParts[#metaParts + 1] = specIcon
-        end
+            row.Name:SetText(rowData.displayName or "")
+            row.Name:SetTextColor(0.78, 0.78, 0.78, 1)
+            row.Meta:SetText(L("EASY_LFG_STATUS_INACTIVE"))
+            row.Meta:SetTextColor(0.92, 0.54, 0.54, 1)
 
-        if type(rowData.itemLevel) == "number" and rowData.itemLevel > 0 then
-            metaParts[#metaParts + 1] = L("EASY_LFG_ITEM_LEVEL"):format(string.format("%.1f", rowData.itemLevel))
-        end
+            row.Badge:SetText("")
+            row.Badge:Hide()
 
-        if type(rowData.dungeonScore) == "number" and rowData.dungeonScore > 0 then
-            metaParts[#metaParts + 1] = L("EASY_LFG_SCORE"):format(math.floor(rowData.dungeonScore + 0.5))
-        end
-
-        row.Name:SetText(rowData.displayName)
-        row.Name:SetTextColor(classRed, classGreen, classBlue, 1)
-        row.Meta:SetText(table.concat(metaParts, " | "))
-
-        row.Badge:SetText("")
-        row.Badge:Hide()
-
-        row.ToggleButton.ApplicantID = rowData.applicantID
-        if rowData.isExpandable then
-            row.ToggleButton.Label:SetText(rowData.isExpanded and "-" or "+")
-            row.ToggleButton:Show()
-        else
+            row.ToggleButton.ApplicantID = nil
             row.ToggleButton.Label:SetText("")
             row.ToggleButton:Hide()
+
+            row.DeclineButton.ApplicantID = nil
+            row.DeclineButton.StatusKey = nil
+            row.DeclineButton:SetShown(false)
+            row.DeclineButton:SetEnabled(false)
+
+            row.InviteButton.ApplicantID = nil
+            row.InviteButton.StatusKey = nil
+            row.InviteButton:SetShown(false)
+            row.InviteButton:SetEnabled(false)
+        else
+            row.Background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
+            row.Border:SetColorTexture(0.88, 0.72, 0.46, 0.18)
+            row.Meta:SetTextColor(0.78, 0.74, 0.69, 1)
+
+            if roleIcon then
+                metaParts[#metaParts + 1] = roleIcon
+            end
+
+            if specIcon then
+                metaParts[#metaParts + 1] = specIcon
+            end
+
+            if type(rowData.itemLevel) == "number" and rowData.itemLevel > 0 then
+                metaParts[#metaParts + 1] = L("EASY_LFG_ITEM_LEVEL"):format(string.format("%.1f", rowData.itemLevel))
+            end
+
+            if type(rowData.dungeonScore) == "number" and rowData.dungeonScore > 0 then
+                metaParts[#metaParts + 1] = L("EASY_LFG_SCORE"):format(math.floor(rowData.dungeonScore + 0.5))
+            end
+
+            row.Name:SetText(rowData.displayName)
+            row.Name:SetTextColor(classRed, classGreen, classBlue, 1)
+            row.Meta:SetText(table.concat(metaParts, " | "))
+
+            row.Badge:SetText("")
+            row.Badge:Hide()
+
+            row.ToggleButton.ApplicantID = rowData.applicantID
+            if rowData.isExpandable then
+                row.ToggleButton.Label:SetText(rowData.isExpanded and "-" or "+")
+                row.ToggleButton:Show()
+            else
+                row.ToggleButton.Label:SetText("")
+                row.ToggleButton:Hide()
+            end
+
+            row.DeclineButton.ApplicantID = rowData.applicantID
+            row.DeclineButton.StatusKey = rowData.applicationStatus
+            row.DeclineButton:SetText("X")
+            row.DeclineButton.Icon:Hide()
+            row.DeclineButton:SetShown(rowData.isPrimary)
+            row.DeclineButton:SetEnabled(rowData.isPrimary and CanDeclineApplicantStatus(rowData.applicationStatus))
+
+            row.InviteButton.ApplicantID = rowData.applicantID
+            row.InviteButton.StatusKey = rowData.applicationStatus
+            row.InviteButton:SetText("")
+            row.InviteButton.Icon:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+            row.InviteButton.Icon:Show()
+            row.InviteButton:SetShown(rowData.isPrimary)
+            row.InviteButton:SetEnabled(rowData.isPrimary and CanInviteApplicantStatus(rowData.applicationStatus))
         end
-
-        row.DeclineButton.ApplicantID = rowData.applicantID
-        row.DeclineButton.StatusKey = rowData.applicationStatus
-        row.DeclineButton:SetText("X")
-        row.DeclineButton.Icon:Hide()
-        row.DeclineButton:SetShown(rowData.isPrimary)
-        row.DeclineButton:SetEnabled(rowData.isPrimary and CanDeclineApplicantStatus(rowData.applicationStatus))
-
-        row.InviteButton.ApplicantID = rowData.applicantID
-        row.InviteButton.StatusKey = rowData.applicationStatus
-        row.InviteButton:SetText("")
-        row.InviteButton.Icon:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
-        row.InviteButton.Icon:Show()
-        row.InviteButton:SetShown(rowData.isPrimary)
-        row.InviteButton:SetEnabled(rowData.isPrimary and CanInviteApplicantStatus(rowData.applicationStatus))
 
         LFG.ApplyFlagToFullName(row, rowData.fullName, row.FlagAnchor, 0, 0)
     end
 
+    ApplyEasyLFGOverlayTextScale()
     LayoutEasyLFGRows(visibleRows, true)
     overlay:Show()
 end
@@ -2082,6 +2407,16 @@ end
 function LFG.SetEasyLFGScale(value)
     local db = LFG.GetLFGDB()
     db.easyLFGScale = math.max(MIN_EASY_LFG_SCALE, math.min(MAX_EASY_LFG_SCALE, value or DEFAULT_EASY_LFG_SCALE))
+    RefreshEasyLFGOverlay()
+end
+
+function LFG.GetEasyLFGTextScale()
+    return LFG.GetLFGDB().easyLFGTextScale
+end
+
+function LFG.SetEasyLFGTextScale(value)
+    local db = LFG.GetLFGDB()
+    db.easyLFGTextScale = math.max(MIN_EASY_LFG_TEXT_SCALE, math.min(MAX_EASY_LFG_TEXT_SCALE, value or DEFAULT_EASY_LFG_TEXT_SCALE))
     RefreshEasyLFGOverlay()
 end
 

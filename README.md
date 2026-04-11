@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.30.0`
-- Release-Datum: `2026-04-08`
+- Version: `0.35.0`
+- Release-Datum: `2026-04-11`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - neues Modul `Auktionshaus` ergänzt mit automatischem Filter für `Nur aktuelle Erweiterung`
-  - die `Schnellansicht` läuft jetzt in einem eigenen Fenster mit Tabs und überarbeitetem Minimap-Kontextmenü
-  - Navigation, Modulseiten und `Minimap-Sammler` wurden optisch und strukturell deutlich überarbeitet
+  - neue Module `Listing-Presets`, `Auktionshaus-Favoriten`, `Auktionshaus-Filter`, `Performance-Profiler` und `Chonky Loadout-Dropdown` ergänzt
+  - mehrere bestehende Module in Performance, Stabilität und Bedienung weiter verbessert
+  - `LFG`, `Auktionshaus` und Character-Sheet-Bereiche wurden funktional erweitert
 
 ## Download
 
@@ -45,18 +45,19 @@ Regeln:
 
 - die mittlere Zahl steigt einmal pro veröffentlichtem Feature-/Modul-Release
 - die hintere Zahl bleibt bei neuen Feature-/Modulständen auf `0`
-- mehrere neue Module oder Features dürfen gemeinsam in derselben Minor-Version erscheinen, solange sie als ein gemeinsamer Release veröffentlicht werden
-- Weiterentwicklung, Feinschliff und Bugfixes an neuen Modulen bleiben im selben laufenden Feature-Release und erhöhen nicht automatisch die `patch`-Version
+- jedes neue Modul erhöht die mittlere Zahl um `1`
+- weitere Verbesserungen und Hotfixes innerhalb eines bestehenden Modulstands erhöhen nur die `patch`-Version
 - reine Bugfixes an bereits veröffentlichten Ständen ohne neue Module erhöhen die `patch`-Version
 - bei einem neuen Feature-/Modulstand wird der Hotfix-Zähler wieder auf `0` gesetzt
 - größere Richtungswechsel oder bewusst große Meilensteine erhöhen die `major`-Version
 
 Beispiele:
 
-- `0.28.0` → veröffentlichter Feature-Release
-- `0.28.1` → Hotfix zu `0.28.0` ohne neue Features
-- `0.29.0` → nächster veröffentlichter Feature-Release nach `0.28.0`
-- mehrere neue Module/Funktionen im selben Release-Batch nach `0.28.0` → trotzdem gemeinsam `0.29.0`
+- `0.28.0` → neuer Modulstand
+- `0.28.1` → Hotfix zu `0.28.0`
+- `0.29.0` → nächster neuer Modulstand
+- `0.30.0` → weiterer neuer Modulstand
+- `0.30.2` → zweiter Hotfix innerhalb des Modulstands `0.30.0`
 - großer Hauptrelease → `1.0.0`
 
 ## Module im Addon
@@ -89,6 +90,10 @@ Beispiele:
   - verkauft graue Items beim Händler automatisch
 - `Auto Repair`
   - repariert automatisch, optional bevorzugt über Gildengold
+- `Auktionshaus`
+  - automatische Filter für aktuelle Erweiterung und Seltenheiten
+- `Auktionshaus-Favoriten`
+  - organisiert Favoriten in eigenen Gruppen
 
 ### Komfort
 
@@ -122,6 +127,8 @@ Beispiele:
   - zeigt freigeschaltete und fehlende Portale direkt in einem kompakten Fenster
   - verfügbare Portale lassen sich direkt per Linksklick benutzen
   - öffnet sich über das Minimap-Schnellmenü
+- `Chonky Loadout-Dropdown`
+  - ergänzt bei aktivem `Chonky Character Sheet` eine schnelle Loadout-Auswahl im Charakterfenster
 
 ### Interface & Kampf
 
@@ -135,6 +142,8 @@ Beispiele:
   - Overlay-Button und Guide-Fenster für unterstützte Instanzen
 - `Stats`
   - kompaktes Overlay für Sekundärwerte
+- `Performance-Profiler`
+  - zeigt CPU-Hotspots von `BeavisQoL` und beobachteten Addons
 
 ### Gruppe & Suche
 
@@ -143,6 +152,9 @@ Beispiele:
   - `Easy LFG` als kompaktes Bewerber-Overlay für eigene aktive Listungen
   - Invite-Timer für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen
   - optionaler Countdown-Sound in den letzten fünf Sekunden
+- `Listing-Presets`
+  - speichert Vorlagen für `Name`, `Details` und Dropdown-Vorgaben für eigene Gruppen
+  - bietet Copy-Helfer direkt im Blizzard-Erstellen-Fenster
 
 ### Streamer Tools
 

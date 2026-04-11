@@ -1,10 +1,11 @@
 local ADDON_NAME, BeavisQoL = ...
 
-local unpackValues = unpack or table.unpack
+local unpackValues = (type(table) == "table" and rawget(table, "unpack")) or rawget(_G, "unpack")
 local SAMPLE_INTERVAL_SECONDS = 2
 local MAX_STORED_SAMPLES = 180
 local MAX_SAMPLE_ENTRIES = 6
 local MAX_REPORT_ENTRIES = 10
+local MAX_ADDON_SAMPLE_ENTRIES = 20
 local REPORT_WINDOW_WIDTH = 760
 local REPORT_WINDOW_HEIGHT = 520
 
@@ -16,7 +17,7 @@ local intervalElapsed = 0
 local intervalStats = {}
 local intervalTotalMs = 0
 local intervalCallCount = 0
-local lastAddonCpuMs = nil
+local lastObservedAddonCpuMs = nil
 local ReportFrame
 local ReportTitleText
 local ReportEditBox
@@ -26,6 +27,11 @@ local FlushCurrentInterval
 
 local SamplerFrame = CreateFrame("Frame")
 SamplerFrame:Hide()
+
+local AddOnsAPI = rawget(_G, "C_AddOns")
+local legacyGetNumAddOns = rawget(_G, "GetNumAddOns")
+local legacyGetAddOnInfo = rawget(_G, "GetAddOnInfo")
+local legacyIsAddOnLoaded = rawget(_G, "IsAddOnLoaded")
 
 local function TrimText(text)
     return tostring(text or ""):match("^%s*(.-)%s*$") or ""
@@ -53,6 +59,42 @@ local function PackResults(...)
     }
 end
 
+local function GetAddOnCount()
+    local getNumAddOns = (AddOnsAPI and AddOnsAPI.GetNumAddOns) or legacyGetNumAddOns
+    if type(getNumAddOns) ~= "function" then
+        return 0
+    end
+
+    return math.max(0, tonumber(getNumAddOns()) or 0)
+end
+
+local function GetAddOnInfoCompat(index)
+    local getAddOnInfo = (AddOnsAPI and AddOnsAPI.GetAddOnInfo) or legacyGetAddOnInfo
+    if type(getAddOnInfo) ~= "function" then
+        return nil, nil
+    end
+
+    local info1, info2 = getAddOnInfo(index)
+    if type(info1) == "table" then
+        return info1.name or info1.Name, info1.title or info1.Title
+    end
+
+    return info1, info2
+end
+
+local function IsAddOnLoadedCompat(index, addonName)
+    local isAddOnLoaded = (AddOnsAPI and AddOnsAPI.IsAddOnLoaded) or legacyIsAddOnLoaded
+    if type(isAddOnLoaded) ~= "function" then
+        return true
+    end
+
+    if type(addonName) == "string" and addonName ~= "" then
+        return isAddOnLoaded(addonName) == true
+    end
+
+    return isAddOnLoaded(index) == true
+end
+
 local function GetProfilerDB()
     BeavisQoLCharDB = BeavisQoLCharDB or {}
     BeavisQoLCharDB.performanceProfiler = BeavisQoLCharDB.performanceProfiler or {}
@@ -69,6 +111,10 @@ local function GetProfilerDB()
 
     if type(db.totals) ~= "table" then
         db.totals = {}
+    end
+
+    if type(db.addonTotals) ~= "table" then
+        db.addonTotals = {}
     end
 
     return db
@@ -100,18 +146,27 @@ local function ResetCurrentInterval()
 end
 
 local function ResetAddonCpuBaseline()
-    lastAddonCpuMs = nil
+    lastObservedAddonCpuMs = nil
 
-    if not IsScriptProfilingEnabled() then
+    if not IsScriptProfilingEnabled()
+        or type(UpdateAddOnCPUUsage) ~= "function"
+        or type(GetAddOnCPUUsage) ~= "function"
+        or GetAddOnCount() <= 0
+    then
         return
     end
 
-    if UpdateAddOnCPUUsage then
-        UpdateAddOnCPUUsage()
-    end
+    UpdateAddOnCPUUsage()
 
-    if GetAddOnCPUUsage then
-        lastAddonCpuMs = tonumber(GetAddOnCPUUsage(ADDON_NAME)) or 0
+    lastObservedAddonCpuMs = {}
+    for index = 1, GetAddOnCount() do
+        local addonName = GetAddOnInfoCompat(index)
+        local isLoaded = IsAddOnLoadedCompat(index, addonName)
+
+        if isLoaded and type(addonName) == "string" and addonName ~= "" then
+            local currentCpuMs = tonumber(GetAddOnCPUUsage(index)) or 0
+            lastObservedAddonCpuMs[addonName] = currentCpuMs
+        end
     end
 end
 
@@ -150,6 +205,118 @@ local function SortStats(statsByLabel)
     return entries
 end
 
+local function SortAddonStats(statsByLabel)
+    local entries = {}
+
+    for label, stats in pairs(statsByLabel or {}) do
+        entries[#entries + 1] = {
+            label = label,
+            totalMs = tonumber(stats.totalMs) or 0,
+            samples = tonumber(stats.samples) or 0,
+            maxMs = tonumber(stats.maxMs) or 0,
+        }
+    end
+
+    table.sort(entries, function(left, right)
+        if left.totalMs == right.totalMs then
+            return tostring(left.label) < tostring(right.label)
+        end
+
+        return left.totalMs > right.totalMs
+    end)
+
+    return entries
+end
+
+local function CaptureAddonCpuInterval()
+    local addonEntries = {}
+    local observedAddonCpuMs = 0
+
+    if not IsScriptProfilingEnabled()
+        or type(UpdateAddOnCPUUsage) ~= "function"
+        or type(GetAddOnCPUUsage) ~= "function"
+        or GetAddOnCount() <= 0
+    then
+        return 0, 0, addonEntries
+    end
+
+    UpdateAddOnCPUUsage()
+
+    local previousSnapshot = lastObservedAddonCpuMs or {}
+    local nextSnapshot = {}
+
+    for index = 1, GetAddOnCount() do
+        local addonName = GetAddOnInfoCompat(index)
+        local isLoaded = IsAddOnLoadedCompat(index, addonName)
+
+        if isLoaded and type(addonName) == "string" and addonName ~= "" then
+            local currentCpuMs = tonumber(GetAddOnCPUUsage(index)) or 0
+            nextSnapshot[addonName] = currentCpuMs
+
+            local previousCpuMs = tonumber(previousSnapshot[addonName])
+            if previousCpuMs then
+                local deltaMs = math.max(0, currentCpuMs - previousCpuMs)
+                if deltaMs > 0 then
+                    observedAddonCpuMs = observedAddonCpuMs + deltaMs
+                    addonEntries[#addonEntries + 1] = {
+                        label = addonName,
+                        totalMs = deltaMs,
+                        samples = 1,
+                        maxMs = deltaMs,
+                    }
+                end
+            end
+        end
+    end
+
+    lastObservedAddonCpuMs = nextSnapshot
+
+    table.sort(addonEntries, function(left, right)
+        if left.totalMs == right.totalMs then
+            return tostring(left.label) < tostring(right.label)
+        end
+
+        return left.totalMs > right.totalMs
+    end)
+
+    local storedEntries = {}
+    for index = 1, math.min(MAX_ADDON_SAMPLE_ENTRIES, #addonEntries) do
+        storedEntries[#storedEntries + 1] = addonEntries[index]
+    end
+
+    local addonCpuMs = 0
+    for _, entry in ipairs(addonEntries) do
+        if entry.label == ADDON_NAME then
+            addonCpuMs = entry.totalMs
+            break
+        end
+    end
+
+    return addonCpuMs, observedAddonCpuMs, storedEntries, addonEntries
+end
+
+local function UpdateAddonTotals(entries)
+    local addonTotals = GetProfilerDB().addonTotals
+
+    for _, entry in ipairs(entries or {}) do
+        if type(entry) == "table" and type(entry.label) == "string" and entry.label ~= "" then
+            local totalEntry = addonTotals[entry.label]
+            if not totalEntry then
+                totalEntry = {
+                    totalMs = 0,
+                    samples = 0,
+                    maxMs = 0,
+                }
+                addonTotals[entry.label] = totalEntry
+            end
+
+            totalEntry.totalMs = totalEntry.totalMs + (tonumber(entry.totalMs) or 0)
+            totalEntry.samples = totalEntry.samples + 1
+            totalEntry.maxMs = math.max(totalEntry.maxMs, tonumber(entry.maxMs) or 0)
+        end
+    end
+end
+
 local function BuildReportData()
     local db = GetProfilerDB()
 
@@ -161,6 +328,7 @@ local function BuildReportData()
         db = db,
         recent = BuildRecentAggregate(30),
         totals = SortStats(db.totals),
+        addonTotals = SortAddonStats(db.addonTotals),
         timestamp = BuildTimestampLabel(),
         scriptProfileEnabled = IsScriptProfilingEnabled(),
     }
@@ -169,17 +337,19 @@ end
 local function BuildReportLines(reportData)
     local recent = reportData.recent
     local totalEntries = reportData.totals
+    local totalAddonEntries = reportData.addonTotals
     local lines = {}
 
     AppendLine(lines, "BeavisQoL CPU Report")
     AppendLine(lines, string.format("Zeit: %s", reportData.timestamp))
     AppendLine(lines, string.format("scriptProfile: %s", reportData.scriptProfileEnabled and "an" or "aus"))
     AppendLine(lines, string.format(
-        "Samples: %d | gemessen: %.1f ms | Calls: %d | Addon CPU: %.1f ms",
+        "Samples: %d | gemessen: %.1f ms | Calls: %d | BeavisQoL CPU: %.1f ms | Beobachtete Addons: %.1f ms",
         recent.sampleCount,
         recent.measuredMs,
         recent.calls,
-        recent.addonCpuMs
+        recent.addonCpuMs,
+        recent.observedAddonCpuMs
     ))
     AppendLine(lines, "")
 
@@ -189,7 +359,49 @@ local function BuildReportLines(reportData)
         return lines
     end
 
-    AppendLine(lines, "Hotspots letzte Samples:")
+    if reportData.scriptProfileEnabled then
+        AppendLine(lines, "Addons letzte Samples:")
+        if #recent.addonEntries > 0 then
+            for index = 1, math.min(MAX_REPORT_ENTRIES, #recent.addonEntries) do
+                local entry = recent.addonEntries[index]
+                AppendLine(lines, string.format(
+                    "%d. %s - %.1f ms | max %.1f ms | %d Samples",
+                    index,
+                    entry.label,
+                    entry.totalMs,
+                    entry.maxMs,
+                    entry.samples
+                ))
+            end
+        else
+            AppendLine(lines, "Keine Addon-Vergleichsdaten in den letzten Samples.")
+        end
+
+        AppendLine(lines, "")
+        AppendLine(lines, "Addons gesamte Session:")
+        if #totalAddonEntries > 0 then
+            for index = 1, math.min(MAX_REPORT_ENTRIES, #totalAddonEntries) do
+                local entry = totalAddonEntries[index]
+                AppendLine(lines, string.format(
+                    "%d. %s - %.1f ms | max %.1f ms | %d Samples",
+                    index,
+                    entry.label,
+                    entry.totalMs,
+                    entry.maxMs,
+                    entry.samples
+                ))
+            end
+        else
+            AppendLine(lines, "Noch keine Addon-Vergleichsdaten vorhanden.")
+        end
+
+        AppendLine(lines, "")
+    else
+        AppendLine(lines, "Addon-Vergleich nur mit '/console scriptProfile 1' und '/reload' verfuegbar.")
+        AppendLine(lines, "")
+    end
+
+    AppendLine(lines, "BeavisQoL Hotspots letzte Samples:")
     for index = 1, math.min(MAX_REPORT_ENTRIES, #recent.entries) do
         local entry = recent.entries[index]
         AppendLine(lines, string.format(
@@ -203,7 +415,7 @@ local function BuildReportLines(reportData)
     end
 
     AppendLine(lines, "")
-    AppendLine(lines, "Hotspots gesamte Session:")
+    AppendLine(lines, "BeavisQoL Hotspots gesamte Session:")
     for index = 1, math.min(MAX_REPORT_ENTRIES, #totalEntries) do
         local entry = totalEntries[index]
         AppendLine(lines, string.format(
@@ -356,8 +568,10 @@ BuildRecentAggregate = function(sampleCount)
     local sampleBuffer = db.samples
     local startIndex = math.max(1, #sampleBuffer - (sampleCount or #sampleBuffer) + 1)
     local aggregate = {}
+    local addonAggregate = {}
     local measuredMs = 0
     local addonCpuMs = 0
+    local observedAddonCpuMs = 0
     local calls = 0
     local usedSamples = 0
 
@@ -367,6 +581,7 @@ BuildRecentAggregate = function(sampleCount)
             usedSamples = usedSamples + 1
             measuredMs = measuredMs + (tonumber(sample.measuredMs) or 0)
             addonCpuMs = addonCpuMs + (tonumber(sample.addonCpuMs) or 0)
+            observedAddonCpuMs = observedAddonCpuMs + (tonumber(sample.observedAddonCpuMs) or 0)
             calls = calls + (tonumber(sample.calls) or 0)
 
             for _, entry in ipairs(sample.top or {}) do
@@ -388,6 +603,26 @@ BuildRecentAggregate = function(sampleCount)
                     aggregateEntry.maxMs = math.max(aggregateEntry.maxMs, tonumber(entry.maxMs) or 0)
                 end
             end
+
+            for _, entry in ipairs(sample.addons or {}) do
+                if type(entry) == "table" and type(entry.label) == "string" and entry.label ~= "" then
+                    local aggregateEntry = addonAggregate[entry.label]
+
+                    if not aggregateEntry then
+                        aggregateEntry = {
+                            label = entry.label,
+                            totalMs = 0,
+                            samples = 0,
+                            maxMs = 0,
+                        }
+                        addonAggregate[entry.label] = aggregateEntry
+                    end
+
+                    aggregateEntry.totalMs = aggregateEntry.totalMs + (tonumber(entry.totalMs) or 0)
+                    aggregateEntry.samples = aggregateEntry.samples + (tonumber(entry.samples) or 0)
+                    aggregateEntry.maxMs = math.max(aggregateEntry.maxMs, tonumber(entry.maxMs) or 0)
+                end
+            end
         end
     end
 
@@ -395,8 +630,10 @@ BuildRecentAggregate = function(sampleCount)
         sampleCount = usedSamples,
         measuredMs = measuredMs,
         addonCpuMs = addonCpuMs,
+        observedAddonCpuMs = observedAddonCpuMs,
         calls = calls,
         entries = SortStats(aggregate),
+        addonEntries = SortAddonStats(addonAggregate),
     }
 end
 
@@ -412,23 +649,18 @@ local function PushSample(sample)
 end
 
 local function SnapshotInterval()
-    if intervalCallCount <= 0 and intervalTotalMs <= 0 then
+    local canCaptureAddonCpu = IsScriptProfilingEnabled()
+        and type(UpdateAddOnCPUUsage) == "function"
+        and type(GetAddOnCPUUsage) == "function"
+        and GetAddOnCount() > 0
+
+    if intervalCallCount <= 0 and intervalTotalMs <= 0 and not canCaptureAddonCpu then
         ResetCurrentInterval()
         ResetAddonCpuBaseline()
         return
     end
 
-    local addonCpuDeltaMs = 0
-    if IsScriptProfilingEnabled() and UpdateAddOnCPUUsage and GetAddOnCPUUsage then
-        UpdateAddOnCPUUsage()
-
-        local currentAddonCpuMs = tonumber(GetAddOnCPUUsage(ADDON_NAME)) or 0
-        if lastAddonCpuMs ~= nil then
-            addonCpuDeltaMs = math.max(0, currentAddonCpuMs - lastAddonCpuMs)
-        end
-
-        lastAddonCpuMs = currentAddonCpuMs
-    end
+    local addonCpuDeltaMs, observedAddonCpuMs, storedAddonEntries, allAddonEntries = CaptureAddonCpuInterval()
 
     local topEntries = SortStats(intervalStats)
     local storedEntries = {}
@@ -441,15 +673,24 @@ local function SnapshotInterval()
         timestamp = BuildTimestampLabel(),
         measuredMs = intervalTotalMs,
         addonCpuMs = addonCpuDeltaMs,
+        observedAddonCpuMs = observedAddonCpuMs,
         calls = intervalCallCount,
         top = storedEntries,
+        addons = storedAddonEntries,
     })
+
+    UpdateAddonTotals(allAddonEntries)
 
     ResetCurrentInterval()
 end
 
 FlushCurrentInterval = function()
-    if intervalCallCount > 0 or intervalTotalMs > 0 then
+    local canCaptureAddonCpu = IsScriptProfilingEnabled()
+        and type(UpdateAddOnCPUUsage) == "function"
+        and type(GetAddOnCPUUsage) == "function"
+        and GetAddOnCount() > 0
+
+    if intervalCallCount > 0 or intervalTotalMs > 0 or canCaptureAddonCpu then
         SnapshotInterval()
     end
 end
@@ -588,6 +829,7 @@ function Profiler.Reset()
     local db = GetProfilerDB()
     db.samples = {}
     db.totals = {}
+    db.addonTotals = {}
     ResetCurrentInterval()
     ResetAddonCpuBaseline()
 end

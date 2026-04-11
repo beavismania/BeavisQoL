@@ -42,6 +42,8 @@ local ScaleSliderText
 local LayoutMarkerBarPage
 local isRefreshingPage = false
 local pendingOverlayRefresh = false
+local pendingOverlayStop = false
+local overlayDragActive = false
 
 local function Clamp(value, minValue, maxValue)
     if value < minValue then
@@ -290,11 +292,25 @@ local function CreateOverlayFrame()
             return
         end
 
+        overlayDragActive = true
+        pendingOverlayStop = false
         self:StartMoving()
     end)
 
     OverlayFrame:SetScript("OnDragStop", function(self)
+        if not overlayDragActive then
+            return
+        end
+
+        if InCombatLockdown and InCombatLockdown() then
+            pendingOverlayStop = true
+            pendingOverlayRefresh = true
+            return
+        end
+
         self:StopMovingOrSizing()
+        overlayDragActive = false
+        pendingOverlayStop = false
         SaveOverlayGeometry()
     end)
 
@@ -685,8 +701,17 @@ refreshWatcher:RegisterEvent("PLAYER_LOGIN")
 refreshWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
 refreshWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
 refreshWatcher:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_REGEN_ENABLED" and not pendingOverlayRefresh then
-        return
+    if event == "PLAYER_REGEN_ENABLED" then
+        if pendingOverlayStop and OverlayFrame then
+            OverlayFrame:StopMovingOrSizing()
+            overlayDragActive = false
+            pendingOverlayStop = false
+            SaveOverlayGeometry()
+        end
+
+        if not pendingOverlayRefresh and not pendingOverlayStop then
+            return
+        end
     end
 
     RefreshOverlayWindow()

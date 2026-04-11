@@ -31,6 +31,7 @@ local OpacitySliderFrameRef = rawget(_G, "OpacitySliderFrame")
 
 local COLOR_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 local DEFAULT_TRAIL_STYLE = "lightning_storm"
+local RUNTIME_UPDATE_INTERVAL = 0.016
 local TRAIL_SAMPLE_INTERVAL = 0.010
 local TRAIL_RENDER_INTERVAL = 0.016
 local TRAIL_IDLE_FADE_INTERVAL = 0.024
@@ -302,10 +303,25 @@ local function ApplyBlizzardCursorSize()
     end
 end
 
+local cachedUiParentScale = 1
+
+local function RefreshUiParentScale()
+    cachedUiParentScale = UIParent:GetEffectiveScale()
+    if type(cachedUiParentScale) ~= "number" or cachedUiParentScale <= 0 then
+        cachedUiParentScale = 1
+    end
+end
+
 local RuntimeFrame = CreateFrame("Frame", nil, UIParent)
 RuntimeFrame:SetAllPoints(UIParent)
 RuntimeFrame:SetFrameStrata("TOOLTIP")
 RuntimeFrame:EnableMouse(false)
+RuntimeFrame:RegisterEvent("UI_SCALE_CHANGED")
+RuntimeFrame:RegisterEvent("DISPLAY_SIZE_CHANGED")
+RuntimeFrame:SetScript("OnEvent", function()
+    RefreshUiParentScale()
+end)
+RefreshUiParentScale()
 
 local CursorCircleFrame = CreateFrame("Frame", nil, RuntimeFrame)
 CursorCircleFrame:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -329,6 +345,9 @@ local trailAccentLines = {}
 local trailBranchLines = {}
 local trailPoints = {}
 local smoothTrailPoints = {}
+local trailPointCount = 0
+local trailPointHeadIndex = 0
+local trailPointCapacity = 0
 local sampleAccumulator = 0
 local trailRenderAccumulator = 0
 local trailFadeAccumulator = 0
@@ -337,6 +356,9 @@ local lastCastRingRenderKey = nil
 local lastRingRenderKey = nil
 local lastTrailSampleX = nil
 local lastTrailSampleY = nil
+local lastTrailCursorX = nil
+local lastTrailCursorY = nil
+local runtimeUpdateAccumulator = 0
 local MouseHelperRuntimeOnUpdate
 
 local function EnsureRingDots(count)
@@ -447,13 +469,83 @@ local function EnsureTrailLines(count)
     end
 end
 
-local function ClearTrail()
-    for index = 1, #trailPoints do
-        trailPoints[index] = nil
+local function GetTrailPoint(logicalIndex)
+    if logicalIndex < 1 or logicalIndex > trailPointCount or trailPointCapacity <= 0 then
+        return nil
     end
 
+    local physicalIndex = trailPointHeadIndex - logicalIndex + 1
+    while physicalIndex <= 0 do
+        physicalIndex = physicalIndex + trailPointCapacity
+    end
+
+    while physicalIndex > trailPointCapacity do
+        physicalIndex = physicalIndex - trailPointCapacity
+    end
+
+    return trailPoints[physicalIndex]
+end
+
+local function ResizeTrailPointBuffer(maxCount)
+    maxCount = math.max(1, math.floor(tonumber(maxCount) or 1))
+    if maxCount == trailPointCapacity then
+        return
+    end
+
+    local preservedCount = math.min(trailPointCount, maxCount)
+    local rebuiltPoints = {}
+
+    for index = 1, preservedCount do
+        local point = GetTrailPoint(index)
+        if point then
+            rebuiltPoints[index] = {
+                x = point.x,
+                y = point.y,
+            }
+        end
+    end
+
+    trailPoints = rebuiltPoints
+    trailPointCapacity = maxCount
+    trailPointCount = preservedCount
+    trailPointHeadIndex = preservedCount > 0 and 1 or 0
+end
+
+local function DropOldestTrailPoint()
+    if trailPointCount <= 0 then
+        return false
+    end
+
+    trailPointCount = trailPointCount - 1
+    if trailPointCount <= 0 then
+        trailPointCount = 0
+        trailPointHeadIndex = 0
+    end
+
+    return true
+end
+
+local function SetSmoothTrailPoint(index, x, y)
+    local point = smoothTrailPoints[index]
+    if point then
+        point.x = x
+        point.y = y
+        return
+    end
+
+    smoothTrailPoints[index] = {
+        x = x,
+        y = y,
+    }
+end
+
+local function ClearTrail()
+    trailPointCount = 0
+    trailPointHeadIndex = 0
     lastTrailSampleX = nil
     lastTrailSampleY = nil
+    lastTrailCursorX = nil
+    lastTrailCursorY = nil
     sampleAccumulator = 0
     trailRenderAccumulator = 0
     trailFadeAccumulator = 0
@@ -477,7 +569,7 @@ end
 
 local function GetCursorUiPosition()
     local cursorX, cursorY = GetCursorPosition()
-    local scale = UIParent:GetEffectiveScale()
+    local scale = cachedUiParentScale
 
     return cursorX / scale, cursorY / scale
 end
@@ -595,20 +687,23 @@ local function DrawCastRing(db, progress)
 end
 
 local function BuildSmoothedTrailPoints(sourceCount)
-    for index = 1, #smoothTrailPoints do
-        smoothTrailPoints[index] = nil
-    end
-
     if sourceCount < 2 then
+        for index = 1, #smoothTrailPoints do
+            smoothTrailPoints[index] = nil
+        end
         return 0
     end
 
     local insertIndex = 0
     for index = 1, sourceCount - 1 do
-        local p0 = trailPoints[(index > 1) and (index - 1) or index]
-        local p1 = trailPoints[index]
-        local p2 = trailPoints[index + 1]
-        local p3 = trailPoints[(index + 2 <= sourceCount) and (index + 2) or (index + 1)]
+        local p0 = GetTrailPoint((index > 1) and (index - 1) or index)
+        local p1 = GetTrailPoint(index)
+        local p2 = GetTrailPoint(index + 1)
+        local p3 = GetTrailPoint((index + 2 <= sourceCount) and (index + 2) or (index + 1))
+
+        if not p0 or not p1 or not p2 or not p3 then
+            break
+        end
 
         local dx = p2.x - p1.x
         local dy = p2.y - p1.y
@@ -635,19 +730,30 @@ local function BuildSmoothedTrailPoints(sourceCount)
             )
 
             insertIndex = insertIndex + 1
-            smoothTrailPoints[insertIndex] = { x = x, y = y }
+            SetSmoothTrailPoint(insertIndex, x, y)
         end
     end
 
-    local lastPoint = trailPoints[sourceCount]
+    local lastPoint = GetTrailPoint(sourceCount)
+    if not lastPoint then
+        for index = insertIndex + 1, #smoothTrailPoints do
+            smoothTrailPoints[index] = nil
+        end
+        return insertIndex
+    end
+
     insertIndex = insertIndex + 1
-    smoothTrailPoints[insertIndex] = { x = lastPoint.x, y = lastPoint.y }
+    SetSmoothTrailPoint(insertIndex, lastPoint.x, lastPoint.y)
+
+    for index = insertIndex + 1, #smoothTrailPoints do
+        smoothTrailPoints[index] = nil
+    end
 
     return insertIndex
 end
 
 local function DrawTrail(db)
-    local sourceCount = math.min(#trailPoints, db.trailLength)
+    local sourceCount = math.min(trailPointCount, db.trailLength)
     local smoothPointCount = BuildSmoothedTrailPoints(sourceCount)
     local segmentCount = smoothPointCount - 1
     if segmentCount <= 0 then
@@ -928,6 +1034,7 @@ local function ApplyVisualState()
     local shouldRunRuntime = db.enabled == true and (db.trailEnabled == true or ShouldShowCircle(db) or ShouldShowCastRing(db))
 
     if not IsVisualFeatureEnabled(db) or not shouldRunRuntime then
+        runtimeUpdateAccumulator = 0
         RuntimeFrame:SetScript("OnUpdate", nil)
         RuntimeFrame:Hide()
         CursorCircleFrame:Hide()
@@ -939,6 +1046,7 @@ local function ApplyVisualState()
         return
     end
 
+    runtimeUpdateAccumulator = 0
     RuntimeFrame:SetScript("OnUpdate", MouseHelperRuntimeOnUpdate)
     RuntimeFrame:Show()
 
@@ -966,10 +1074,28 @@ end
 local function PushTrailPoint(cursorX, cursorY, maxCount)
     lastTrailSampleX = cursorX
     lastTrailSampleY = cursorY
-    table.insert(trailPoints, 1, { x = cursorX, y = cursorY })
+    ResizeTrailPointBuffer(maxCount)
 
-    while #trailPoints > maxCount do
-        table.remove(trailPoints)
+    if trailPointCapacity <= 0 then
+        return
+    end
+
+    trailPointHeadIndex = trailPointHeadIndex + 1
+    if trailPointHeadIndex > trailPointCapacity then
+        trailPointHeadIndex = 1
+    end
+
+    local point = trailPoints[trailPointHeadIndex]
+    if not point then
+        point = {}
+        trailPoints[trailPointHeadIndex] = point
+    end
+
+    point.x = cursorX
+    point.y = cursorY
+
+    if trailPointCount < trailPointCapacity then
+        trailPointCount = trailPointCount + 1
     end
 end
 
@@ -1009,24 +1135,34 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
     end
 
     trailRenderAccumulator = trailRenderAccumulator + elapsed
-    sampleAccumulator = sampleAccumulator + elapsed
-    while sampleAccumulator >= TRAIL_SAMPLE_INTERVAL do
-        sampleAccumulator = sampleAccumulator - TRAIL_SAMPLE_INTERVAL
-        local deltaX = cursorX - (lastTrailSampleX or cursorX)
-        local deltaY = cursorY - (lastTrailSampleY or cursorY)
+    local previousCursorX = lastTrailCursorX or cursorX
+    local previousCursorY = lastTrailCursorY or cursorY
+    local pendingElapsed = sampleAccumulator + elapsed
+    local pendingSampleCount = math.floor(pendingElapsed / TRAIL_SAMPLE_INTERVAL)
+    sampleAccumulator = pendingElapsed - (pendingSampleCount * TRAIL_SAMPLE_INTERVAL)
+
+    for sampleIndex = 1, pendingSampleCount do
+        local ratio = sampleIndex / pendingSampleCount
+        local sampleX = previousCursorX + ((cursorX - previousCursorX) * ratio)
+        local sampleY = previousCursorY + ((cursorY - previousCursorY) * ratio)
+        local deltaX = sampleX - (lastTrailSampleX or sampleX)
+        local deltaY = sampleY - (lastTrailSampleY or sampleY)
         local movedEnough = ((deltaX * deltaX) + (deltaY * deltaY)) >= 1
 
-        if movedEnough or #trailPoints == 0 then
+        if movedEnough or trailPointCount == 0 then
             trailFadeAccumulator = 0
-            PushTrailPoint(cursorX, cursorY, db.trailLength + 4)
-        elseif #trailPoints > 0 then
+            PushTrailPoint(sampleX, sampleY, db.trailLength + 4)
+        elseif trailPointCount > 0 then
             trailFadeAccumulator = trailFadeAccumulator + TRAIL_SAMPLE_INTERVAL
-            while trailFadeAccumulator >= TRAIL_IDLE_FADE_INTERVAL and #trailPoints > 0 do
+            while trailFadeAccumulator >= TRAIL_IDLE_FADE_INTERVAL and trailPointCount > 0 do
                 trailFadeAccumulator = trailFadeAccumulator - TRAIL_IDLE_FADE_INTERVAL
-                table.remove(trailPoints)
+                DropOldestTrailPoint()
             end
         end
     end
+
+    lastTrailCursorX = cursorX
+    lastTrailCursorY = cursorY
 
     if trailRenderAccumulator >= TRAIL_RENDER_INTERVAL then
         trailRenderAccumulator = trailRenderAccumulator - TRAIL_RENDER_INTERVAL
@@ -1035,6 +1171,14 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
 end
 
 MouseHelperRuntimeOnUpdate = function(_, elapsed)
+    runtimeUpdateAccumulator = runtimeUpdateAccumulator + (elapsed or 0)
+    if runtimeUpdateAccumulator < RUNTIME_UPDATE_INTERVAL then
+        return
+    end
+
+    elapsed = runtimeUpdateAccumulator
+    runtimeUpdateAccumulator = 0
+
     local profiler = BeavisQoL.PerformanceProfiler
     local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
     HandleMouseHelperRuntimeUpdate(_, elapsed)
@@ -1042,8 +1186,6 @@ MouseHelperRuntimeOnUpdate = function(_, elapsed)
         profiler.EndSample("MouseHelper.OnUpdate", sampleToken)
     end
 end
-
-RuntimeFrame:SetScript("OnUpdate", MouseHelperRuntimeOnUpdate)
 
 function MouseHelper.SetEnabled(enabled)
     MouseHelper.GetDB().enabled = enabled == true

@@ -53,6 +53,7 @@ local PreviewRows = {}
 
 local ShowOverlayCheckbox
 local LockOverlayCheckbox
+local HideInRaidCheckbox
 local FontSizeSlider
 local ScaleSlider
 local BackgroundAlphaSlider
@@ -639,6 +640,10 @@ local function GetWeeklyKeysSettings()
         db.overlayLocked = false
     end
 
+    if db.hideOverlayInRaid == nil then
+        db.hideOverlayInRaid = false
+    end
+
     if type(db.fontSize) ~= "number" then
         db.fontSize = DEFAULT_FONT_SIZE
     elseif db.overlayScale == nil and math.floor(db.fontSize + 0.5) == LEGACY_DEFAULT_FONT_SIZE then
@@ -680,6 +685,31 @@ local function ShouldHideOverlayInCombat()
         and BeavisQoL.ShouldHideOverlay("weekly")
 end
 
+local function IsPlayerInAnyRaidGroup()
+    if type(IsInRaid) ~= "function" then
+        return false
+    end
+
+    if LE_PARTY_CATEGORY_HOME and IsInRaid(LE_PARTY_CATEGORY_HOME) then
+        return true
+    end
+
+    if LE_PARTY_CATEGORY_INSTANCE and IsInRaid(LE_PARTY_CATEGORY_INSTANCE) then
+        return true
+    end
+
+    return IsInRaid() == true
+end
+
+local function ShouldHideOverlayInRaidGroup()
+    local settings = GetWeeklyKeysSettings()
+    return settings.hideOverlayInRaid == true and IsPlayerInAnyRaidGroup()
+end
+
+local function ShouldHideWeeklyKeysOverlay()
+    return ShouldHideOverlayInCombat() or ShouldHideOverlayInRaidGroup()
+end
+
 function WeeklyKeysModule.IsOverlayEnabled()
     return GetWeeklyKeysSettings().overlayEnabled == true
 end
@@ -695,6 +725,15 @@ end
 
 function WeeklyKeysModule.SetOverlayLocked(locked)
     GetWeeklyKeysSettings().overlayLocked = locked == true
+    WeeklyKeysModule.RefreshOverlayWindow()
+end
+
+function WeeklyKeysModule.IsHideOverlayInRaidEnabled()
+    return GetWeeklyKeysSettings().hideOverlayInRaid == true
+end
+
+function WeeklyKeysModule.SetHideOverlayInRaidEnabled(enabled)
+    GetWeeklyKeysSettings().hideOverlayInRaid = enabled == true
     WeeklyKeysModule.RefreshOverlayWindow()
 end
 
@@ -806,7 +845,8 @@ end
 
 local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
     local checkbox = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-    checkbox:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", -4, -14)
+    local anchorOffsetX = anchor and anchor.BeavisNextCheckboxOffsetX or -4
+    checkbox:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", anchorOffsetX, -14)
 
     local label = parent:CreateFontString(nil, "OVERLAY")
     label:SetPoint("LEFT", checkbox, "RIGHT", 6, 0)
@@ -822,6 +862,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
     hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     hint:SetTextColor(0.78, 0.74, 0.69, 1)
     hint:SetText(hintText)
+    hint.BeavisNextCheckboxOffsetX = -34
+    checkbox.BeavisNextCheckboxOffsetX = 0
 
     return checkbox, label, hint
 end
@@ -1216,7 +1258,7 @@ function WeeklyKeysModule.RefreshOverlayWindow()
 
     OverlayFrame:EnableMouse(true)
 
-    if settings.overlayEnabled and not ShouldHideOverlayInCombat() then
+    if settings.overlayEnabled and not ShouldHideWeeklyKeysOverlay() then
         OverlayFrame:Show()
     else
         OverlayFrame:Hide()
@@ -1228,31 +1270,20 @@ function WeeklyKeysModule.RefreshOverlayWindow()
 end
 
 local RefreshTicker = CreateFrame("Frame")
-RefreshTicker.elapsed = 0
-local HandleWeeklyKeysRefreshTicker
-local function WeeklyKeysRefreshTickerOnUpdate(self, elapsed)
+local RefreshTickerHandle = nil
+local function RunWeeklyKeysRefreshTicker()
     local profiler = BeavisQoL.PerformanceProfiler
     local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
-    HandleWeeklyKeysRefreshTicker(self, elapsed)
-    if profiler and profiler.EndSample then
-        profiler.EndSample("WeeklyKeys.RefreshTicker", sampleToken)
-    end
-end
-
-HandleWeeklyKeysRefreshTicker = function(self, elapsed)
-    -- Nur aktualisieren, wenn Vorschau oder Overlay wirklich sichtbar sind.
     local needsRefresh = (PageWeeklyKeys and PageWeeklyKeys:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
     if not needsRefresh then
-        self.elapsed = 0
+        if UpdateWeeklyKeysRefreshTickerState then
+            UpdateWeeklyKeysRefreshTickerState()
+        end
+        if profiler and profiler.EndSample then
+            profiler.EndSample("WeeklyKeys.RefreshTicker", sampleToken)
+        end
         return
     end
-
-    self.elapsed = self.elapsed + elapsed
-    if self.elapsed < REFRESH_INTERVAL then
-        return
-    end
-
-    self.elapsed = 0
 
     if PageWeeklyKeys and PageWeeklyKeys:IsShown() then
         RefreshPreview()
@@ -1261,16 +1292,37 @@ HandleWeeklyKeysRefreshTicker = function(self, elapsed)
     if OverlayFrame and OverlayFrame:IsShown() then
         WeeklyKeysModule.RefreshOverlayWindow()
     end
+
+    if profiler and profiler.EndSample then
+        profiler.EndSample("WeeklyKeys.RefreshTicker", sampleToken)
+    end
 end
 
 UpdateWeeklyKeysRefreshTickerState = function()
     local shouldRefresh = (PageWeeklyKeys and PageWeeklyKeys:IsShown()) or (OverlayFrame and OverlayFrame:IsShown())
 
-    RefreshTicker.elapsed = 0
-
     if shouldRefresh then
-        RefreshTicker:SetScript("OnUpdate", WeeklyKeysRefreshTickerOnUpdate)
+        if RefreshTickerHandle == nil and C_Timer and C_Timer.NewTicker then
+            RefreshTickerHandle = C_Timer.NewTicker(REFRESH_INTERVAL, RunWeeklyKeysRefreshTicker)
+        elseif RefreshTickerHandle == nil then
+            RefreshTicker.elapsed = 0
+            RefreshTicker:SetScript("OnUpdate", function(self, elapsed)
+                self.elapsed = (self.elapsed or 0) + elapsed
+                if self.elapsed < REFRESH_INTERVAL then
+                    return
+                end
+
+                self.elapsed = 0
+                RunWeeklyKeysRefreshTicker()
+            end)
+        end
     else
+        if RefreshTickerHandle then
+            RefreshTickerHandle:Cancel()
+            RefreshTickerHandle = nil
+        end
+
+        RefreshTicker.elapsed = 0
         RefreshTicker:SetScript("OnUpdate", nil)
     end
 end
@@ -1443,16 +1495,22 @@ LockOverlayCheckbox, lockOverlayLabel, lockOverlayHint = CreateSectionCheckbox(
     L("WEEKLY_KEYS_LOCK_OVERLAY_HINT")
 )
 
+local hideInRaidLabel, hideInRaidHint
+HideInRaidCheckbox, hideInRaidLabel, hideInRaidHint = CreateSectionCheckbox(
+    SettingsPanel,
+    lockOverlayHint,
+    L("WEEKLY_KEYS_HIDE_IN_RAID"),
+    L("WEEKLY_KEYS_HIDE_IN_RAID_HINT")
+)
+
 local minimapContextLabel, minimapContextHint
 local MinimapContextCheckbox
 MinimapContextCheckbox, minimapContextLabel, minimapContextHint = CreateSectionCheckbox(
     SettingsPanel,
-    lockOverlayHint,
+    hideInRaidHint,
     L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"),
     L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT")
 )
-MinimapContextCheckbox:ClearAllPoints()
-MinimapContextCheckbox:SetPoint("TOPLEFT", lockOverlayHint, "BOTTOMLEFT", -64, -14)
 
 FontSizeSlider = CreateValueSlider(SettingsPanel, L("FONT_SIZE_OVERLAY"), MIN_FONT_SIZE, MAX_FONT_SIZE, 1, "font")
 FontSizeSlider:SetPoint("TOPLEFT", minimapContextHint, "BOTTOMLEFT", 18, -34)
@@ -1563,6 +1621,7 @@ function PageWeeklyKeys:UpdateScrollLayout()
             + GetTextHeight(SettingsHint, 12)
             + 14 + ShowOverlayCheckbox:GetHeight() + 2 + GetTextHeight(showOverlayHint, 12)
             + 14 + LockOverlayCheckbox:GetHeight() + 2 + GetTextHeight(lockOverlayHint, 12)
+            + 14 + HideInRaidCheckbox:GetHeight() + 2 + GetTextHeight(hideInRaidHint, 12)
             + 14 + MinimapContextCheckbox:GetHeight() + 2 + GetTextHeight(minimapContextHint, 12)
             + 34 + FontSizeSlider:GetHeight()
             + 44 + ScaleSlider:GetHeight()
@@ -1676,6 +1735,11 @@ LockOverlayCheckbox:SetScript("OnClick", function(self)
     WeeklyKeysModule.SetOverlayLocked(self:GetChecked())
 end)
 
+HideInRaidCheckbox:SetScript("OnClick", function(self)
+    WeeklyKeysModule.SetHideOverlayInRaidEnabled(self:GetChecked())
+    PageWeeklyKeys:RefreshState()
+end)
+
 MinimapContextCheckbox:SetScript("OnClick", function(self)
     if BeavisQoL.SetMinimapContextMenuEntryVisible then
         BeavisQoL.SetMinimapContextMenuEntryVisible("weeklyKeys", self:GetChecked())
@@ -1703,6 +1767,8 @@ function PageWeeklyKeys:RefreshState()
     showOverlayHint:SetText(L("WEEKLY_KEYS_SHOW_OVERLAY_HINT"))
     lockOverlayLabel:SetText(L("WEEKLY_KEYS_LOCK_OVERLAY"))
     lockOverlayHint:SetText(L("WEEKLY_KEYS_LOCK_OVERLAY_HINT"))
+    hideInRaidLabel:SetText(L("WEEKLY_KEYS_HIDE_IN_RAID"))
+    hideInRaidHint:SetText(L("WEEKLY_KEYS_HIDE_IN_RAID_HINT"))
     minimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
     minimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
     FontSizeSlider.Text:SetText(L("FONT_SIZE_OVERLAY"))
@@ -1715,6 +1781,7 @@ function PageWeeklyKeys:RefreshState()
     isRefreshing = true
     ShowOverlayCheckbox:SetChecked(settings.overlayEnabled)
     LockOverlayCheckbox:SetChecked(settings.overlayLocked)
+    HideInRaidCheckbox:SetChecked(settings.hideOverlayInRaid == true)
     MinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("weeklyKeys") or true)
     FontSizeSlider:SetValue(settings.fontSize)
     ScaleSlider:SetValue(settings.overlayScale)
@@ -1766,6 +1833,7 @@ WeeklyKeysEvents:RegisterEvent("CHALLENGE_MODE_RESET")
 WeeklyKeysEvents:RegisterEvent("SCENARIO_COMPLETED")
 WeeklyKeysEvents:RegisterEvent("LFG_COMPLETION_REWARD")
 WeeklyKeysEvents:RegisterEvent("UPDATE_INSTANCE_INFO")
+WeeklyKeysEvents:RegisterEvent("GROUP_ROSTER_UPDATE")
 WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_DISABLED")
 WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
 WeeklyKeysEvents:SetScript("OnEvent", function(_, eventName)

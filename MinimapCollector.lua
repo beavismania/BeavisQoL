@@ -5,6 +5,9 @@ BeavisQoL.MinimapCollectorModule = BeavisQoL.MinimapCollectorModule or {}
 local Module = BeavisQoL.MinimapCollectorModule
 local L = BeavisQoL.L
 local C_Timer = _G.C_Timer
+local legacyGetNumAddOns = rawget(_G, "GetNumAddOns")
+local legacyGetAddOnInfo = rawget(_G, "GetAddOnInfo")
+local legacyGetAddOnMetadata = rawget(_G, "GetAddOnMetadata")
 
 local LAUNCHER_SIZE = 32
 local PANEL_PADDING = 4
@@ -203,15 +206,15 @@ local function GetAddOnCount()
         return C_AddOns.GetNumAddOns()
     end
 
-    if GetNumAddOns then
-        return GetNumAddOns()
+    if legacyGetNumAddOns then
+        return legacyGetNumAddOns()
     end
 
     return 0
 end
 
 local function GetAddOnInfoCompat(index)
-    local getAddOnInfo = (C_AddOns and C_AddOns.GetAddOnInfo) or GetAddOnInfo
+    local getAddOnInfo = (C_AddOns and C_AddOns.GetAddOnInfo) or legacyGetAddOnInfo
     if type(getAddOnInfo) ~= "function" then
         return nil, nil
     end
@@ -225,7 +228,7 @@ local function GetAddOnInfoCompat(index)
 end
 
 local function GetAddOnMetadataCompat(addonName, metadataKey)
-    local getAddOnMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+    local getAddOnMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or legacyGetAddOnMetadata
     if type(getAddOnMetadata) ~= "function" or type(addonName) ~= "string" or addonName == "" then
         return nil
     end
