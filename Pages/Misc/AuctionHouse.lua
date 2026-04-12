@@ -191,11 +191,35 @@ local function IsAnyAuctionHouseFilterAutomationEnabled()
         or Misc.IsAuctionHouseCommonQualityFilterAutoDisabled()
 end
 
+local function SafeCallMethod(target, methodName, ...)
+    if not target or type(methodName) ~= "string" or methodName == "" then
+        return false
+    end
+
+    local method = target[methodName]
+    if type(method) ~= "function" then
+        return false
+    end
+
+    return pcall(method, target, ...)
+end
+
 local function IsVisibleFrame(frame)
-    return frame
-        and frame.IsShown
-        and frame:IsShown()
-        and (not frame.GetAlpha or (frame:GetAlpha() or 0) > 0)
+    local okShown, isShown = SafeCallMethod(frame, "IsShown")
+    if not okShown or isShown ~= true then
+        return false
+    end
+
+    if not frame.GetAlpha then
+        return true
+    end
+
+    local okAlpha, alpha = SafeCallMethod(frame, "GetAlpha")
+    if not okAlpha then
+        return false
+    end
+
+    return (alpha or 0) > 0
 end
 
 local function TextMatchesFilter(text, needles)
@@ -218,13 +242,22 @@ local function ControlMatchesFilter(control, needles)
         return false
     end
 
-    if control.GetText and TextMatchesFilter(control:GetText(), needles) then
+    local okControlText, controlText = SafeCallMethod(control, "GetText")
+    if okControlText and TextMatchesFilter(controlText, needles) then
         return true
     end
 
-    for _, region in ipairs({ control:GetRegions() }) do
-        if region and region.GetObjectType and region:GetObjectType() == "FontString" and region.GetText then
-            if TextMatchesFilter(region:GetText(), needles) then
+    local regionResults = { SafeCallMethod(control, "GetRegions") }
+    if not regionResults[1] then
+        return false
+    end
+
+    for index = 2, #regionResults do
+        local region = regionResults[index]
+        local okObjectType, objectType = SafeCallMethod(region, "GetObjectType")
+        if region and okObjectType and objectType == "FontString" then
+            local okRegionText, regionText = SafeCallMethod(region, "GetText")
+            if okRegionText and TextMatchesFilter(regionText, needles) then
                 return true
             end
         end
@@ -238,8 +271,8 @@ local function FindFilterControl(owner, depth, needles)
         return nil
     end
 
-    if owner.GetObjectType and owner.GetObjectType then
-        local objectType = owner:GetObjectType()
+    local okObjectType, objectType = SafeCallMethod(owner, "GetObjectType")
+    if okObjectType then
         if (objectType == "CheckButton" or objectType == "Button") and owner.GetChecked and owner.Click then
             if ControlMatchesFilter(owner, needles) then
                 return owner
@@ -247,7 +280,13 @@ local function FindFilterControl(owner, depth, needles)
         end
     end
 
-    for _, child in ipairs({ owner:GetChildren() }) do
+    local childResults = { SafeCallMethod(owner, "GetChildren") }
+    if not childResults[1] then
+        return nil
+    end
+
+    for index = 2, #childResults do
+        local child = childResults[index]
         local foundControl = FindFilterControl(child, depth + 1, needles)
         if foundControl then
             return foundControl
@@ -275,9 +314,17 @@ local function EnsureAuctionHouseFiltersApplied()
 
         if control and control.GetChecked and control.Click then
             local desiredState = GetDesiredFilterState(filterDefinition)
-            if control:GetChecked() ~= desiredState then
-                if not control.IsEnabled or control:IsEnabled() ~= false then
-                    control:Click()
+            local okChecked, currentState = SafeCallMethod(control, "GetChecked")
+            if okChecked and currentState ~= desiredState then
+                local canClick = true
+
+                if control.IsEnabled then
+                    local okEnabled, isEnabled = SafeCallMethod(control, "IsEnabled")
+                    canClick = okEnabled and isEnabled ~= false
+                end
+
+                if canClick then
+                    SafeCallMethod(control, "Click")
                     changedAny = true
                 end
             end
@@ -292,8 +339,7 @@ local function UpdateAuctionHouseWatcherState(forceTryNow)
     local shouldWatch = IsAnyAuctionHouseFilterAutomationEnabled()
         and IsAuctionHouseUILoaded()
         and auctionHouseFrame
-        and auctionHouseFrame.IsShown
-        and auctionHouseFrame:IsShown()
+        and IsVisibleFrame(auctionHouseFrame)
 
     if not shouldWatch then
         AuctionHouseWatcher:SetScript("OnUpdate", nil)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.36.3 - 2026-04-12
+
+### Hotfix
+
+- `AuctionHouse` scannt Blizzard-Frames jetzt defensiv, damit beim rekursiven Filter-Scan keine `bad self`-Fehler mehr auf Sonder-Frames wie `ServicesLogoutPopup` auftreten
+- Favoritengruppen-Kontextmenue im Auktionshaus zeigt fuer den Bearbeiten-Eintrag wieder einen sichtbaren Text an
+
 ## 0.36.2 - 2026-04-12
 
 ### Hotfix

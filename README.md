@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.2`
+- Version: `0.36.3`
 - Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `MinimapCollector` sammelt selbstverwaltete Minimap-Buttons jetzt kompatibler ein
-  - Anchor-Family-Fehler mit der `TomCats`-MapIcon-Sammlung beim Einsammeln behoben
-  - Patch-Release `0.36.2` auf Basis von `0.36.0`
+  - `AuctionHouse` scannt Blizzard-Frames im Filterpfad jetzt robuster
+  - Favoritengruppen-Kontextmenue im Auktionshaus zeigt den Bearbeiten-Eintrag wieder korrekt an
+  - Patch-Release `0.36.3` auf Basis von `0.36.0`
 
 ## Download
 

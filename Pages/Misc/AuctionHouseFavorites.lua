@@ -732,7 +732,7 @@ local function ShowFavoriteGroupEditMenu(frame, groupID)
         rootDescription:SetTag("MENU_BEAVISQOL_AUCTION_HOUSE_FAVORITE_GROUP_EDIT")
         rootDescription:CreateTitle(group.name)
 
-        rootDescription:CreateButton(RENAME, function()
+        rootDescription:CreateButton(L("AUCTION_HOUSE_FAVORITE_GROUP_EDIT_BUTTON"), function()
             ShowRenameFavoriteGroupPopup(groupID)
         end)
 
