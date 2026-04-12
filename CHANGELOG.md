@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.36.5 - 2026-04-12
+
+### Hotfix
+
+- `MinimapCollector` erkennt jetzt, wenn `Minimap Button Button` installiert und aktiv ist
+- BeavisQoL fragt bei einem Konflikt, welches Addon die Minimap-Button-Verwaltung uebernehmen soll
+- bei Auswahl von `BeavisQoL` wird `Minimap Button Button` deaktiviert und die UI neu geladen
+- bei Auswahl von `Minimap Button Button` wird nur der BeavisQoL-Minimap-Sammler deaktiviert
+
 ## 0.36.4 - 2026-04-12
 
 ### Hotfix

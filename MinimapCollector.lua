@@ -8,6 +8,11 @@ local C_Timer = _G.C_Timer
 local legacyGetNumAddOns = rawget(_G, "GetNumAddOns")
 local legacyGetAddOnInfo = rawget(_G, "GetAddOnInfo")
 local legacyGetAddOnMetadata = rawget(_G, "GetAddOnMetadata")
+local legacyGetAddOnEnableState = rawget(_G, "GetAddOnEnableState")
+local legacyDisableAddOn = rawget(_G, "DisableAddOn")
+local legacyIsAddOnLoaded = rawget(_G, "IsAddOnLoaded")
+local ReloadUIValue = rawget(_G, "ReloadUI")
+local InCombatLockdownValue = rawget(_G, "InCombatLockdown")
 
 local LAUNCHER_SIZE = 32
 local PANEL_PADDING = 4
@@ -23,6 +28,8 @@ local DEFAULT_LAUNCHER_SCALE = 1.05
 local DEFAULT_WINDOW_SCALE = 1.05
 local MIN_SCALE = 0.85
 local MAX_SCALE = 1.40
+local MINIMAP_BUTTON_BUTTON_DISPLAY_NAME = "Minimap Button Button"
+local MINIMAP_COLLECTOR_CONFLICT_POPUP_KEY = ADDON_NAME .. "_MinimapCollectorConflict"
 
 local LauncherButton
 local CollectorPanel
@@ -38,6 +45,10 @@ local InstalledAddonEntries
 local InstalledAddonByLookup
 local GetButtonMode
 local ApplyCollectedButtonLayout
+local ScheduleCollectorRefresh
+local ConflictPromptPending = false
+local ConflictPromptAddonInfo
+local StartupConflictPromptChecked = false
 
 local function Clamp(value, minValue, maxValue)
     if value < minValue then
@@ -236,6 +247,90 @@ local function GetAddOnMetadataCompat(addonName, metadataKey)
     end
 
     return getAddOnMetadata(addonName, metadataKey)
+end
+
+local function GetAddOnEnableStateCompat(addonName)
+    if type(addonName) ~= "string" or addonName == "" then
+        return 0
+    end
+
+    if C_AddOns and C_AddOns.GetAddOnEnableState then
+        return C_AddOns.GetAddOnEnableState(addonName) or 0
+    end
+
+    if legacyGetAddOnEnableState then
+        return legacyGetAddOnEnableState(addonName) or 0
+    end
+
+    return 0
+end
+
+local function DisableAddOnCompat(addonName)
+    if type(addonName) ~= "string" or addonName == "" then
+        return
+    end
+
+    if C_AddOns and C_AddOns.DisableAddOn then
+        C_AddOns.DisableAddOn(addonName)
+        return
+    end
+
+    if legacyDisableAddOn then
+        legacyDisableAddOn(addonName)
+    end
+end
+
+local function IsAddOnLoadedCompat(addonName)
+    if type(addonName) ~= "string" or addonName == "" then
+        return false
+    end
+
+    if C_AddOns and C_AddOns.IsAddOnLoaded then
+        return C_AddOns.IsAddOnLoaded(addonName) == true
+    end
+
+    if legacyIsAddOnLoaded then
+        return legacyIsAddOnLoaded(addonName) == true
+    end
+
+    return false
+end
+
+local function IsMinimapButtonButtonLookup(text)
+    local lookup = NormalizeAddonLookupText(text)
+    if not lookup then
+        return false
+    end
+
+    return lookup == "minimapbuttonbutton" or lookup == "mbb"
+end
+
+local function FindMinimapButtonButtonAddonInfo()
+    for index = 1, GetAddOnCount() do
+        local addonName, addonTitle = GetAddOnInfoCompat(index)
+
+        if type(addonName) == "string" and addonName ~= "" then
+            local resolvedTitle = NormalizeLabelText(addonTitle)
+                or NormalizeLabelText(GetAddOnMetadataCompat(addonName, "Title"))
+                or addonName
+
+            if IsMinimapButtonButtonLookup(addonName) or IsMinimapButtonButtonLookup(resolvedTitle) then
+                local enableState = GetAddOnEnableStateCompat(addonName)
+                local isLoaded = IsAddOnLoadedCompat(addonName)
+
+                return {
+                    addonName = addonName,
+                    addonTitle = resolvedTitle,
+                    displayName = resolvedTitle or addonName or MINIMAP_BUTTON_BUTTON_DISPLAY_NAME,
+                    isEnabled = enableState > 0,
+                    isLoaded = isLoaded,
+                    isActive = enableState > 0 or isLoaded,
+                }
+            end
+        end
+    end
+
+    return nil
 end
 
 local function EnsureInstalledAddonCache()
@@ -1051,7 +1146,7 @@ local function RefreshCollector(forcePageRefresh)
     NotifyPageStateChanged(forcePageRefresh == true or discoveredChange)
 end
 
-local function ScheduleCollectorRefresh(forcePageRefresh)
+ScheduleCollectorRefresh = function(forcePageRefresh)
     DeferredPageRefresh = DeferredPageRefresh or forcePageRefresh == true
 
     if ScheduledRefresh then
@@ -1323,6 +1418,116 @@ local function UpdateLauncherVisibility()
     UpdateCollectedButtonHostVisibility()
 end
 
+local function ApplyEnabledState(enabled)
+    GetModuleDB().enabled = enabled == true
+    UpdateLauncherVisibility()
+    ScheduleCollectorRefresh(true)
+    NotifyPageStateChanged(true)
+end
+
+local function ResolveMinimapCollectorConflict(preferredAddonKey, addonInfo)
+    ConflictPromptPending = false
+    ConflictPromptAddonInfo = nil
+
+    if preferredAddonKey == "beavis" then
+        ApplyEnabledState(true)
+
+        if addonInfo and addonInfo.addonName then
+            DisableAddOnCompat(addonInfo.addonName)
+        end
+
+        if type(ReloadUIValue) == "function" then
+            ReloadUIValue()
+        end
+
+        return
+    end
+
+    if preferredAddonKey == "mbb" then
+        ApplyEnabledState(false)
+        return
+    end
+
+    NotifyPageStateChanged(true)
+end
+
+local function EnsureMinimapCollectorConflictPopup()
+    local staticPopupDialogs = rawget(_G, "StaticPopupDialogs")
+    if type(staticPopupDialogs) ~= "table" then
+        return false
+    end
+
+    if staticPopupDialogs[MINIMAP_COLLECTOR_CONFLICT_POPUP_KEY] then
+        return true
+    end
+
+    staticPopupDialogs[MINIMAP_COLLECTOR_CONFLICT_POPUP_KEY] = {
+        text = L("MINIMAP_COLLECTOR_CONFLICT_TEXT"),
+        button1 = L("MINIMAP_COLLECTOR_CONFLICT_USE_BEAVIS"),
+        button2 = L("MINIMAP_COLLECTOR_CONFLICT_USE_MBB"),
+        OnAccept = function(_, data)
+            ResolveMinimapCollectorConflict("beavis", data)
+        end,
+        OnCancel = function(_, data, reason)
+            if reason == "clicked" then
+                ResolveMinimapCollectorConflict("mbb", data)
+                return
+            end
+
+            ResolveMinimapCollectorConflict(nil, data)
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = rawget(_G, "STATICPOPUP_NUMDIALOGS") or 4,
+    }
+
+    return true
+end
+
+local function PromptForMinimapCollectorConflict(addonInfo)
+    if not addonInfo or addonInfo.isActive ~= true then
+        return false
+    end
+
+    if InCombatLockdownValue and InCombatLockdownValue() then
+        ConflictPromptPending = true
+        ConflictPromptAddonInfo = addonInfo
+        NotifyPageStateChanged(true)
+        return true
+    end
+
+    local staticPopupShow = rawget(_G, "StaticPopup_Show")
+    if not EnsureMinimapCollectorConflictPopup() or type(staticPopupShow) ~= "function" then
+        return false
+    end
+
+    local staticPopupVisible = rawget(_G, "StaticPopup_Visible")
+    if type(staticPopupVisible) == "function" and staticPopupVisible(MINIMAP_COLLECTOR_CONFLICT_POPUP_KEY) then
+        return true
+    end
+
+    ConflictPromptPending = false
+    ConflictPromptAddonInfo = nil
+
+    staticPopupShow(MINIMAP_COLLECTOR_CONFLICT_POPUP_KEY, addonInfo.displayName or MINIMAP_BUTTON_BUTTON_DISPLAY_NAME, nil, addonInfo)
+    NotifyPageStateChanged(true)
+    return true
+end
+
+local function MaybePromptForMinimapCollectorConflict(enableRequested)
+    if enableRequested ~= true then
+        return false
+    end
+
+    local addonInfo = FindMinimapButtonButtonAddonInfo()
+    if not addonInfo or addonInfo.isActive ~= true then
+        return false
+    end
+
+    return PromptForMinimapCollectorConflict(addonInfo)
+end
+
 function Module.GetButtons()
     local buttons = {}
 
@@ -1348,10 +1553,13 @@ function Module.IsEnabled()
 end
 
 function Module.SetEnabled(enabled)
-    GetModuleDB().enabled = enabled == true
-    UpdateLauncherVisibility()
-    ScheduleCollectorRefresh(true)
-    NotifyPageStateChanged(true)
+    local enableRequested = enabled == true
+
+    if MaybePromptForMinimapCollectorConflict(enableRequested) then
+        return
+    end
+
+    ApplyEnabledState(enableRequested)
 end
 
 function Module.GetScale()
@@ -1461,6 +1669,19 @@ startupFrame:SetScript("OnEvent", function(_, event, addonName)
     EnsureHiddenButtonHost()
     UpdateLauncherVisibility()
     ScheduleCollectorRefresh(true)
+
+    if event == "PLAYER_REGEN_ENABLED" and ConflictPromptPending and ConflictPromptAddonInfo then
+        PromptForMinimapCollectorConflict(ConflictPromptAddonInfo)
+        return
+    end
+
+    if event == "PLAYER_ENTERING_WORLD" and not StartupConflictPromptChecked then
+        StartupConflictPromptChecked = true
+
+        if IsEnabled() then
+            MaybePromptForMinimapCollectorConflict(true)
+        end
+    end
 end)
 
 CreateLauncher()

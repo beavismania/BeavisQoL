@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.4`
+- Version: `0.36.5`
 - Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `FlightMasterTimer` blendet sein Overlay jetzt waehrend der Weltkarte aus
-  - Flugtimer-Overlay liegt nicht mehr ueber der Weltkarte
-  - Patch-Release `0.36.4` auf Basis von `0.36.0`
+  - `MinimapCollector` erkennt jetzt aktive Installationen von `Minimap Button Button`
+  - Konflikt-Dialog fuer die Minimap-Button-Verwaltung mit direkter Addon-Auswahl
+  - Patch-Release `0.36.5` auf Basis von `0.36.0`
 
 ## Download
 
