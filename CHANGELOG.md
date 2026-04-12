@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.36.6 - 2026-04-12
+
+### Hotfix
+
+- `Minimap-HUD` nutzt jetzt den FarmHUD-Ansatz: Live-Minimap als Overlay, Rahmen/Buttons bleiben oben rechts
+- `Minimap-HUD` dreht die Karte bei aktivem HUD automatisch nach Norden (Pfeil bleibt oben)
+- `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das Minimap-HUD an/aus
+- Keystone-Fenster schliesst nach Aktivierung automatisch (auch nach Ladebildschirm)
+- Keystone-Buttons umgestellt auf `Bereitschaftscheck`, `Timer`, `Start` mit Auto-Kette
+
 ## 0.36.5 - 2026-04-12
 
 ### Hotfix

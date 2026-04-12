@@ -21,6 +21,7 @@ local PullTimerButton = nil
 local PendingStartTimer = nil
 local PendingReadyCheck = nil
 local AutoTimerReadyCheckRequestedAt = 0
+local PendingKeystoneFrameClose = false
 local RefreshKeystoneButtons = function()
 end
 
@@ -50,6 +51,10 @@ end
 
 local function GetTimerAPI()
     return C_Timer and C_Timer.NewTimer or nil
+end
+
+local function GetTimerAfterAPI()
+    return C_Timer and C_Timer.After or nil
 end
 
 local function GetNow()
@@ -244,6 +249,33 @@ local function IsActivationReady()
     return type(GetStartChallengeModeAPI()) == "function"
 end
 
+local function CloseKeystoneFrame()
+    if not KeystoneFrame then
+        return
+    end
+
+    if HideUIPanel and KeystoneFrame.IsShown and KeystoneFrame:IsShown() then
+        local ok = pcall(HideUIPanel, KeystoneFrame)
+        if ok then
+            return
+        end
+    end
+
+    if KeystoneFrame.Hide then
+        pcall(KeystoneFrame.Hide, KeystoneFrame)
+    end
+end
+
+local function RequestKeystoneFrameClose()
+    PendingKeystoneFrameClose = true
+    CloseKeystoneFrame()
+
+    local timerAfter = GetTimerAfterAPI()
+    if type(timerAfter) == "function" then
+        timerAfter(0, CloseKeystoneFrame)
+    end
+end
+
 local function StartChallengeModeNow()
     CancelAutoTimerPreparation()
 
@@ -258,12 +290,26 @@ local function StartChallengeModeNow()
         return
     end
 
-    local startOk, startSuccess = pcall(startChallengeMode)
+    local startInvoker = startChallengeMode
+    local startTarget = nil
+    if KeystoneFrame and type(KeystoneFrame.StartChallengeMode) == "function" then
+        startInvoker = KeystoneFrame.StartChallengeMode
+        startTarget = KeystoneFrame
+    end
+
+    local startOk, startSuccess
+    if startTarget then
+        startOk, startSuccess = pcall(startInvoker, startTarget)
+    else
+        startOk, startSuccess = pcall(startInvoker)
+    end
+
     if not startOk or startSuccess == false then
         RefreshKeystoneButtons()
         return
     end
 
+    RequestKeystoneFrameClose()
     RefreshKeystoneButtons()
 end
 
@@ -287,8 +333,8 @@ local function PositionKeystoneButtons()
     local autoTimerBlockWidth = (AutoTimerCheckbox:GetWidth() or 24) + math.ceil(AutoTimerLabel:GetStringWidth() or 0) + 2
     local totalWidth = autoTimerBlockWidth
         + BUTTON_GAP + ReadyCheckButton:GetWidth()
-        + BUTTON_GAP + StartButton:GetWidth()
         + BUTTON_GAP + PullTimerButton:GetWidth()
+        + BUTTON_GAP + StartButton:GetWidth()
     local buttonHeight = math.max(ReadyCheckButton:GetHeight() or 0, StartButton:GetHeight() or 0, PullTimerButton:GetHeight() or 0)
 
     ButtonsContainer:ClearAllPoints()
@@ -304,8 +350,8 @@ local function PositionKeystoneButtons()
     AutoTimerCheckbox:SetPoint("LEFT", ButtonsContainer, "LEFT", 0, 0)
     AutoTimerLabel:SetPoint("LEFT", AutoTimerCheckbox, "RIGHT", 0, 1)
     ReadyCheckButton:SetPoint("LEFT", ButtonsContainer, "LEFT", autoTimerBlockWidth + BUTTON_GAP, 0)
-    StartButton:SetPoint("LEFT", ReadyCheckButton, "RIGHT", BUTTON_GAP, 0)
-    PullTimerButton:SetPoint("LEFT", StartButton, "RIGHT", BUTTON_GAP, 0)
+    PullTimerButton:SetPoint("LEFT", ReadyCheckButton, "RIGHT", BUTTON_GAP, 0)
+    StartButton:SetPoint("LEFT", PullTimerButton, "RIGHT", BUTTON_GAP, 0)
 end
 
 local function StartAutomaticActivationCountdown()
@@ -364,14 +410,14 @@ RefreshKeystoneButtons = function()
     end
 
     UpdateOriginalStartButtonVisibility()
-    AutoTimerLabel:SetText(L("KEYSTONE_ACTIONS_AUTOTIMER"))
+    AutoTimerLabel:SetText(L("KEYSTONE_ACTIONS_AUTO") or L("KEYSTONE_ACTIONS_AUTOTIMER"))
     AutoTimerCheckbox:SetChecked(Misc.IsKeystoneAutoTimerEnabled())
     ReadyCheckButton:SetText(L("KEYSTONE_ACTIONS_READYCHECK"))
     StartButton:SetText(L("KEYSTONE_ACTIONS_START"))
     PullTimerButton:SetText(countdownRunning and L("KEYSTONE_ACTIONS_CANCEL") or L("KEYSTONE_ACTIONS_PULLTIMER"))
     FitButtonWidth(ReadyCheckButton, 96)
     FitButtonWidth(StartButton, 72)
-    FitButtonWidth(PullTimerButton, countdownRunning and 84 or 108)
+    FitButtonWidth(PullTimerButton, countdownRunning and 84 or 92)
     PositionKeystoneButtons()
 
     if not Misc.IsKeystoneActionsEnabled() then
@@ -577,6 +623,17 @@ KeystoneActionsWatcher:SetScript("OnEvent", function(_, event, ...)
     end
 
     if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+        if event == "PLAYER_ENTERING_WORLD" and PendingKeystoneFrameClose then
+            PendingKeystoneFrameClose = false
+
+            local timerAfter = GetTimerAfterAPI()
+            if type(timerAfter) == "function" then
+                timerAfter(0, CloseKeystoneFrame)
+            else
+                CloseKeystoneFrame()
+            end
+        end
+
         if GetChallengesUILoaded() then
             InitializeChallengesUI()
         else

@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.5`
+- Version: `0.36.6`
 - Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `MinimapCollector` erkennt jetzt aktive Installationen von `Minimap Button Button`
-  - Konflikt-Dialog fuer die Minimap-Button-Verwaltung mit direkter Addon-Auswahl
-  - Patch-Release `0.36.5` auf Basis von `0.36.0`
+  - neues FarmHUD-aehnliches `Minimap-HUD` mit separatem Overlay und festem Minimap-Rahmen oben rechts
+  - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das HUD
+  - Keystone-Fenster schliesst nach Aktivierung automatisch und Buttons sind auf `Bereitschaftscheck`, `Timer`, `Start` umgestellt
 
 ## Download
 

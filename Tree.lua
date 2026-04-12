@@ -717,6 +717,17 @@ local FlightMasterTimerEntry = RegisterModuleEntry(WorldSection, "FLIGHT_MASTER_
     searchTextKeys = { "FLIGHT_MASTER_TIMER_HINT", "FLIGHT_MASTER_TIMER_UNKNOWN" },
     searchAliases = "flight taxi gryphon wyvern flightmaster travel timer arrival countdown",
 })
+local MinimapHudEntry = RegisterModuleEntry(WorldSection, "MINIMAP_HUD", "MinimapHud", {
+    miscSection = "MinimapHud",
+    searchTextKeys = {
+        "MINIMAP_HUD_HINT",
+        "MINIMAP_HUD_TOGGLE_HINT",
+        "MINIMAP_HUD_SIZE",
+        "MINIMAP_HUD_MOUSE_HINT",
+        "MINIMAP_HUD_HIDE_ELEMENTS_HINT",
+    },
+    searchAliases = "farmhud farming gather ore herb mining minimap hud scanner scan center overlay",
+})
 local TooltipItemLevelEntry = RegisterModuleEntry(WindowsSection, "TOOLTIP_ITEMLEVEL", "TooltipItemLevel", {
     tabLabelTextKey = "TOOLTIP_SETTINGS",
     miscSection = "TooltipItemLevel",
@@ -732,6 +743,11 @@ local MacroFrameEntry = RegisterModuleEntry(WindowsSection, "MACRO_FRAME", "Macr
     miscSection = "MacroFrame",
     searchTextKeys = { "MACRO_FRAME_HINT" },
     searchAliases = "macro macros macroframe macro ui window larger bigger",
+})
+local TalentFrameScaleEntry = RegisterModuleEntry(WindowsSection, "TALENT_FRAME_SCALE", "TalentFrameScale", {
+    miscSection = "TalentFrameScale",
+    searchTextKeys = { "TALENT_FRAME_SCALE_HINT", "TALENT_FRAME_SCALE_BUTTON_TOOLTIP" },
+    searchAliases = "talent talents talentframe player spells spellbook scale smaller compact window",
 })
 local ReputationSearchEntry = RegisterModuleEntry(WindowsSection, "REPUTATION_SEARCH", "ReputationSearch", {
     miscSection = "ReputationSearch",
@@ -879,9 +895,12 @@ local TreeLocalizedTextTargets = {
     { target = EasyDeleteEntry.text, textKey = "EASY_DELETE" },
     { target = CutsceneSkipEntry.text, textKey = "CUTSCENE_SKIP" },
     { target = AutoRespawnPetEntry.text, textKey = "AUTO_RESPAWN_PET_TITLE" },
+    { target = FlightMasterTimerEntry.text, textKey = "FLIGHT_MASTER_TIMER" },
+    { target = MinimapHudEntry.text, textKey = "MINIMAP_HUD" },
     { target = TooltipItemLevelEntry.text, textKey = "TOOLTIP_ITEMLEVEL" },
     { target = CameraDistanceEntry.text, textKey = "CAMERA_DISTANCE" },
     { target = MacroFrameEntry.text, textKey = "MACRO_FRAME" },
+    { target = TalentFrameScaleEntry.text, textKey = "TALENT_FRAME_SCALE" },
     { target = ReputationSearchEntry.text, textKey = "REPUTATION_SEARCH" },
     { target = CurrencySearchEntry.text, textKey = "CURRENCY_SEARCH" },
     { target = PreyHuntProgressEntry.text, textKey = "PREY_HUNT_PROGRESS" },
@@ -1142,6 +1161,7 @@ function BeavisQoL.OpenMiscSection(sectionKey)
         CutsceneSkip = "CutsceneSkip",
         AutoRespawnPet = "AutoRespawnPet",
         FlightMasterTimer = "FlightMasterTimer",
+        MinimapHud = "MinimapHud",
         TooltipItemLevel = "TooltipItemLevel",
         CameraDistance = "CameraDistance",
         MacroFrame = "MacroFrame",

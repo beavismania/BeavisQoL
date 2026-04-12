@@ -123,6 +123,7 @@ local DEFAULT_MINIMAP_CONTEXT_MENU_ENTRY_VISIBILITY = {
     markerBar = true,
     streamerPlanner = true,
     easyLFG = true,
+    minimapHud = true,
     portalViewer = true,
     quickHideOverlays = true,
 }

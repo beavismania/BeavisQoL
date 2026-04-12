@@ -171,6 +171,42 @@ local function ToggleEasyLFGOverlay()
     end
 end
 
+local function GetMinimapHudModule()
+    return BeavisQoL.Misc
+end
+
+local function IsMinimapHudEnabled()
+    local minimapHudModule = GetMinimapHudModule()
+    return minimapHudModule and minimapHudModule.IsMinimapHudEnabled and minimapHudModule.IsMinimapHudEnabled() == true
+end
+
+local function IsMinimapHudActive()
+    local minimapHudModule = GetMinimapHudModule()
+    return minimapHudModule and minimapHudModule.IsMinimapHudActive and minimapHudModule.IsMinimapHudActive() == true
+end
+
+local function ToggleMinimapHudOverlay()
+    local minimapHudModule = GetMinimapHudModule()
+    if not minimapHudModule or not minimapHudModule.ToggleMinimapHud or not minimapHudModule.IsMinimapHudActive then
+        return
+    end
+
+    local shouldActivate = not minimapHudModule.IsMinimapHudActive()
+
+    if shouldActivate and minimapHudModule.SetMinimapHudEnabled and minimapHudModule.IsMinimapHudEnabled and not minimapHudModule.IsMinimapHudEnabled() then
+        local didEnable = minimapHudModule.SetMinimapHudEnabled(true)
+        if didEnable == false and not minimapHudModule.IsMinimapHudEnabled() then
+            return
+        end
+    end
+
+    minimapHudModule.ToggleMinimapHud(shouldActivate)
+
+    if BeavisQoL.Pages and BeavisQoL.Pages.Misc and BeavisQoL.Pages.Misc.RefreshState then
+        BeavisQoL.Pages.Misc:RefreshState()
+    end
+end
+
 local function GetQuickHideOverlaysEnabled()
     return BeavisQoL.GetQuickHideOverlaysEnabled and BeavisQoL.GetQuickHideOverlaysEnabled() == true
 end
@@ -273,6 +309,7 @@ local MENU_ITEM_ICONS = {
     stats = "Interface\\ICONS\\Ability_Hunter_MasterMarksman",
     markerBar = "Interface\\ICONS\\INV_Misc_Map_01",
     easyLFG = "Interface\\ICONS\\INV_Misc_GroupLooking",
+    minimapHud = "Interface\\ICONS\\INV_Misc_Spyglass_03",
     quickHide = "Interface\\ICONS\\Ability_Spy",
 }
 
@@ -338,6 +375,7 @@ local function ShowMinimapContextMenu(anchorFrame)
     local hasMarkerBarToggle = BeavisQoL.MarkerBarModule and BeavisQoL.MarkerBarModule.IsOverlayEnabled and BeavisQoL.MarkerBarModule.SetOverlayEnabled
     local hasStreamerPlannerToggle = BeavisQoL.StreamerPlannerModule and BeavisQoL.StreamerPlannerModule.IsOverlayEnabled and BeavisQoL.StreamerPlannerModule.SetOverlayEnabled
     local hasEasyLFGToggle = BeavisQoL.LFG and BeavisQoL.LFG.IsEasyLFGEnabled and BeavisQoL.LFG.SetEasyLFGEnabled
+    local hasMinimapHudToggle = GetMinimapHudModule() and GetMinimapHudModule().ToggleMinimapHud and GetMinimapHudModule().IsMinimapHudActive
     local showLevelTimeEntry = IsMinimapContextEntryVisible("levelTime")
     local showItemLevelGuideEntry = IsMinimapContextEntryVisible("itemLevelGuide")
     local showQuestCheckEntry = IsMinimapContextEntryVisible("questCheck")
@@ -349,6 +387,7 @@ local function ShowMinimapContextMenu(anchorFrame)
     local showMarkerBarEntry = IsMinimapContextEntryVisible("markerBar")
     local showStreamerPlannerEntry = IsMinimapContextEntryVisible("streamerPlanner")
     local showEasyLFGEntry = IsMinimapContextEntryVisible("easyLFG")
+    local showMinimapHudEntry = IsMinimapContextEntryVisible("minimapHud")
     local showPortalViewerEntry = IsMinimapContextEntryVisible("portalViewer")
     local showQuickHideEntry = IsMinimapContextEntryVisible("quickHideOverlays")
     local hasQuickViewEntries = showPortalViewerEntry or showChecklistEntry or showStreamerPlannerEntry or showLevelTimeEntry or showItemLevelGuideEntry or showQuestCheckEntry or showQuestAbandonEntry or showLoggingEntry
@@ -356,6 +395,7 @@ local function ShowMinimapContextMenu(anchorFrame)
         or (hasStatsToggle and showStatsEntry)
         or (hasMarkerBarToggle and showMarkerBarEntry)
         or (hasEasyLFGToggle and showEasyLFGEntry)
+        or (hasMinimapHudToggle and showMinimapHudEntry)
         or showQuickHideEntry
 
     if MenuUtil and MenuUtil.CreateContextMenu then
@@ -549,6 +589,18 @@ local function ShowMinimapContextMenu(anchorFrame)
                         end,
                         function()
                             ToggleEasyLFGOverlay()
+                        end
+                    )
+                end
+
+                if hasMinimapHudToggle and showMinimapHudEntry then
+                    rootDescription:CreateCheckbox(
+                        WithMenuIcon("minimapHud", L("MINIMAP_HUD")),
+                        function()
+                            return IsMinimapHudActive()
+                        end,
+                        function()
+                            ToggleMinimapHudOverlay()
                         end
                     )
                 end
@@ -768,6 +820,9 @@ local function ShowMinimapContextMenu(anchorFrame)
     AddToggleEntry(hasEasyLFGToggle and showEasyLFGEntry, WithMenuIcon("easyLFG", L("MINIMAP_EASY_LFG_SHOW")), IsEasyLFGOverlayEnabled(), not hasEasyLFGToggle, function()
         ToggleEasyLFGOverlay()
     end)
+    AddToggleEntry(hasMinimapHudToggle and showMinimapHudEntry, WithMenuIcon("minimapHud", L("MINIMAP_HUD")), IsMinimapHudActive(), not hasMinimapHudToggle, function()
+        ToggleMinimapHudOverlay()
+    end)
     AddQuickHideEntries(showQuickHideEntry)
 
     if CloseDropDownMenus then
@@ -791,6 +846,8 @@ local launcher = LDB:NewDataObject(ADDON_NAME, {
         -- Shift hat Vorrang, damit der schnelle Reload immer klappt.
         if IsShiftKeyDown() then
             ReloadUI()
+        elseif IsControlKeyDown() and button == "LeftButton" then
+            ToggleMinimapHudOverlay()
         elseif button == "LeftButton" then
             ToggleMainWindow()
         elseif button == "RightButton" then
@@ -810,6 +867,7 @@ local launcher = LDB:NewDataObject(ADDON_NAME, {
         tooltip:AddLine(L("MINIMAP_LEFT_CLICK"), 1, 1, 1)
         tooltip:AddLine(L("MINIMAP_RIGHT_CLICK"), 1, 1, 1)
         tooltip:AddLine(L("MINIMAP_SHIFT_CLICK"), 1, 1, 1)
+        tooltip:AddLine(L("MINIMAP_CTRL_CLICK"), 1, 1, 1)
         tooltip:AddLine(L("MINIMAP_DRAG"), 1, 1, 1)
     end,
 })

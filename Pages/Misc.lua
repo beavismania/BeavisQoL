@@ -10,9 +10,16 @@ local function GetPortalViewerModule()
 end
 
 local talentFrameScaleSliderIsRefreshing = false
+local minimapHudSizeSliderIsRefreshing = false
+local minimapHudAlphaSliderIsRefreshing = false
 
 local function FormatTalentScalePercent(value)
     local numericValue = tonumber(value) or 1
+    return string.format("%d%%", math.floor((numericValue * 100) + 0.5))
+end
+
+local function FormatMinimapHudPercent(value)
+    local numericValue = tonumber(value) or 0
     return string.format("%d%%", math.floor((numericValue * 100) + 0.5))
 end
 
@@ -861,12 +868,275 @@ TalentFrameScaleSlider:SetScript("OnValueChanged", function(self, value)
 end)
 
 -- ========================================
+-- Bereich: Minimap HUD
+-- ========================================
+
+local function CreateMinimapHudSection(contentParent, anchorPanel)
+    local section = {}
+    local rightColumnX = 340
+
+    local panel = CreateFrame("Frame", nil, contentParent)
+    panel:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -18)
+    panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -18)
+    panel:SetHeight(330)
+
+    local background = panel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+
+    local border = panel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+
+    local title = panel:CreateFontString(nil, "OVERLAY")
+    title:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, -14)
+    title:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+    title:SetTextColor(1, 0.88, 0.62, 1)
+    title:SetText(L("MINIMAP_HUD"))
+
+    local checkbox = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    checkbox:SetPoint("TOPLEFT", title, "BOTTOMLEFT", -4, -12)
+
+    local label = panel:CreateFontString(nil, "OVERLAY")
+    label:SetPoint("LEFT", checkbox, "RIGHT", 6, 0)
+    label:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    label:SetTextColor(0.95, 0.91, 0.85, 1)
+    label:SetText(L("ACTIVE"))
+
+    local hint = panel:CreateFontString(nil, "OVERLAY")
+    hint:SetPoint("TOPLEFT", checkbox, "BOTTOMLEFT", 34, -2)
+    hint:SetPoint("RIGHT", panel, "RIGHT", -18, 0)
+    hint:SetJustifyH("LEFT")
+    hint:SetJustifyV("TOP")
+    hint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    hint:SetTextColor(0.78, 0.74, 0.69, 1)
+    hint:SetText(L("MINIMAP_HUD_HINT"))
+
+    local toggleButton = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    toggleButton:SetSize(150, 22)
+    toggleButton:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -14)
+    toggleButton:SetText(L("MINIMAP_HUD_OPEN"))
+
+    local toggleHint = panel:CreateFontString(nil, "OVERLAY")
+    toggleHint:SetPoint("TOPLEFT", toggleButton, "TOPRIGHT", 10, -3)
+    toggleHint:SetPoint("RIGHT", panel, "LEFT", rightColumnX - 26, 0)
+    toggleHint:SetJustifyH("LEFT")
+    toggleHint:SetJustifyV("TOP")
+    toggleHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    toggleHint:SetTextColor(0.72, 0.72, 0.72, 1)
+    toggleHint:SetText(L("MINIMAP_HUD_TOGGLE_HINT"))
+
+    local sizeLabel = panel:CreateFontString(nil, "OVERLAY")
+    sizeLabel:SetPoint("TOPLEFT", toggleButton, "BOTTOMLEFT", 0, -16)
+    sizeLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    sizeLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+    sizeLabel:SetText(L("MINIMAP_HUD_SIZE"))
+
+    local sizeValue = panel:CreateFontString(nil, "OVERLAY")
+    sizeValue:SetPoint("LEFT", sizeLabel, "RIGHT", 10, 0)
+    sizeValue:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    sizeValue:SetTextColor(1, 0.88, 0.62, 1)
+    sizeValue:SetText("58%")
+
+    local sizeSlider = CreateFrame("Slider", "BeavisQoLMiscMinimapHudSizeSlider", panel, "OptionsSliderTemplate")
+    sizeSlider:SetPoint("TOPLEFT", sizeLabel, "BOTTOMLEFT", -4, -16)
+    sizeSlider:SetWidth(190)
+    sizeSlider:SetMinMaxValues(0.35, 0.85)
+    sizeSlider:SetValueStep(0.05)
+    sizeSlider:SetObeyStepOnDrag(true)
+
+    local sliderLow = _G[sizeSlider:GetName() .. "Low"]
+    local sliderHigh = _G[sizeSlider:GetName() .. "High"]
+    local sliderText = _G[sizeSlider:GetName() .. "Text"]
+
+    if sliderLow then
+        sliderLow:SetText("35%")
+    end
+
+    if sliderHigh then
+        sliderHigh:SetText("85%")
+    end
+
+    if sliderText then
+        sliderText:SetText("")
+    end
+
+    sizeSlider:SetScript("OnValueChanged", function(self, value)
+        local normalizedValue = math.floor(((tonumber(value) or 0.58) * 20) + 0.5) / 20
+        if math.abs((value or normalizedValue) - normalizedValue) > 0.001 then
+            self:SetValue(normalizedValue)
+            return
+        end
+
+        if minimapHudSizeSliderIsRefreshing then
+            return
+        end
+
+        if Misc.SetMinimapHudSize then
+            Misc.SetMinimapHudSize(normalizedValue)
+        end
+
+        PageMisc:RefreshState()
+    end)
+
+
+    local mapAlphaLabel = panel:CreateFontString(nil, "OVERLAY")
+    mapAlphaLabel:SetPoint("TOPLEFT", sizeSlider, "BOTTOMLEFT", 0, -14)
+    mapAlphaLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    mapAlphaLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+    mapAlphaLabel:SetText(L("MINIMAP_HUD_MAP_ALPHA"))
+
+    local mapAlphaValue = panel:CreateFontString(nil, "OVERLAY")
+    mapAlphaValue:SetPoint("LEFT", mapAlphaLabel, "RIGHT", 10, 0)
+    mapAlphaValue:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    mapAlphaValue:SetTextColor(1, 0.88, 0.62, 1)
+    mapAlphaValue:SetText("25%")
+
+    local mapAlphaSlider = CreateFrame("Slider", "BeavisQoLMiscMinimapHudAlphaSlider", panel, "OptionsSliderTemplate")
+    mapAlphaSlider:SetPoint("TOPLEFT", mapAlphaLabel, "BOTTOMLEFT", -4, -16)
+    mapAlphaSlider:SetWidth(190)
+    mapAlphaSlider:SetMinMaxValues(0.2, 1.0)
+    mapAlphaSlider:SetValueStep(0.05)
+    mapAlphaSlider:SetObeyStepOnDrag(true)
+
+    local mapAlphaLow = _G[mapAlphaSlider:GetName() .. "Low"]
+    local mapAlphaHigh = _G[mapAlphaSlider:GetName() .. "High"]
+    local mapAlphaText = _G[mapAlphaSlider:GetName() .. "Text"]
+
+    if mapAlphaLow then
+        mapAlphaLow:SetText("20%")
+    end
+
+    if mapAlphaHigh then
+        mapAlphaHigh:SetText("100%")
+    end
+
+    if mapAlphaText then
+        mapAlphaText:SetText("")
+    end
+
+    mapAlphaSlider:SetScript("OnValueChanged", function(self, value)
+        local normalizedValue = math.floor(((tonumber(value) or 0.25) * 20) + 0.5) / 20
+        if math.abs((value or normalizedValue) - normalizedValue) > 0.001 then
+            self:SetValue(normalizedValue)
+            return
+        end
+
+        if minimapHudAlphaSliderIsRefreshing then
+            return
+        end
+
+        if Misc.SetMinimapHudMapAlpha then
+            Misc.SetMinimapHudMapAlpha(normalizedValue)
+        end
+
+        PageMisc:RefreshState()
+    end)
+    local coordsCheckbox = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    coordsCheckbox:SetPoint("TOPLEFT", mapAlphaSlider, "BOTTOMLEFT", 8, -12)
+    coordsCheckbox:SetScale(0.85)
+
+    local coordsLabel = panel:CreateFontString(nil, "OVERLAY")
+    coordsLabel:SetPoint("LEFT", coordsCheckbox, "RIGHT", 4, 0)
+    coordsLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    coordsLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+    coordsLabel:SetText(L("MINIMAP_HUD_COORDS"))
+
+    local mouseCheckbox = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    mouseCheckbox:SetPoint("TOPLEFT", panel, "TOPLEFT", rightColumnX, -132)
+    mouseCheckbox:SetScale(0.85)
+
+    local mouseLabel = panel:CreateFontString(nil, "OVERLAY")
+    mouseLabel:SetPoint("LEFT", mouseCheckbox, "RIGHT", 4, 0)
+    mouseLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    mouseLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+    mouseLabel:SetText(L("MINIMAP_HUD_MOUSE"))
+
+    local mouseHint = panel:CreateFontString(nil, "OVERLAY")
+    mouseHint:SetPoint("TOPLEFT", mouseCheckbox, "BOTTOMLEFT", 30, -4)
+    mouseHint:SetPoint("RIGHT", panel, "RIGHT", -18, 0)
+    mouseHint:SetJustifyH("LEFT")
+    mouseHint:SetJustifyV("TOP")
+    mouseHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    mouseHint:SetTextColor(0.72, 0.72, 0.72, 1)
+    mouseHint:SetText(L("MINIMAP_HUD_MOUSE_HINT"))
+
+    local topRightInfoLabel = panel:CreateFontString(nil, "OVERLAY")
+    topRightInfoLabel:SetPoint("TOPLEFT", mouseHint, "BOTTOMLEFT", 0, -10)
+    topRightInfoLabel:SetPoint("RIGHT", panel, "RIGHT", -18, 0)
+    topRightInfoLabel:SetJustifyH("LEFT")
+    topRightInfoLabel:SetJustifyV("TOP")
+    topRightInfoLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    topRightInfoLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+    topRightInfoLabel:SetText(L("MINIMAP_HUD_TOPRIGHT_MINIMAP"))
+
+    local topRightInfoHint = panel:CreateFontString(nil, "OVERLAY")
+    topRightInfoHint:SetPoint("TOPLEFT", topRightInfoLabel, "BOTTOMLEFT", 0, -4)
+    topRightInfoHint:SetPoint("RIGHT", panel, "RIGHT", -18, 0)
+    topRightInfoHint:SetJustifyH("LEFT")
+    topRightInfoHint:SetJustifyV("TOP")
+    topRightInfoHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    topRightInfoHint:SetTextColor(0.72, 0.72, 0.72, 1)
+    topRightInfoHint:SetText(L("MINIMAP_HUD_TOPRIGHT_MINIMAP_HINT"))
+
+    local minimapContextCheckbox = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    minimapContextCheckbox:SetPoint("TOPLEFT", topRightInfoHint, "BOTTOMLEFT", -30, -10)
+    minimapContextCheckbox:SetScale(0.85)
+
+    local minimapContextLabel = panel:CreateFontString(nil, "OVERLAY")
+    minimapContextLabel:SetPoint("LEFT", minimapContextCheckbox, "RIGHT", 4, 0)
+    minimapContextLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    minimapContextLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+    minimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+
+    local minimapContextHint = panel:CreateFontString(nil, "OVERLAY")
+    minimapContextHint:SetPoint("TOPLEFT", minimapContextCheckbox, "BOTTOMLEFT", 30, -4)
+    minimapContextHint:SetPoint("RIGHT", panel, "RIGHT", -18, 0)
+    minimapContextHint:SetJustifyH("LEFT")
+    minimapContextHint:SetJustifyV("TOP")
+    minimapContextHint:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    minimapContextHint:SetTextColor(0.72, 0.72, 0.72, 1)
+    minimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
+
+    section.Panel = panel
+    section.Title = title
+    section.Checkbox = checkbox
+    section.Label = label
+    section.Hint = hint
+    section.ToggleButton = toggleButton
+    section.ToggleHint = toggleHint
+    section.SizeLabel = sizeLabel
+    section.SizeValue = sizeValue
+    section.SizeSlider = sizeSlider
+    section.MapAlphaLabel = mapAlphaLabel
+    section.MapAlphaValue = mapAlphaValue
+    section.MapAlphaSlider = mapAlphaSlider
+    section.CoordsCheckbox = coordsCheckbox
+    section.CoordsLabel = coordsLabel
+    section.MouseCheckbox = mouseCheckbox
+    section.MouseLabel = mouseLabel
+    section.MouseHint = mouseHint
+    section.TopRightInfoLabel = topRightInfoLabel
+    section.TopRightInfoHint = topRightInfoHint
+    section.MinimapContextCheckbox = minimapContextCheckbox
+    section.MinimapContextLabel = minimapContextLabel
+    section.MinimapContextHint = minimapContextHint
+
+    return section
+end
+
+local MinimapHudSection = CreateMinimapHudSection(PageMiscContent, TalentFrameScalePanel)
+local MinimapHudPanel = MinimapHudSection.Panel
+
+-- ========================================
 -- Bereich: Reputation Search
 -- ========================================
 
 local ReputationSearchPanel = CreateFrame("Frame", nil, PageMiscContent)
-ReputationSearchPanel:SetPoint("TOPLEFT", TalentFrameScalePanel, "BOTTOMLEFT", 0, -18)
-ReputationSearchPanel:SetPoint("TOPRIGHT", TalentFrameScalePanel, "BOTTOMRIGHT", 0, -18)
+ReputationSearchPanel:SetPoint("TOPLEFT", MinimapHudPanel, "BOTTOMLEFT", 0, -18)
+ReputationSearchPanel:SetPoint("TOPRIGHT", MinimapHudPanel, "BOTTOMRIGHT", 0, -18)
 ReputationSearchPanel:SetHeight(115)
 
 local ReputationSearchBg = ReputationSearchPanel:CreateTexture(nil, "BACKGROUND")
@@ -1222,6 +1492,7 @@ local SectionPanels = {
     CameraDistance = CameraDistancePanel,
     MacroFrame = MacroFramePanel,
     TalentFrameScale = TalentFrameScalePanel,
+    MinimapHud = MinimapHudPanel,
     ReputationSearch = ReputationSearchPanel,
     CurrencySearch = CurrencySearchPanel,
     PreyHuntProgress = PreyHuntProgressPanel,
@@ -1242,6 +1513,7 @@ local SectionOrder = {
     "CameraDistance",
     "MacroFrame",
     "TalentFrameScale",
+    "MinimapHud",
     "ReputationSearch",
     "CurrencySearch",
     "PreyHuntProgress",
@@ -1262,6 +1534,7 @@ local SectionMeta = {
     CameraDistance = { titleKey = "CAMERA_DISTANCE", descKey = "CAMERA_DISTANCE_HINT" },
     MacroFrame = { titleKey = "MACRO_FRAME", descKey = "MACRO_FRAME_HINT" },
     TalentFrameScale = { titleKey = "TALENT_FRAME_SCALE", descKey = "TALENT_FRAME_SCALE_HINT" },
+    MinimapHud = { titleKey = "MINIMAP_HUD", descKey = "MINIMAP_HUD_HINT" },
     ReputationSearch = { titleKey = "REPUTATION_SEARCH", descKey = "REPUTATION_SEARCH_HINT" },
     CurrencySearch = { titleKey = "CURRENCY_SEARCH", descKey = "CURRENCY_SEARCH_HINT" },
     PreyHuntProgress = { titleKey = "PREY_HUNT_PROGRESS", descKey = "PREY_HUNT_PROGRESS_HINT" },
@@ -1381,6 +1654,28 @@ PageMisc.Widgets = {
     TalentFrameScaleValueLabel = TalentFrameScaleValueLabel,
     TalentFrameScaleValue = TalentFrameScaleValue,
     TalentFrameScaleSlider = TalentFrameScaleSlider,
+    MinimapHudTitle = MinimapHudSection.Title,
+    MinimapHudLabel = MinimapHudSection.Label,
+    MinimapHudHint = MinimapHudSection.Hint,
+    MinimapHudCheckbox = MinimapHudSection.Checkbox,
+    MinimapHudToggleButton = MinimapHudSection.ToggleButton,
+    MinimapHudToggleHint = MinimapHudSection.ToggleHint,
+    MinimapHudSizeLabel = MinimapHudSection.SizeLabel,
+    MinimapHudSizeValue = MinimapHudSection.SizeValue,
+    MinimapHudSizeSlider = MinimapHudSection.SizeSlider,
+    MinimapHudMapAlphaLabel = MinimapHudSection.MapAlphaLabel,
+    MinimapHudMapAlphaValue = MinimapHudSection.MapAlphaValue,
+    MinimapHudMapAlphaSlider = MinimapHudSection.MapAlphaSlider,
+    MinimapHudCoordsCheckbox = MinimapHudSection.CoordsCheckbox,
+    MinimapHudCoordsLabel = MinimapHudSection.CoordsLabel,
+    MinimapHudMouseCheckbox = MinimapHudSection.MouseCheckbox,
+    MinimapHudMouseLabel = MinimapHudSection.MouseLabel,
+    MinimapHudMouseHint = MinimapHudSection.MouseHint,
+    MinimapHudTopRightInfoLabel = MinimapHudSection.TopRightInfoLabel,
+    MinimapHudTopRightInfoHint = MinimapHudSection.TopRightInfoHint,
+    MinimapHudMinimapContextCheckbox = MinimapHudSection.MinimapContextCheckbox,
+    MinimapHudMinimapContextLabel = MinimapHudSection.MinimapContextLabel,
+    MinimapHudMinimapContextHint = MinimapHudSection.MinimapContextHint,
     ReputationSearchTitle = ReputationSearchTitle,
     ReputationSearchLabel = ReputationSearchLabel,
     ReputationSearchHint = ReputationSearchHint,
@@ -1495,6 +1790,13 @@ function PageMisc:RefreshState()
     local macroFrameEnabled = false
     local talentFrameScaleEnabled = false
     local talentFrameScale = 1
+    local minimapHudEnabled = false
+    local minimapHudActive = false
+    local minimapHudSize = 0.58
+    local minimapHudMapAlpha = 0.25
+    local minimapHudCoordinatesShown = true
+    local minimapHudMouseEnabled = false
+    local minimapHudMinimapVisible = true
     local reputationSearchEnabled = false
     local currencySearchEnabled = false
     local preyHuntProgressEnabled = false
@@ -1582,6 +1884,34 @@ function PageMisc:RefreshState()
 
     if Misc.GetTalentFrameScale then
         talentFrameScale = Misc.GetTalentFrameScale()
+    end
+
+    if Misc.IsMinimapHudEnabled then
+        minimapHudEnabled = Misc.IsMinimapHudEnabled()
+    end
+
+    if Misc.IsMinimapHudActive then
+        minimapHudActive = Misc.IsMinimapHudActive()
+    end
+
+    if Misc.GetMinimapHudSize then
+        minimapHudSize = Misc.GetMinimapHudSize()
+    end
+
+    if Misc.GetMinimapHudMapAlpha then
+        minimapHudMapAlpha = Misc.GetMinimapHudMapAlpha()
+    end
+
+    if Misc.IsMinimapHudCoordinatesShown then
+        minimapHudCoordinatesShown = Misc.IsMinimapHudCoordinatesShown()
+    end
+
+    if Misc.IsMinimapHudMouseEnabled then
+        minimapHudMouseEnabled = Misc.IsMinimapHudMouseEnabled()
+    end
+
+    if BeavisQoL.IsMinimapContextMenuEntryVisible then
+        minimapHudMinimapVisible = BeavisQoL.IsMinimapContextMenuEntryVisible("minimapHud")
     end
 
     if Misc.IsReputationSearchEnabled then
@@ -1692,6 +2022,26 @@ function PageMisc:RefreshState()
     widgets.TalentFrameScaleHint:SetText(L("TALENT_FRAME_SCALE_HINT"))
     widgets.TalentFrameScaleValueLabel:SetText(L("WINDOW_SCALE"))
     widgets.TalentFrameScaleValue:SetText(FormatTalentScalePercent(talentFrameScale))
+    widgets.MinimapHudTitle:SetText(L("MINIMAP_HUD"))
+    widgets.MinimapHudLabel:SetText(L("ACTIVE"))
+    widgets.MinimapHudHint:SetText(L("MINIMAP_HUD_HINT"))
+    if minimapHudActive then
+        widgets.MinimapHudToggleButton:SetText(L("MINIMAP_HUD_CLOSE"))
+    else
+        widgets.MinimapHudToggleButton:SetText(L("MINIMAP_HUD_OPEN"))
+    end
+    widgets.MinimapHudToggleHint:SetText(L("MINIMAP_HUD_TOGGLE_HINT"))
+    widgets.MinimapHudSizeLabel:SetText(L("MINIMAP_HUD_SIZE"))
+    widgets.MinimapHudSizeValue:SetText(FormatMinimapHudPercent(minimapHudSize))
+    widgets.MinimapHudMapAlphaLabel:SetText(L("MINIMAP_HUD_MAP_ALPHA"))
+    widgets.MinimapHudMapAlphaValue:SetText(FormatMinimapHudPercent(minimapHudMapAlpha))
+    widgets.MinimapHudCoordsLabel:SetText(L("MINIMAP_HUD_COORDS"))
+    widgets.MinimapHudMouseLabel:SetText(L("MINIMAP_HUD_MOUSE"))
+    widgets.MinimapHudMouseHint:SetText(L("MINIMAP_HUD_MOUSE_HINT"))
+    widgets.MinimapHudTopRightInfoLabel:SetText(L("MINIMAP_HUD_TOPRIGHT_MINIMAP"))
+    widgets.MinimapHudTopRightInfoHint:SetText(L("MINIMAP_HUD_TOPRIGHT_MINIMAP_HINT"))
+    widgets.MinimapHudMinimapContextLabel:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
+    widgets.MinimapHudMinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
     widgets.ReputationSearchTitle:SetText(L("REPUTATION_SEARCH"))
     widgets.ReputationSearchLabel:SetText(L("ACTIVE"))
     widgets.ReputationSearchHint:SetText(L("REPUTATION_SEARCH_HINT"))
@@ -1739,6 +2089,16 @@ function PageMisc:RefreshState()
     talentFrameScaleSliderIsRefreshing = true
     widgets.TalentFrameScaleSlider:SetValue(talentFrameScale)
     talentFrameScaleSliderIsRefreshing = false
+    widgets.MinimapHudCheckbox:SetChecked(minimapHudEnabled)
+    minimapHudSizeSliderIsRefreshing = true
+    widgets.MinimapHudSizeSlider:SetValue(minimapHudSize)
+    minimapHudAlphaSliderIsRefreshing = true
+    widgets.MinimapHudMapAlphaSlider:SetValue(minimapHudMapAlpha)
+    minimapHudAlphaSliderIsRefreshing = false
+    minimapHudSizeSliderIsRefreshing = false
+    widgets.MinimapHudCoordsCheckbox:SetChecked(minimapHudCoordinatesShown)
+    widgets.MinimapHudMouseCheckbox:SetChecked(minimapHudMouseEnabled)
+    widgets.MinimapHudMinimapContextCheckbox:SetChecked(minimapHudMinimapVisible)
     widgets.ReputationSearchCheckbox:SetChecked(reputationSearchEnabled)
     widgets.CurrencySearchCheckbox:SetChecked(currencySearchEnabled)
     widgets.PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
@@ -1770,6 +2130,18 @@ function PageMisc:RefreshState()
     else
         widgets.TalentFrameScaleSlider:Disable()
     end
+    widgets.MinimapHudToggleButton:SetEnabled(minimapHudEnabled)
+    widgets.MinimapHudSizeSlider:SetAlpha(minimapHudEnabled and 1 or 0.5)
+    widgets.MinimapHudMapAlphaSlider:SetAlpha(minimapHudEnabled and 1 or 0.5)
+    widgets.MinimapHudCoordsCheckbox:SetEnabled(minimapHudEnabled)
+    widgets.MinimapHudMouseCheckbox:SetEnabled(minimapHudEnabled)
+    if minimapHudEnabled then
+        widgets.MinimapHudSizeSlider:Enable()
+        widgets.MinimapHudMapAlphaSlider:Enable()
+    else
+        widgets.MinimapHudSizeSlider:Disable()
+        widgets.MinimapHudMapAlphaSlider:Disable()
+    end
     if keystoneActionsEnabled then
         widgets.KeystoneActionsSecondsInput:Enable()
     else
@@ -1798,6 +2170,33 @@ function PageMisc:RefreshState()
         widgets.TalentFrameScaleValueLabel:SetTextColor(0.50, 0.50, 0.50, 1)
         widgets.TalentFrameScaleValue:SetTextColor(0.55, 0.55, 0.55, 1)
     end
+
+    if minimapHudEnabled then
+        widgets.MinimapHudSizeLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.MinimapHudMapAlphaLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.MinimapHudMapAlphaValue:SetTextColor(1, 0.88, 0.62, 1)
+        widgets.MinimapHudSizeValue:SetTextColor(1, 0.88, 0.62, 1)
+        widgets.MinimapHudCoordsLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.MinimapHudMouseLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.MinimapHudTopRightInfoLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.MinimapHudToggleHint:SetTextColor(0.72, 0.72, 0.72, 1)
+        widgets.MinimapHudMouseHint:SetTextColor(0.72, 0.72, 0.72, 1)
+        widgets.MinimapHudTopRightInfoHint:SetTextColor(0.72, 0.72, 0.72, 1)
+    else
+        widgets.MinimapHudSizeLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.MinimapHudMapAlphaLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.MinimapHudMapAlphaValue:SetTextColor(0.55, 0.55, 0.55, 1)
+        widgets.MinimapHudSizeValue:SetTextColor(0.55, 0.55, 0.55, 1)
+        widgets.MinimapHudCoordsLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.MinimapHudMouseLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.MinimapHudTopRightInfoLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.MinimapHudToggleHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.MinimapHudMouseHint:SetTextColor(0.45, 0.45, 0.45, 1)
+        widgets.MinimapHudTopRightInfoHint:SetTextColor(0.45, 0.45, 0.45, 1)
+    end
+
+    widgets.MinimapHudMinimapContextLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+    widgets.MinimapHudMinimapContextHint:SetTextColor(0.72, 0.72, 0.72, 1)
 
     if flightMasterTimerEnabled then
         widgets.FlightMasterTimerSoundLabel:SetTextColor(0.95, 0.91, 0.85, 1)
@@ -2090,6 +2489,46 @@ end)
 TalentFrameScaleCheckbox:SetScript("OnClick", function(self)
     if Misc.SetTalentFrameScaleEnabled then
         Misc.SetTalentFrameScaleEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+MinimapHudSection.Checkbox:SetScript("OnClick", function(self)
+    if Misc.SetMinimapHudEnabled then
+        Misc.SetMinimapHudEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+MinimapHudSection.ToggleButton:SetScript("OnClick", function()
+    if Misc.ToggleMinimapHud then
+        Misc.ToggleMinimapHud()
+    end
+
+    PageMisc:RefreshState()
+end)
+
+MinimapHudSection.CoordsCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetMinimapHudCoordinatesShown then
+        Misc.SetMinimapHudCoordinatesShown(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+MinimapHudSection.MouseCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetMinimapHudMouseEnabled then
+        Misc.SetMinimapHudMouseEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+MinimapHudSection.MinimapContextCheckbox:SetScript("OnClick", function(self)
+    if BeavisQoL.SetMinimapContextMenuEntryVisible then
+        BeavisQoL.SetMinimapContextMenuEntryVisible("minimapHud", self:GetChecked())
     end
 
     PageMisc:RefreshState()
