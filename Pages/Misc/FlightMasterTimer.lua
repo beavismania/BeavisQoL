@@ -33,6 +33,7 @@ local DEFAULT_ARRIVAL_SOUND_KEY = "builtin:squire_horn"
 local KHAZ_ALGAR_MAP_ID = 2274
 local KHAZ_ALGAR_FLIGHT_MASTER_ACHIEVEMENT_ID = 40430
 local RIDE_LIKE_THE_WIND_SPELL_ID = 117983
+local WORLD_MAP_UI_ADDON_NAME = "Blizzard_WorldMap"
 local FLIGHT_TIMER_UPDATE_INTERVAL = 0.05
 local DEFAULT_OVERLAY_POINT = "CENTER"
 local DEFAULT_OVERLAY_RELATIVE_POINT = "CENTER"
@@ -56,6 +57,7 @@ local DurationGraphFactionKey = nil
 local DurationGraphAverageEdgeDuration = nil
 local StandardSpecialFlightHookInstalled = false
 local ImmersionSpecialFlightHookInstalled = false
+local WorldMapHooksInstalled = false
 local BUILTIN_ARRIVAL_SOUND_OPTIONS = {
     {
         key = DEFAULT_ARRIVAL_SOUND_KEY,
@@ -598,6 +600,23 @@ local function UpdateOverlayLockState()
     local isUnlocked = Misc.IsFlightMasterTimerLocked() ~= true
     OverlayFrame:SetMovable(isUnlocked)
     OverlayFrame:EnableMouse(isUnlocked)
+end
+
+local function SafeIsFrameShown(frame)
+    if not frame or not frame.IsShown then
+        return false
+    end
+
+    local ok, isShown = pcall(frame.IsShown, frame)
+    if not ok then
+        return false
+    end
+
+    return isShown == true
+end
+
+local function IsWorldMapShown()
+    return SafeIsFrameShown(rawget(_G, "WorldMapFrame"))
 end
 
 function Misc.SetFlightMasterTimerLocked(locked)
@@ -1606,6 +1625,11 @@ RefreshOverlay = function()
         return
     end
 
+    if IsWorldMapShown() then
+        HideOverlay()
+        return
+    end
+
     local frame = EnsureOverlayFrame()
     frame.ElapsedSinceUpdate = FLIGHT_TIMER_UPDATE_INTERVAL
     frame:Show()
@@ -1839,6 +1863,27 @@ local function InstallTakeTaxiNodeHook()
     TakeTaxiNodeHookInstalled = true
 end
 
+local function InstallWorldMapHooks()
+    if WorldMapHooksInstalled then
+        return
+    end
+
+    local worldMapFrame = rawget(_G, "WorldMapFrame")
+    if not worldMapFrame or not worldMapFrame.HookScript then
+        return
+    end
+
+    worldMapFrame:HookScript("OnShow", function()
+        HideOverlay()
+    end)
+
+    worldMapFrame:HookScript("OnHide", function()
+        RefreshOverlay()
+    end)
+
+    WorldMapHooksInstalled = true
+end
+
 function Misc.SetFlightMasterTimerEnabled(value)
     GetFlightMasterTimerDB().flightMasterTimer = value == true
 
@@ -1863,11 +1908,20 @@ FlightMasterWatcher:RegisterEvent("PLAYER_CONTROL_GAINED")
 FlightMasterWatcher:RegisterEvent("TAXIMAP_OPENED")
 FlightMasterWatcher:RegisterEvent("TAXIMAP_CLOSED")
 FlightMasterWatcher:RegisterEvent("GOSSIP_SHOW")
+FlightMasterWatcher:RegisterEvent("ADDON_LOADED")
 
-FlightMasterWatcher:SetScript("OnEvent", function(_, event)
+FlightMasterWatcher:SetScript("OnEvent", function(_, event, arg1)
+    if event == "ADDON_LOADED" then
+        if arg1 == WORLD_MAP_UI_ADDON_NAME then
+            InstallWorldMapHooks()
+        end
+        return
+    end
+
     if event == "PLAYER_LOGIN" then
         InstallTakeTaxiNodeHook()
         InstallSpecialFlightHooks()
+        InstallWorldMapHooks()
         EnsureOverlayFrame()
         return
     end

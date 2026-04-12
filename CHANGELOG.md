@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.36.4 - 2026-04-12
+
+### Hotfix
+
+- `FlightMasterTimer` blendet sein Overlay jetzt aus, solange die Weltkarte geoeffnet ist
+- Flugtimer-Overlay liegt beim Oeffnen der Weltkarte nicht mehr ueber der Map und erscheint nach dem Schliessen wieder normal
+
 ## 0.36.3 - 2026-04-12
 
 ### Hotfix

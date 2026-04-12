@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.3`
+- Version: `0.36.4`
 - Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `AuctionHouse` scannt Blizzard-Frames im Filterpfad jetzt robuster
-  - Favoritengruppen-Kontextmenue im Auktionshaus zeigt den Bearbeiten-Eintrag wieder korrekt an
-  - Patch-Release `0.36.3` auf Basis von `0.36.0`
+  - `FlightMasterTimer` blendet sein Overlay jetzt waehrend der Weltkarte aus
+  - Flugtimer-Overlay liegt nicht mehr ueber der Weltkarte
+  - Patch-Release `0.36.4` auf Basis von `0.36.0`
 
 ## Download
 
