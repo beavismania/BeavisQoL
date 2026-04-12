@@ -9,6 +9,13 @@ local function GetPortalViewerModule()
     return BeavisQoL.PortalViewerModule
 end
 
+local talentFrameScaleSliderIsRefreshing = false
+
+local function FormatTalentScalePercent(value)
+    local numericValue = tonumber(value) or 1
+    return string.format("%d%%", math.floor((numericValue * 100) + 0.5))
+end
+
 if not rawget(_G, "UIDropDownMenuTemplate") then
     local dropdownAddonName = "Blizzard_UIDropDownMenu"
     local dropdownAddonExists = not C_AddOns or not C_AddOns.DoesAddOnExist or C_AddOns.DoesAddOnExist(dropdownAddonName)
@@ -758,12 +765,108 @@ MacroFrameHint:SetTextColor(0.78, 0.74, 0.69, 1)
 MacroFrameHint:SetText(L("MACRO_FRAME_HINT"))
 
 -- ========================================
+-- Bereich: Talent Frame Scale
+-- ========================================
+
+local TalentFrameScalePanel = CreateFrame("Frame", nil, PageMiscContent)
+TalentFrameScalePanel:SetPoint("TOPLEFT", MacroFramePanel, "BOTTOMLEFT", 0, -18)
+TalentFrameScalePanel:SetPoint("TOPRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, -18)
+TalentFrameScalePanel:SetHeight(186)
+
+local TalentFrameScaleBg = TalentFrameScalePanel:CreateTexture(nil, "BACKGROUND")
+TalentFrameScaleBg:SetAllPoints()
+TalentFrameScaleBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+
+local TalentFrameScaleBorder = TalentFrameScalePanel:CreateTexture(nil, "ARTWORK")
+TalentFrameScaleBorder:SetPoint("BOTTOMLEFT", TalentFrameScalePanel, "BOTTOMLEFT", 0, 0)
+TalentFrameScaleBorder:SetPoint("BOTTOMRIGHT", TalentFrameScalePanel, "BOTTOMRIGHT", 0, 0)
+TalentFrameScaleBorder:SetHeight(1)
+TalentFrameScaleBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+
+local TalentFrameScaleTitle = TalentFrameScalePanel:CreateFontString(nil, "OVERLAY")
+TalentFrameScaleTitle:SetPoint("TOPLEFT", TalentFrameScalePanel, "TOPLEFT", 18, -14)
+TalentFrameScaleTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+TalentFrameScaleTitle:SetTextColor(1, 0.88, 0.62, 1)
+TalentFrameScaleTitle:SetText(L("TALENT_FRAME_SCALE"))
+
+local TalentFrameScaleCheckbox = CreateFrame("CheckButton", nil, TalentFrameScalePanel, "UICheckButtonTemplate")
+TalentFrameScaleCheckbox:SetPoint("TOPLEFT", TalentFrameScaleTitle, "BOTTOMLEFT", -4, -12)
+
+local TalentFrameScaleLabel = TalentFrameScalePanel:CreateFontString(nil, "OVERLAY")
+TalentFrameScaleLabel:SetPoint("LEFT", TalentFrameScaleCheckbox, "RIGHT", 6, 0)
+TalentFrameScaleLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TalentFrameScaleLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+TalentFrameScaleLabel:SetText(L("ACTIVE"))
+
+local TalentFrameScaleHint = TalentFrameScalePanel:CreateFontString(nil, "OVERLAY")
+TalentFrameScaleHint:SetPoint("TOPLEFT", TalentFrameScaleCheckbox, "BOTTOMLEFT", 34, -2)
+TalentFrameScaleHint:SetPoint("RIGHT", TalentFrameScalePanel, "RIGHT", -18, 0)
+TalentFrameScaleHint:SetJustifyH("LEFT")
+TalentFrameScaleHint:SetJustifyV("TOP")
+TalentFrameScaleHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TalentFrameScaleHint:SetTextColor(0.78, 0.74, 0.69, 1)
+TalentFrameScaleHint:SetText(L("TALENT_FRAME_SCALE_HINT"))
+
+local TalentFrameScaleValueLabel = TalentFrameScalePanel:CreateFontString(nil, "OVERLAY")
+TalentFrameScaleValueLabel:SetPoint("TOPLEFT", TalentFrameScaleHint, "BOTTOMLEFT", 0, -14)
+TalentFrameScaleValueLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+TalentFrameScaleValueLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+TalentFrameScaleValueLabel:SetText(L("WINDOW_SCALE"))
+
+local TalentFrameScaleValue = TalentFrameScalePanel:CreateFontString(nil, "OVERLAY")
+TalentFrameScaleValue:SetPoint("LEFT", TalentFrameScaleValueLabel, "RIGHT", 10, 0)
+TalentFrameScaleValue:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+TalentFrameScaleValue:SetTextColor(1, 0.88, 0.62, 1)
+TalentFrameScaleValue:SetText("100%")
+
+local TalentFrameScaleSlider = CreateFrame("Slider", "BeavisQoLMiscTalentFrameScaleSlider", TalentFrameScalePanel, "OptionsSliderTemplate")
+TalentFrameScaleSlider:SetPoint("TOPLEFT", TalentFrameScaleValueLabel, "BOTTOMLEFT", -4, -16)
+TalentFrameScaleSlider:SetWidth(190)
+TalentFrameScaleSlider:SetMinMaxValues(0.50, 1.50)
+TalentFrameScaleSlider:SetValueStep(0.05)
+TalentFrameScaleSlider:SetObeyStepOnDrag(true)
+
+local TalentFrameScaleSliderLow = _G[TalentFrameScaleSlider:GetName() .. "Low"]
+local TalentFrameScaleSliderHigh = _G[TalentFrameScaleSlider:GetName() .. "High"]
+local TalentFrameScaleSliderText = _G[TalentFrameScaleSlider:GetName() .. "Text"]
+
+if TalentFrameScaleSliderLow then
+    TalentFrameScaleSliderLow:SetText("50%")
+end
+
+if TalentFrameScaleSliderHigh then
+    TalentFrameScaleSliderHigh:SetText("150%")
+end
+
+if TalentFrameScaleSliderText then
+    TalentFrameScaleSliderText:SetText("")
+end
+
+TalentFrameScaleSlider:SetScript("OnValueChanged", function(self, value)
+    local normalizedValue = math.floor(((tonumber(value) or 1) * 20) + 0.5) / 20
+    if math.abs((value or normalizedValue) - normalizedValue) > 0.001 then
+        self:SetValue(normalizedValue)
+        return
+    end
+
+    if talentFrameScaleSliderIsRefreshing then
+        return
+    end
+
+    if Misc.SetTalentFrameScale then
+        Misc.SetTalentFrameScale(normalizedValue)
+    end
+
+    PageMisc:RefreshState()
+end)
+
+-- ========================================
 -- Bereich: Reputation Search
 -- ========================================
 
 local ReputationSearchPanel = CreateFrame("Frame", nil, PageMiscContent)
-ReputationSearchPanel:SetPoint("TOPLEFT", MacroFramePanel, "BOTTOMLEFT", 0, -18)
-ReputationSearchPanel:SetPoint("TOPRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, -18)
+ReputationSearchPanel:SetPoint("TOPLEFT", TalentFrameScalePanel, "BOTTOMLEFT", 0, -18)
+ReputationSearchPanel:SetPoint("TOPRIGHT", TalentFrameScalePanel, "BOTTOMRIGHT", 0, -18)
 ReputationSearchPanel:SetHeight(115)
 
 local ReputationSearchBg = ReputationSearchPanel:CreateTexture(nil, "BACKGROUND")
@@ -1118,6 +1221,7 @@ local SectionPanels = {
     TooltipItemLevel = TooltipItemLevelPanel,
     CameraDistance = CameraDistancePanel,
     MacroFrame = MacroFramePanel,
+    TalentFrameScale = TalentFrameScalePanel,
     ReputationSearch = ReputationSearchPanel,
     CurrencySearch = CurrencySearchPanel,
     PreyHuntProgress = PreyHuntProgressPanel,
@@ -1137,6 +1241,7 @@ local SectionOrder = {
     "TooltipItemLevel",
     "CameraDistance",
     "MacroFrame",
+    "TalentFrameScale",
     "ReputationSearch",
     "CurrencySearch",
     "PreyHuntProgress",
@@ -1156,6 +1261,7 @@ local SectionMeta = {
     TooltipItemLevel = { titleKey = "TOOLTIP_ITEMLEVEL", descKey = "TOOLTIP_ITEMLEVEL_HINT" },
     CameraDistance = { titleKey = "CAMERA_DISTANCE", descKey = "CAMERA_DISTANCE_HINT" },
     MacroFrame = { titleKey = "MACRO_FRAME", descKey = "MACRO_FRAME_HINT" },
+    TalentFrameScale = { titleKey = "TALENT_FRAME_SCALE", descKey = "TALENT_FRAME_SCALE_HINT" },
     ReputationSearch = { titleKey = "REPUTATION_SEARCH", descKey = "REPUTATION_SEARCH_HINT" },
     CurrencySearch = { titleKey = "CURRENCY_SEARCH", descKey = "CURRENCY_SEARCH_HINT" },
     PreyHuntProgress = { titleKey = "PREY_HUNT_PROGRESS", descKey = "PREY_HUNT_PROGRESS_HINT" },
@@ -1268,6 +1374,13 @@ PageMisc.Widgets = {
     MacroFrameLabel = MacroFrameLabel,
     MacroFrameHint = MacroFrameHint,
     MacroFrameCheckbox = MacroFrameCheckbox,
+    TalentFrameScaleTitle = TalentFrameScaleTitle,
+    TalentFrameScaleLabel = TalentFrameScaleLabel,
+    TalentFrameScaleHint = TalentFrameScaleHint,
+    TalentFrameScaleCheckbox = TalentFrameScaleCheckbox,
+    TalentFrameScaleValueLabel = TalentFrameScaleValueLabel,
+    TalentFrameScaleValue = TalentFrameScaleValue,
+    TalentFrameScaleSlider = TalentFrameScaleSlider,
     ReputationSearchTitle = ReputationSearchTitle,
     ReputationSearchLabel = ReputationSearchLabel,
     ReputationSearchHint = ReputationSearchHint,
@@ -1380,6 +1493,8 @@ function PageMisc:RefreshState()
     local flightMasterTimerPreviewVisible = false
     local tooltipItemLevelEnabled = false
     local macroFrameEnabled = false
+    local talentFrameScaleEnabled = false
+    local talentFrameScale = 1
     local reputationSearchEnabled = false
     local currencySearchEnabled = false
     local preyHuntProgressEnabled = false
@@ -1459,6 +1574,14 @@ function PageMisc:RefreshState()
 
     if Misc.IsLargeMacroFrameEnabled then
         macroFrameEnabled = Misc.IsLargeMacroFrameEnabled()
+    end
+
+    if Misc.IsTalentFrameScaleEnabled then
+        talentFrameScaleEnabled = Misc.IsTalentFrameScaleEnabled()
+    end
+
+    if Misc.GetTalentFrameScale then
+        talentFrameScale = Misc.GetTalentFrameScale()
     end
 
     if Misc.IsReputationSearchEnabled then
@@ -1564,6 +1687,11 @@ function PageMisc:RefreshState()
     widgets.MacroFrameTitle:SetText(L("MACRO_FRAME"))
     widgets.MacroFrameLabel:SetText(L("ACTIVE"))
     widgets.MacroFrameHint:SetText(L("MACRO_FRAME_HINT"))
+    widgets.TalentFrameScaleTitle:SetText(L("TALENT_FRAME_SCALE"))
+    widgets.TalentFrameScaleLabel:SetText(L("ACTIVE"))
+    widgets.TalentFrameScaleHint:SetText(L("TALENT_FRAME_SCALE_HINT"))
+    widgets.TalentFrameScaleValueLabel:SetText(L("WINDOW_SCALE"))
+    widgets.TalentFrameScaleValue:SetText(FormatTalentScalePercent(talentFrameScale))
     widgets.ReputationSearchTitle:SetText(L("REPUTATION_SEARCH"))
     widgets.ReputationSearchLabel:SetText(L("ACTIVE"))
     widgets.ReputationSearchHint:SetText(L("REPUTATION_SEARCH_HINT"))
@@ -1607,6 +1735,10 @@ function PageMisc:RefreshState()
     widgets.FlightMasterTimerLockCheckbox:SetChecked(flightMasterTimerLocked)
     widgets.TooltipItemLevelCheckbox:SetChecked(tooltipItemLevelEnabled)
     widgets.MacroFrameCheckbox:SetChecked(macroFrameEnabled)
+    widgets.TalentFrameScaleCheckbox:SetChecked(talentFrameScaleEnabled)
+    talentFrameScaleSliderIsRefreshing = true
+    widgets.TalentFrameScaleSlider:SetValue(talentFrameScale)
+    talentFrameScaleSliderIsRefreshing = false
     widgets.ReputationSearchCheckbox:SetChecked(reputationSearchEnabled)
     widgets.CurrencySearchCheckbox:SetChecked(currencySearchEnabled)
     widgets.PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
@@ -1632,6 +1764,12 @@ function PageMisc:RefreshState()
     widgets.FlightMasterTimerResetButton:SetEnabled(flightMasterTimerEnabled)
     widgets.KeystoneActionsGroupLockCheckbox:SetEnabled(keystoneActionsEnabled)
     widgets.PortalViewerLockCheckbox:SetEnabled(portalViewerEnabled)
+    widgets.TalentFrameScaleSlider:SetAlpha(talentFrameScaleEnabled and 1 or 0.5)
+    if talentFrameScaleEnabled then
+        widgets.TalentFrameScaleSlider:Enable()
+    else
+        widgets.TalentFrameScaleSlider:Disable()
+    end
     if keystoneActionsEnabled then
         widgets.KeystoneActionsSecondsInput:Enable()
     else
@@ -1651,6 +1789,14 @@ function PageMisc:RefreshState()
         widgets.AutoRepairGuildLabel:SetTextColor(0.50, 0.50, 0.50, 1)
         widgets.AutoRepairGuildHint:SetTextColor(0.45, 0.45, 0.45, 1)
         widgets.AutoRepairGuildCheckbox:SetChecked(false)
+    end
+
+    if talentFrameScaleEnabled then
+        widgets.TalentFrameScaleValueLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+        widgets.TalentFrameScaleValue:SetTextColor(1, 0.88, 0.62, 1)
+    else
+        widgets.TalentFrameScaleValueLabel:SetTextColor(0.50, 0.50, 0.50, 1)
+        widgets.TalentFrameScaleValue:SetTextColor(0.55, 0.55, 0.55, 1)
     end
 
     if flightMasterTimerEnabled then
@@ -1936,6 +2082,14 @@ end)
 MacroFrameCheckbox:SetScript("OnClick", function(self)
     if Misc.SetLargeMacroFrameEnabled then
         Misc.SetLargeMacroFrameEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+TalentFrameScaleCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetTalentFrameScaleEnabled then
+        Misc.SetTalentFrameScaleEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

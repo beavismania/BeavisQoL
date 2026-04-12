@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.36.0 - 2026-04-12
+
+### Versionshinweis
+
+- `0.36.0` ist der aktuelle Feature-Stand nach `0.35.0`
+- seit `0.35.0` ist ein neues Modul hinzugekommen: `Talentfenster-Skalierung`
+- die mittlere Zahl steigt damit auf `36`, der Hotfix-Zähler steht für diesen Stand auf `0`
+
+### Neue Module
+
+- neues Modul `Talentfenster-Skalierung` ergänzt
+- `Talentfenster-Skalierung` skaliert das Blizzard-Talent- und Zauberbuchfenster direkt im Spiel
+- `Talentfenster-Skalierung` bietet ein separates Skalierungsfenster mit gespeicherter Position
+- `Talentfenster-Skalierung` kann das Blizzard-Fenster fixieren oder zum Verschieben freigeben und merkt sich die Position
+
 ## 0.35.0 - 2026-04-11
 
 ### Versionshinweis

@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.35.0`
-- Release-Datum: `2026-04-11`
+- Version: `0.36.0`
+- Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - neue Module `Listing-Presets`, `Auktionshaus-Favoriten`, `Auktionshaus-Filter`, `Performance-Profiler` und `Chonky Loadout-Dropdown` ergänzt
-  - mehrere bestehende Module in Performance, Stabilität und Bedienung weiter verbessert
-  - `LFG`, `Auktionshaus` und Character-Sheet-Bereiche wurden funktional erweitert
+  - neues Modul `Talentfenster-Skalierung` ergänzt
+  - Blizzard-Talent- und Zauberbuchfenster lassen sich direkt skalieren
+  - separates Skalierungsfenster mit gespeicherter Position und Fixieren/Lösen für das Blizzard-Fenster ergänzt
 
 ## Download
 
@@ -129,6 +129,10 @@ Beispiele:
   - öffnet sich über das Minimap-Schnellmenü
 - `Chonky Loadout-Dropdown`
   - ergänzt bei aktivem `Chonky Character Sheet` eine schnelle Loadout-Auswahl im Charakterfenster
+- `Talentfenster-Skalierung`
+  - skaliert das Blizzard-Talent- und Zauberbuchfenster
+  - bietet ein separates Skalierungsfenster mit gespeicherter Position
+  - kann das Fenster fixieren oder zum Verschieben freigeben
 
 ### Interface & Kampf
 
