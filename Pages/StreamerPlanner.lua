@@ -858,10 +858,10 @@ local function IsUsablePlainStringInternal(value, depth)
     if type(value) ~= "string" then
         return false
     end
-    if #value > MAX_STRING_LENGTH then
+    if PlannerPrivate.IsSecretValue(value) then
         return false
     end
-    if PlannerPrivate.IsSecretValue(value) then
+    if #value > MAX_STRING_LENGTH then
         return false
     end
     return value ~= ""

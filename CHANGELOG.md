@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.36.1 - 2026-04-12
+
+### Hotfix
+
+- `StreamerPlanner` schützt Battle.net-Whisper-Secret-Strings jetzt sauber vor direkten String-Operationen
+- Taint-/Lua-Fehler bei `BN_WHISPER` und anderen geheimen Whisper-Werten im `StreamerPlanner` behoben
+
 ## 0.36.0 - 2026-04-12
 
 ### Versionshinweis

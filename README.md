@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.0`
+- Version: `0.36.1`
 - Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - neues Modul `Talentfenster-Skalierung` ergänzt
-  - Blizzard-Talent- und Zauberbuchfenster lassen sich direkt skalieren
-  - separates Skalierungsfenster mit gespeicherter Position und Fixieren/Lösen für das Blizzard-Fenster ergänzt
+  - `StreamerPlanner` schützt Battle.net-Whisper-Secret-Strings jetzt sauber
+  - Taint-/Lua-Fehler bei `BN_WHISPER` im `StreamerPlanner` behoben
+  - Patch-Release `0.36.1` auf Basis von `0.36.0`
 
 ## Download
 
