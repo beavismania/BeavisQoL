@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.36.2 - 2026-04-12
+
+### Hotfix
+
+- `MinimapCollector` sammelt selbstverwaltete Minimap-Buttons jetzt ueber einen separaten Host statt sie direkt unter das Collector-Fenster umzuhängen
+- Anchor-Family-Fehler mit der `TomCats`-MapIcon-Sammlung beim Einsammeln des Minimap-Buttons behoben
+
 ## 0.36.1 - 2026-04-12
 
 ### Hotfix

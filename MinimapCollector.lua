@@ -27,6 +27,7 @@ local MAX_SCALE = 1.40
 local LauncherButton
 local CollectorPanel
 local EmptyText
+local CollectedButtonHost
 local HiddenButtonHost
 local KnownButtons = {}
 local OrderedButtonKeys = {}
@@ -36,6 +37,7 @@ local LastKnownButtonsSignature = ""
 local InstalledAddonEntries
 local InstalledAddonByLookup
 local GetButtonMode
+local ApplyCollectedButtonLayout
 
 local function Clamp(value, minValue, maxValue)
     if value < minValue then
@@ -687,16 +689,10 @@ local function LayoutCollectorPanel()
     for index, entry in ipairs(visibleEntries) do
         local columnIndex = (index - 1) % columns
         local rowIndex = math.floor((index - 1) / columns)
-        local button = entry.button
 
-        button:ClearAllPoints()
-        button:SetPoint(
-            "TOPLEFT",
-            CollectorPanel,
-            "TOPLEFT",
-            PANEL_PADDING + (columnIndex * cellWidth),
-            -PANEL_PADDING - (rowIndex * cellHeight)
-        )
+        entry.collectorOffsetX = PANEL_PADDING + (columnIndex * cellWidth)
+        entry.collectorOffsetY = -PANEL_PADDING - (rowIndex * cellHeight)
+        ApplyCollectedButtonLayout(entry)
     end
 
     local panelWidth = (PANEL_PADDING * 2)
@@ -719,6 +715,42 @@ local function ApplyCollectorScale()
     end
 
     UpdateCollectorAnchor()
+
+    for _, entry in pairs(KnownButtons) do
+        if entry and entry.collected then
+            local button = entry.button
+            if button and button.SetScale then
+                button:SetScale(GetWindowScale())
+            end
+        end
+    end
+end
+
+local function EnsureCollectedButtonHost()
+    if CollectedButtonHost then
+        return
+    end
+
+    local host = CreateFrame("Frame", "BeavisQoLMinimapCollectorButtonHost", UIParent)
+    host:SetAllPoints(UIParent)
+    host:SetFrameStrata("HIGH")
+    host:SetFrameLevel(15)
+    host:Hide()
+
+    CollectedButtonHost = host
+end
+
+local function UpdateCollectedButtonHostVisibility()
+    if not CollectedButtonHost then
+        return
+    end
+
+    if CollectorPanel and CollectorPanel:IsShown() and IsEnabled() then
+        CollectedButtonHost:Show()
+        return
+    end
+
+    CollectedButtonHost:Hide()
 end
 
 local function EnsureHiddenButtonHost()
@@ -746,26 +778,108 @@ local function CaptureOriginalButtonState(entry)
     entry.originalPoints = CapturePoints(button)
     entry.originalFrameStrata = button:GetFrameStrata()
     entry.originalFrameLevel = button:GetFrameLevel()
+    entry.originalScale = button.GetScale and button:GetScale() or nil
 end
 
-local function CollectButton(entry)
+ApplyCollectedButtonLayout = function(entry)
     local button = entry and entry.button
-    if not button or not CollectorPanel then
+    if not button or not CollectorPanel or not CollectedButtonHost then
         return
     end
 
-    if button:GetParent() ~= CollectorPanel then
-        if button:GetParent() ~= HiddenButtonHost then
-            CaptureOriginalButtonState(entry)
-        end
-        button:SetParent(CollectorPanel)
+    local offsetX = tonumber(entry.collectorOffsetX)
+    local offsetY = tonumber(entry.collectorOffsetY)
+    if not offsetX or not offsetY then
+        return
+    end
+
+    entry.isApplyingCollectorLayout = true
+
+    if button:GetParent() ~= CollectedButtonHost then
+        button:SetParent(CollectedButtonHost)
     end
 
     button:Show()
     button:SetFrameStrata(CollectorPanel:GetFrameStrata())
     button:SetFrameLevel(CollectorPanel:GetFrameLevel() + 10)
+
+    if button.SetScale then
+        button:SetScale(GetWindowScale())
+    end
+
+    button:ClearAllPoints()
+    button:SetPoint("TOPLEFT", CollectorPanel, "TOPLEFT", offsetX, offsetY)
+
+    entry.isApplyingCollectorLayout = false
+end
+
+local function ScheduleCollectedButtonLayout(entry)
+    if not entry or entry.collectorLayoutScheduled then
+        return
+    end
+
+    entry.collectorLayoutScheduled = true
+
+    local function ApplyDeferredLayout()
+        entry.collectorLayoutScheduled = false
+
+        if entry.collected then
+            ApplyCollectedButtonLayout(entry)
+        end
+    end
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, ApplyDeferredLayout)
+        return
+    end
+
+    ApplyDeferredLayout()
+end
+
+local function EnsureCollectedButtonHooks(entry)
+    local button = entry and entry.button
+    if not button or entry.collectorHookedButton == button or not hooksecurefunc then
+        return
+    end
+
+    entry.collectorHookedButton = button
+
+    hooksecurefunc(button, "SetPoint", function()
+        if entry.isApplyingCollectorLayout or not entry.collected then
+            return
+        end
+
+        ScheduleCollectedButtonLayout(entry)
+    end)
+
+    hooksecurefunc(button, "SetParent", function()
+        if entry.isApplyingCollectorLayout or not entry.collected then
+            return
+        end
+
+        ScheduleCollectedButtonLayout(entry)
+    end)
+end
+
+local function CollectButton(entry)
+    local button = entry and entry.button
+    if not button or not CollectorPanel or not CollectedButtonHost then
+        return
+    end
+
+    EnsureCollectedButtonHooks(entry)
+
+    if button:GetParent() ~= CollectedButtonHost then
+        if button:GetParent() ~= HiddenButtonHost then
+            CaptureOriginalButtonState(entry)
+        end
+        button:SetParent(CollectedButtonHost)
+    end
+
     entry.collected = true
     entry.hidden = false
+
+    ApplyCollectedButtonLayout(entry)
 end
 
 local function HideButton(entry)
@@ -775,7 +889,7 @@ local function HideButton(entry)
     end
 
     if button:GetParent() ~= HiddenButtonHost then
-        if button:GetParent() ~= CollectorPanel then
+        if button:GetParent() ~= CollectedButtonHost then
             CaptureOriginalButtonState(entry)
         end
         button:SetParent(HiddenButtonHost)
@@ -806,10 +920,17 @@ local function RestoreButton(entry)
         button:SetFrameLevel(entry.originalFrameLevel)
     end
 
+    if entry.originalScale and button.SetScale then
+        button:SetScale(entry.originalScale)
+    end
+
     RestorePoints(button, entry.originalPoints, parent)
     button:Show()
     entry.collected = false
     entry.hidden = false
+    entry.collectorOffsetX = nil
+    entry.collectorOffsetY = nil
+    entry.collectorLayoutScheduled = false
 end
 
 local function RestoreAllButtons()
@@ -1115,6 +1236,8 @@ local function EnsureCollectorPanel()
     panel:SetFrameStrata("HIGH")
     panel:SetFrameLevel(LauncherButton:GetFrameLevel() + 5)
     panel:Hide()
+    panel:SetScript("OnShow", UpdateCollectedButtonHostVisibility)
+    panel:SetScript("OnHide", UpdateCollectedButtonHostVisibility)
 
     local background = panel:CreateTexture(nil, "BACKGROUND")
     background:SetAllPoints()
@@ -1188,6 +1311,7 @@ local function UpdateLauncherVisibility()
 
     if IsEnabled() then
         LauncherButton:Show()
+        UpdateCollectedButtonHostVisibility()
         return
     end
 
@@ -1196,6 +1320,7 @@ local function UpdateLauncherVisibility()
     end
 
     LauncherButton:Hide()
+    UpdateCollectedButtonHostVisibility()
 end
 
 function Module.GetButtons()
@@ -1332,6 +1457,7 @@ startupFrame:SetScript("OnEvent", function(_, event, addonName)
 
     CreateLauncher()
     EnsureCollectorPanel()
+    EnsureCollectedButtonHost()
     EnsureHiddenButtonHost()
     UpdateLauncherVisibility()
     ScheduleCollectorRefresh(true)
@@ -1339,6 +1465,7 @@ end)
 
 CreateLauncher()
 EnsureCollectorPanel()
+EnsureCollectedButtonHost()
 EnsureHiddenButtonHost()
 UpdateLauncherVisibility()
 ApplyCollectorScale()

@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.1`
+- Version: `0.36.2`
 - Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `StreamerPlanner` schützt Battle.net-Whisper-Secret-Strings jetzt sauber
-  - Taint-/Lua-Fehler bei `BN_WHISPER` im `StreamerPlanner` behoben
-  - Patch-Release `0.36.1` auf Basis von `0.36.0`
+  - `MinimapCollector` sammelt selbstverwaltete Minimap-Buttons jetzt kompatibler ein
+  - Anchor-Family-Fehler mit der `TomCats`-MapIcon-Sammlung beim Einsammeln behoben
+  - Patch-Release `0.36.2` auf Basis von `0.36.0`
 
 ## Download
 
