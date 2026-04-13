@@ -38,7 +38,6 @@ local COMMON_UNIT_TOKENS = {
 
 local function IsUsablePlayerUnit(unit)
     return type(unit) == "string"
-        and unit ~= ""
         and UnitExists
         and UnitExists(unit)
         and UnitIsPlayer
@@ -162,7 +161,7 @@ local function HasValidInspectFrameUnit(parent)
     end
 
     local unit = inspectParent and inspectParent.unit or nil
-    if type(unit) ~= "string" or unit == "" then
+    if type(unit) ~= "string" then
         return false
     end
 
@@ -297,16 +296,10 @@ end
 
 -- Ermittelt, auf welchen Spieler sich der aktuelle Tooltip bezieht.
 -- Die Funktion arbeitet absichtlich konservativ: lieber kein Treffer als Taint.
--- Im sicheren Tooltip-Callback prüfen wir nur feste Unit-Tokens direkt und
--- lesen weder Tooltip-GUIDs noch Secret-Strings aus den Tooltip-Daten.
+-- Im sicheren Tooltip-Laufweg bleiben wir komplett bei festen Unit-Tokens.
+-- Wir lesen bewusst weder Tooltip-GUIDs noch `tooltip:GetUnit()`, weil Blizzard
+-- dort Secret-Strings liefern kann, die wir nicht vergleichen dürfen.
 local function ResolveTooltipUnit(tooltip, tooltipData)
-    if tooltip and tooltip.GetUnit then
-        local _, tooltipUnit = tooltip:GetUnit()
-        if IsUsablePlayerUnit(tooltipUnit) then
-            return tooltipUnit
-        end
-    end
-
     if IsUsablePlayerUnit("mouseover") then
         return "mouseover"
     end
