@@ -4,11 +4,11 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.12`
+- Version: `0.36.13`
 - Release-Datum: `2026-04-13`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Tooltip-Itemlevel` vermeidet im sicheren Tooltip-Pfad jetzt direkte Vergleiche gegen mögliche Secret-Unit-Strings und löst dadurch keinen Taint-Fehler mehr aus
+  - `Tooltip-Itemlevel` kapselt riskante Unit-/GUID-Zugriffe im sicheren Tooltip-Pfad jetzt zusätzlich defensiv ab, damit Secret-String-Taint nicht an weiteren API-Aufrufen oder Vergleichen hängen bleibt
 
 ## Download
 

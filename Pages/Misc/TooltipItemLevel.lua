@@ -36,14 +36,6 @@ local COMMON_UNIT_TOKENS = {
     "focus",
 }
 
-local function IsUsablePlayerUnit(unit)
-    return type(unit) == "string"
-        and UnitExists
-        and UnitExists(unit)
-        and UnitIsPlayer
-        and UnitIsPlayer(unit)
-end
-
 -- Dieses Modul erweitert die bestehende Misc-Datenbank nur um einen weiteren
 -- Schalter. Die vorhandenen Defaults bleiben deshalb komplett erhalten.
 function Misc.GetMiscDB()
@@ -93,6 +85,81 @@ end
 -- Dadurch entstehen später keine Mischformen wie nil, 0 oder "false".
 function Misc.SetTooltipItemLevelEnabled(value)
     Misc.GetMiscDB().tooltipItemLevel = value and true or false
+end
+
+-- Secret-Strings aus Blizzard-Tooltips können schon in API-Aufrufen oder
+-- Vergleichen Fehler auslösen. Diese Hilfen fangen solche Fälle defensiv ab.
+local function SafeCall(func, ...)
+    if type(func) ~= "function" then
+        return nil
+    end
+
+    local ok, result = pcall(func, ...)
+    if ok then
+        return result
+    end
+
+    return nil
+end
+
+local function SafeUnitExists(unit)
+    return SafeCall(UnitExists, unit) == true
+end
+
+local function SafeUnitIsPlayer(unit)
+    return SafeCall(UnitIsPlayer, unit) == true
+end
+
+local function SafeUnitIsUnit(unitA, unitB)
+    return SafeCall(UnitIsUnit, unitA, unitB) == true
+end
+
+local function SafeCanInspect(unit)
+    return SafeCall(CanInspect, unit) == true
+end
+
+local function SafeUnitGUID(unit)
+    local guid = SafeCall(UnitGUID, unit)
+    if type(guid) == "string" and guid ~= "" then
+        return guid
+    end
+
+    return nil
+end
+
+local function SafeGetInspectItemLevel(unit)
+    if not C_PaperDollInfo or type(C_PaperDollInfo.GetInspectItemLevel) ~= "function" then
+        return nil
+    end
+
+    local itemLevel = SafeCall(C_PaperDollInfo.GetInspectItemLevel, unit)
+    if type(itemLevel) == "number" and itemLevel > 0 then
+        return itemLevel
+    end
+
+    return nil
+end
+
+local function SafeNotifyInspect(unit)
+    SafeCall(NotifyInspect, unit)
+end
+
+local function SafeStringsEqual(left, right)
+    if left == nil or right == nil then
+        return false
+    end
+
+    local ok, isEqual = pcall(function()
+        return left == right
+    end)
+
+    return ok and isEqual == true
+end
+
+local function IsUsablePlayerUnit(unit)
+    return type(unit) == "string"
+        and SafeUnitExists(unit)
+        and SafeUnitIsPlayer(unit)
 end
 
 -- Liefert eine möglichst präzise Zeitbasis.
@@ -165,7 +232,7 @@ local function HasValidInspectFrameUnit(parent)
         return false
     end
 
-    if UnitExists and not UnitExists(unit) then
+    if not SafeUnitExists(unit) then
         return false
     end
 
@@ -342,15 +409,15 @@ local function RequestInspectForTooltip(tooltip, unit)
         return
     end
 
-    if not tooltip or not unit or not UnitExists or not UnitExists(unit) then
+    if not tooltip or not unit or not SafeUnitExists(unit) then
         return
     end
 
-    if not UnitIsPlayer or not UnitIsPlayer(unit) then
+    if not SafeUnitIsPlayer(unit) then
         return
     end
 
-    if UnitIsUnit and UnitIsUnit(unit, "player") then
+    if SafeUnitIsUnit(unit, "player") then
         return
     end
 
@@ -358,7 +425,7 @@ local function RequestInspectForTooltip(tooltip, unit)
         return
     end
 
-    if pendingInspectUnit == unit then
+    if SafeStringsEqual(pendingInspectUnit, unit) then
         SetTooltipItemLevelLine(tooltip, L("TOOLTIP_ITEMLEVEL_LOADING"), 0.8, 0.8, 0.8)
         tooltip:Show()
         return
@@ -372,7 +439,7 @@ local function RequestInspectForTooltip(tooltip, unit)
         return
     end
 
-    if not CanInspect(unit) then
+    if not SafeCanInspect(unit) then
         return
     end
 
@@ -382,10 +449,10 @@ local function RequestInspectForTooltip(tooltip, unit)
     end
 
     pendingInspectUnit = unit
-    pendingInspectGUID = UnitGUID and UnitGUID(unit) or nil
+    pendingInspectGUID = SafeUnitGUID(unit)
     lastInspectRequestTime = now
 
-    NotifyInspect(unit)
+    SafeNotifyInspect(unit)
     SetTooltipItemLevelLine(tooltip, L("TOOLTIP_ITEMLEVEL_LOADING"), 0.8, 0.8, 0.8)
     tooltip:Show()
 end
@@ -399,12 +466,10 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
         return
     end
 
-    if pendingInspectGUID
-        and type(inspecteeGUID) == "string"
-        and inspecteeGUID ~= ""
-        and inspecteeGUID ~= pendingInspectGUID
-    then
-        return
+    if pendingInspectGUID and type(inspecteeGUID) == "string" and inspecteeGUID ~= "" then
+        if not SafeStringsEqual(inspecteeGUID, pendingInspectGUID) then
+            return
+        end
     end
 
     if IsBlizzardInspectFrameActive() then
@@ -417,19 +482,19 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
     end
 
     local unit = pendingInspectUnit
-    if not unit or not UnitExists or not UnitExists(unit) or not C_PaperDollInfo or not C_PaperDollInfo.GetInspectItemLevel then
+    if not unit or not SafeUnitExists(unit) or not C_PaperDollInfo or not C_PaperDollInfo.GetInspectItemLevel then
         ClearPendingInspect()
         return
     end
 
-    local itemLevel = C_PaperDollInfo.GetInspectItemLevel(unit)
-    if itemLevel and itemLevel > 0 then
+    local itemLevel = SafeGetInspectItemLevel(unit)
+    if itemLevel then
         SetCachedItemLevel(unit, itemLevel)
 
         -- Nur wenn der Tooltip noch immer denselben festen Unit-Token benutzt,
         -- schreiben wir das frisch geladene Itemlevel sichtbar hinein.
         local tooltipUnit = ResolveTooltipUnit(GameTooltip, nil)
-        if tooltipUnit and tooltipUnit == unit and Misc.IsTooltipItemLevelEnabled and Misc.IsTooltipItemLevelEnabled() then
+        if tooltipUnit and SafeStringsEqual(tooltipUnit, unit) and Misc.IsTooltipItemLevelEnabled and Misc.IsTooltipItemLevelEnabled() then
             local formattedItemLevel = FormatItemLevel(itemLevel)
             if formattedItemLevel then
                 SetTooltipItemLevelLine(GameTooltip, formattedItemLevel, 0.25, 0.85, 0.25)

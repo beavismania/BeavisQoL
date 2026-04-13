@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.36.13 - 2026-04-13
+
+### Hotfix
+
+- `Tooltip Itemlevel` kapselt gefährdete Unit-/GUID-API-Aufrufe und Vergleiche jetzt zusätzlich defensiv ab, damit Secret-String-Taint nicht nur an einer einzelnen Vergleichsstelle hängen bleibt
+
 ## 0.36.12 - 2026-04-13
 
 ### Hotfix
