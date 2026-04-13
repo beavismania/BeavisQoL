@@ -45,20 +45,6 @@ local function IsUsablePlayerUnit(unit)
         and UnitIsPlayer(unit)
 end
 
-local function FindCommonUnitByGUID(guid)
-    if type(guid) ~= "string" or guid == "" or not UnitGUID then
-        return nil
-    end
-
-    for _, unit in ipairs(COMMON_UNIT_TOKENS) do
-        if IsUsablePlayerUnit(unit) and UnitGUID(unit) == guid then
-            return unit
-        end
-    end
-
-    return nil
-end
-
 -- Dieses Modul erweitert die bestehende Misc-Datenbank nur um einen weiteren
 -- Schalter. Die vorhandenen Defaults bleiben deshalb komplett erhalten.
 function Misc.GetMiscDB()
@@ -312,19 +298,11 @@ end
 -- Ermittelt, auf welchen Spieler sich der aktuelle Tooltip bezieht.
 -- Die Funktion arbeitet absichtlich konservativ: lieber kein Treffer als Taint.
 -- Im sicheren Tooltip-Callback prüfen wir nur feste Unit-Tokens direkt und
--- verzichten komplett auf GUID-Vergleiche.
+-- lesen weder Tooltip-GUIDs noch Secret-Strings aus den Tooltip-Daten.
 local function ResolveTooltipUnit(tooltip, tooltipData)
     if tooltip and tooltip.GetUnit then
         local _, tooltipUnit = tooltip:GetUnit()
         if IsUsablePlayerUnit(tooltipUnit) then
-            return tooltipUnit
-        end
-    end
-
-    if tooltipData then
-        local tooltipGUID = tooltipData.guid or tooltipData.unitGUID
-        local tooltipUnit = FindCommonUnitByGUID(tooltipGUID)
-        if tooltipUnit then
             return tooltipUnit
         end
     end

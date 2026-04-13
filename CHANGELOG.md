@@ -12,7 +12,7 @@
 - das bisherige `GRP-Keys`-Debugfenster ist jetzt eine zentrale `Beavis Debug`-Konsole und lässt sich per `/beavis debug open` für aktuelle Module öffnen
 - das `SmartLFG`-Raider.IO-Panel ist jetzt kompakter, sitzt optisch näher am `SmartLFG`-Fenster und nutzt denselben Look statt einer separaten Tooltip-Box; die Buttons für `Annehmen` und `Ablehnen` sitzen jetzt enger zusammen
 - `Organisierte Gruppen` fängt abrupte Gruppen-/Listing-Wechsel robuster ab, damit der Blizzard-Bereich nach Invite oder Kick nicht mit leerer rechter Seite hängen bleibt
-- `Tooltip Itemlevel` löst Tooltip-Units und laufende Inspect-Antworten robuster über Unit-Token und GUID auf, damit Itemlevel seltener am falschen Spieler hängen bleiben
+- `Tooltip Itemlevel` bleibt im sicheren Tooltip-Pfad jetzt komplett bei festen Unit-Tokens, damit keine Secret-String-/Taint-Fehler mehr über Tooltip-GUIDs ausgelöst werden
 
 ## 0.36.10 - 2026-04-13
 
