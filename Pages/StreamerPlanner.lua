@@ -307,6 +307,11 @@ local LayoutEditDialogOptionButtons
 local PlannerPrivate = {
     applicantSnapshot = nil,
     applicantByName = {},
+    secretValueByString = {},
+    normalizedCompareByValue = {},
+    identityKeysByValue = {},
+    displayNameByFullName = {},
+    fullNameByCharacterAndRealm = {},
     inspectSpecByGUID = {},
     inspectSpecByName = {},
     pendingSpecPromptQueue = {},
@@ -343,6 +348,8 @@ local PlannerPrivate = {
     watcher = nil,
     whisperSpecAliasLookupByClass = nil,
     whisperSpecAliasLookupGlobal = nil,
+    currentGroupLookupCache = nil,
+    currentGroupLookupDirty = true,
 }
 
 local function Clamp(value, minValue, maxValue)
@@ -837,13 +844,48 @@ end
 
 PlannerPrivate.destinationAliasCache = nil
 
+local function CanUsePlannerStringCacheKey(value)
+    if type(value) ~= "string" then
+        return false
+    end
+
+    if not issecretvalue then
+        return true
+    end
+
+    local ok, isSecret = pcall(issecretvalue, value)
+    return ok and isSecret ~= true
+end
+
 PlannerPrivate.IsSecretValue = function(value)
     if not issecretvalue then
         return false
     end
 
+    if type(value) ~= "string" then
+        local ok, isSecret = pcall(issecretvalue, value)
+        return ok and isSecret == true
+    end
+
     local ok, isSecret = pcall(issecretvalue, value)
-    return ok and isSecret == true
+    if not ok then
+        return false
+    end
+
+    if isSecret == true then
+        return true
+    end
+
+    if CanUsePlannerStringCacheKey(value) then
+        local cachedIsSecret = PlannerPrivate.secretValueByString[value]
+        if cachedIsSecret ~= nil then
+            return cachedIsSecret == true
+        end
+
+        PlannerPrivate.secretValueByString[value] = false
+    end
+
+    return false
 end
 
 
@@ -931,7 +973,22 @@ PlannerPrivate.GetRoleIconTexCoords = function(roleKey)
 end
 
 PlannerPrivate.NormalizeCompareText = function(value)
+    if type(value) ~= "string" then
+        return nil
+    end
+
+    local canCacheByValue = CanUsePlannerStringCacheKey(value)
+    if canCacheByValue then
+        local cachedValue = PlannerPrivate.normalizedCompareByValue[value]
+        if cachedValue ~= nil then
+            return cachedValue or nil
+        end
+    end
+
     if not PlannerPrivate.IsUsablePlainString(value) then
+        if canCacheByValue then
+            PlannerPrivate.normalizedCompareByValue[value] = false
+        end
         return nil
     end
 
@@ -940,9 +997,15 @@ PlannerPrivate.NormalizeCompareText = function(value)
     normalized = normalized:gsub("%s+", " ")
     normalized = normalized:match("^%s*(.-)%s*$")
     if normalized == "" then
+        if canCacheByValue then
+            PlannerPrivate.normalizedCompareByValue[value] = false
+        end
         return nil
     end
 
+    if canCacheByValue then
+        PlannerPrivate.normalizedCompareByValue[value] = normalized
+    end
     return normalized
 end
 
@@ -1147,6 +1210,14 @@ end
 local MAX_IDENTITY_KEYS = 10
 
 PlannerPrivate.GetIdentityKeys = function(value)
+    local canCacheByValue = CanUsePlannerStringCacheKey(value)
+    if canCacheByValue then
+        local cachedIdentityKeys = PlannerPrivate.identityKeysByValue[value]
+        if cachedIdentityKeys ~= nil then
+            return cachedIdentityKeys
+        end
+    end
+
     local identityKeys = {}
     local seen = {}
     local count = 0
@@ -1167,10 +1238,22 @@ PlannerPrivate.GetIdentityKeys = function(value)
         AddCandidate(PlannerPrivate.GetDisplayNameFromFullName(value))
     end
 
+    if canCacheByValue then
+        PlannerPrivate.identityKeysByValue[value] = identityKeys
+    end
+
     return identityKeys
 end
 
 PlannerPrivate.GetDisplayNameFromFullName = function(fullName)
+    local canCacheByValue = CanUsePlannerStringCacheKey(fullName)
+    if canCacheByValue then
+        local cachedDisplayName = PlannerPrivate.displayNameByFullName[fullName]
+        if cachedDisplayName ~= nil then
+            return cachedDisplayName
+        end
+    end
+
     if not PlannerPrivate.IsUsablePlainString(fullName) then
         return UNKNOWN or "Unknown"
     end
@@ -1178,11 +1261,18 @@ PlannerPrivate.GetDisplayNameFromFullName = function(fullName)
     if Ambiguate then
         local ok, shortName = pcall(Ambiguate, fullName, "short")
         if ok and PlannerPrivate.IsUsablePlainString(shortName) then
+            if canCacheByValue then
+                PlannerPrivate.displayNameByFullName[fullName] = shortName
+            end
             return shortName
         end
     end
 
-    return fullName:match("^[^-]+") or fullName
+    local displayName = fullName:match("^[^-]+") or fullName
+    if canCacheByValue then
+        PlannerPrivate.displayNameByFullName[fullName] = displayName
+    end
+    return displayName
 end
 
 PlannerPrivate.AddUniqueCandidate = function(target, seen, value)
@@ -1630,8 +1720,22 @@ PlannerPrivate.ResolveWhisperCommand = function(messageText)
 end
 
 PlannerPrivate.BuildCharacterFullName = function(characterName, realmName)
+    if type(characterName) ~= "string" then
+        return nil
+    end
+
     if not PlannerPrivate.IsUsablePlainString(characterName) then
         return nil
+    end
+
+    local canCacheByValue = CanUsePlannerStringCacheKey(characterName)
+    local cacheKey = nil
+    if canCacheByValue and CanUsePlannerStringCacheKey(tostring(realmName or "")) then
+        cacheKey = characterName .. "\031" .. tostring(realmName or "")
+        local cachedFullName = PlannerPrivate.fullNameByCharacterAndRealm[cacheKey]
+        if cachedFullName ~= nil then
+            return cachedFullName or nil
+        end
     end
 
     local function CollapseDuplicateRealmPart(realmText)
@@ -1672,16 +1776,31 @@ PlannerPrivate.BuildCharacterFullName = function(characterName, realmName)
     if existingCharacterName and existingRealmName then
         local collapsedRealmName = CollapseDuplicateRealmPart(existingRealmName)
         if normalizedRealmName and collapsedRealmName:gsub("%s+", "") == normalizedRealmName then
-            return string.format("%s-%s", existingCharacterName, normalizedRealmName)
+            local fullName = string.format("%s-%s", existingCharacterName, normalizedRealmName)
+            if cacheKey ~= nil then
+                PlannerPrivate.fullNameByCharacterAndRealm[cacheKey] = fullName
+            end
+            return fullName
         end
 
-        return string.format("%s-%s", existingCharacterName, collapsedRealmName)
+        local fullName = string.format("%s-%s", existingCharacterName, collapsedRealmName)
+        if cacheKey ~= nil then
+            PlannerPrivate.fullNameByCharacterAndRealm[cacheKey] = fullName
+        end
+        return fullName
     end
 
     if normalizedRealmName and normalizedRealmName ~= "" then
-        return string.format("%s-%s", trimmedName, normalizedRealmName)
+        local fullName = string.format("%s-%s", trimmedName, normalizedRealmName)
+        if cacheKey ~= nil then
+            PlannerPrivate.fullNameByCharacterAndRealm[cacheKey] = fullName
+        end
+        return fullName
     end
 
+    if cacheKey ~= nil then
+        PlannerPrivate.fullNameByCharacterAndRealm[cacheKey] = trimmedName
+    end
     return trimmedName
 end
 
@@ -2772,11 +2891,11 @@ local function GetSlotValue(layout, index)
     return PlannerPrivate.NormalizeSlotEntry(entry).name
 end
 
-local function GetSlotEntry(layout, index)
-    local settings = GetStreamerPlannerSettings()
+local function GetSlotEntry(layout, index, settings)
+    local resolvedSettings = settings or GetStreamerPlannerSettings()
 
     if layout == "raid" then
-        return PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
+        return PlannerPrivate.NormalizeSlotEntry(resolvedSettings.slots.raid[index])
     end
 
     local slotInfo = GetDungeonSlotInfo(index)
@@ -2784,7 +2903,7 @@ local function GetSlotEntry(layout, index)
         return PlannerPrivate.NormalizeSlotEntry(nil)
     end
 
-    return PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotInfo.key])
+    return PlannerPrivate.NormalizeSlotEntry(resolvedSettings.slots.dungeon[slotInfo.key])
 end
 
 local function GetRaidRoleCounts()
@@ -3572,11 +3691,9 @@ PlannerPrivate.SyncDynamicPlannerState = function(forceRefresh)
     PlannerPrivate.ApplyRaidParticipantsToSlots(settings, raidParticipants)
     PlannerPrivate.lastDungeonSyncSignature = nextSignature
 
-    if PlannerPrivate.RefreshApplicantPanel then
-        PlannerPrivate.RefreshApplicantPanel(snapshot)
-    end
-
-    if StreamerPlannerModule and StreamerPlannerModule.RefreshAllDisplays then
+    if PlannerPrivate.RefreshDynamicDisplays then
+        PlannerPrivate.RefreshDynamicDisplays(snapshot)
+    elseif StreamerPlannerModule and StreamerPlannerModule.RefreshAllDisplays then
         StreamerPlannerModule.RefreshAllDisplays()
     end
 
@@ -3602,6 +3719,10 @@ PlannerPrivate.InviteApplicantByName = function(name)
 end
 
 PlannerPrivate.BuildCurrentGroupLookup = function()
+    if PlannerPrivate.currentGroupLookupDirty ~= true and type(PlannerPrivate.currentGroupLookupCache) == "table" then
+        return PlannerPrivate.currentGroupLookupCache
+    end
+
     local lookup = {}
 
     local function AddName(name)
@@ -3622,6 +3743,8 @@ PlannerPrivate.BuildCurrentGroupLookup = function()
         end
     end
 
+    PlannerPrivate.currentGroupLookupCache = lookup
+    PlannerPrivate.currentGroupLookupDirty = false
     return lookup
 end
 
@@ -5382,13 +5505,24 @@ local function OpenDestinationEditor()
     DestinationInput:HighlightText()
 end
 
-local function RefreshSlotButton(button)
+local function CreateRefreshContext(settings)
+    local resolvedSettings = settings or GetStreamerPlannerSettings()
+    return {
+        settings = resolvedSettings,
+        groupLookup = PlannerPrivate.BuildCurrentGroupLookup(),
+    }
+end
+
+local function RefreshSlotButton(button, refreshContext)
     if not button then
         return
     end
 
+    local resolvedContext = type(refreshContext) == "table" and refreshContext or nil
+    local settings = resolvedContext and resolvedContext.settings or GetStreamerPlannerSettings()
+    local groupLookup = resolvedContext and resolvedContext.groupLookup or nil
     local slotLabel = GetSlotLabel(button.Layout, button.Index)
-    local slotEntry = GetSlotEntry(button.Layout, button.Index)
+    local slotEntry = GetSlotEntry(button.Layout, button.Index, settings)
     local slotValue = slotEntry.name
     local isSelfSlot = PlannerPrivate.IsSelfSlotEntry(slotEntry)
     local classRed, classGreen, classBlue = GetClassColor(slotEntry.classFile)
@@ -5401,7 +5535,7 @@ local function RefreshSlotButton(button)
         inviteName = slotEntry.inviteName,
         applicantID = applicantData and applicantData.applicantID or nil,
         applicationStatus = applicantData and applicantData.applicationStatus or nil,
-    })
+    }, groupLookup)
     local showInviteButton = inviteTarget ~= nil
 
     if button.InviteButton then
@@ -5466,7 +5600,7 @@ local function RefreshSlotButton(button)
 
     button:SetScript("OnClick", function(_, mouseButton)
         if mouseButton == "RightButton" then
-            local currentEntry = GetSlotEntry(button.Layout, button.Index)
+            local currentEntry = GetSlotEntry(button.Layout, button.Index, settings)
             if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
                 PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
             end
@@ -5480,7 +5614,7 @@ local function RefreshSlotButton(button)
 
         local forceSelfRoleEditor = false
         if button.Layout == "dungeon" then
-            local currentEntry = GetSlotEntry(button.Layout, button.Index)
+            local currentEntry = GetSlotEntry(button.Layout, button.Index, settings)
             local slotInfo = GetDungeonSlotInfo and GetDungeonSlotInfo(button.Index) or nil
             local selfSlotKey = PlannerPrivate.GetAssignedSelfDungeonSlotKey()
             forceSelfRoleEditor = button.IsSelfSlot == true
@@ -5492,9 +5626,9 @@ local function RefreshSlotButton(button)
     end)
 end
 
-local function RefreshButtonList(buttons)
+local function RefreshButtonList(buttons, refreshContext)
     for _, button in ipairs(buttons) do
-        RefreshSlotButton(button)
+        RefreshSlotButton(button, refreshContext)
     end
 end
 
@@ -5854,10 +5988,11 @@ function StreamerPlannerModule.ClearAllLayouts()
 end
 
 function StreamerPlannerModule.RefreshAllDisplays()
-    RefreshButtonList(PreviewUI.DungeonButtons)
-    RefreshButtonList(PreviewUI.RaidButtons)
-    RefreshButtonList(OverlayDungeonButtons)
-    RefreshButtonList(OverlayRaidButtons)
+    local refreshContext = CreateRefreshContext()
+    RefreshButtonList(PreviewUI.DungeonButtons, refreshContext)
+    RefreshButtonList(PreviewUI.RaidButtons, refreshContext)
+    RefreshButtonList(OverlayDungeonButtons, refreshContext)
+    RefreshButtonList(OverlayRaidButtons, refreshContext)
     PlannerPrivate.RefreshModeButtons()
     if PlannerPrivate.RefreshApplicantPanel then
         PlannerPrivate.RefreshApplicantPanel()
@@ -5865,11 +6000,30 @@ function StreamerPlannerModule.RefreshAllDisplays()
     if PlannerPrivate.RefreshWhisperSpecPrompt then
         PlannerPrivate.RefreshWhisperSpecPrompt()
     end
-    PlannerPrivate.RefreshLayoutVisibility()
     StreamerPlannerModule.RefreshOverlayWindow()
 
     if PageStreamerPlanner and PageStreamerPlanner:IsShown() then
         PageStreamerPlanner:RefreshState()
+    end
+end
+
+PlannerPrivate.RefreshDynamicDisplays = function(snapshot)
+    local refreshContext = CreateRefreshContext()
+    RefreshButtonList(PreviewUI.DungeonButtons, refreshContext)
+    RefreshButtonList(PreviewUI.RaidButtons, refreshContext)
+    RefreshButtonList(OverlayDungeonButtons, refreshContext)
+    RefreshButtonList(OverlayRaidButtons, refreshContext)
+    PlannerPrivate.RefreshModeButtons()
+    if PlannerPrivate.RefreshApplicantPanel then
+        PlannerPrivate.RefreshApplicantPanel(snapshot)
+    end
+    if PlannerPrivate.RefreshWhisperSpecPrompt then
+        PlannerPrivate.RefreshWhisperSpecPrompt()
+    end
+    StreamerPlannerModule.RefreshOverlayWindow()
+
+    if PageStreamerPlanner and PageStreamerPlanner:IsShown() then
+        PageStreamerPlanner:UpdateScrollLayout()
     end
 end
 
@@ -6973,6 +7127,7 @@ PlannerPrivate.BuildStreamerPlannerUi()
 
 function PageStreamerPlanner:RefreshState()
     local settings = GetStreamerPlannerSettings()
+    local refreshContext = CreateRefreshContext(settings)
     local introTitle = self.IntroTitle
     local introText = self.IntroText
     local usageHint = self.UsageHint
@@ -7045,10 +7200,10 @@ function PageStreamerPlanner:RefreshState()
     RefreshTimerDurationSliderText()
     PlannerPrivate.isRefreshingPage = false
 
-    RefreshButtonList(PreviewUI.DungeonButtons)
-    RefreshButtonList(PreviewUI.RaidButtons)
-    RefreshButtonList(OverlayDungeonButtons)
-    RefreshButtonList(OverlayRaidButtons)
+    RefreshButtonList(PreviewUI.DungeonButtons, refreshContext)
+    RefreshButtonList(PreviewUI.RaidButtons, refreshContext)
+    RefreshButtonList(OverlayDungeonButtons, refreshContext)
+    RefreshButtonList(OverlayRaidButtons, refreshContext)
     PlannerPrivate.RefreshModeButtons()
     PlannerPrivate.RefreshLayoutVisibility()
     RefreshTimerDisplay()
@@ -7147,6 +7302,8 @@ PlannerPrivate.watcher:RegisterEvent("LFG_LIST_APPLICANT_UPDATED")
 PlannerPrivate.watcher:RegisterEvent("CHAT_MSG_ADDON")
 PlannerPrivate.watcher:RegisterEvent("INSPECT_READY")
 PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
+    PlannerPrivate.currentGroupLookupDirty = true
+
     if event == "PLAYER_LOGIN" and C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
         C_ChatInfo.RegisterAddonMessagePrefix(STREAMER_PLANNER_ADDON_PREFIX)
     end

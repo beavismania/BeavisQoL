@@ -348,18 +348,87 @@ local smoothTrailPoints = {}
 local trailPointCount = 0
 local trailPointHeadIndex = 0
 local trailPointCapacity = 0
+local trailGeometryDirty = true
+local smoothTrailPointCount = 0
+local smoothTrailSourceCount = 0
 local sampleAccumulator = 0
 local trailRenderAccumulator = 0
 local trailFadeAccumulator = 0
 local ringDots = {}
-local lastCastRingRenderKey = nil
-local lastRingRenderKey = nil
+local runtimeState = {
+    circleColor = { r = 1, g = 0.82, b = 0, a = 0.9 },
+    castRingColor = { r = 1, g = 0.9, b = 0.22, a = 0.95 },
+    trailColor = { r = 1, g = 0.62, b = 0.1, a = 0.75 },
+}
+local lastCastRingSegmentCount = nil
+local lastCastRingLitSegmentCount = nil
+local lastCastRingRadius = nil
+local lastCastRingThickness = nil
+local lastCastRingSegmentLength = nil
+local lastCastRingColorRed = nil
+local lastCastRingColorGreen = nil
+local lastCastRingColorBlue = nil
+local lastCastRingColorAlpha = nil
+local lastCastRingPulseSegmentIndex = nil
+local lastCastRingPulseAlpha = nil
+local lastRingSize = nil
+local lastRingThickness = nil
+local lastRingColorRed = nil
+local lastRingColorGreen = nil
+local lastRingColorBlue = nil
+local lastRingColorAlpha = nil
 local lastTrailSampleX = nil
 local lastTrailSampleY = nil
 local lastTrailCursorX = nil
 local lastTrailCursorY = nil
+local lastCircleCursorX = nil
+local lastCircleCursorY = nil
+local lastCastRingCursorX = nil
+local lastCastRingCursorY = nil
 local runtimeUpdateAccumulator = 0
 local MouseHelperRuntimeOnUpdate
+
+local function AssignColor(target, red, green, blue, alpha)
+    target.r = Clamp(tonumber(red) or 1, 0, 1)
+    target.g = Clamp(tonumber(green) or 0.82, 0, 1)
+    target.b = Clamp(tonumber(blue) or 0, 0, 1)
+    target.a = Clamp(tonumber(alpha) or 0.9, 0, 1)
+    return target
+end
+
+local function RefreshRuntimeState(db)
+    db = db or MouseHelper.GetDB()
+
+    runtimeState.enabled = db.enabled == true
+    runtimeState.circleEnabled = db.circleEnabled == true
+    runtimeState.circleCombatOnly = db.circleCombatOnly == true
+    runtimeState.circleUseClassColor = db.circleUseClassColor == true
+    runtimeState.castRingEnabled = db.castRingEnabled == true
+    runtimeState.trailEnabled = db.trailEnabled == true
+    runtimeState.trailUseClassColor = db.trailUseClassColor == true
+    runtimeState.circleSize = db.circleSize
+    runtimeState.circleThickness = db.circleThickness
+    runtimeState.trailLength = db.trailLength
+    runtimeState.trailSize = db.trailSize
+    runtimeState.trailStyle = db.trailStyle
+    runtimeState.blizzardCursorSize = db.blizzardCursorSize
+    runtimeState.trailMaxPointCount = db.trailLength + 4
+
+    local circleRed, circleGreen, circleBlue, circleAlpha = GetCircleColorComponents(db)
+    local trailRed, trailGreen, trailBlue, trailAlpha = GetTrailColorComponents(db)
+
+    AssignColor(runtimeState.circleColor, circleRed, circleGreen, circleBlue, circleAlpha)
+    AssignColor(
+        runtimeState.castRingColor,
+        db.castRingColor and db.castRingColor.r or 1,
+        db.castRingColor and db.castRingColor.g or 0.9,
+        db.castRingColor and db.castRingColor.b or 0.22,
+        db.castRingColor and db.castRingColor.a or 0.95
+    )
+    AssignColor(runtimeState.trailColor, trailRed, trailGreen, trailBlue, trailAlpha)
+
+    return runtimeState
+end
 
 local function EnsureRingDots(count)
     for index = #ringDots + 1, count do
@@ -437,7 +506,19 @@ local function EnsureCastRingSegments(count)
 end
 
 local function HideCastRing()
-    lastCastRingRenderKey = nil
+    lastCastRingSegmentCount = nil
+    lastCastRingLitSegmentCount = nil
+    lastCastRingRadius = nil
+    lastCastRingThickness = nil
+    lastCastRingSegmentLength = nil
+    lastCastRingColorRed = nil
+    lastCastRingColorGreen = nil
+    lastCastRingColorBlue = nil
+    lastCastRingColorAlpha = nil
+    lastCastRingPulseSegmentIndex = nil
+    lastCastRingPulseAlpha = nil
+    lastCastRingCursorX = nil
+    lastCastRingCursorY = nil
     CastRingFrame:Hide()
 
     for index = 1, #castRingSegments do
@@ -509,6 +590,7 @@ local function ResizeTrailPointBuffer(maxCount)
     trailPointCapacity = maxCount
     trailPointCount = preservedCount
     trailPointHeadIndex = preservedCount > 0 and 1 or 0
+    trailGeometryDirty = true
 end
 
 local function DropOldestTrailPoint()
@@ -517,6 +599,7 @@ local function DropOldestTrailPoint()
     end
 
     trailPointCount = trailPointCount - 1
+    trailGeometryDirty = true
     if trailPointCount <= 0 then
         trailPointCount = 0
         trailPointHeadIndex = 0
@@ -542,6 +625,9 @@ end
 local function ClearTrail()
     trailPointCount = 0
     trailPointHeadIndex = 0
+    trailGeometryDirty = true
+    smoothTrailPointCount = 0
+    smoothTrailSourceCount = 0
     lastTrailSampleX = nil
     lastTrailSampleY = nil
     lastTrailCursorX = nil
@@ -576,21 +662,22 @@ end
 
 local function ApplyCircleVisual(db)
     CursorCircleFrame:SetSize(db.circleSize, db.circleSize)
-    local circleColor = GetCircleDisplayColor(db)
+    local circleColor = db.circleColor or GetCircleDisplayColor(db)
 
-    local renderKey = string.format(
-        "%d|%d|%.3f|%.3f|%.3f|%.3f",
-        math.floor((db.circleSize or 0) + 0.5),
-        math.floor((db.circleThickness or 0) + 0.5),
-        circleColor.r or 0,
-        circleColor.g or 0,
-        circleColor.b or 0,
-        circleColor.a or 0
-    )
-
-    if renderKey ~= lastRingRenderKey then
+    if lastRingSize ~= db.circleSize
+        or lastRingThickness ~= db.circleThickness
+        or lastRingColorRed ~= circleColor.r
+        or lastRingColorGreen ~= circleColor.g
+        or lastRingColorBlue ~= circleColor.b
+        or lastRingColorAlpha ~= circleColor.a
+    then
         DrawRing(db.circleSize, db.circleThickness, circleColor)
-        lastRingRenderKey = renderKey
+        lastRingSize = db.circleSize
+        lastRingThickness = db.circleThickness
+        lastRingColorRed = circleColor.r
+        lastRingColorGreen = circleColor.g
+        lastRingColorBlue = circleColor.b
+        lastRingColorAlpha = circleColor.a
     end
 end
 
@@ -632,56 +719,81 @@ local function DrawCastRing(db, progress)
     local ringThickness = Clamp((db.circleThickness * 0.72) + 1, 2, 12)
     local segmentLength = math.max(4, ((2 * math.pi * radius) / segmentCount) * 0.82)
     local pulse = 0.84 + (0.16 * math.sin((GetTime() or 0) * 12))
-    local renderKey = string.format(
-        "%d|%d|%d|%.3f|%.3f|%.3f|%.3f|%.3f",
-        math.floor((db.circleSize or 0) + 0.5),
-        math.floor((db.circleThickness or 0) + 0.5),
-        litSegmentCount,
-        color.r or 0,
-        color.g or 0,
-        color.b or 0,
-        color.a or 0,
-        pulse
-    )
 
     CastRingFrame:SetSize((radius * 2) + (ringThickness * 4), (radius * 2) + (ringThickness * 4))
-
-    if renderKey == lastCastRingRenderKey and CastRingFrame:IsShown() then
-        return
-    end
-
-    lastCastRingRenderKey = renderKey
     EnsureCastRingSegments(segmentCount)
 
-    -- Inspired by cursor-ring addons: render a separate progress arc instead of replacing the base cursor ring.
-    for index = 1, segmentCount do
-        local segment = castRingSegments[index]
-        local angle = (-math.pi * 0.5) + (((index - 1) / segmentCount) * (math.pi * 2))
-        local x = math.cos(angle) * radius
-        local y = math.sin(angle) * radius
+    local needsLayoutUpdate = segmentCount ~= lastCastRingSegmentCount
+        or radius ~= lastCastRingRadius
+        or ringThickness ~= lastCastRingThickness
+        or segmentLength ~= lastCastRingSegmentLength
 
-        segment:ClearAllPoints()
-        segment:SetPoint("CENTER", CastRingFrame, "CENTER", x, y)
-        segment:SetSize(segmentLength, ringThickness)
-        segment:SetRotation(angle + (math.pi * 0.5))
+    if needsLayoutUpdate then
+        for index = 1, segmentCount do
+            local segment = castRingSegments[index]
+            local angle = (-math.pi * 0.5) + (((index - 1) / segmentCount) * (math.pi * 2))
+            local x = math.cos(angle) * radius
+            local y = math.sin(angle) * radius
 
-        if index <= litSegmentCount then
-            local alphaRatio = 0.42 + (0.58 * (index / math.max(1, litSegmentCount)))
-            local alpha = (color.a or 1) * alphaRatio
-            if index == litSegmentCount then
-                alpha = Clamp(alpha * pulse, 0, 1)
-            end
-
-            segment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, alpha)
-            segment:Show()
-        else
-            segment:Hide()
+            segment:ClearAllPoints()
+            segment:SetPoint("CENTER", CastRingFrame, "CENTER", x, y)
+            segment:SetSize(segmentLength, ringThickness)
+            segment:SetRotation(angle + (math.pi * 0.5))
         end
     end
 
-    for index = segmentCount + 1, #castRingSegments do
-        castRingSegments[index]:Hide()
+    local needsVisualUpdate = needsLayoutUpdate
+        or litSegmentCount ~= lastCastRingLitSegmentCount
+        or color.r ~= lastCastRingColorRed
+        or color.g ~= lastCastRingColorGreen
+        or color.b ~= lastCastRingColorBlue
+        or color.a ~= lastCastRingColorAlpha
+
+    if needsVisualUpdate then
+        -- Inspired by cursor-ring addons: render a separate progress arc instead of replacing the base cursor ring.
+        for index = 1, segmentCount do
+            local segment = castRingSegments[index]
+            if index <= litSegmentCount then
+                local alphaRatio = 0.42 + (0.58 * (index / math.max(1, litSegmentCount)))
+                local alpha = (color.a or 1) * alphaRatio
+                if index == litSegmentCount then
+                    alpha = Clamp(alpha * pulse, 0, 1)
+                end
+
+                segment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, alpha)
+                segment:Show()
+            else
+                segment:Hide()
+            end
+        end
+
+        for index = segmentCount + 1, #castRingSegments do
+            castRingSegments[index]:Hide()
+        end
+
+        lastCastRingPulseSegmentIndex = litSegmentCount
+        lastCastRingPulseAlpha = Clamp((color.a or 1) * pulse, 0, 1)
+    else
+        local pulseSegment = castRingSegments[litSegmentCount]
+        if pulseSegment then
+            local pulseAlpha = Clamp((color.a or 1) * pulse, 0, 1)
+            if lastCastRingPulseSegmentIndex ~= litSegmentCount or lastCastRingPulseAlpha ~= pulseAlpha then
+                pulseSegment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, pulseAlpha)
+                lastCastRingPulseSegmentIndex = litSegmentCount
+                lastCastRingPulseAlpha = pulseAlpha
+            end
+        end
     end
+
+    lastCastRingSegmentCount = segmentCount
+    lastCastRingLitSegmentCount = litSegmentCount
+    lastCastRingRadius = radius
+    lastCastRingThickness = ringThickness
+    lastCastRingSegmentLength = segmentLength
+    lastCastRingColorRed = color.r
+    lastCastRingColorGreen = color.g
+    lastCastRingColorBlue = color.b
+    lastCastRingColorAlpha = color.a
 
     CastRingFrame:Show()
 end
@@ -691,6 +803,9 @@ local function BuildSmoothedTrailPoints(sourceCount)
         for index = 1, #smoothTrailPoints do
             smoothTrailPoints[index] = nil
         end
+        smoothTrailPointCount = 0
+        smoothTrailSourceCount = sourceCount
+        trailGeometryDirty = false
         return 0
     end
 
@@ -739,6 +854,9 @@ local function BuildSmoothedTrailPoints(sourceCount)
         for index = insertIndex + 1, #smoothTrailPoints do
             smoothTrailPoints[index] = nil
         end
+        smoothTrailPointCount = insertIndex
+        smoothTrailSourceCount = sourceCount
+        trailGeometryDirty = false
         return insertIndex
     end
 
@@ -749,13 +867,19 @@ local function BuildSmoothedTrailPoints(sourceCount)
         smoothTrailPoints[index] = nil
     end
 
+    smoothTrailPointCount = insertIndex
+    smoothTrailSourceCount = sourceCount
+    trailGeometryDirty = false
     return insertIndex
 end
 
 local function DrawTrail(db)
     local sourceCount = math.min(trailPointCount, db.trailLength)
-    local smoothPointCount = BuildSmoothedTrailPoints(sourceCount)
-    local segmentCount = smoothPointCount - 1
+    if trailGeometryDirty or sourceCount ~= smoothTrailSourceCount then
+        BuildSmoothedTrailPoints(sourceCount)
+    end
+
+    local segmentCount = smoothTrailPointCount - 1
     if segmentCount <= 0 then
         for index = 1, #trailCoreLines do
             trailCoreLines[index]:Hide()
@@ -777,7 +901,11 @@ local function DrawTrail(db)
     local timeNow = GetTime() or 0
     local style = db.trailStyle or DEFAULT_TRAIL_STYLE
     local useClassColor = db.trailUseClassColor == true
-    local trailRed, trailGreen, trailBlue, trailAlpha = GetTrailColorComponents(db)
+    local trailColor = db.trailColor
+    local trailRed = trailColor and trailColor.r or 1
+    local trailGreen = trailColor and trailColor.g or 0.62
+    local trailBlue = trailColor and trailColor.b or 0.1
+    local trailAlpha = trailColor and trailColor.a or 0.75
 
     for index = 1, segmentCount do
         local p1 = smoothTrailPoints[index]
@@ -1031,15 +1159,18 @@ end
 
 local function ApplyVisualState()
     local db = MouseHelper.GetDB()
-    local shouldRunRuntime = db.enabled == true and (db.trailEnabled == true or ShouldShowCircle(db) or ShouldShowCastRing(db))
+    local state = RefreshRuntimeState(db)
+    local shouldRunRuntime = state.enabled == true and (state.trailEnabled == true or ShouldShowCircle(state) or ShouldShowCastRing(state))
 
-    if not IsVisualFeatureEnabled(db) or not shouldRunRuntime then
+    if not IsVisualFeatureEnabled(state) or not shouldRunRuntime then
         runtimeUpdateAccumulator = 0
         RuntimeFrame:SetScript("OnUpdate", nil)
         RuntimeFrame:Hide()
         CursorCircleFrame:Hide()
+        lastCircleCursorX = nil
+        lastCircleCursorY = nil
         HideCastRing()
-        if db.trailEnabled ~= true then
+        if state.trailEnabled ~= true then
             TrailFrame:Hide()
             ClearTrail()
         end
@@ -1047,23 +1178,26 @@ local function ApplyVisualState()
     end
 
     runtimeUpdateAccumulator = 0
+    ResizeTrailPointBuffer(state.trailMaxPointCount)
     RuntimeFrame:SetScript("OnUpdate", MouseHelperRuntimeOnUpdate)
     RuntimeFrame:Show()
 
-    if ShouldShowCircle(db) then
-        ApplyCircleVisual(db)
+    if ShouldShowCircle(state) then
+        ApplyCircleVisual(state)
         CursorCircleFrame:Show()
     else
         CursorCircleFrame:Hide()
+        lastCircleCursorX = nil
+        lastCircleCursorY = nil
     end
 
-    if ShouldShowCastRing(db) then
+    if ShouldShowCastRing(state) then
         CastRingFrame:Show()
     else
         HideCastRing()
     end
 
-    if db.trailEnabled == true then
+    if state.trailEnabled == true then
         TrailFrame:Show()
     else
         TrailFrame:Hide()
@@ -1071,10 +1205,9 @@ local function ApplyVisualState()
     end
 end
 
-local function PushTrailPoint(cursorX, cursorY, maxCount)
+local function PushTrailPoint(cursorX, cursorY)
     lastTrailSampleX = cursorX
     lastTrailSampleY = cursorY
-    ResizeTrailPointBuffer(maxCount)
 
     if trailPointCapacity <= 0 then
         return
@@ -1097,10 +1230,12 @@ local function PushTrailPoint(cursorX, cursorY, maxCount)
     if trailPointCount < trailPointCapacity then
         trailPointCount = trailPointCount + 1
     end
+
+    trailGeometryDirty = true
 end
 
 local function HandleMouseHelperRuntimeUpdate(_, elapsed)
-    local db = MouseHelper.GetDB()
+    local db = runtimeState
 
     if not IsVisualFeatureEnabled(db) then
         return
@@ -1110,18 +1245,28 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
 
     if ShouldShowCircle(db) then
         ApplyCircleVisual(db)
-        CursorCircleFrame:ClearAllPoints()
-        CursorCircleFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cursorX, cursorY)
+        if lastCircleCursorX ~= cursorX or lastCircleCursorY ~= cursorY then
+            CursorCircleFrame:ClearAllPoints()
+            CursorCircleFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cursorX, cursorY)
+            lastCircleCursorX = cursorX
+            lastCircleCursorY = cursorY
+        end
         CursorCircleFrame:Show()
     else
         CursorCircleFrame:Hide()
+        lastCircleCursorX = nil
+        lastCircleCursorY = nil
     end
 
     if ShouldShowCastRing(db) then
         local castProgress = GetCastRingProgress()
         if castProgress ~= nil then
-            CastRingFrame:ClearAllPoints()
-            CastRingFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cursorX, cursorY)
+            if lastCastRingCursorX ~= cursorX or lastCastRingCursorY ~= cursorY then
+                CastRingFrame:ClearAllPoints()
+                CastRingFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cursorX, cursorY)
+                lastCastRingCursorX = cursorX
+                lastCastRingCursorY = cursorY
+            end
             DrawCastRing(db, castProgress)
         else
             HideCastRing()
@@ -1151,7 +1296,7 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
 
         if movedEnough or trailPointCount == 0 then
             trailFadeAccumulator = 0
-            PushTrailPoint(sampleX, sampleY, db.trailLength + 4)
+            PushTrailPoint(sampleX, sampleY)
         elseif trailPointCount > 0 then
             trailFadeAccumulator = trailFadeAccumulator + TRAIL_SAMPLE_INTERVAL
             while trailFadeAccumulator >= TRAIL_IDLE_FADE_INTERVAL and trailPointCount > 0 do

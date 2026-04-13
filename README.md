@@ -11,6 +11,7 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
   - neues kreisfoermiges `Minimap-HUD` mit separatem Overlay und festem Minimap-Rahmen oben rechts
   - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das HUD
   - Keystone-Fenster schliesst nach Aktivierung automatisch und Buttons sind auf `Bereitschaftscheck`, `Timer`, `Start` umgestellt
+  - `MouseHelper` und `StreamerPlanner` enthalten zusaetzliche Laufzeit-/Refresh-Optimierungen
 
 ## Download
 

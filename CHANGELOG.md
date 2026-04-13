@@ -9,6 +9,8 @@
 - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das Minimap-HUD an/aus
 - Keystone-Fenster schliesst nach Aktivierung automatisch (auch nach Ladebildschirm)
 - Keystone-Buttons umgestellt auf `Bereitschaftscheck`, `Timer`, `Start` mit Auto-Kette
+- `MouseHelper` rendert Kreis, Cast-Ring und Trail effizienter und vermeidet unnoetige Neuberechnungen pro Frame
+- `StreamerPlanner` cached Namens-/Lookup-Daten robuster und aktualisiert Slots, Overlay und Bewerberliste konsistenter
 
 ## 0.36.5 - 2026-04-12
 
