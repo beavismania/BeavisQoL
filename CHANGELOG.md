@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.36.8 - 2026-04-13
+
+### Hotfix
+
+- `Checkliste` entfernt die taegliche Aufgabe `M0 World Tour fuer zusaetzliche Beute`
+- `Checkliste` enthaelt stattdessen jetzt die Weekly-Aufgabe `Woechentliche Housing-Quest`
+- alte gespeicherte Built-in-Reste der entfernten `M0 World Tour` werden bei der Checkliste bereinigt
+
 ## 0.36.7 - 2026-04-13
 
 ### Hotfix

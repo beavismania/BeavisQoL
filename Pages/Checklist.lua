@@ -30,14 +30,18 @@ local BUILT_IN_TODOS = {
     { id = "weekly_overflow", labelKey = "CHECKLIST_TODO_WEEKLY_OVERFLOW", cadence = "weekly" },
     { id = "weekly_stormarion", labelKey = "CHECKLIST_TODO_WEEKLY_STORMARION", cadence = "weekly" },
     { id = "weekly_harandir", labelKey = "CHECKLIST_TODO_WEEKLY_HARANDIR", cadence = "weekly" },
+    { id = "weekly_housing_quest", labelKey = "CHECKLIST_TODO_WEEKLY_HOUSING_QUEST", cadence = "weekly" },
     { id = "weekly_voidstorm", labelKey = "CHECKLIST_TODO_WEEKLY_VOIDSTORM", cadence = "weekly" },
     { id = "weekly_delve_progress", labelKey = "CHECKLIST_TODO_WEEKLY_DELVE_PROGRESS", cadence = "weekly" },
     { id = "weekly_delve_hero_map", labelKey = "CHECKLIST_TODO_WEEKLY_DELVE_HERO_MAP", cadence = "weekly" },
     { id = "daily_delves", labelKey = "CHECKLIST_TODO_DAILY_DELVES", cadence = "daily" },
     { id = "daily_worldquests", labelKey = "CHECKLIST_TODO_DAILY_WORLDQUESTS", cadence = "daily" },
-    { id = "daily_m0_tour", labelKey = "CHECKLIST_TODO_DAILY_M0", cadence = "daily" },
     { id = "daily_harandir", labelKey = "CHECKLIST_TODO_DAILY_HARANDIR", cadence = "daily" },
     { id = "watch_tier_set", labelKey = "CHECKLIST_TODO_WATCH_TIER", cadence = "watch" },
+}
+
+local REMOVED_BUILT_IN_TODO_IDS = {
+    daily_m0_tour = true,
 }
 
 local DEFAULT_TRACKER_WIDTH = 300
@@ -361,6 +365,11 @@ local function GetChecklistCharacterData()
 
     if type(db.disabledBuiltIns) ~= "table" then
         db.disabledBuiltIns = {}
+    end
+
+    for todoID in pairs(REMOVED_BUILT_IN_TODO_IDS) do
+        db.builtInState[todoID] = nil
+        db.disabledBuiltIns[todoID] = nil
     end
 
     if type(db.nextDailyResetAt) ~= "number" then
