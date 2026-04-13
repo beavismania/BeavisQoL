@@ -31,11 +31,16 @@ local OpacitySliderFrameRef = rawget(_G, "OpacitySliderFrame")
 
 local COLOR_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 local DEFAULT_TRAIL_STYLE = "lightning_storm"
+local DEFAULT_CIRCLE_STYLE = "standard"
 local RUNTIME_UPDATE_INTERVAL = 0.016
 local TRAIL_SAMPLE_INTERVAL = 0.010
 local TRAIL_RENDER_INTERVAL = 0.016
 local TRAIL_IDLE_FADE_INTERVAL = 0.024
 local CAST_RING_SEGMENT_COUNT = 96
+local CIRCLE_STYLE_OPTIONS = {
+    { value = "standard", textKey = "MOUSE_HELPER_CIRCLE_STYLE_STANDARD" },
+    { value = "beveled_3d", textKey = "MOUSE_HELPER_CIRCLE_STYLE_3D" },
+}
 local TRAIL_STYLE_OPTIONS = {
     { value = "lightning_storm", textKey = "MOUSE_HELPER_TRAIL_STYLE_LIGHTNING" },
     { value = "holy_light", textKey = "MOUSE_HELPER_TRAIL_STYLE_HOLY" },
@@ -179,6 +184,16 @@ local function IsValidTrailStyle(value)
     return false
 end
 
+local function IsValidCircleStyle(value)
+    for _, option in ipairs(CIRCLE_STYLE_OPTIONS) do
+        if option.value == value then
+            return true
+        end
+    end
+
+    return false
+end
+
 local function Lerp(fromValue, toValue, ratio)
     return fromValue + ((toValue - fromValue) * ratio)
 end
@@ -221,6 +236,10 @@ function MouseHelper.GetDB()
 
     if db.circleUseClassColor == nil then
         db.circleUseClassColor = false
+    end
+
+    if not IsValidCircleStyle(db.circleStyle) then
+        db.circleStyle = DEFAULT_CIRCLE_STYLE
     end
 
     if db.castRingEnabled == nil then
@@ -359,6 +378,7 @@ local runtimeState = {
     circleColor = { r = 1, g = 0.82, b = 0, a = 0.9 },
     castRingColor = { r = 1, g = 0.9, b = 0.22, a = 0.95 },
     trailColor = { r = 1, g = 0.62, b = 0.1, a = 0.75 },
+    circleStyle = DEFAULT_CIRCLE_STYLE,
 }
 local lastCastRingSegmentCount = nil
 local lastCastRingLitSegmentCount = nil
@@ -377,6 +397,7 @@ local lastRingColorRed = nil
 local lastRingColorGreen = nil
 local lastRingColorBlue = nil
 local lastRingColorAlpha = nil
+local lastRingStyle = nil
 local lastTrailSampleX = nil
 local lastTrailSampleY = nil
 local lastTrailCursorX = nil
@@ -408,6 +429,7 @@ local function RefreshRuntimeState(db)
     runtimeState.trailUseClassColor = db.trailUseClassColor == true
     runtimeState.circleSize = db.circleSize
     runtimeState.circleThickness = db.circleThickness
+    runtimeState.circleStyle = db.circleStyle
     runtimeState.trailLength = db.trailLength
     runtimeState.trailSize = db.trailSize
     runtimeState.trailStyle = db.trailStyle
@@ -430,17 +452,35 @@ local function RefreshRuntimeState(db)
     return runtimeState
 end
 
-local function EnsureRingDots(count)
-    for index = #ringDots + 1, count do
-        local dot = CursorCircleFrame:CreateTexture(nil, "ARTWORK")
-        dot:SetColorTexture(1, 1, 1, 1)
-        dot:SetBlendMode("BLEND")
+local function EnsureCircleTexturePool(pool, count, drawLayer, blendMode)
+    for index = #pool + 1, count do
+        local dot = CursorCircleFrame:CreateTexture(nil, drawLayer)
+        dot:SetTexture(COLOR_TEXTURE)
+        dot:SetBlendMode(blendMode or "BLEND")
         dot:Hide()
-        ringDots[index] = dot
+        pool[index] = dot
     end
 end
 
-local function DrawRing(size, thickness, color)
+local function HideTexturePoolFrom(pool, startIndex)
+    for index = startIndex, #pool do
+        pool[index]:Hide()
+    end
+end
+
+local function GetBeveledColor(color, highlightStrength, shadowStrength, innerBias)
+    local highlightMix = Clamp((highlightStrength * 0.62) + (innerBias * 0.12), 0, 0.82)
+    local shadowScale = Clamp(1 - ((shadowStrength * 0.38) + ((1 - innerBias) * 0.08)), 0.28, 1)
+    local red = Lerp(color.r or 1, 1, highlightMix) * shadowScale
+    local green = Lerp(color.g or 1, 1, highlightMix) * shadowScale
+    local blue = Lerp(color.b or 1, 1, highlightMix) * shadowScale
+
+    return Clamp(red, 0, 1), Clamp(green, 0, 1), Clamp(blue, 0, 1)
+end
+
+local function DrawRing(size, thickness, color, style)
+    style = IsValidCircleStyle(style) and style or DEFAULT_CIRCLE_STYLE
+
     local baseRadius = math.max(4, (size * 0.5) - (thickness * 0.5))
     local laneCount = Clamp(math.floor((thickness * 1.25) + 0.5), 2, 14)
     local totalDotCount = 0
@@ -458,9 +498,11 @@ local function DrawRing(size, thickness, color)
         totalDotCount = totalDotCount + Clamp(math.floor(laneCircumference * 3.6), 120, 1800)
     end
 
-    EnsureRingDots(totalDotCount)
+    EnsureCircleTexturePool(ringDots, totalDotCount, "ARTWORK", "BLEND")
 
     local dotIndex = 0
+    local lightDirectionX = -0.70710678
+    local lightDirectionY = 0.70710678
     for laneIndex = 1, laneCount do
         local laneFactor
         if laneCount == 1 then
@@ -473,26 +515,53 @@ local function DrawRing(size, thickness, color)
         local laneCircumference = 2 * math.pi * laneRadius
         local segmentCount = Clamp(math.floor(laneCircumference * 3.6), 120, 1800)
         local laneAlphaFactor = 1 - (math.abs(laneFactor) * 0.35)
-        local dotSize = math.max(1.0, (thickness / laneCount) * 1.15)
+        local dotSize = math.max(1.0, (thickness / laneCount) * ((style == "beveled_3d") and 1.3 or 1.15))
+        local radialRatio = Clamp((laneFactor + 0.5), 0, 1)
+        local innerBias = 1 - radialRatio
 
         for segmentIndex = 1, segmentCount do
             dotIndex = dotIndex + 1
             local dot = ringDots[dotIndex]
             local angle = ((segmentIndex - 1) / segmentCount) * (math.pi * 2)
-            local x = math.cos(angle) * laneRadius
-            local y = math.sin(angle) * laneRadius
+            local unitX = math.cos(angle)
+            local unitY = math.sin(angle)
+            local directionalLight = Clamp(((unitX * lightDirectionX) + (unitY * lightDirectionY) + 1) * 0.5, 0, 1)
+            local highlightStrength = directionalLight * directionalLight
+            local shadowStrength = (1 - directionalLight) * (1 - directionalLight)
+            local radiusOffset = 0
+            if style == "beveled_3d" then
+                radiusOffset = (shadowStrength - highlightStrength) * thickness * 0.16
+            end
+            local x = unitX * (laneRadius + radiusOffset)
+            local y = unitY * (laneRadius + radiusOffset)
+            local brightness = 1
+            local alpha = color.a * laneAlphaFactor
+
+            if style == "beveled_3d" then
+                brightness = Clamp(0.78 + (innerBias * 0.13) + (highlightStrength * 0.28) - (shadowStrength * 0.16), 0.2, 1.45)
+                alpha = Clamp(alpha * (0.92 + (highlightStrength * 0.08)), 0, 1)
+            end
 
             dot:ClearAllPoints()
             dot:SetPoint("CENTER", CursorCircleFrame, "CENTER", x, y)
-            dot:SetSize(dotSize, dotSize)
-            dot:SetColorTexture(color.r, color.g, color.b, color.a * laneAlphaFactor)
+            if style == "beveled_3d" then
+                local beveledRed, beveledGreen, beveledBlue = GetBeveledColor(color, highlightStrength, shadowStrength, innerBias)
+                dot:SetSize(dotSize * (0.94 + (shadowStrength * 0.34) + (innerBias * 0.08)), dotSize * (0.94 + (shadowStrength * 0.34) + (innerBias * 0.08)))
+                dot:SetColorTexture(beveledRed, beveledGreen, beveledBlue, alpha)
+            else
+                dot:SetSize(dotSize, dotSize)
+                dot:SetColorTexture(
+                    Clamp(color.r * brightness, 0, 1),
+                    Clamp(color.g * brightness, 0, 1),
+                    Clamp(color.b * brightness, 0, 1),
+                    alpha
+                )
+            end
             dot:Show()
         end
     end
 
-    for index = dotIndex + 1, #ringDots do
-        ringDots[index]:Hide()
-    end
+    HideTexturePoolFrom(ringDots, dotIndex + 1)
 end
 
 local function EnsureCastRingSegments(count)
@@ -670,14 +739,16 @@ local function ApplyCircleVisual(db)
         or lastRingColorGreen ~= circleColor.g
         or lastRingColorBlue ~= circleColor.b
         or lastRingColorAlpha ~= circleColor.a
+        or lastRingStyle ~= db.circleStyle
     then
-        DrawRing(db.circleSize, db.circleThickness, circleColor)
+        DrawRing(db.circleSize, db.circleThickness, circleColor, db.circleStyle)
         lastRingSize = db.circleSize
         lastRingThickness = db.circleThickness
         lastRingColorRed = circleColor.r
         lastRingColorGreen = circleColor.g
         lastRingColorBlue = circleColor.b
         lastRingColorAlpha = circleColor.a
+        lastRingStyle = db.circleStyle
     end
 end
 
@@ -717,6 +788,10 @@ local function DrawCastRing(db, progress)
     local color = db.castRingColor or db.circleColor or { r = 1, g = 0.9, b = 0.22, a = 0.95 }
     local radius = math.max(10, (db.circleSize * 0.5) + (db.circleThickness * 0.95))
     local ringThickness = Clamp((db.circleThickness * 0.72) + 1, 2, 12)
+    local beveledCastRing = db.circleStyle == "beveled_3d"
+    if beveledCastRing then
+        ringThickness = Clamp(ringThickness + 1.2, 3, 14)
+    end
     local segmentLength = math.max(4, ((2 * math.pi * radius) / segmentCount) * 0.82)
     local pulse = 0.84 + (0.16 * math.sin((GetTime() or 0) * 12))
 
@@ -759,8 +834,20 @@ local function DrawCastRing(db, progress)
                 if index == litSegmentCount then
                     alpha = Clamp(alpha * pulse, 0, 1)
                 end
-
-                segment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, alpha)
+                if beveledCastRing then
+                    local angle = (-math.pi * 0.5) + (((index - 1) / segmentCount) * (math.pi * 2))
+                    local x = math.cos(angle)
+                    local y = math.sin(angle)
+                    local directionalLight = Clamp((((x * -0.70710678) + (y * 0.70710678)) + 1) * 0.5, 0, 1)
+                    local highlightStrength = directionalLight * directionalLight
+                    local shadowStrength = (1 - directionalLight) * (1 - directionalLight)
+                    local red, green, blue = GetBeveledColor(color, highlightStrength, shadowStrength, 0.6)
+                    segment:SetVertexColor(red, green, blue, alpha)
+                    segment:SetSize(segmentLength, ringThickness * (0.92 + (shadowStrength * 0.2)))
+                else
+                    segment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, alpha)
+                    segment:SetSize(segmentLength, ringThickness)
+                end
                 segment:Show()
             else
                 segment:Hide()
@@ -778,7 +865,18 @@ local function DrawCastRing(db, progress)
         if pulseSegment then
             local pulseAlpha = Clamp((color.a or 1) * pulse, 0, 1)
             if lastCastRingPulseSegmentIndex ~= litSegmentCount or lastCastRingPulseAlpha ~= pulseAlpha then
-                pulseSegment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, pulseAlpha)
+                if beveledCastRing then
+                    local angle = (-math.pi * 0.5) + (((litSegmentCount - 1) / segmentCount) * (math.pi * 2))
+                    local x = math.cos(angle)
+                    local y = math.sin(angle)
+                    local directionalLight = Clamp((((x * -0.70710678) + (y * 0.70710678)) + 1) * 0.5, 0, 1)
+                    local highlightStrength = directionalLight * directionalLight
+                    local shadowStrength = (1 - directionalLight) * (1 - directionalLight)
+                    local red, green, blue = GetBeveledColor(color, highlightStrength, shadowStrength, 0.6)
+                    pulseSegment:SetVertexColor(red, green, blue, pulseAlpha)
+                else
+                    pulseSegment:SetVertexColor(color.r or 1, color.g or 1, color.b or 1, pulseAlpha)
+                end
                 lastCastRingPulseSegmentIndex = litSegmentCount
                 lastCastRingPulseAlpha = pulseAlpha
             end
@@ -1392,6 +1490,16 @@ function MouseHelper.SetCircleCombatOnly(enabled)
     ApplyVisualState()
 end
 
+function MouseHelper.SetCircleStyle(style)
+    local db = MouseHelper.GetDB()
+    if not IsValidCircleStyle(style) then
+        style = DEFAULT_CIRCLE_STYLE
+    end
+
+    db.circleStyle = style
+    ApplyVisualState()
+end
+
 function MouseHelper.SetCastRingEnabled(enabled)
     MouseHelper.GetDB().castRingEnabled = enabled == true
     ApplyVisualState()
@@ -1452,13 +1560,21 @@ local function CreateValueSlider(parent, labelText, minValue, maxValue, step)
     slider.Low = _G[sliderName .. "Low"]
     slider.High = _G[sliderName .. "High"]
 
+    slider.Text:ClearAllPoints()
+    slider.Text:SetPoint("BOTTOM", slider, "TOP", 0, 2)
     slider.Text:SetText(labelText)
     slider.Text:SetTextColor(1, 0.88, 0.62, 1)
+
+    slider.Low:ClearAllPoints()
+    slider.Low:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", -4, -2)
     slider.Low:SetText(FormatValue(minValue))
+
+    slider.High:ClearAllPoints()
+    slider.High:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 4, -2)
     slider.High:SetText(FormatValue(maxValue))
 
     slider.ValueText = parent:CreateFontString(nil, "OVERLAY")
-    slider.ValueText:SetPoint("BOTTOM", slider, "TOP", 0, 8)
+    slider.ValueText:SetPoint("BOTTOM", slider.Text, "TOP", 0, 6)
     slider.ValueText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
     slider.ValueText:SetTextColor(0.95, 0.91, 0.85, 1)
 
@@ -1647,7 +1763,7 @@ UIDropDownMenu_SetWidth(CursorSizeDropdown, 150)
 local CirclePanel = CreateFrame("Frame", nil, PageContent)
 CirclePanel:SetPoint("TOPLEFT", GeneralPanel, "BOTTOMLEFT", 0, -18)
 CirclePanel:SetPoint("TOPRIGHT", GeneralPanel, "BOTTOMRIGHT", 0, -18)
-CirclePanel:SetHeight(362)
+CirclePanel:SetHeight(404)
 
 local CircleBg = CirclePanel:CreateTexture(nil, "BACKGROUND")
 CircleBg:SetAllPoints()
@@ -1702,8 +1818,17 @@ CircleSizeSlider:SetPoint("TOPLEFT", CircleClassColorCheckbox, "BOTTOMLEFT", 10,
 local CircleThicknessSlider = CreateValueSlider(CirclePanel, "", 2, 20, 1)
 CircleThicknessSlider:SetPoint("TOPLEFT", CircleSizeSlider, "BOTTOMLEFT", 0, -48)
 
+local CircleStyleLabel = CirclePanel:CreateFontString(nil, "OVERLAY")
+CircleStyleLabel:SetPoint("TOPLEFT", CircleThicknessSlider, "BOTTOMLEFT", 0, -28)
+CircleStyleLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+CircleStyleLabel:SetTextColor(1, 0.88, 0.62, 1)
+
+local CircleStyleDropdown = CreateFrame("Frame", "BeavisQoLMouseHelperCircleStyleDropdown", CirclePanel, "UIDropDownMenuTemplate")
+CircleStyleDropdown:SetPoint("TOPLEFT", CircleStyleLabel, "BOTTOMLEFT", -18, -2)
+UIDropDownMenu_SetWidth(CircleStyleDropdown, 170)
+
 local CircleColorButton = CreateColorButton(CirclePanel)
-CircleColorButton:SetPoint("TOPLEFT", CircleThicknessSlider, "BOTTOMLEFT", -10, -20)
+CircleColorButton:SetPoint("TOPLEFT", CircleStyleDropdown, "BOTTOMLEFT", 8, -14)
 
 local CastRingColorButton = CreateColorButton(CirclePanel)
 CastRingColorButton:SetPoint("LEFT", CircleColorButton, "RIGHT", 14, 0)
@@ -1711,7 +1836,7 @@ CastRingColorButton:SetPoint("LEFT", CircleColorButton, "RIGHT", 14, 0)
 local TrailPanel = CreateFrame("Frame", nil, PageContent)
 TrailPanel:SetPoint("TOPLEFT", CirclePanel, "BOTTOMLEFT", 0, -18)
 TrailPanel:SetPoint("TOPRIGHT", CirclePanel, "BOTTOMRIGHT", 0, -18)
-TrailPanel:SetHeight(340)
+TrailPanel:SetHeight(364)
 
 local TrailBg = TrailPanel:CreateTexture(nil, "BACKGROUND")
 TrailBg:SetAllPoints()
@@ -1773,6 +1898,11 @@ local function SetControlsEnabled(masterEnabled, db)
     CircleClassColorCheckbox:SetEnabled(masterEnabled and CircleCheckbox:GetChecked())
     CircleSizeSlider:SetEnabled(masterEnabled)
     CircleThicknessSlider:SetEnabled(masterEnabled)
+    if masterEnabled then
+        UIDropDownMenu_EnableDropDown(CircleStyleDropdown)
+    else
+        UIDropDownMenu_DisableDropDown(CircleStyleDropdown)
+    end
     CircleColorButton:SetEnabled(masterEnabled and db.circleUseClassColor ~= true)
     CastRingColorButton:SetEnabled(masterEnabled and db.castRingEnabled == true)
 
@@ -1812,6 +1942,7 @@ function PageMouseHelper:RefreshState()
     CircleClassColorLabel:SetText(L("MOUSE_HELPER_CIRCLE_CLASS_COLOR"))
     CircleSizeSlider.Text:SetText(L("MOUSE_HELPER_CIRCLE_SIZE"))
     CircleThicknessSlider.Text:SetText(L("MOUSE_HELPER_CIRCLE_THICKNESS"))
+    CircleStyleLabel:SetText(L("MOUSE_HELPER_CIRCLE_STYLE"))
     CircleColorButton:SetText(L("MOUSE_HELPER_COLOR_PICK"))
     CastRingColorButton:SetText(L("MOUSE_HELPER_CAST_RING_COLOR"))
 
@@ -1855,6 +1986,14 @@ function PageMouseHelper:RefreshState()
     for _, option in ipairs(TRAIL_STYLE_OPTIONS) do
         if option.value == db.trailStyle then
             UIDropDownMenu_SetText(TrailStyleDropdown, L(option.textKey))
+            break
+        end
+    end
+
+    UIDropDownMenu_SetSelectedValue(CircleStyleDropdown, db.circleStyle)
+    for _, option in ipairs(CIRCLE_STYLE_OPTIONS) do
+        if option.value == db.circleStyle then
+            UIDropDownMenu_SetText(CircleStyleDropdown, L(option.textKey))
             break
         end
     end
@@ -1929,6 +2068,21 @@ UIDropDownMenu_Initialize(CursorSizeDropdown, function(_, level)
             PageMouseHelper:RefreshState()
         end
         info.checked = (MouseHelper.GetBlizzardCursorSize() == option.value)
+        UIDropDownMenu_AddButton(info, level)
+    end
+end)
+
+UIDropDownMenu_Initialize(CircleStyleDropdown, function(_, level)
+    for _, option in ipairs(CIRCLE_STYLE_OPTIONS) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = L(option.textKey)
+        info.value = option.value
+        info.func = function()
+            MouseHelper.SetCircleStyle(option.value)
+            UIDropDownMenu_SetSelectedValue(CircleStyleDropdown, option.value)
+            PageMouseHelper:RefreshState()
+        end
+        info.checked = (MouseHelper.GetDB().circleStyle == option.value)
         UIDropDownMenu_AddButton(info, level)
     end
 end)

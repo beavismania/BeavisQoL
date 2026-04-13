@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.36.10 - 2026-04-13
+
+### Hotfix
+
+- `MouseHelper` hat jetzt einen umschaltbaren `Optikstil` mit `Standard` und einem deutlich sichtbareren `3D-Look`
+- der `3D-Look` wirkt bei aktivem Optikstil jetzt konsistent auf Cursor-Kreis und `Cast-Ring`
+- das `MouseHelper`-Menue wurde im Layout nachgezogen, damit Slider-Werte, Beschriftungen und der `Optikstil`-Dropdown nicht mehr ineinanderlaufen
+
 ## 0.36.9 - 2026-04-13
 
 ### Hotfix

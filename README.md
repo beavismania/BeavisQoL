@@ -4,14 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.9`
+- Version: `0.36.10`
 - Release-Datum: `2026-04-13`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `SmartLFG` wurde sichtbar umbenannt und im Overlay um `Bearb.`, `Abmelden` und kompaktere Bewerberzeilen erweitert
-  - `Markerleiste` kann optional automatisch nur noch in Dungeons und Raids erscheinen
-  - das `Loadout`-Feld im `Chonky Character Sheet` zeigt jetzt den aktiven Loadout-Namen
-  - `Boss Guides` bauen Boss-Tabs robuster auf, damit Tabnamen nicht mehr sporadisch leer bleiben
+  - `MouseHelper` hat jetzt einen umschaltbaren `Optikstil` mit `Standard` und `3D-Look`
+  - der `3D-Look` wirkt auf Cursor-Kreis und `Cast-Ring` zusammen statt nur auf einzelne Teile
+  - das `MouseHelper`-Menue nutzt den Platz sauberer, damit Slider-Werte, Labels und Dropdowns nicht mehr kollidieren
 
 ## Download
 
