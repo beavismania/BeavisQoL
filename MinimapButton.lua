@@ -847,6 +847,8 @@ local launcher = LDB:NewDataObject(ADDON_NAME, {
         if IsShiftKeyDown() then
             ReloadUI()
         elseif IsControlKeyDown() and button == "LeftButton" then
+            OpenPortalViewerWindow()
+        elseif IsControlKeyDown() and button == "RightButton" then
             ToggleMinimapHudOverlay()
         elseif button == "LeftButton" then
             ToggleMainWindow()
@@ -867,7 +869,8 @@ local launcher = LDB:NewDataObject(ADDON_NAME, {
         tooltip:AddLine(L("MINIMAP_LEFT_CLICK"), 1, 1, 1)
         tooltip:AddLine(L("MINIMAP_RIGHT_CLICK"), 1, 1, 1)
         tooltip:AddLine(L("MINIMAP_SHIFT_CLICK"), 1, 1, 1)
-        tooltip:AddLine(L("MINIMAP_CTRL_CLICK"), 1, 1, 1)
+        tooltip:AddLine(L("MINIMAP_CTRL_LEFT_CLICK"), 1, 1, 1)
+        tooltip:AddLine(L("MINIMAP_CTRL_RIGHT_CLICK"), 1, 1, 1)
         tooltip:AddLine(L("MINIMAP_DRAG"), 1, 1, 1)
     end,
 })

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.36.7 - 2026-04-13
+
+### Hotfix
+
+- Minimap-Button-Shortcuts neu belegt: `Strg+Linksklick` oeffnet jetzt `Saison Portale`
+- `Strg+Rechtsklick` auf den BeavisQoL-Minimap-Button schaltet jetzt das `Minimap-HUD`
+- Tooltip des Minimap-Buttons zeigt die neue `Strg`-Belegung jetzt getrennt und korrekt an
+
 ## 0.36.6 - 2026-04-12
 
 ### Hotfix

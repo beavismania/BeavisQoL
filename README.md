@@ -4,14 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.6`
-- Release-Datum: `2026-04-12`
+- Version: `0.36.7`
+- Release-Datum: `2026-04-13`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - neues kreisfoermiges `Minimap-HUD` mit separatem Overlay und festem Minimap-Rahmen oben rechts
-  - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das HUD
-  - Keystone-Fenster schliesst nach Aktivierung automatisch und Buttons sind auf `Bereitschaftscheck`, `Timer`, `Start` umgestellt
-  - `MouseHelper` und `StreamerPlanner` enthalten zusaetzliche Laufzeit-/Refresh-Optimierungen
+  - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button oeffnet jetzt `Saison Portale`
+  - `Strg+Rechtsklick` auf den BeavisQoL-Minimap-Button schaltet jetzt das `Minimap-HUD`
+  - der Tooltip des Minimap-Buttons zeigt die getrennte `Strg`-Belegung passend an
 
 ## Download
 
