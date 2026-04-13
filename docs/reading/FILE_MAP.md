@@ -5,16 +5,16 @@
 - [README.md](../../README.md)
   Projektziel, aktueller Stand, Versionierung und Installationshinweise.
 - [CHANGELOG.md](../../CHANGELOG.md)
-  Release-Historie und sichtbare Aenderungen.
+  Release-Historie und sichtbare Änderungen.
 - [BeavisQoL.toc](../../BeavisQoL.toc)
   Addon-Metadaten, Version, Release-Datum, Dateien und Lade-Reihenfolge.
 
 ## Release und Repository-Hygiene
 
 - [.gitignore](../../.gitignore)
-  Lokale Arbeitsreste, die kuenftig nicht neu getrackt werden sollen.
+  Lokale Arbeitsreste, die künftig nicht neu getrackt werden sollen.
 - [.gitattributes](../../.gitattributes)
-  Ausschluesse fuer Release-Archive.
+  Ausschlüsse für Release-Archive.
 - [.github/workflows/package-release.yml](../../.github/workflows/package-release.yml)
   Erzeugung und Upload des Release-ZIPs.
 
@@ -30,7 +30,7 @@
 ## Wichtige Inhaltsbereiche
 
 - [Localization/Localization.lua](../../Localization/Localization.lua)
-  Gemeinsamer Zugriff auf Uebersetzungen.
+  Gemeinsamer Zugriff auf Übersetzungen.
 - [Localization/deDE.lua](../../Localization/deDE.lua)
   Deutsche Texte.
 - [Localization/enUS.lua](../../Localization/enUS.lua)

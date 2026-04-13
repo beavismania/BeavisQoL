@@ -7,7 +7,7 @@ BeavisQoL.StatsModule = BeavisQoL.StatsModule or {}
 local StatsModule = BeavisQoL.StatsModule
 
 --[[
-Stats.lua besteht aus zwei zusammenhaengenden Teilen:
+Stats.lua besteht aus zwei zusammenhängenden Teilen:
 
 1. Einstellungs- und Overlay-Logik
    - SavedVariables lesen und normalisieren
@@ -225,7 +225,7 @@ end
 
 local function SaveOverlayGeometry()
     -- Gespeichert wird nur die obere linke Anker-Information des Overlay-Frames.
-    -- Damit laesst sich die Position spaeter exakt wiederherstellen.
+    -- Damit lässt sich die Position später exakt wiederherstellen.
     if not OverlayFrame then
         return
     end
@@ -338,8 +338,8 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
 end
 
 local function CreateStatRows(parent, targetTable)
-    -- Die Zeilen werden einmal gebaut und spaeter nur noch neu befuellt.
-    -- Das ist deutlich guenstiger, als bei jedem Refresh neue FontStrings anzulegen.
+    -- Die Zeilen werden einmal gebaut und später nur noch neu befüllt.
+    -- Das ist deutlich günstiger, als bei jedem Refresh neue FontStrings anzulegen.
     for index, definition in ipairs(STAT_DEFINITIONS) do
         local row = CreateFrame("Frame", nil, parent)
         row:SetHeight(22)
@@ -426,7 +426,7 @@ end
 
 local function RefreshStatRows(rows)
     -- Die Textwerte werden getrennt vom Layout aktualisiert.
-    -- So kann der Ticker spaeter nur die Zahlen erneuern, ohne das ganze
+    -- So kann der Ticker später nur die Zahlen erneuern, ohne das ganze
     -- Overlay jedes Mal neu anzukern.
     local values = GetCurrentStats()
 

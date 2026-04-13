@@ -818,7 +818,7 @@ end
 
 local function AppendSalesLog(amount, itemCount, source, timestamp, items)
     -- Verkaufslog und Geldlog bleiben getrennt:
-    -- Das Verkaufslog zeigt die Item-Sicht, das Geldlog spaeter die Kategorie-Sicht.
+    -- Das Verkaufslog zeigt die Item-Sicht, das Geldlog später die Kategorie-Sicht.
     if amount <= 0 then
         return
     end

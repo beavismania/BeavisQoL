@@ -7,7 +7,7 @@ Wichtig:
 1. LibDataBroker erstellt das Datenobjekt (also das, was "angeboten" wird)
 2. LibDBIcon zeigt dieses Objekt als Minimap-Button an
 3. Linksklick, Rechtsklick und Shift-Klick landen alle in derselben Datei,
-   damit sich das Verhalten an einer Stelle pflegen laesst
+   damit sich das Verhalten an einer Stelle pflegen lässt
 ]]
 
 -- Die beiden LDB-Bibliotheken sind die Grundlage für den Minimap-Button.

@@ -668,7 +668,7 @@ local function CreateSectionCheckbox(parent, anchor, titleText, hintText)
 end
 
 local function CreateBuiltInTodoRow(parent)
-    -- Standardaufgaben haben rechts zusaetzlich einen Aktiv-Schalter.
+    -- Standardaufgaben haben rechts zusätzlich einen Aktiv-Schalter.
     local row = CreateFrame("Frame", nil, parent)
     row:SetHeight(24)
 

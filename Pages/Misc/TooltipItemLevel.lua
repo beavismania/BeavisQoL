@@ -21,6 +21,7 @@ local tooltipItemLevelLines = setmetatable({}, { __mode = "k" })
 -- Solange eine Inspect-Anfrage läuft, merken wir uns nur den festen Unit-Token.
 -- Auch hier vermeiden wir absichtlich GUIDs im Laufweg dieses Moduls.
 local pendingInspectUnit = nil
+local pendingInspectGUID = nil
 local lastInspectRequestTime = 0
 local inspectFrameProtectionUntil = 0
 local inspectFrameHooksInstalled = false
@@ -34,6 +35,29 @@ local COMMON_UNIT_TOKENS = {
     "target",
     "focus",
 }
+
+local function IsUsablePlayerUnit(unit)
+    return type(unit) == "string"
+        and unit ~= ""
+        and UnitExists
+        and UnitExists(unit)
+        and UnitIsPlayer
+        and UnitIsPlayer(unit)
+end
+
+local function FindCommonUnitByGUID(guid)
+    if type(guid) ~= "string" or guid == "" or not UnitGUID then
+        return nil
+    end
+
+    for _, unit in ipairs(COMMON_UNIT_TOKENS) do
+        if IsUsablePlayerUnit(unit) and UnitGUID(unit) == guid then
+            return unit
+        end
+    end
+
+    return nil
+end
 
 -- Dieses Modul erweitert die bestehende Misc-Datenbank nur um einen weiteren
 -- Schalter. Die vorhandenen Defaults bleiben deshalb komplett erhalten.
@@ -290,11 +314,28 @@ end
 -- Im sicheren Tooltip-Callback prüfen wir nur feste Unit-Tokens direkt und
 -- verzichten komplett auf GUID-Vergleiche.
 local function ResolveTooltipUnit(tooltip, tooltipData)
-    if UnitExists and UnitIsPlayer then
-        for _, unit in ipairs(COMMON_UNIT_TOKENS) do
-            if UnitExists(unit) and UnitIsPlayer(unit) then
-                return unit
-            end
+    if tooltip and tooltip.GetUnit then
+        local _, tooltipUnit = tooltip:GetUnit()
+        if IsUsablePlayerUnit(tooltipUnit) then
+            return tooltipUnit
+        end
+    end
+
+    if tooltipData then
+        local tooltipGUID = tooltipData.guid or tooltipData.unitGUID
+        local tooltipUnit = FindCommonUnitByGUID(tooltipGUID)
+        if tooltipUnit then
+            return tooltipUnit
+        end
+    end
+
+    if IsUsablePlayerUnit("mouseover") then
+        return "mouseover"
+    end
+
+    for _, unit in ipairs(COMMON_UNIT_TOKENS) do
+        if IsUsablePlayerUnit(unit) then
+            return unit
         end
     end
 
@@ -305,6 +346,7 @@ end
 -- Das ist wichtig, damit keine alte Anfrage später falsche Tooltips verändert.
 local function ClearPendingInspect()
     pendingInspectUnit = nil
+    pendingInspectGUID = nil
 end
 
 -- Zeigt ein Itemlevel sofort aus dem Cache an.
@@ -369,6 +411,7 @@ local function RequestInspectForTooltip(tooltip, unit)
     end
 
     pendingInspectUnit = unit
+    pendingInspectGUID = UnitGUID and UnitGUID(unit) or nil
     lastInspectRequestTime = now
 
     NotifyInspect(unit)
@@ -385,9 +428,20 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
         return
     end
 
+    if pendingInspectGUID
+        and type(inspecteeGUID) == "string"
+        and inspecteeGUID ~= ""
+        and inspecteeGUID ~= pendingInspectGUID
+    then
+        return
+    end
+
     if IsBlizzardInspectFrameActive() then
         lastInspectRequestTime = GetNow()
-        pendingInspectUnit = nil
+        if ClearInspectPlayer then
+            ClearInspectPlayer()
+        end
+        ClearPendingInspect()
         return
     end
 
@@ -413,8 +467,19 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
         end
     end
 
+    if ClearInspectPlayer then
+        ClearInspectPlayer()
+    end
+
     ClearPendingInspect()
 end)
+
+local function HandleTooltipUnitUpdate(tooltip, tooltipData)
+    local unit = ResolveTooltipUnit(tooltip, tooltipData)
+    if unit then
+        RequestInspectForTooltip(tooltip, unit)
+    end
+end
 
 -- Retail bietet einen modernen Tooltip-Callback über TooltipDataProcessor.
 -- Den nutzen wir zuerst. Der alte Hook bleibt nur als vorsichtiger Fallback.
@@ -433,17 +498,11 @@ inspectSafetyFrame:SetScript("OnEvent", function(_, event, addonName)
 end)
 
 if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType and Enum.TooltipDataType.Unit then
-    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tooltip, tooltipData)
-        local unit = ResolveTooltipUnit(tooltip, tooltipData)
-        if unit then
-            RequestInspectForTooltip(tooltip, unit)
-        end
-    end)
-elseif GameTooltip and GameTooltip.HookScript and GameTooltip.HasScript and GameTooltip:HasScript("OnTooltipSetUnit") then
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, HandleTooltipUnitUpdate)
+end
+
+if GameTooltip and GameTooltip.HookScript and GameTooltip.HasScript and GameTooltip:HasScript("OnTooltipSetUnit") then
     GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
-        local unit = ResolveTooltipUnit(tooltip, nil)
-        if unit then
-            RequestInspectForTooltip(tooltip, unit)
-        end
+        HandleTooltipUnitUpdate(tooltip, nil)
     end)
 end

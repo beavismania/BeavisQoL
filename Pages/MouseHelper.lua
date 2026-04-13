@@ -33,9 +33,31 @@ local COLOR_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 local DEFAULT_TRAIL_STYLE = "lightning_storm"
 local DEFAULT_CIRCLE_STYLE = "standard"
 local RUNTIME_UPDATE_INTERVAL = 0.016
+local RUNTIME_TRAIL_UPDATE_INTERVAL = 0.016
 local TRAIL_SAMPLE_INTERVAL = 0.010
 local TRAIL_RENDER_INTERVAL = 0.016
-local TRAIL_IDLE_FADE_INTERVAL = 0.024
+local TRAIL_IDLE_RENDER_INTERVAL = 0.028
+local TRAIL_IDLE_FADE_INTERVAL = 0.032
+local TRAIL_ACTIVE_ANIMATION_WINDOW = 0.18
+local TRAIL_MIN_MOVEMENT_SQUARED = 0.81
+local TRAIL_SMOOTHING_DISTANCE = 8
+local TRAIL_MAX_SMOOTH_STEPS = 3
+local TRAIL_HEAD_SOURCE_SEGMENTS = 10
+local TRAIL_TAIL_SOURCE_STRIDE = 1
+local TRAIL_DECORATION_STRIDE = 2
+local TRAIL_DECORATION_HEAD_RATIO = 0.72
+local TRAIL_GLOW_HEAD_RATIO = 0.66
+local TRAIL_BRANCH_HEAD_RATIO = 0.78
+local TRAIL_MAX_DECORATED_SEGMENTS = 5
+local TRAIL_MAX_BRANCH_SEGMENTS = 2
+local TRAIL_CORE_ALPHA_THRESHOLD = 0.03
+local TRAIL_GLOW_ALPHA_THRESHOLD = 0.035
+local TRAIL_DECORATION_ALPHA_THRESHOLD = 0.055
+local TRAIL_MIN_SEGMENT_DISTANCE = 1.0
+local TRAIL_MAX_STORED_POINTS = 32
+local TRAIL_MAX_RENDER_POINTS = 24
+local TRAIL_HEAD_RENDER_POINTS = 6
+local TRAIL_MAX_GLOW_SEGMENTS = 4
 local CAST_RING_SEGMENT_COUNT = 96
 local CIRCLE_STYLE_OPTIONS = {
     { value = "standard", textKey = "MOUSE_HELPER_CIRCLE_STYLE_STANDARD" },
@@ -196,6 +218,19 @@ end
 
 local function Lerp(fromValue, toValue, ratio)
     return fromValue + ((toValue - fromValue) * ratio)
+end
+
+local function GetSegmentAngle(dx, dy)
+    if dx == 0 then
+        return (dy >= 0) and (math.pi * 0.5) or (math.pi * -0.5)
+    end
+
+    local angle = math.atan(dy / dx)
+    if dx < 0 then
+        angle = angle + math.pi
+    end
+
+    return angle
 end
 
 function MouseHelper.GetDB()
@@ -364,10 +399,12 @@ local trailAccentLines = {}
 local trailBranchLines = {}
 local trailPoints = {}
 local smoothTrailPoints = {}
+local trailRenderSampleIndices = {}
 local trailPointCount = 0
 local trailPointHeadIndex = 0
 local trailPointCapacity = 0
 local trailGeometryDirty = true
+local trailVisualDirty = true
 local smoothTrailPointCount = 0
 local smoothTrailSourceCount = 0
 local sampleAccumulator = 0
@@ -402,6 +439,10 @@ local lastTrailSampleX = nil
 local lastTrailSampleY = nil
 local lastTrailCursorX = nil
 local lastTrailCursorY = nil
+local lastTrailMovementAt = 0
+local lastRuntimeCursorX = nil
+local lastRuntimeCursorY = nil
+local castRingSpellActive = false
 local lastCircleCursorX = nil
 local lastCircleCursorY = nil
 local lastCastRingCursorX = nil
@@ -434,7 +475,10 @@ local function RefreshRuntimeState(db)
     runtimeState.trailSize = db.trailSize
     runtimeState.trailStyle = db.trailStyle
     runtimeState.blizzardCursorSize = db.blizzardCursorSize
-    runtimeState.trailMaxPointCount = db.trailLength + 4
+    runtimeState.trailMaxPointCount = math.min(
+        math.max(12, math.floor(db.trailLength * 0.45) + 8),
+        TRAIL_MAX_STORED_POINTS
+    )
 
     local circleRed, circleGreen, circleBlue, circleAlpha = GetCircleColorComponents(db)
     local trailRed, trailGreen, trailBlue, trailAlpha = GetTrailColorComponents(db)
@@ -448,6 +492,7 @@ local function RefreshRuntimeState(db)
         db.castRingColor and db.castRingColor.a or 0.95
     )
     AssignColor(runtimeState.trailColor, trailRed, trailGreen, trailBlue, trailAlpha)
+    trailVisualDirty = true
 
     return runtimeState
 end
@@ -597,25 +642,17 @@ end
 
 local function EnsureTrailLines(count)
     for index = #trailCoreLines + 1, count do
-        local coreLine = TrailFrame:CreateLine(nil, "ARTWORK")
-        coreLine:SetThickness(2)
-        coreLine:Hide()
-        trailCoreLines[index] = coreLine
+        local coreTexture = TrailFrame:CreateTexture(nil, "ARTWORK")
+        coreTexture:SetTexture(COLOR_TEXTURE)
+        coreTexture:SetBlendMode("BLEND")
+        coreTexture:Hide()
+        trailCoreLines[index] = coreTexture
 
-        local glowLine = TrailFrame:CreateLine(nil, "BORDER")
-        glowLine:SetThickness(4)
-        glowLine:Hide()
-        trailGlowLines[index] = glowLine
-
-        local accentLine = TrailFrame:CreateLine(nil, "ARTWORK")
-        accentLine:SetThickness(2)
-        accentLine:Hide()
-        trailAccentLines[index] = accentLine
-
-        local branchLine = TrailFrame:CreateLine(nil, "OVERLAY")
-        branchLine:SetThickness(1)
-        branchLine:Hide()
-        trailBranchLines[index] = branchLine
+        local glowTexture = TrailFrame:CreateTexture(nil, "BORDER")
+        glowTexture:SetTexture(COLOR_TEXTURE)
+        glowTexture:SetBlendMode("ADD")
+        glowTexture:Hide()
+        trailGlowLines[index] = glowTexture
     end
 end
 
@@ -634,6 +671,66 @@ local function GetTrailPoint(logicalIndex)
     end
 
     return trailPoints[physicalIndex]
+end
+
+local function BuildTrailRenderSampleIndices(pointCount)
+    for index = 1, #trailRenderSampleIndices do
+        trailRenderSampleIndices[index] = nil
+    end
+
+    if pointCount <= 0 then
+        return 0
+    end
+
+    local targetPointCount = math.min(pointCount, TRAIL_MAX_RENDER_POINTS)
+    if pointCount <= targetPointCount then
+        for index = 1, pointCount do
+            trailRenderSampleIndices[index] = index
+        end
+
+        return pointCount
+    end
+
+    local sampleCount = 0
+    local headPointCount = math.min(TRAIL_HEAD_RENDER_POINTS, targetPointCount - 2)
+    if headPointCount < 2 then
+        headPointCount = math.min(2, targetPointCount)
+    end
+
+    for index = 1, headPointCount do
+        sampleCount = sampleCount + 1
+        trailRenderSampleIndices[sampleCount] = index
+    end
+
+    local remainingSlots = targetPointCount - sampleCount
+    if remainingSlots <= 0 then
+        return sampleCount
+    end
+
+    local rangeStart = headPointCount + 1
+    local rangeEnd = pointCount
+
+    if remainingSlots == 1 then
+        sampleCount = sampleCount + 1
+        trailRenderSampleIndices[sampleCount] = rangeEnd
+        return sampleCount
+    end
+
+    local rangeLength = rangeEnd - rangeStart
+    for slotIndex = 1, remainingSlots do
+        local ratio = (slotIndex - 1) / (remainingSlots - 1)
+        local sourceIndex = rangeStart + math.floor((rangeLength * ratio) + 0.5)
+        local previousIndex = trailRenderSampleIndices[sampleCount] or 0
+
+        if sourceIndex <= previousIndex then
+            sourceIndex = math.min(rangeEnd, previousIndex + 1)
+        end
+
+        sampleCount = sampleCount + 1
+        trailRenderSampleIndices[sampleCount] = sourceIndex
+    end
+
+    return sampleCount
 end
 
 local function ResizeTrailPointBuffer(maxCount)
@@ -660,6 +757,7 @@ local function ResizeTrailPointBuffer(maxCount)
     trailPointCount = preservedCount
     trailPointHeadIndex = preservedCount > 0 and 1 or 0
     trailGeometryDirty = true
+    trailVisualDirty = true
 end
 
 local function DropOldestTrailPoint()
@@ -669,6 +767,7 @@ local function DropOldestTrailPoint()
 
     trailPointCount = trailPointCount - 1
     trailGeometryDirty = true
+    trailVisualDirty = true
     if trailPointCount <= 0 then
         trailPointCount = 0
         trailPointHeadIndex = 0
@@ -704,6 +803,8 @@ local function ClearTrail()
     sampleAccumulator = 0
     trailRenderAccumulator = 0
     trailFadeAccumulator = 0
+    lastTrailMovementAt = 0
+    trailVisualDirty = true
 
     for index = 1, #trailCoreLines do
         trailCoreLines[index]:Hide()
@@ -908,43 +1009,59 @@ local function BuildSmoothedTrailPoints(sourceCount)
     end
 
     local insertIndex = 0
-    for index = 1, sourceCount - 1 do
-        local p0 = GetTrailPoint((index > 1) and (index - 1) or index)
-        local p1 = GetTrailPoint(index)
-        local p2 = GetTrailPoint(index + 1)
-        local p3 = GetTrailPoint((index + 2 <= sourceCount) and (index + 2) or (index + 1))
+    local sourceIndex = 1
+    while sourceIndex < sourceCount do
+        local useTailStride = sourceIndex > TRAIL_HEAD_SOURCE_SEGMENTS
+        local sourceStride = useTailStride and TRAIL_TAIL_SOURCE_STRIDE or 1
+        local nextIndex = math.min(sourceCount, sourceIndex + sourceStride)
+        local p1 = GetTrailPoint(sourceIndex)
+        local p2 = GetTrailPoint(nextIndex)
 
-        if not p0 or not p1 or not p2 or not p3 then
+        if not p1 or not p2 then
             break
         end
 
-        local dx = p2.x - p1.x
-        local dy = p2.y - p1.y
-        local distance = math.sqrt((dx * dx) + (dy * dy))
-        local steps = Clamp(math.floor(distance / 8), 1, 3)
-
-        for step = 0, steps - 1 do
-            local t = step / steps
-            local t2 = t * t
-            local t3 = t2 * t
-
-            local x = 0.5 * (
-                (2 * p1.x)
-                + ((-p0.x + p2.x) * t)
-                + ((2 * p0.x - (5 * p1.x) + (4 * p2.x) - p3.x) * t2)
-                + ((-p0.x + (3 * p1.x) - (3 * p2.x) + p3.x) * t3)
-            )
-
-            local y = 0.5 * (
-                (2 * p1.y)
-                + ((-p0.y + p2.y) * t)
-                + ((2 * p0.y - (5 * p1.y) + (4 * p2.y) - p3.y) * t2)
-                + ((-p0.y + (3 * p1.y) - (3 * p2.y) + p3.y) * t3)
-            )
-
+        if useTailStride then
             insertIndex = insertIndex + 1
-            SetSmoothTrailPoint(insertIndex, x, y)
+            SetSmoothTrailPoint(insertIndex, p1.x, p1.y)
+        else
+            local p0 = GetTrailPoint((sourceIndex > 1) and (sourceIndex - 1) or sourceIndex)
+            local p3 = GetTrailPoint((nextIndex + 1 <= sourceCount) and (nextIndex + 1) or nextIndex)
+
+            if not p0 or not p3 then
+                break
+            end
+
+            local dx = p2.x - p1.x
+            local dy = p2.y - p1.y
+            local distance = math.sqrt((dx * dx) + (dy * dy))
+            local steps = Clamp(math.floor(distance / TRAIL_SMOOTHING_DISTANCE), 1, TRAIL_MAX_SMOOTH_STEPS)
+
+            for step = 0, steps - 1 do
+                local t = step / steps
+                local t2 = t * t
+                local t3 = t2 * t
+
+                local x = 0.5 * (
+                    (2 * p1.x)
+                    + ((-p0.x + p2.x) * t)
+                    + ((2 * p0.x - (5 * p1.x) + (4 * p2.x) - p3.x) * t2)
+                    + ((-p0.x + (3 * p1.x) - (3 * p2.x) + p3.x) * t3)
+                )
+
+                local y = 0.5 * (
+                    (2 * p1.y)
+                    + ((-p0.y + p2.y) * t)
+                    + ((2 * p0.y - (5 * p1.y) + (4 * p2.y) - p3.y) * t2)
+                    + ((-p0.y + (3 * p1.y) - (3 * p2.y) + p3.y) * t3)
+                )
+
+                insertIndex = insertIndex + 1
+                SetSmoothTrailPoint(insertIndex, x, y)
+            end
         end
+
+        sourceIndex = nextIndex
     end
 
     local lastPoint = GetTrailPoint(sourceCount)
@@ -972,12 +1089,15 @@ local function BuildSmoothedTrailPoints(sourceCount)
 end
 
 local function DrawTrail(db)
-    local sourceCount = math.min(trailPointCount, db.trailLength)
-    if trailGeometryDirty or sourceCount ~= smoothTrailSourceCount then
-        BuildSmoothedTrailPoints(sourceCount)
+    local availablePointCount = math.min(trailPointCount, math.min(db.trailLength, TRAIL_MAX_STORED_POINTS))
+    local smoothedPointCount = BuildSmoothedTrailPoints(availablePointCount)
+    local rawSegmentCount = smoothedPointCount - 1
+    local segmentStride = 1
+    if rawSegmentCount > TRAIL_MAX_RENDER_POINTS then
+        segmentStride = math.max(1, math.ceil(rawSegmentCount / TRAIL_MAX_RENDER_POINTS))
     end
 
-    local segmentCount = smoothTrailPointCount - 1
+    local segmentCount = rawSegmentCount > 0 and math.max(1, math.ceil(rawSegmentCount / segmentStride)) or 0
     if segmentCount <= 0 then
         for index = 1, #trailCoreLines do
             trailCoreLines[index]:Hide()
@@ -991,12 +1111,14 @@ local function DrawTrail(db)
         for index = 1, #trailBranchLines do
             trailBranchLines[index]:Hide()
         end
+        trailGeometryDirty = false
+        smoothTrailPointCount = 0
+        smoothTrailSourceCount = availablePointCount
         return
     end
 
     EnsureTrailLines(segmentCount)
 
-    local timeNow = GetTime() or 0
     local style = db.trailStyle or DEFAULT_TRAIL_STYLE
     local useClassColor = db.trailUseClassColor == true
     local trailColor = db.trailColor
@@ -1004,231 +1126,134 @@ local function DrawTrail(db)
     local trailGreen = trailColor and trailColor.g or 0.62
     local trailBlue = trailColor and trailColor.b or 0.1
     local trailAlpha = trailColor and trailColor.a or 0.75
+    local coreRed = trailRed
+    local coreGreen = trailGreen
+    local coreBlue = trailBlue
+    local glowRed = trailRed
+    local glowGreen = trailGreen
+    local glowBlue = trailBlue
+    local glowAlphaScale = 0.16
 
-    for index = 1, segmentCount do
-        local p1 = smoothTrailPoints[index]
-        local p2 = smoothTrailPoints[index + 1]
-        local coreLine = trailCoreLines[index]
-        local glowLine = trailGlowLines[index]
-        local accentLine = trailAccentLines[index]
-        local branchLine = trailBranchLines[index]
+    if style == "holy_light" then
+        if useClassColor then
+            coreRed = Lerp(coreRed, 1.0, 0.28)
+            coreGreen = Lerp(coreGreen, 0.95, 0.20)
+            coreBlue = Lerp(coreBlue, 0.72, 0.12)
+        else
+            coreRed = 1.0
+            coreGreen = 0.93
+            coreBlue = 0.74
+        end
+        glowRed = 1.0
+        glowGreen = 0.97
+        glowBlue = 0.82
+        glowAlphaScale = 0.22
+    elseif style == "arc_ribbons" then
+        if useClassColor then
+            coreRed = Lerp(coreRed, 0.78, 0.10)
+            coreGreen = Lerp(coreGreen, 0.88, 0.10)
+            coreBlue = Lerp(coreBlue, 1.0, 0.16)
+        else
+            coreRed = 0.78
+            coreGreen = 0.88
+            coreBlue = 1.0
+        end
+        glowRed = 0.66
+        glowGreen = 0.82
+        glowBlue = 1.0
+        glowAlphaScale = 0.14
+    elseif style == "clean_streak" then
+        coreRed = Lerp(coreRed, 1.0, 0.08)
+        coreGreen = Lerp(coreGreen, 0.98, 0.08)
+        coreBlue = Lerp(coreBlue, 0.95, 0.08)
+        glowRed = Lerp(coreRed, 1.0, 0.10)
+        glowGreen = Lerp(coreGreen, 0.96, 0.10)
+        glowBlue = Lerp(coreBlue, 0.84, 0.08)
+        glowAlphaScale = 0.10
+    else
+        glowRed = Lerp(coreRed, 0.72, useClassColor and 0.12 or 0.20)
+        glowGreen = Lerp(coreGreen, 0.84, useClassColor and 0.12 or 0.20)
+        glowBlue = Lerp(coreBlue, 1.0, useClassColor and 0.18 or 0.24)
+        glowAlphaScale = 0.18
+    end
+
+    local maxSegmentCount = math.max(1, segmentCount - 1)
+    local drawIndex = 0
+    local sourceIndex = 1
+    while sourceIndex < smoothedPointCount do
+        local nextIndex = math.min(smoothedPointCount, sourceIndex + segmentStride)
+        drawIndex = drawIndex + 1
+
+        local p1 = smoothTrailPoints[sourceIndex]
+        local p2 = smoothTrailPoints[nextIndex]
+        local coreLine = trailCoreLines[drawIndex]
+        local glowLine = trailGlowLines[drawIndex]
 
         if p1 and p2 then
             local dx = p2.x - p1.x
             local dy = p2.y - p1.y
             local distance = math.sqrt((dx * dx) + (dy * dy))
+            local ratio = 1 - ((drawIndex - 1) / maxSegmentCount)
+            local alpha = trailAlpha * (0.22 + (0.78 * ratio * ratio))
 
-            if distance > 0.35 then
-                local ratio = 1 - ((index - 1) / math.max(1, segmentCount))
-                local alpha = trailAlpha * ratio * ratio
-                local coreThickness = math.max(1.0, db.trailSize * (0.16 + (ratio * 0.42)))
-                local glowThickness = coreThickness * 2.6
-                local coreRed = trailRed
-                local coreGreen = trailGreen
-                local coreBlue = trailBlue
-                local glowRed = coreRed
-                local glowGreen = coreGreen
-                local glowBlue = coreBlue
-                local glowAlpha = alpha * 0.28
-                local strandOffsetA = 0
-                local strandOffsetB = 0
-                local strandAlpha = alpha * 0.38
-                local strandOffsetC = 0
-                local strandAlphaC = alpha * 0.32
+            if distance >= TRAIL_MIN_SEGMENT_DISTANCE and alpha >= TRAIL_CORE_ALPHA_THRESHOLD then
+                local angle = GetSegmentAngle(dx, dy)
+                local centerX = (p1.x + p2.x) * 0.5
+                local centerY = (p1.y + p2.y) * 0.5
+                local coreLength = math.max(3.0, distance + (db.trailSize * (0.90 + (ratio * 0.35))))
+                local coreThickness = math.max(2.0, db.trailSize * (0.52 + (ratio * 0.24)))
 
-                local waveA = math.sin((timeNow * 3.6) + (index * 0.24))
-                local waveB = math.cos((timeNow * 2.9) + (index * 0.31))
-                local baseOffset = db.trailSize * (0.24 + (0.68 * ratio))
-
-                if style == "holy_light" then
-                    local pulse = 0.5 + (math.sin((timeNow * 4.8) + (index * 0.34)) * 0.5)
-                    if useClassColor then
-                        coreRed = Lerp(coreRed, 1.0, 0.34)
-                        coreGreen = Lerp(coreGreen, 0.95, 0.22)
-                        coreBlue = Lerp(coreBlue, 0.72, 0.14)
-                    else
-                        coreRed = Lerp(coreRed, 1.0, 0.68)
-                        coreGreen = Lerp(coreGreen, 0.95, 0.58)
-                        coreBlue = Lerp(coreBlue, 0.72, 0.54)
-                    end
-                    coreThickness = coreThickness * (1.10 + (pulse * 0.10))
-                    glowThickness = coreThickness * 3.1
-                    if useClassColor then
-                        glowRed = Lerp(coreRed, 1.0, 0.18)
-                        glowGreen = Lerp(coreGreen, 0.93, 0.18)
-                        glowBlue = Lerp(coreBlue, 0.72, 0.14)
-                    else
-                        glowRed = 1.0
-                        glowGreen = 0.93
-                        glowBlue = 0.72
-                    end
-                    glowAlpha = alpha * (0.40 + (pulse * 0.16))
-                    strandOffsetA = baseOffset * (0.32 + (0.22 * waveA))
-                    strandOffsetB = -baseOffset * (0.30 + (0.20 * waveB))
-                    strandAlpha = alpha * (0.30 + (pulse * 0.12))
-                    strandOffsetC = strandOffsetB
-                    strandAlphaC = strandAlpha * 0.8
-                elseif style == "arc_ribbons" then
-                    local flow = 0.5 + (math.sin((timeNow * 1.9) + (index * 0.18)) * 0.5)
-                    if useClassColor then
-                        coreRed = Lerp(coreRed, 0.74, 0.12)
-                        coreGreen = Lerp(coreGreen, 0.86, 0.12)
-                        coreBlue = Lerp(coreBlue, 1.0, 0.18)
-                    else
-                        coreRed = 0.74
-                        coreGreen = 0.86
-                        coreBlue = 1.0
-                    end
-                    coreThickness = math.max(1.0, coreThickness * 0.88)
-                    glowThickness = coreThickness * 1.7
-                    if useClassColor then
-                        glowRed = Lerp(coreRed, 0.68, 0.16)
-                        glowGreen = Lerp(coreGreen, 0.82, 0.16)
-                        glowBlue = Lerp(coreBlue, 1.0, 0.18)
-                    else
-                        glowRed = 0.68
-                        glowGreen = 0.82
-                        glowBlue = 1.0
-                    end
-                    glowAlpha = alpha * 0.18
-
-                    local arcBase = db.trailSize * (0.80 + (1.95 * ratio))
-                    strandOffsetA = arcBase * (0.95 + (0.34 * waveA))
-                    strandOffsetB = -arcBase * (0.58 + (0.28 * waveB))
-                    strandOffsetC = arcBase * (1.90 + (0.45 * flow))
-                    strandAlpha = alpha * 0.46
-                    strandAlphaC = alpha * 0.34
-                elseif style == "clean_streak" then
-                    coreRed = Lerp(coreRed, 1.0, 0.10)
-                    coreGreen = Lerp(coreGreen, 0.98, 0.10)
-                    coreBlue = Lerp(coreBlue, 0.95, 0.10)
-                    coreThickness = coreThickness * 1.05
-                    glowThickness = coreThickness * 1.9
-                    glowRed = Lerp(coreRed, 1.0, 0.15)
-                    glowGreen = Lerp(coreGreen, 0.95, 0.15)
-                    glowBlue = Lerp(coreBlue, 0.82, 0.10)
-                    glowAlpha = alpha * 0.23
-                    strandOffsetA = 0
-                    strandOffsetB = 0
-                    strandAlpha = 0
-                    strandOffsetC = 0
-                    strandAlphaC = 0
-                else
-                    if useClassColor then
-                        coreRed = Lerp(coreRed, 0.70, 0.24)
-                        coreGreen = Lerp(coreGreen, 0.86, 0.24)
-                        coreBlue = Lerp(coreBlue, 1.0, 0.28)
-                    else
-                        coreRed = Lerp(coreRed, 0.70, 0.62)
-                        coreGreen = Lerp(coreGreen, 0.86, 0.62)
-                        coreBlue = Lerp(coreBlue, 1.0, 0.76)
-                    end
-                    coreThickness = coreThickness * 1.03
-                    glowThickness = coreThickness * 2.4
-                    if useClassColor then
-                        glowRed = Lerp(coreRed, 0.72, 0.18)
-                        glowGreen = Lerp(coreGreen, 0.84, 0.18)
-                        glowBlue = Lerp(coreBlue, 1.0, 0.22)
-                    else
-                        glowRed = 0.72
-                        glowGreen = 0.84
-                        glowBlue = 1.0
-                    end
-                    glowAlpha = alpha * 0.36
-                    strandOffsetA = baseOffset * (0.52 + (0.24 * waveA))
-                    strandOffsetB = -baseOffset * (0.64 + (0.30 * waveB))
-                    strandAlpha = alpha * 0.44
-                    strandOffsetC = strandOffsetB
-                    strandAlphaC = strandAlpha * 0.84
-                end
-
-                local nx = -dy / distance
-                local ny = dx / distance
-                local x1 = p1.x
-                local y1 = p1.y
-                local x2 = p2.x
-                local y2 = p2.y
-
-                coreLine:SetStartPoint("BOTTOMLEFT", UIParent, x1, y1)
-                coreLine:SetEndPoint("BOTTOMLEFT", UIParent, x2, y2)
-                coreLine:SetThickness(coreThickness)
+                coreLine:ClearAllPoints()
+                coreLine:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
+                coreLine:SetSize(coreLength, coreThickness)
+                coreLine:SetRotation(angle)
                 coreLine:SetColorTexture(coreRed, coreGreen, coreBlue, alpha)
                 coreLine:Show()
 
-                glowLine:SetStartPoint("BOTTOMLEFT", UIParent, x1, y1)
-                glowLine:SetEndPoint("BOTTOMLEFT", UIParent, x2, y2)
-                glowLine:SetThickness(glowThickness)
-                glowLine:SetColorTexture(glowRed, glowGreen, glowBlue, glowAlpha)
-                glowLine:Show()
-
-                if style == "clean_streak" then
-                    accentLine:Hide()
-                    branchLine:Hide()
+                local glowAlpha = alpha * glowAlphaScale * (0.65 + (ratio * 0.35))
+                if drawIndex <= math.max(TRAIL_MAX_GLOW_SEGMENTS, math.floor(segmentCount * 0.5))
+                    and glowAlpha >= TRAIL_GLOW_ALPHA_THRESHOLD
+                then
+                    glowLine:ClearAllPoints()
+                    glowLine:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX, centerY)
+                    glowLine:SetSize(coreLength + (db.trailSize * (1.10 + (ratio * 0.45))), coreThickness * 2.0)
+                    glowLine:SetRotation(angle)
+                    glowLine:SetColorTexture(glowRed, glowGreen, glowBlue, glowAlpha)
+                    glowLine:Show()
                 else
-                    local ax1 = x1 + (nx * strandOffsetA)
-                    local ay1 = y1 + (ny * strandOffsetA)
-                    local ax2 = x2 + (nx * strandOffsetA)
-                    local ay2 = y2 + (ny * strandOffsetA)
-
-                    local bx1 = x1 + (nx * strandOffsetB)
-                    local by1 = y1 + (ny * strandOffsetB)
-                    local bx2 = x2 + (nx * strandOffsetB)
-                    local by2 = y2 + (ny * strandOffsetB)
-
-                    local cx1 = x1 + (nx * strandOffsetC)
-                    local cy1 = y1 + (ny * strandOffsetC)
-                    local cx2 = x2 + (nx * strandOffsetC)
-                    local cy2 = y2 + (ny * strandOffsetC)
-
-                    accentLine:SetStartPoint("BOTTOMLEFT", UIParent, ax1, ay1)
-                    accentLine:SetEndPoint("BOTTOMLEFT", UIParent, ax2, ay2)
-                    accentLine:SetThickness(math.max(1.0, coreThickness * 0.72))
-                    accentLine:SetColorTexture(glowRed, glowGreen, glowBlue, strandAlpha)
-                    accentLine:Show()
-
-                    if style == "arc_ribbons" then
-                        branchLine:SetStartPoint("BOTTOMLEFT", UIParent, cx1, cy1)
-                        branchLine:SetEndPoint("BOTTOMLEFT", UIParent, cx2, cy2)
-                        branchLine:SetThickness(math.max(1.0, coreThickness * 0.56))
-                        branchLine:SetColorTexture(0.80, 0.90, 1.0, strandAlphaC)
-                        branchLine:Show()
-                    else
-                        branchLine:SetStartPoint("BOTTOMLEFT", UIParent, bx1, by1)
-                        branchLine:SetEndPoint("BOTTOMLEFT", UIParent, bx2, by2)
-                        branchLine:SetThickness(math.max(1.0, coreThickness * 0.52))
-                        branchLine:SetColorTexture(glowRed, glowGreen, glowBlue, strandAlpha * 0.84)
-                        branchLine:Show()
-                    end
+                    glowLine:Hide()
                 end
             else
                 coreLine:Hide()
                 glowLine:Hide()
-                accentLine:Hide()
-                branchLine:Hide()
             end
         else
             coreLine:Hide()
             glowLine:Hide()
-            accentLine:Hide()
-            branchLine:Hide()
         end
+
+        sourceIndex = nextIndex
     end
 
-    for index = segmentCount + 1, #trailCoreLines do
+    for index = drawIndex + 1, #trailCoreLines do
         trailCoreLines[index]:Hide()
     end
 
-    for index = segmentCount + 1, #trailGlowLines do
+    for index = drawIndex + 1, #trailGlowLines do
         trailGlowLines[index]:Hide()
     end
 
-    for index = segmentCount + 1, #trailAccentLines do
+    for index = 1, #trailAccentLines do
         trailAccentLines[index]:Hide()
     end
 
-    for index = segmentCount + 1, #trailBranchLines do
+    for index = 1, #trailBranchLines do
         trailBranchLines[index]:Hide()
     end
+
+    trailGeometryDirty = false
+    smoothTrailPointCount = smoothedPointCount
+    smoothTrailSourceCount = availablePointCount
 end
 
 local function IsVisualFeatureEnabled(db)
@@ -1255,15 +1280,21 @@ local function ShouldShowCastRing(db)
     return db.enabled == true and db.castRingEnabled == true
 end
 
+local function ShouldPollCastRing(db)
+    return ShouldShowCastRing(db) and castRingSpellActive == true
+end
+
 local function ApplyVisualState()
     local db = MouseHelper.GetDB()
     local state = RefreshRuntimeState(db)
-    local shouldRunRuntime = state.enabled == true and (state.trailEnabled == true or ShouldShowCircle(state) or ShouldShowCastRing(state))
+    local shouldRunRuntime = state.enabled == true and (state.trailEnabled == true or ShouldShowCircle(state) or ShouldPollCastRing(state))
 
     if not IsVisualFeatureEnabled(state) or not shouldRunRuntime then
         runtimeUpdateAccumulator = 0
         RuntimeFrame:SetScript("OnUpdate", nil)
         RuntimeFrame:Hide()
+        lastRuntimeCursorX = nil
+        lastRuntimeCursorY = nil
         CursorCircleFrame:Hide()
         lastCircleCursorX = nil
         lastCircleCursorY = nil
@@ -1330,6 +1361,20 @@ local function PushTrailPoint(cursorX, cursorY)
     end
 
     trailGeometryDirty = true
+    trailVisualDirty = true
+    lastTrailMovementAt = (GetTime and GetTime()) or 0
+end
+
+local function HasRecentlyAnimatedTrail(now)
+    if trailPointCount <= 0 then
+        return false
+    end
+
+    if lastTrailMovementAt <= 0 then
+        return false
+    end
+
+    return (now - lastTrailMovementAt) <= TRAIL_ACTIVE_ANIMATION_WINDOW
 end
 
 local function HandleMouseHelperRuntimeUpdate(_, elapsed)
@@ -1340,6 +1385,23 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
     end
 
     local cursorX, cursorY = GetCursorUiPosition()
+    local cursorMoved = lastRuntimeCursorX ~= cursorX or lastRuntimeCursorY ~= cursorY
+    local castProgress = nil
+
+    if ShouldPollCastRing(db) then
+        castProgress = GetCastRingProgress()
+        if castProgress == nil then
+            castRingSpellActive = false
+        end
+    end
+
+    local trailNeedsWork = db.trailEnabled == true and (trailPointCount > 0 or trailGeometryDirty or trailVisualDirty)
+    if not cursorMoved and castProgress == nil and not trailNeedsWork then
+        return
+    end
+
+    lastRuntimeCursorX = cursorX
+    lastRuntimeCursorY = cursorY
 
     if ShouldShowCircle(db) then
         ApplyCircleVisual(db)
@@ -1356,8 +1418,7 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
         lastCircleCursorY = nil
     end
 
-    if ShouldShowCastRing(db) then
-        local castProgress = GetCastRingProgress()
+    if ShouldPollCastRing(db) then
         if castProgress ~= nil then
             if lastCastRingCursorX ~= cursorX or lastCastRingCursorY ~= cursorY then
                 CastRingFrame:ClearAllPoints()
@@ -1377,6 +1438,9 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
         return
     end
 
+    local timeNow = (GetTime and GetTime()) or 0
+    local recentTrailAnimation = HasRecentlyAnimatedTrail(timeNow)
+    local trailRenderInterval = recentTrailAnimation and TRAIL_RENDER_INTERVAL or TRAIL_IDLE_RENDER_INTERVAL
     trailRenderAccumulator = trailRenderAccumulator + elapsed
     local previousCursorX = lastTrailCursorX or cursorX
     local previousCursorY = lastTrailCursorY or cursorY
@@ -1390,7 +1454,7 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
         local sampleY = previousCursorY + ((cursorY - previousCursorY) * ratio)
         local deltaX = sampleX - (lastTrailSampleX or sampleX)
         local deltaY = sampleY - (lastTrailSampleY or sampleY)
-        local movedEnough = ((deltaX * deltaX) + (deltaY * deltaY)) >= 1
+        local movedEnough = ((deltaX * deltaX) + (deltaY * deltaY)) >= TRAIL_MIN_MOVEMENT_SQUARED
 
         if movedEnough or trailPointCount == 0 then
             trailFadeAccumulator = 0
@@ -1407,15 +1471,28 @@ local function HandleMouseHelperRuntimeUpdate(_, elapsed)
     lastTrailCursorX = cursorX
     lastTrailCursorY = cursorY
 
-    if trailRenderAccumulator >= TRAIL_RENDER_INTERVAL then
-        trailRenderAccumulator = trailRenderAccumulator - TRAIL_RENDER_INTERVAL
-        DrawTrail(db)
+    if trailRenderAccumulator >= trailRenderInterval then
+        trailRenderAccumulator = trailRenderAccumulator - trailRenderInterval
+
+        if trailGeometryDirty
+            or trailVisualDirty
+            or (recentTrailAnimation and db.trailStyle ~= "clean_streak")
+        then
+            DrawTrail(db)
+            trailVisualDirty = false
+        end
     end
 end
 
 MouseHelperRuntimeOnUpdate = function(_, elapsed)
+    local db = runtimeState
+    local requiredInterval = RUNTIME_UPDATE_INTERVAL
+    if db and db.trailEnabled == true then
+        requiredInterval = math.max(requiredInterval, RUNTIME_TRAIL_UPDATE_INTERVAL)
+    end
+
     runtimeUpdateAccumulator = runtimeUpdateAccumulator + (elapsed or 0)
-    if runtimeUpdateAccumulator < RUNTIME_UPDATE_INTERVAL then
+    if runtimeUpdateAccumulator < requiredInterval then
         return
     end
 
@@ -1423,10 +1500,12 @@ MouseHelperRuntimeOnUpdate = function(_, elapsed)
     runtimeUpdateAccumulator = 0
 
     local profiler = BeavisQoL.PerformanceProfiler
-    local sampleToken = profiler and profiler.BeginSample and profiler.BeginSample()
-    HandleMouseHelperRuntimeUpdate(_, elapsed)
-    if profiler and profiler.EndSample then
+    if profiler and profiler.BeginSample and profiler.EndSample then
+        local sampleToken = profiler.BeginSample()
+        HandleMouseHelperRuntimeUpdate(_, elapsed)
         profiler.EndSample("MouseHelper.OnUpdate", sampleToken)
+    else
+        HandleMouseHelperRuntimeUpdate(_, elapsed)
     end
 end
 
@@ -1512,14 +1591,41 @@ local function RefreshPageIfVisible()
     end
 end
 
+local function RefreshCastRingState(forceRefresh)
+    local wasActive = castRingSpellActive == true
+    castRingSpellActive = GetCastRingProgress() ~= nil
+
+    if forceRefresh or wasActive ~= castRingSpellActive then
+        if not castRingSpellActive then
+            HideCastRing()
+        end
+        ApplyVisualState()
+    end
+end
+
 local LoginWatcher = CreateFrame("Frame")
 LoginWatcher:RegisterEvent("PLAYER_LOGIN")
 LoginWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
 LoginWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
-LoginWatcher:SetScript("OnEvent", function()
+LoginWatcher:RegisterEvent("UNIT_SPELLCAST_START")
+LoginWatcher:RegisterEvent("UNIT_SPELLCAST_STOP")
+LoginWatcher:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+LoginWatcher:RegisterEvent("UNIT_SPELLCAST_FAILED")
+LoginWatcher:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
+LoginWatcher:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
+LoginWatcher:SetScript("OnEvent", function(_, event, unit)
+    if string.sub(event or "", 1, 14) == "UNIT_SPELLCAST" then
+        if unit ~= "player" then
+            return
+        end
+
+        RefreshCastRingState(false)
+        return
+    end
+
     MouseHelper.GetDB()
+    RefreshCastRingState(true)
     ApplyBlizzardCursorSize()
-    ApplyVisualState()
     RefreshPageIfVisible()
 end)
 
@@ -1683,15 +1789,17 @@ IntroPanel:SetPoint("TOPLEFT", PageContent, "TOPLEFT", 20, -20)
 IntroPanel:SetPoint("TOPRIGHT", PageContent, "TOPRIGHT", -20, -20)
 IntroPanel:SetHeight(126)
 
-local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
-IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+do
+    local background = IntroPanel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
-local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
-IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
-IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
-IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+    local border = IntroPanel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+end
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
@@ -1711,15 +1819,17 @@ GeneralPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 GeneralPanel:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
 GeneralPanel:SetHeight(176)
 
-local GeneralBg = GeneralPanel:CreateTexture(nil, "BACKGROUND")
-GeneralBg:SetAllPoints()
-GeneralBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+do
+    local background = GeneralPanel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
-local GeneralBorder = GeneralPanel:CreateTexture(nil, "ARTWORK")
-GeneralBorder:SetPoint("BOTTOMLEFT", GeneralPanel, "BOTTOMLEFT", 0, 0)
-GeneralBorder:SetPoint("BOTTOMRIGHT", GeneralPanel, "BOTTOMRIGHT", 0, 0)
-GeneralBorder:SetHeight(1)
-GeneralBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+    local border = GeneralPanel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", GeneralPanel, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", GeneralPanel, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+end
 
 local GeneralTitle = GeneralPanel:CreateFontString(nil, "OVERLAY")
 GeneralTitle:SetPoint("TOPLEFT", GeneralPanel, "TOPLEFT", 18, -14)
@@ -1765,15 +1875,17 @@ CirclePanel:SetPoint("TOPLEFT", GeneralPanel, "BOTTOMLEFT", 0, -18)
 CirclePanel:SetPoint("TOPRIGHT", GeneralPanel, "BOTTOMRIGHT", 0, -18)
 CirclePanel:SetHeight(404)
 
-local CircleBg = CirclePanel:CreateTexture(nil, "BACKGROUND")
-CircleBg:SetAllPoints()
-CircleBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+do
+    local background = CirclePanel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
-local CircleBorder = CirclePanel:CreateTexture(nil, "ARTWORK")
-CircleBorder:SetPoint("BOTTOMLEFT", CirclePanel, "BOTTOMLEFT", 0, 0)
-CircleBorder:SetPoint("BOTTOMRIGHT", CirclePanel, "BOTTOMRIGHT", 0, 0)
-CircleBorder:SetHeight(1)
-CircleBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+    local border = CirclePanel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", CirclePanel, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", CirclePanel, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+end
 
 local CircleTitle = CirclePanel:CreateFontString(nil, "OVERLAY")
 CircleTitle:SetPoint("TOPLEFT", CirclePanel, "TOPLEFT", 18, -14)
@@ -1828,7 +1940,7 @@ CircleStyleDropdown:SetPoint("TOPLEFT", CircleStyleLabel, "BOTTOMLEFT", -18, -2)
 UIDropDownMenu_SetWidth(CircleStyleDropdown, 170)
 
 local CircleColorButton = CreateColorButton(CirclePanel)
-CircleColorButton:SetPoint("TOPLEFT", CircleStyleDropdown, "BOTTOMLEFT", 8, -14)
+CircleColorButton:SetPoint("TOPLEFT", CircleStyleDropdown, "BOTTOMLEFT", 8, -4)
 
 local CastRingColorButton = CreateColorButton(CirclePanel)
 CastRingColorButton:SetPoint("LEFT", CircleColorButton, "RIGHT", 14, 0)
@@ -1838,15 +1950,17 @@ TrailPanel:SetPoint("TOPLEFT", CirclePanel, "BOTTOMLEFT", 0, -18)
 TrailPanel:SetPoint("TOPRIGHT", CirclePanel, "BOTTOMRIGHT", 0, -18)
 TrailPanel:SetHeight(364)
 
-local TrailBg = TrailPanel:CreateTexture(nil, "BACKGROUND")
-TrailBg:SetAllPoints()
-TrailBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+do
+    local background = TrailPanel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.1, 0.068, 0.046, 0.94)
 
-local TrailBorder = TrailPanel:CreateTexture(nil, "ARTWORK")
-TrailBorder:SetPoint("BOTTOMLEFT", TrailPanel, "BOTTOMLEFT", 0, 0)
-TrailBorder:SetPoint("BOTTOMRIGHT", TrailPanel, "BOTTOMRIGHT", 0, 0)
-TrailBorder:SetHeight(1)
-TrailBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+    local border = TrailPanel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", TrailPanel, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", TrailPanel, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+end
 
 local TrailTitle = TrailPanel:CreateFontString(nil, "OVERLAY")
 TrailTitle:SetPoint("TOPLEFT", TrailPanel, "TOPLEFT", 18, -14)

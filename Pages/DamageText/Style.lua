@@ -3,7 +3,7 @@ local ADDON_NAME, BeavisQoL = ...
 BeavisQoL.DamageText = BeavisQoL.DamageText or {}
 local DamageText = BeavisQoL.DamageText
 
--- Style.lua enthaelt die eigentliche Combat-Text-Fachlogik:
+-- Style.lua enthält die eigentliche Combat-Text-Fachlogik:
 -- Font-Auswahl, CVar-Steuerung, Restore-Logik und Reapply beim Login.
 
 -- Fonts, die ohne Zusatzdateien direkt im WoW-Client vorhanden sind.

@@ -358,8 +358,8 @@ local function GetPreyWidgetDataForSet(widgetSetID)
     end
 
     if not preyInfo then
-        -- Ohne echtes Prey-Hunt-Widget wuerden normale Statusleisten
-        -- faelschlich als "Phase 1/4" interpretiert werden.
+        -- Ohne echtes Prey-Hunt-Widget würden normale Statusleisten
+        -- fälschlich als "Phase 1/4" interpretiert werden.
         return nil
     end
 
@@ -477,8 +477,8 @@ local function UpdatePreyHuntOverlay()
 
     local anchorFrame = ResolvePreyOverlayAnchor(widgetData)
     -- Die eigentliche Jagd-Anzeige soll sich am Blizzard-Prey-Widget
-    -- orientieren. Questziele zaehlen oft den Endboss noch mit und zeigen
-    -- dadurch am Bossstein irrefuehrend nur 50%.
+    -- orientieren. Questziele zählen oft den Endboss noch mit und zeigen
+    -- dadurch am Bossstein irreführend nur 50%.
     local progressValue = (widgetData and widgetData.preyInfo and GetProgressPercentFromStage(widgetData.preyInfo.progressState))
         or (widgetData and GetProgressPercentFromWidget(widgetData.progressInfo))
         or (activeQuestID and GetQuestProgressPercent(activeQuestID))

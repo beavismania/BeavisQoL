@@ -4,13 +4,14 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.10`
+- Version: `0.36.11`
 - Release-Datum: `2026-04-13`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `MouseHelper` hat jetzt einen umschaltbaren `Optikstil` mit `Standard` und `3D-Look`
-  - der `3D-Look` wirkt auf Cursor-Kreis und `Cast-Ring` zusammen statt nur auf einzelne Teile
-  - das `MouseHelper`-Menue nutzt den Platz sauberer, damit Slider-Werte, Labels und Dropdowns nicht mehr kollidieren
+  - `WeeklyKeys` hat jetzt `GRP-Keys` mit robusterer Key-Auflösung, `Details`-Fallback und direkter Gruppenchat-Ausgabe
+  - das frühere `GRP-Keys`-Debugfenster ist jetzt die zentrale `Beavis Debug`-Konsole und lässt sich per `/beavis debug open` öffnen
+  - `Organisierte Gruppen` fangen abrupte Invite-/Kick-Wechsel jetzt robuster ab, damit der Blizzard-Bereich nicht leer hängen bleibt
+  - `MouseHelper` rendert den `max fps`-Trail wieder weicher und sichtbar länger, bei gleichzeitig abgespeckter Laufzeitlogik
 
 ## Download
 

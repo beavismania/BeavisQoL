@@ -77,7 +77,7 @@ local function ScheduleAutoSellRetryPasses()
 end
 
 -- Wir verkaufen die Items bewusst selbst aus den Bags heraus.
--- Das ist verlaesslicher, als sich komplett auf eine Komfort-API des MerchantFrames zu verlassen.
+-- Das ist verlässlicher, als sich komplett auf eine Komfort-API des MerchantFrames zu verlassen.
 function Misc.SellAllJunk()
     if not Misc.IsAutoSellJunkEnabled() then
         return

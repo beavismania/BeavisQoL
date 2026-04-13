@@ -48,6 +48,17 @@ local function PrintProfilerMessage(messageText)
     print(finalText)
 end
 
+local function PrintBeavisMessage(messageText)
+    local finalText = string.format("|cff66d9efBeavisQoL:|r %s", tostring(messageText or ""))
+
+    if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
+        DEFAULT_CHAT_FRAME:AddMessage(finalText)
+        return
+    end
+
+    print(finalText)
+end
+
 local function AppendLine(lines, text)
     lines[#lines + 1] = tostring(text or "")
 end
@@ -397,7 +408,7 @@ local function BuildReportLines(reportData)
 
         AppendLine(lines, "")
     else
-        AppendLine(lines, "Addon-Vergleich nur mit '/console scriptProfile 1' und '/reload' verfuegbar.")
+        AppendLine(lines, "Addon-Vergleich nur mit '/console scriptProfile 1' und '/reload' verfügbar.")
         AppendLine(lines, "")
     end
 
@@ -872,7 +883,7 @@ function Profiler.PrintReport()
     local reportData = BuildReportData()
     local reportLines = BuildReportLines(reportData)
     ShowReportWindow(table.concat(reportLines, "\n"), string.format("BeavisQoL CPU Report - %s", reportData.timestamp))
-    PrintProfilerMessage("CPU-Report im Kopierfenster geoeffnet.")
+    PrintProfilerMessage("CPU-Report im Kopierfenster geöffnet.")
 end
 
 function Profiler.PrintReportToChat()
@@ -882,8 +893,12 @@ function Profiler.PrintReportToChat()
     end
 end
 
-local function PrintHelp()
+local function PrintProfilerHelp()
     PrintProfilerMessage("Befehle: /beavis cpu start | stop | reset | status | report | chat")
+end
+
+local function PrintDebugHelp()
+    PrintBeavisMessage("Befehle: /beavis debug open [modul]")
 end
 
 SamplerFrame:SetScript("OnUpdate", function(_, elapsed)
@@ -908,14 +923,39 @@ function BeavisQoL.HandleSlashCommand(msg)
 
     local commandName, commandAction = trimmedMessage:match("^(%S+)%s*(.-)$")
     commandName = string.lower(tostring(commandName or ""))
-    commandAction = string.lower(TrimText(commandAction))
+    commandAction = TrimText(commandAction)
+
+    if commandName == "debug" then
+        local debugAction, debugTarget = commandAction:match("^(%S+)%s*(.-)$")
+        debugAction = string.lower(tostring(debugAction or ""))
+        debugTarget = TrimText(debugTarget)
+
+        if debugAction == "" or debugAction == "help" then
+            PrintDebugHelp()
+            return true
+        end
+
+        if debugAction == "open" then
+            if BeavisQoL.DebugConsole and BeavisQoL.DebugConsole.Open then
+                BeavisQoL.DebugConsole.Open(debugTarget ~= "" and debugTarget or nil)
+            else
+                PrintBeavisMessage("Debug-Konsole ist aktuell nicht verfügbar.")
+            end
+            return true
+        end
+
+        PrintDebugHelp()
+        return true
+    end
+
+    commandAction = string.lower(commandAction)
 
     if commandName ~= "cpu" and commandName ~= "perf" and commandName ~= "profile" then
         return false
     end
 
     if commandAction == "" or commandAction == "help" then
-        PrintHelp()
+        PrintProfilerHelp()
         return true
     end
 
@@ -924,7 +964,7 @@ function BeavisQoL.HandleSlashCommand(msg)
         Profiler.SetEnabled(true)
         PrintProfilerMessage("CPU-Logging aktiviert. Problem reproduzieren und danach '/beavis cpu report' ausfuehren.")
         if not IsScriptProfilingEnabled() then
-            PrintProfilerMessage("Optional fuer Addon-Gesamt-CPU: '/console scriptProfile 1' und danach '/reload'.")
+            PrintProfilerMessage("Optional für Addon-Gesamt-CPU: '/console scriptProfile 1' und danach '/reload'.")
         end
         return true
     end
@@ -937,7 +977,7 @@ function BeavisQoL.HandleSlashCommand(msg)
 
     if commandAction == "reset" then
         Profiler.Reset()
-        PrintProfilerMessage("CPU-Logging-Daten zurueckgesetzt.")
+        PrintProfilerMessage("CPU-Logging-Daten zurückgesetzt.")
         return true
     end
 
@@ -956,7 +996,7 @@ function BeavisQoL.HandleSlashCommand(msg)
         return true
     end
 
-    PrintHelp()
+    PrintProfilerHelp()
     return true
 end
 

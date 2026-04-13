@@ -1,13 +1,13 @@
 local ADDON_NAME, BeavisQoL = ...
 
 --[[
-UI.lua baut das feste Grundgeruest des Addons.
+UI.lua baut das feste Grundgerüst des Addons.
 
 Hier entsteht nur der gemeinsame Rahmen:
 - Hauptfenster
 - Header
 - Sidebar
-- Content-Flaeche
+- Content-Fläche
 - zentrales Link-Popup
 ]]
 
@@ -59,9 +59,65 @@ local CATEGORY_TAB_TITLE_EXCLUSIONS = {
 BeavisQoL.Version = version
 BeavisQoL.Title = name
 BeavisQoL.FrameVisualScale = FRAME_VISUAL_SCALE
+BeavisQoL.DebugConsole = BeavisQoL.DebugConsole or {}
+
+local DebugConsole = BeavisQoL.DebugConsole
+local DebugConsoleState = {
+    modules = {},
+    moduleOrder = {},
+    latestModuleKey = nil,
+    selectedModuleKey = nil,
+}
 
 function BeavisQoL.GetModulePageTitle(pageKey, defaultText)
     return defaultText or ""
+end
+
+local function TrimText(text)
+    return tostring(text or ""):match("^%s*(.-)%s*$") or ""
+end
+
+local function NormalizeDebugModuleKey(moduleKey)
+    local normalizedKey = string.lower(TrimText(moduleKey))
+    if normalizedKey == "" then
+        return nil
+    end
+
+    return normalizedKey
+end
+
+local function EnsureDebugModuleEntry(moduleKey, options)
+    local normalizedKey = NormalizeDebugModuleKey(moduleKey)
+    if not normalizedKey then
+        return nil
+    end
+
+    local entry = DebugConsoleState.modules[normalizedKey]
+    if not entry then
+        entry = {
+            key = normalizedKey,
+            titleText = tostring((options and options.titleText) or moduleKey or normalizedKey),
+            lines = {},
+        }
+
+        DebugConsoleState.modules[normalizedKey] = entry
+        DebugConsoleState.moduleOrder[#DebugConsoleState.moduleOrder + 1] = normalizedKey
+    end
+
+    if options and type(options.titleText) == "string" and options.titleText ~= "" then
+        entry.titleText = options.titleText
+    end
+
+    return entry
+end
+
+local function GetDebugModuleEntry(moduleKey)
+    local normalizedKey = NormalizeDebugModuleKey(moduleKey)
+    if not normalizedKey then
+        return nil
+    end
+
+    return DebugConsoleState.modules[normalizedKey]
 end
 
 local BeavisFrame = CreateFrame("Frame", "BeavisQoLMainFrame", UIParent, "BasicFrameTemplateWithInset")
@@ -398,18 +454,222 @@ LinkPopupHint:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
 LinkPopupHint:SetTextColor(0.8, 0.74, 0.68, 1)
 LinkPopupHint:SetText(L("LINK_COPY_HINT"))
 
+local DebugConsolePopup
+local RefreshDebugConsolePopup
+
 local function HideLinkPopup()
     LinkPopupEditBox:ClearFocus()
     LinkPopup:Hide()
 end
 
-local function GetLinkPopupParent()
+local function GetPopupParent()
     local quickView = BeavisQoL.QuickView
     if quickView and quickView.Frame and quickView.Frame:IsShown() then
         return quickView.Frame
     end
 
     return BeavisFrame
+end
+
+local function GetLinkPopupParent()
+    return GetPopupParent()
+end
+
+local function GetDebugConsoleParent()
+    local popupParent = GetPopupParent()
+    if popupParent and popupParent:IsShown() then
+        return popupParent
+    end
+
+    return UIParent
+end
+
+local function BuildDebugConsoleText(entry)
+    if not entry or type(entry.lines) ~= "table" or #entry.lines <= 0 then
+        return L("DEBUG_CONSOLE_EMPTY")
+    end
+
+    return table.concat(entry.lines, "\n")
+end
+
+local function EnsureDebugConsolePopup()
+    if DebugConsolePopup then
+        return DebugConsolePopup
+    end
+
+    DebugConsolePopup = CreateFrame("Frame", nil, BeavisFrame)
+    DebugConsolePopup:SetSize(760, 500)
+    DebugConsolePopup:SetPoint("CENTER", BeavisFrame, "CENTER", 0, 0)
+    DebugConsolePopup:SetFrameStrata("DIALOG")
+    DebugConsolePopup:EnableMouse(true)
+    DebugConsolePopup:SetMovable(true)
+    DebugConsolePopup:RegisterForDrag("LeftButton")
+    DebugConsolePopup:SetClampedToScreen(true)
+    DebugConsolePopup:SetScript("OnDragStart", DebugConsolePopup.StartMoving)
+    DebugConsolePopup:SetScript("OnDragStop", DebugConsolePopup.StopMovingOrSizing)
+    DebugConsolePopup:Hide()
+
+    local background = DebugConsolePopup:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.08, 0.055, 0.038, 0.98)
+    DebugConsolePopup.Background = background
+
+    local texture = DebugConsolePopup:CreateTexture(nil, "ARTWORK")
+    texture:SetAllPoints()
+    texture:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background-Dark")
+    texture:SetVertexColor(0.95, 0.78, 0.52, 0.12)
+    DebugConsolePopup.Texture = texture
+
+    local glow = DebugConsolePopup:CreateTexture(nil, "BORDER")
+    glow:SetPoint("TOPLEFT", DebugConsolePopup, "TOPLEFT", 0, 0)
+    glow:SetPoint("TOPRIGHT", DebugConsolePopup, "TOPRIGHT", 0, 0)
+    glow:SetHeight(28)
+    glow:SetColorTexture(1, 0.86, 0.62, 0.09)
+    DebugConsolePopup.Glow = glow
+
+    local borderTop = DebugConsolePopup:CreateTexture(nil, "ARTWORK")
+    borderTop:SetPoint("TOPLEFT", DebugConsolePopup, "TOPLEFT", 0, 0)
+    borderTop:SetPoint("TOPRIGHT", DebugConsolePopup, "TOPRIGHT", 0, 0)
+    borderTop:SetHeight(1)
+    borderTop:SetColorTexture(0.9, 0.76, 0.5, 0.9)
+    DebugConsolePopup.BorderTop = borderTop
+
+    local borderBottom = DebugConsolePopup:CreateTexture(nil, "ARTWORK")
+    borderBottom:SetPoint("BOTTOMLEFT", DebugConsolePopup, "BOTTOMLEFT", 0, 0)
+    borderBottom:SetPoint("BOTTOMRIGHT", DebugConsolePopup, "BOTTOMRIGHT", 0, 0)
+    borderBottom:SetHeight(1)
+    borderBottom:SetColorTexture(0.9, 0.76, 0.5, 0.9)
+    DebugConsolePopup.BorderBottom = borderBottom
+
+    local title = DebugConsolePopup:CreateFontString(nil, "OVERLAY")
+    title:SetPoint("TOPLEFT", DebugConsolePopup, "TOPLEFT", 16, -14)
+    title:SetPoint("RIGHT", DebugConsolePopup, "RIGHT", -46, 0)
+    title:SetJustifyH("LEFT")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    title:SetTextColor(1, 0.88, 0.62, 1)
+    DebugConsolePopup.Title = title
+
+    local moduleLabel = DebugConsolePopup:CreateFontString(nil, "OVERLAY")
+    moduleLabel:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
+    moduleLabel:SetPoint("RIGHT", DebugConsolePopup, "RIGHT", -18, 0)
+    moduleLabel:SetJustifyH("LEFT")
+    moduleLabel:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    moduleLabel:SetTextColor(0.96, 0.9, 0.78, 1)
+    DebugConsolePopup.ModuleLabel = moduleLabel
+
+    local instructions = DebugConsolePopup:CreateFontString(nil, "OVERLAY")
+    instructions:SetPoint("TOPLEFT", moduleLabel, "BOTTOMLEFT", 0, -8)
+    instructions:SetPoint("RIGHT", DebugConsolePopup, "RIGHT", -18, 0)
+    instructions:SetJustifyH("LEFT")
+    instructions:SetJustifyV("TOP")
+    instructions:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    instructions:SetTextColor(0.82, 0.76, 0.7, 1)
+    DebugConsolePopup.Instructions = instructions
+
+    local textPanel = CreateFrame("Frame", nil, DebugConsolePopup)
+    textPanel:SetPoint("TOPLEFT", instructions, "BOTTOMLEFT", 0, -12)
+    textPanel:SetPoint("BOTTOMRIGHT", DebugConsolePopup, "BOTTOMRIGHT", -18, 50)
+
+    local textPanelBg = textPanel:CreateTexture(nil, "BACKGROUND")
+    textPanelBg:SetAllPoints()
+    textPanelBg:SetColorTexture(0.035, 0.035, 0.04, 0.94)
+    textPanel.TextPanelBg = textPanelBg
+
+    local textPanelBorder = textPanel:CreateTexture(nil, "ARTWORK")
+    textPanelBorder:SetPoint("TOPLEFT", textPanel, "TOPLEFT", 0, 0)
+    textPanelBorder:SetPoint("BOTTOMRIGHT", textPanel, "BOTTOMRIGHT", 0, 0)
+    textPanelBorder:SetColorTexture(0.55, 0.44, 0.25, 0.18)
+    textPanel.TextPanelBorder = textPanelBorder
+
+    DebugConsolePopup.TextPanel = textPanel
+
+    local scrollFrame = CreateFrame("ScrollFrame", nil, textPanel, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", 8, -8)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -30, 8)
+    DebugConsolePopup.ScrollFrame = scrollFrame
+
+    local measureText = DebugConsolePopup:CreateFontString(nil, "OVERLAY")
+    measureText:Hide()
+    measureText:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    measureText:SetJustifyH("LEFT")
+    measureText:SetJustifyV("TOP")
+    measureText:SetWidth(660)
+    DebugConsolePopup.MeasureText = measureText
+
+    local editBox = CreateFrame("EditBox", nil, scrollFrame)
+    editBox:SetMultiLine(true)
+    editBox:SetAutoFocus(false)
+    editBox:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+    editBox:SetTextColor(1, 0.96, 0.86, 1)
+    editBox:SetWidth(660)
+    editBox:SetTextInsets(0, 0, 0, 0)
+    editBox:SetJustifyH("LEFT")
+    editBox:SetJustifyV("TOP")
+    editBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+        DebugConsolePopup:Hide()
+    end)
+    editBox:SetScript("OnEditFocusGained", function(self)
+        self:HighlightText()
+    end)
+    editBox:SetScript("OnMouseUp", function(self)
+        self:HighlightText()
+    end)
+    editBox:SetScript("OnCursorChanged", function(_, _, y, _, height)
+        local visibleHeight = scrollFrame:GetHeight() or 0
+        local currentScroll = scrollFrame:GetVerticalScroll() or 0
+        if y < currentScroll then
+            scrollFrame:SetVerticalScroll(y)
+        elseif (y + height) > (currentScroll + visibleHeight) then
+            scrollFrame:SetVerticalScroll(math.max(0, y + height - visibleHeight))
+        end
+    end)
+    editBox:SetScript("OnTextChanged", function(self)
+        measureText:SetWidth(math.max(1, self:GetWidth() or 660))
+        measureText:SetText(self:GetText() or "")
+        self:SetHeight(math.max(scrollFrame:GetHeight() or 1, measureText:GetStringHeight() + 12))
+    end)
+    scrollFrame:SetScrollChild(editBox)
+    DebugConsolePopup.EditBox = editBox
+
+    local closeButton = CreateFrame("Button", nil, DebugConsolePopup, "UIPanelCloseButton")
+    closeButton:SetPoint("TOPRIGHT", -4, -4)
+    DebugConsolePopup.CloseButton = closeButton
+
+    local closeActionButton = CreateFrame("Button", nil, DebugConsolePopup, "UIPanelButtonTemplate")
+    closeActionButton:SetSize(110, 26)
+    closeActionButton:SetPoint("BOTTOMRIGHT", DebugConsolePopup, "BOTTOMRIGHT", -16, 12)
+    closeActionButton:SetText(L("CLOSE"))
+    closeActionButton:SetScript("OnClick", function()
+        DebugConsolePopup:Hide()
+    end)
+    DebugConsolePopup.CloseActionButton = closeActionButton
+
+    return DebugConsolePopup
+end
+
+RefreshDebugConsolePopup = function()
+    local popup = EnsureDebugConsolePopup()
+    local entry = nil
+    local moduleLabelText = nil
+
+    if DebugConsoleState.selectedModuleKey then
+        entry = GetDebugModuleEntry(DebugConsoleState.selectedModuleKey)
+    end
+
+    if entry then
+        moduleLabelText = string.format(L("DEBUG_CONSOLE_MODULE"), tostring(entry.titleText or entry.key or ""))
+    else
+        moduleLabelText = L("DEBUG_CONSOLE_MODULE_NONE")
+    end
+
+    popup.Title:SetText(L("DEBUG_CONSOLE_TITLE"))
+    popup.ModuleLabel:SetText(moduleLabelText)
+    popup.Instructions:SetText(L("DEBUG_CONSOLE_COPY_HINT"))
+    popup.EditBox:SetText(BuildDebugConsoleText(entry))
+    popup.EditBox:SetCursorPosition(0)
+    popup.ScrollFrame:SetVerticalScroll(0)
+    popup.CloseActionButton:SetText(L("CLOSE"))
 end
 
 LinkPopupEditBox:SetScript("OnEscapePressed", function(self)
@@ -427,6 +687,80 @@ LinkCloseButton:SetPoint("BOTTOMRIGHT", LinkPopup, "BOTTOMRIGHT", -16, 12)
 LinkCloseButton:SetText(L("CLOSE"))
 LinkCloseButton:SetScript("OnClick", HideLinkPopup)
 
+function DebugConsole.RegisterModule(moduleKey, options)
+    return EnsureDebugModuleEntry(moduleKey, options)
+end
+
+function DebugConsole.Clear(moduleKey, options)
+    local entry = EnsureDebugModuleEntry(moduleKey, options)
+    if not entry then
+        return nil
+    end
+
+    entry.lines = {}
+    DebugConsoleState.latestModuleKey = entry.key
+
+    if options and options.select == true then
+        DebugConsoleState.selectedModuleKey = entry.key
+    end
+
+    if DebugConsolePopup and DebugConsolePopup:IsShown() and DebugConsoleState.selectedModuleKey == entry.key then
+        RefreshDebugConsolePopup()
+    end
+
+    return entry
+end
+
+function DebugConsole.AppendLine(moduleKey, text, options)
+    local entry = EnsureDebugModuleEntry(moduleKey, options)
+    if not entry or text == nil then
+        return nil
+    end
+
+    entry.lines = entry.lines or {}
+    entry.lines[#entry.lines + 1] = tostring(text)
+    DebugConsoleState.latestModuleKey = entry.key
+
+    if not DebugConsoleState.selectedModuleKey or (options and options.select == true) then
+        DebugConsoleState.selectedModuleKey = entry.key
+    end
+
+    if DebugConsolePopup and DebugConsolePopup:IsShown() and DebugConsoleState.selectedModuleKey == entry.key then
+        RefreshDebugConsolePopup()
+    end
+
+    return entry
+end
+
+function DebugConsole.Open(moduleKey)
+    local entry = nil
+    if moduleKey and moduleKey ~= "" then
+        entry = EnsureDebugModuleEntry(moduleKey)
+    elseif DebugConsoleState.latestModuleKey then
+        entry = GetDebugModuleEntry(DebugConsoleState.latestModuleKey)
+    end
+
+    if entry then
+        DebugConsoleState.selectedModuleKey = entry.key
+    end
+
+    local popupParent = GetDebugConsoleParent()
+    local popup = EnsureDebugConsolePopup()
+
+    if popup:GetParent() ~= popupParent then
+        popup:SetParent(popupParent)
+    end
+
+    popup:ClearAllPoints()
+    popup:SetPoint("CENTER", popupParent, "CENTER", 0, 0)
+    RefreshDebugConsolePopup()
+    popup:Show()
+    popup.EditBox:SetFocus()
+    popup.EditBox:HighlightText()
+
+    return true
+end
+
 BeavisQoL.UpdateUI = function()
     HeaderSubtitle:SetText(L("HEADER_SUBTITLE"))
     VersionBadgeText:SetText(L("VERSION") .. " " .. version)
@@ -435,6 +769,10 @@ BeavisQoL.UpdateUI = function()
     LinkPopupText:SetText(L("LINK_COPY_DESC"))
     LinkPopupHint:SetText(L("LINK_COPY_HINT"))
     LinkCloseButton:SetText(L("CLOSE"))
+
+    if DebugConsolePopup then
+        RefreshDebugConsolePopup()
+    end
 end
 
 function BeavisQoL.ShowLinkPopup(titleText, urlText)
@@ -457,4 +795,7 @@ function BeavisQoL.ShowLinkPopup(titleText, urlText)
 end
 
 BeavisQoL.HideLinkPopup = HideLinkPopup
+BeavisQoL.ShowDebugConsole = function(moduleKey)
+    return DebugConsole.Open(moduleKey)
+end
 

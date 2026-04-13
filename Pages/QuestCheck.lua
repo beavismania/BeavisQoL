@@ -54,7 +54,7 @@ local isQuickViewMode = false
 
 local function TrimText(text)
     -- Nutzertexte immer zuerst bereinigen.
-    -- Das spart spaeter viele kleine Sonderfaelle.
+    -- Das spart später viele kleine Sonderfälle.
     if not text then
         return nil
     end

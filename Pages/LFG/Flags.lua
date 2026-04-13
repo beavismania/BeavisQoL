@@ -44,13 +44,30 @@ local EasyLFGApplicantStates = {}
 local EasyLFGNextApplicantOrder = 1
 local EasyLFGRemovalRefreshAt = nil
 local EasyLFGRemovalRefreshSerial = 0
--- Raider.IO public ShowProfile defaults to the smaller unit-tooltip layout.
--- This source-derived option mask requests the extended profile view and ignores modifier-only behavior.
-local RAIDERIO_EXTENDED_PROFILE_OPTIONS = 32440
+local EasyLFGPanelRepairSerial = 0
 local EasyLFGRioTooltip = nil
 local EasyLFGRioAnchor = nil
+local EasyLFGRioPanel = nil
 local EasyLFGRioSelectedFullName = nil
 local EasyLFGRioSelectedDisplayName = nil
+local EASY_LFG_RIO_PANEL_WIDTH = 300
+local EASY_LFG_RIO_PANEL_MIN_HEIGHT = 96
+local EASY_LFG_RIO_PANEL_HORIZONTAL_PADDING = 18
+local EASY_LFG_RIO_PANEL_TOP_PADDING = 16
+local EASY_LFG_RIO_PANEL_BOTTOM_PADDING = 14
+local EASY_LFG_RIO_PANEL_LINE_SPACING = 4
+local EASY_LFG_RIO_PANEL_MAX_DUNGEONS = 8
+local EASY_LFG_RIO_PANEL_MAX_RAIDS = 6
+local EASY_LFG_ACTION_BUTTON_WIDTH = 34
+local EASY_LFG_ACTION_BUTTON_HEIGHT = 22
+local EASY_LFG_ACTION_BUTTON_GAP = 6
+local EASY_LFG_ACTION_AREA_WIDTH = (EASY_LFG_ACTION_BUTTON_WIDTH * 2) + EASY_LFG_ACTION_BUTTON_GAP
+local EASY_LFG_RIO_DIFFICULTY_LABELS = {
+    [1] = "LFR",
+    [2] = "N",
+    [3] = "HC",
+    [4] = "M",
+}
 
 local function NormalizeListingPresetLineEndings(text)
     if type(text) ~= "string" then
@@ -1261,7 +1278,7 @@ end
 -- Wir hooken bewusst die Blizzard-Update-Funktion statt selbst die ganze Liste nachzubauen.
 local function TryInstallHooks()
     if not applicantHookInstalled and type(LFGListApplicationViewer_UpdateApplicantMember) == "function" then
-        -- hooksecurefunc haengt unser Verhalten nur an Blizzard an und ersetzt
+        -- hooksecurefunc hängt unser Verhalten nur an Blizzard an und ersetzt
         -- keine Originalfunktion. Das ist für UI-Addons deutlich robuster.
         hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", function(memberFrame, applicantID, memberIdx)
             LFG.ApplyFlagToApplicantMember(memberFrame, applicantID, memberIdx)
@@ -1334,8 +1351,116 @@ local function IsPlayerListingLeader()
         return false
     end
 
-    -- Solo-Listungen duerfen weiterhin sichtbar sein.
+    -- Solo-Listungen dürfen weiterhin sichtbar sein.
     return true
+end
+
+local function IsLFGPanelShown(panel)
+    return panel and panel.IsShown and panel:IsShown() == true
+end
+
+local function SetLFGListActivePanelSafe(panel)
+    if not panel then
+        return false
+    end
+
+    if type(LFGListFrame_SetActivePanel) == "function" then
+        local ok = pcall(LFGListFrame_SetActivePanel, panel)
+        if ok then
+            return true
+        end
+
+        if LFGListFrame then
+            ok = pcall(LFGListFrame_SetActivePanel, LFGListFrame, panel)
+            if ok then
+                return true
+            end
+        end
+    end
+
+    if panel.Show then
+        local ok = pcall(panel.Show, panel)
+        return ok == true
+    end
+
+    return false
+end
+
+local function RefreshLFGFallbackPanel(panel)
+    if not panel then
+        return
+    end
+
+    if LFGListFrame and panel == LFGListFrame.SearchPanel then
+        if type(LFGListSearchPanel_UpdateResultList) == "function" then
+            pcall(LFGListSearchPanel_UpdateResultList, panel)
+        elseif type(LFGListSearchPanel_UpdateResults) == "function" then
+            pcall(LFGListSearchPanel_UpdateResults, panel)
+        elseif type(LFGListSearchPanel_Update) == "function" then
+            pcall(LFGListSearchPanel_Update, panel)
+        end
+        return
+    end
+
+    if LFGListFrame and panel == LFGListFrame.EntryCreation and type(LFGListEntryCreation_Update) == "function" then
+        pcall(LFGListEntryCreation_Update, panel)
+    end
+end
+
+local function RepairBlizzardLFGPanelState()
+    local lfgListFrame = LFGListFrame
+    local pveFrameShown = PVEFrame and PVEFrame.IsShown and PVEFrame:IsShown() == true
+    if not lfgListFrame or (not pveFrameShown and not IsLFGPanelShown(lfgListFrame)) then
+        return false
+    end
+
+    local categorySelection = lfgListFrame.CategorySelection or rawget(_G, "LFGListCategorySelection")
+    local searchPanel = lfgListFrame.SearchPanel
+    local applicationViewer = lfgListFrame.ApplicationViewer
+    local entryCreation = lfgListFrame.EntryCreation
+
+    local hasVisiblePanel = IsLFGPanelShown(categorySelection)
+        or IsLFGPanelShown(searchPanel)
+        or IsLFGPanelShown(applicationViewer)
+        or IsLFGPanelShown(entryCreation)
+    local controllableListing = HasActiveListing() and IsPlayerListingLeader()
+    local stuckOnListingPanel = not controllableListing
+        and IsLFGPanelShown(applicationViewer)
+
+    if hasVisiblePanel and not stuckOnListingPanel then
+        return false
+    end
+
+    local fallbackPanel = categorySelection or searchPanel
+    if not fallbackPanel then
+        return false
+    end
+
+    local restored = SetLFGListActivePanelSafe(fallbackPanel)
+    if restored then
+        RefreshLFGFallbackPanel(fallbackPanel)
+    end
+
+    return restored
+end
+
+local function ScheduleBlizzardLFGPanelRepair(delaySeconds)
+    local delay = tonumber(delaySeconds) or 0
+
+    if not C_Timer or type(C_Timer.After) ~= "function" then
+        RepairBlizzardLFGPanelState()
+        return
+    end
+
+    EasyLFGPanelRepairSerial = EasyLFGPanelRepairSerial + 1
+    local repairSerial = EasyLFGPanelRepairSerial
+    C_Timer.After(math.max(0, delay), function()
+        if repairSerial ~= EasyLFGPanelRepairSerial then
+            return
+        end
+
+        RepairBlizzardLFGPanelState()
+    end)
 end
 
 local function HideBlizzardLFGWindow()
@@ -1417,8 +1542,17 @@ local function RemoveActiveEasyLFGListing()
 end
 
 local function HideEasyLFGRioTooltip()
+    local raiderIOProfileTooltip = rawget(_G, "RaiderIO_ProfileTooltip")
+    if raiderIOProfileTooltip and raiderIOProfileTooltip.Hide then
+        raiderIOProfileTooltip:Hide()
+    end
+
     if EasyLFGRioTooltip and EasyLFGRioTooltip.Hide then
         EasyLFGRioTooltip:Hide()
+    end
+
+    if EasyLFGRioPanel and EasyLFGRioPanel.Hide then
+        EasyLFGRioPanel:Hide()
     end
 end
 
@@ -1487,25 +1621,297 @@ local function PopulateEasyLFGRioFallbackTooltip(tooltip, fullName, displayName,
 end
 
 local function EnsureEasyLFGRioTooltip()
-    if EasyLFGRioAnchor and EasyLFGRioTooltip then
-        return EasyLFGRioAnchor, EasyLFGRioTooltip
+    if EasyLFGRioAnchor then
+        return EasyLFGRioAnchor
     end
 
     if not EasyLFGOverlay then
-        return nil, nil
+        return nil
     end
 
     EasyLFGRioAnchor = CreateFrame("Frame", nil, EasyLFGOverlay)
     EasyLFGRioAnchor:SetSize(1, 1)
     EasyLFGRioAnchor:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPRIGHT", 14, -10)
 
-    EasyLFGRioTooltip = CreateFrame("GameTooltip", "BeavisQoLEasyLFGRioTooltip", UIParent, "GameTooltipTemplate")
-    EasyLFGRioTooltip:SetClampedToScreen(true)
-    EasyLFGRioTooltip:SetOwner(EasyLFGRioAnchor, "ANCHOR_NONE")
-    EasyLFGRioTooltip:ClearAllPoints()
-    EasyLFGRioTooltip:SetPoint("TOPLEFT", EasyLFGRioAnchor, "TOPRIGHT", 0, 0)
+    return EasyLFGRioAnchor
+end
 
-    return EasyLFGRioAnchor, EasyLFGRioTooltip
+local function GetEasyLFGScaledFontSize(baseSize)
+    local db = LFG.GetLFGDB and LFG.GetLFGDB() or nil
+    local textScale = db and db.easyLFGTextScale or DEFAULT_EASY_LFG_TEXT_SCALE
+    return math.max(1, math.floor((baseSize * textScale) + 0.5))
+end
+
+local function EnsureEasyLFGRioPanel()
+    if EasyLFGRioPanel then
+        return EasyLFGRioPanel
+    end
+
+    local panel = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
+    panel:SetFrameStrata("TOOLTIP")
+    panel:SetClampedToScreen(true)
+    panel:SetSize(EASY_LFG_RIO_PANEL_WIDTH, EASY_LFG_RIO_PANEL_MIN_HEIGHT)
+    panel:Hide()
+
+    panel.Background = panel:CreateTexture(nil, "BACKGROUND")
+    panel.Background:SetAllPoints()
+    panel.Background:SetColorTexture(0.02, 0.02, 0.03, DEFAULT_EASY_LFG_ALPHA)
+
+    panel.TopLine = panel:CreateTexture(nil, "ARTWORK")
+    panel.TopLine:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -8)
+    panel.TopLine:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, -8)
+    panel.TopLine:SetHeight(1)
+    panel.TopLine:SetColorTexture(0.88, 0.72, 0.46, 0.70)
+
+    panel.Accent = panel:CreateTexture(nil, "BACKGROUND")
+    panel.Accent:SetPoint("TOPLEFT", panel, "TOPLEFT", 9, -10)
+    panel.Accent:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 9, 10)
+    panel.Accent:SetWidth(2)
+    panel.Accent:SetColorTexture(0.88, 0.72, 0.46, 0.18)
+
+    panel.Title = panel:CreateFontString(nil, "OVERLAY")
+    panel.Title:SetPoint("TOPLEFT", panel, "TOPLEFT", EASY_LFG_RIO_PANEL_HORIZONTAL_PADDING, -EASY_LFG_RIO_PANEL_TOP_PADDING)
+    panel.Title:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -EASY_LFG_RIO_PANEL_HORIZONTAL_PADDING, -EASY_LFG_RIO_PANEL_TOP_PADDING)
+    panel.Title:SetJustifyH("LEFT")
+    panel.Title:SetJustifyV("TOP")
+    panel.Title:SetWordWrap(true)
+    panel.Title:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+    panel.Title:SetTextColor(1, 0.88, 0.62, 1)
+
+    panel.Lines = {}
+    EasyLFGRioPanel = panel
+    return panel
+end
+
+local function AcquireEasyLFGRioPanelLine(panel, index)
+    local line = panel.Lines[index]
+    if line then
+        return line
+    end
+
+    line = panel:CreateFontString(nil, "OVERLAY")
+    line:SetPoint("LEFT", panel, "LEFT", EASY_LFG_RIO_PANEL_HORIZONTAL_PADDING, 0)
+    line:SetPoint("RIGHT", panel, "RIGHT", -EASY_LFG_RIO_PANEL_HORIZONTAL_PADDING, 0)
+    line:SetJustifyH("LEFT")
+    line:SetJustifyV("TOP")
+    line:SetWordWrap(true)
+    panel.Lines[index] = line
+    return line
+end
+
+local function AddEasyLFGRioPanelLine(lines, text, red, green, blue, fontSize, flags)
+    if not IsUsablePlainString(text) then
+        return
+    end
+
+    lines[#lines + 1] = {
+        text = text,
+        red = red or 1,
+        green = green or 1,
+        blue = blue or 1,
+        fontSize = fontSize or 10,
+        flags = flags or "",
+    }
+end
+
+local function BuildEasyLFGRioPanelData(fullName, displayName, profile)
+    local titleText = displayName
+    if not IsUsablePlainString(titleText) then
+        titleText = GetDisplayNameFromFullName(fullName)
+    end
+    if not IsUsablePlainString(titleText) then
+        titleText = fullName
+    end
+
+    local realmName = profile and profile.realm or GetRealmNameFromFullName(fullName)
+    if IsUsablePlainString(realmName) and realmName ~= titleText then
+        titleText = string.format("%s (%s)", titleText or UNKNOWN or "Unknown", realmName)
+    end
+
+    local lines = {}
+    local api = GetRaiderIOAPI()
+    local keystoneProfile = profile and profile.mythicKeystoneProfile or nil
+    local currentScore = keystoneProfile and keystoneProfile.mplusCurrent and tonumber(keystoneProfile.mplusCurrent.score) or 0
+    local bestDungeon = keystoneProfile and keystoneProfile.maxDungeon or nil
+    local bestLevel = keystoneProfile and tonumber(keystoneProfile.maxDungeonLevel) or 0
+    local bestRunText = nil
+
+    if bestDungeon and bestLevel and bestLevel > 0 then
+        local bestDungeonName = bestDungeon.shortNameLocale or bestDungeon.shortName or bestDungeon.name or bestDungeon.nameLocale
+        if IsUsablePlainString(bestDungeonName) then
+            bestRunText = string.format("+%d %s", bestLevel, bestDungeonName)
+        else
+            bestRunText = string.format("+%d", bestLevel)
+        end
+    end
+
+    if currentScore and currentScore > 0 then
+        local scoreColorRed, scoreColorGreen, scoreColorBlue = 1, 1, 1
+        if api and type(api.GetScoreColor) == "function" then
+            local red, green, blue = api.GetScoreColor(currentScore)
+            if type(red) == "number" and type(green) == "number" and type(blue) == "number" then
+                scoreColorRed, scoreColorGreen, scoreColorBlue = red, green, blue
+            end
+        end
+
+        AddEasyLFGRioPanelLine(lines, string.format("%s: %d", L("EASY_LFG_OVERLAY_RIO_SCORE"), math.floor(currentScore + 0.5)), scoreColorRed, scoreColorGreen, scoreColorBlue, 11, "OUTLINE")
+    end
+
+    if IsUsablePlainString(bestRunText) then
+        AddEasyLFGRioPanelLine(lines, string.format("%s: %s", L("EASY_LFG_OVERLAY_RIO_BEST_RUN"), bestRunText), 0.95, 0.95, 0.95, 10, "")
+    end
+
+    local shownDungeonHeader = false
+    if keystoneProfile and type(keystoneProfile.sortedDungeons) == "table" then
+        local shownDungeons = 0
+        for _, sortedDungeon in ipairs(keystoneProfile.sortedDungeons) do
+            local level = tonumber(sortedDungeon and sortedDungeon.level) or 0
+            if level > 0 then
+                if not shownDungeonHeader then
+                    AddEasyLFGRioPanelLine(lines, " ", 1, 1, 1, 4, "")
+                    AddEasyLFGRioPanelLine(lines, L("EASY_LFG_OVERLAY_RIO_TOP_DUNGEONS"), 1, 0.85, 0, 11, "OUTLINE")
+                    shownDungeonHeader = true
+                end
+
+                local dungeonInfo = sortedDungeon.dungeon or nil
+                local dungeonName = dungeonInfo and (dungeonInfo.shortNameLocale or dungeonInfo.shortName or dungeonInfo.nameLocale or dungeonInfo.name) or nil
+                local chestText = ""
+                local chests = tonumber(sortedDungeon.chests) or 0
+                if chests > 0 then
+                    chestText = string.rep("+", chests)
+                end
+
+                AddEasyLFGRioPanelLine(
+                    lines,
+                    string.format("%s %s%d", dungeonName or UNKNOWN or "Unknown", chestText, level),
+                    0.88,
+                    0.88,
+                    0.90,
+                    10,
+                    ""
+                )
+                shownDungeons = shownDungeons + 1
+                if shownDungeons >= EASY_LFG_RIO_PANEL_MAX_DUNGEONS then
+                    break
+                end
+            end
+        end
+    end
+
+    local shownRaidHeader = false
+    local raidProfile = profile and profile.raidProfile or nil
+    if raidProfile and type(raidProfile.raidProgress) == "table" then
+        local shownRaids = 0
+        for _, raidGroup in ipairs(raidProfile.raidProgress) do
+            local raidInfo = raidGroup and raidGroup.raid or nil
+            local progressGroups = raidGroup and raidGroup.progress or nil
+            if raidInfo and type(progressGroups) == "table" then
+                local progressParts = {}
+                for _, progress in ipairs(progressGroups) do
+                    if progress and progress.obsolete ~= true then
+                        local difficultyLabel = EASY_LFG_RIO_DIFFICULTY_LABELS[tonumber(progress.difficulty) or 0] or tostring(progress.difficulty or "?")
+                        local kills = tonumber(progress.kills) or 0
+                        progressParts[#progressParts + 1] = string.format("%s %d/%d", difficultyLabel, kills, tonumber(raidInfo.bossCount) or 0)
+                    end
+                end
+
+                if #progressParts > 0 then
+                    if not shownRaidHeader then
+                        AddEasyLFGRioPanelLine(lines, " ", 1, 1, 1, 4, "")
+                        AddEasyLFGRioPanelLine(lines, L("EASY_LFG_OVERLAY_RIO_RAID_PROGRESS"), 1, 0.85, 0, 11, "OUTLINE")
+                        shownRaidHeader = true
+                    end
+
+                    local raidName = raidInfo.shortName or raidInfo.shortNameLocale or raidInfo.name or raidInfo.nameLocale or UNKNOWN or "Unknown"
+                    AddEasyLFGRioPanelLine(lines, string.format("%s: %s", raidName, table.concat(progressParts, "  ")), 0.88, 0.88, 0.90, 10, "")
+                    shownRaids = shownRaids + 1
+                    if shownRaids >= EASY_LFG_RIO_PANEL_MAX_RAIDS then
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    if #lines == 0 then
+        AddEasyLFGRioPanelLine(lines, L("EASY_LFG_OVERLAY_RIO_NO_PROFILE"), 0.88, 0.88, 0.88, 10, "")
+    end
+
+    return titleText or UNKNOWN or "Unknown", lines
+end
+
+local function RenderEasyLFGRioPanel(panel, fullName, displayName, profile)
+    local titleText, lines = BuildEasyLFGRioPanelData(fullName, displayName, profile)
+    local db = LFG.GetLFGDB()
+    local titleFontSize = GetEasyLFGScaledFontSize(11)
+
+    panel:SetWidth(EASY_LFG_RIO_PANEL_WIDTH)
+    if panel.Background then
+        panel.Background:SetColorTexture(0.02, 0.02, 0.03, db.easyLFGAlpha or DEFAULT_EASY_LFG_ALPHA)
+    end
+
+    panel.Title:SetFont("Fonts\\FRIZQT__.TTF", titleFontSize, "OUTLINE")
+    panel.Title:SetText(titleText)
+    local titleHeight = math.max(panel.Title:GetStringHeight() or 0, titleFontSize)
+
+    local cursor = -(EASY_LFG_RIO_PANEL_TOP_PADDING + titleHeight + 10)
+    for index, entry in ipairs(lines) do
+        local line = AcquireEasyLFGRioPanelLine(panel, index)
+        local fontSize = GetEasyLFGScaledFontSize(entry.fontSize or 10)
+        line:ClearAllPoints()
+        line:SetPoint("TOPLEFT", panel, "TOPLEFT", EASY_LFG_RIO_PANEL_HORIZONTAL_PADDING, cursor)
+        line:SetPoint("RIGHT", panel, "RIGHT", -EASY_LFG_RIO_PANEL_HORIZONTAL_PADDING, 0)
+        line:SetFont("Fonts\\FRIZQT__.TTF", fontSize, entry.flags or "")
+        line:SetTextColor(entry.red or 1, entry.green or 1, entry.blue or 1, 1)
+        line:SetText(entry.text or "")
+        line:Show()
+        local lineHeight = math.max(line:GetStringHeight() or 0, fontSize)
+        cursor = cursor - lineHeight - EASY_LFG_RIO_PANEL_LINE_SPACING
+    end
+
+    for index = #lines + 1, #panel.Lines do
+        panel.Lines[index]:Hide()
+    end
+
+    local panelHeight = math.max(EASY_LFG_RIO_PANEL_MIN_HEIGHT, -cursor + EASY_LFG_RIO_PANEL_BOTTOM_PADDING)
+    panel:SetSize(EASY_LFG_RIO_PANEL_WIDTH, panelHeight)
+    panel:Show()
+end
+
+local function PositionEasyLFGRioAnchor(anchor, tooltip)
+    if not anchor or not EasyLFGOverlay then
+        return "right"
+    end
+
+    local uiWidth = UIParent and UIParent.GetWidth and UIParent:GetWidth() or 0
+    local overlayLeft = EasyLFGOverlay.GetLeft and EasyLFGOverlay:GetLeft() or nil
+    local overlayRight = EasyLFGOverlay.GetRight and EasyLFGOverlay:GetRight() or nil
+    local leftSpace = tonumber(overlayLeft) or 0
+    local rightSpace = 0
+
+    if uiWidth > 0 and overlayRight then
+        rightSpace = math.max(0, uiWidth - overlayRight)
+    end
+
+    local openLeft = leftSpace > rightSpace
+
+    anchor:ClearAllPoints()
+    if openLeft then
+        anchor:SetPoint("TOPRIGHT", EasyLFGOverlay, "TOPLEFT", -10, -8)
+    else
+        anchor:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPRIGHT", 10, -8)
+    end
+
+    if tooltip then
+        tooltip:ClearAllPoints()
+        if openLeft then
+            tooltip:SetPoint("TOPRIGHT", anchor, "TOPLEFT", 0, 0)
+        else
+            tooltip:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 0, 0)
+        end
+    end
+
+    return openLeft and "left" or "right"
 end
 
 local function UpdateEasyLFGRioSelectionVisuals()
@@ -1529,38 +1935,19 @@ local function RefreshEasyLFGRioTooltip()
         return
     end
 
-    local anchor, tooltip = EnsureEasyLFGRioTooltip()
+    local anchor = EnsureEasyLFGRioTooltip()
+    local panel = EnsureEasyLFGRioPanel()
     local api = GetRaiderIOAPI()
-    if not anchor or not tooltip or not api then
+    if not anchor or not panel or not api then
         HideEasyLFGRioTooltip()
         return
     end
 
-    tooltip:SetOwner(anchor, "ANCHOR_NONE")
-    tooltip:ClearAllPoints()
-    tooltip:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 6, 0)
-    tooltip:SetFrameStrata("TOOLTIP")
-    tooltip:SetFrameLevel(math.max(100, (EasyLFGOverlay.GetFrameLevel and EasyLFGOverlay:GetFrameLevel() or 0) + 20))
-    tooltip:SetScale(EasyLFGOverlay and EasyLFGOverlay.GetScale and EasyLFGOverlay:GetScale() or 1)
-    tooltip:Hide()
-    tooltip:ClearLines()
-
-    local showSucceeded = false
-    if type(api.ShowProfile) == "function" then
-        showSucceeded = api.ShowProfile(tooltip, EasyLFGRioSelectedFullName, RAIDERIO_EXTENDED_PROFILE_OPTIONS) == true
-        if not showSucceeded then
-            local characterName = GetDisplayNameFromFullName(EasyLFGRioSelectedFullName)
-            local characterRealm = GetRealmNameFromFullName(EasyLFGRioSelectedFullName)
-            if IsUsablePlainString(characterName) then
-                showSucceeded = api.ShowProfile(tooltip, characterName, characterRealm, RAIDERIO_EXTENDED_PROFILE_OPTIONS) == true
-            end
-        end
-    end
-
-    if showSucceeded then
-        tooltip:Show()
-        return
-    end
+    HideEasyLFGRioTooltip()
+    PositionEasyLFGRioAnchor(anchor, panel)
+    panel:SetFrameStrata("TOOLTIP")
+    panel:SetFrameLevel(math.max(100, (EasyLFGOverlay.GetFrameLevel and EasyLFGOverlay:GetFrameLevel() or 0) + 20))
+    panel:SetScale(EasyLFGOverlay and EasyLFGOverlay.GetScale and EasyLFGOverlay:GetScale() or 1)
 
     local profile = nil
     if type(api.GetProfile) == "function" then
@@ -1574,11 +1961,12 @@ local function RefreshEasyLFGRioTooltip()
         end
     end
 
-    if profile or IsUsablePlainString(EasyLFGRioSelectedFullName) then
-        PopulateEasyLFGRioFallbackTooltip(tooltip, EasyLFGRioSelectedFullName, EasyLFGRioSelectedDisplayName, profile)
-    else
+    if not profile and not IsUsablePlainString(EasyLFGRioSelectedFullName) then
         HideEasyLFGRioTooltip()
+        return
     end
+
+    RenderEasyLFGRioPanel(panel, EasyLFGRioSelectedFullName, EasyLFGRioSelectedDisplayName, profile)
 end
 
 local function SetEasyLFGRioSelection(fullName, displayName)
@@ -2060,7 +2448,7 @@ end
 
 local function CreateEasyLFGActionButton(parent)
     local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    button:SetSize(34, 22)
+    button:SetSize(EASY_LFG_ACTION_BUTTON_WIDTH, EASY_LFG_ACTION_BUTTON_HEIGHT)
 
     if button.SetNormalFontObject then
         button:SetNormalFontObject(GameFontNormalSmall)
@@ -2277,13 +2665,13 @@ local function EnsureEasyLFGRow(index)
     row.Border = border
 
     local actionArea = CreateFrame("Frame", nil, row)
-    actionArea:SetSize(72, 22)
+    actionArea:SetSize(EASY_LFG_ACTION_AREA_WIDTH, EASY_LFG_ACTION_BUTTON_HEIGHT)
     actionArea:SetPoint("RIGHT", row, "RIGHT", -2, 0)
     row.ActionArea = actionArea
 
     local flagAnchor = CreateFrame("Frame", nil, row)
     flagAnchor:SetSize(1, 1)
-    flagAnchor:SetPoint("RIGHT", actionArea, "LEFT", -12, 0)
+    flagAnchor:SetPoint("RIGHT", actionArea, "LEFT", -24, 0)
     row.FlagAnchor = flagAnchor
 
     local toggleButton = CreateFrame("Button", nil, row)
@@ -2307,7 +2695,7 @@ local function EnsureEasyLFGRow(index)
 
     local name = row:CreateFontString(nil, "OVERLAY")
     name:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -4)
-    name:SetPoint("RIGHT", flagAnchor, "LEFT", -8, 0)
+    name:SetPoint("RIGHT", flagAnchor, "LEFT", -12, 0)
     name:SetJustifyH("LEFT")
     name:SetWordWrap(false)
     name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -2315,7 +2703,7 @@ local function EnsureEasyLFGRow(index)
 
     local meta = row:CreateFontString(nil, "OVERLAY")
     meta:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -1)
-    meta:SetPoint("RIGHT", flagAnchor, "LEFT", -8, 0)
+    meta:SetPoint("RIGHT", flagAnchor, "LEFT", -12, 0)
     meta:SetJustifyH("LEFT")
     meta:SetWordWrap(false)
     meta:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
@@ -2944,6 +3332,9 @@ FlagWatcher:SetScript("OnEvent", function(_, event, ...)
 
     if LFG.IsEasyLFGEnabled and LFG.IsEasyLFGEnabled() then
         RefreshEasyLFGOverlay()
+        if event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" or event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+            ScheduleBlizzardLFGPanelRepair(0.05)
+        end
     end
 end)
 

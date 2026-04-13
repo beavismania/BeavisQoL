@@ -169,8 +169,8 @@ local function IsRemoteVersionNewerThanKnown(remoteVersionText, remoteReleaseDat
 end
 
 local function GetVersionChannels()
-    -- Wir fragen nur Kanaele an, in denen der Spieler gerade wirklich ist.
-    -- So vermeiden wir unnoetige Addon-Nachrichten.
+    -- Wir fragen nur Kanäle an, in denen der Spieler gerade wirklich ist.
+    -- So vermeiden wir unnötige Addon-Nachrichten.
     local channels = {}
     local seenChannels = {}
 

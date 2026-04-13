@@ -1,38 +1,52 @@
 # Changelog
 
+## 0.36.11 - 2026-04-13
+
+### Hotfix
+
+- `MouseHelper` nutzt für `max fps` jetzt einen stark vereinfachten texturbasierten Trail mit begrenzter interner Renderlänge, während der Cast-Ring außerhalb echter Zauber nicht mehr dauernd gepollt wird
+- der `MouseHelper`-Trail zeigt im `max fps`-Modus jetzt wieder sichtbar mehr Länge, ohne die reduzierte Segmentanzahl komplett aufzugeben, und rendert wieder als deutlich weicherer, geglätteter Streak
+- `WeeklyKeys` cached seine Anzeige jetzt zwischen und baut die Run-Ansicht nicht mehr unnötig bei jedem sichtbaren Ticker neu auf
+- `WeeklyKeys` hat jetzt einen `GRP-Keys`-Button, der die aktuell in den Taschen befindlichen Schlüssel der Gruppenmitglieder per BeavisQoL-Addon-Chat einsammelt
+- `WeeklyKeys` löst eigene und neue `GRP-Keys`-Antworten jetzt über die Challenge-Map robuster auf, prüft bei fehlenden Antworten automatisch `Details` als Fallback und schreibt die Ergebnisliste direkt in den Gruppenchat
+- das bisherige `GRP-Keys`-Debugfenster ist jetzt eine zentrale `Beavis Debug`-Konsole und lässt sich per `/beavis debug open` für aktuelle Module öffnen
+- das `SmartLFG`-Raider.IO-Panel ist jetzt kompakter, sitzt optisch näher am `SmartLFG`-Fenster und nutzt denselben Look statt einer separaten Tooltip-Box; die Buttons für `Annehmen` und `Ablehnen` sitzen jetzt enger zusammen
+- `Organisierte Gruppen` fängt abrupte Gruppen-/Listing-Wechsel robuster ab, damit der Blizzard-Bereich nach Invite oder Kick nicht mit leerer rechter Seite hängen bleibt
+- `Tooltip Itemlevel` löst Tooltip-Units und laufende Inspect-Antworten robuster über Unit-Token und GUID auf, damit Itemlevel seltener am falschen Spieler hängen bleiben
+
 ## 0.36.10 - 2026-04-13
 
 ### Hotfix
 
 - `MouseHelper` hat jetzt einen umschaltbaren `Optikstil` mit `Standard` und einem deutlich sichtbareren `3D-Look`
 - der `3D-Look` wirkt bei aktivem Optikstil jetzt konsistent auf Cursor-Kreis und `Cast-Ring`
-- das `MouseHelper`-Menue wurde im Layout nachgezogen, damit Slider-Werte, Beschriftungen und der `Optikstil`-Dropdown nicht mehr ineinanderlaufen
+- das `MouseHelper`-Menü wurde im Layout nachgezogen, damit Slider-Werte, Beschriftungen und der `Optikstil`-Dropdown nicht mehr ineinanderlaufen
 
 ## 0.36.9 - 2026-04-13
 
 ### Hotfix
 
-- `SmartLFG` heisst jetzt sichtbar konsistent `SmartLFG` statt `Easy LFG`
-- `SmartLFG` hat jetzt groessere Bewerber-Buttons, links `Annehmen`, rechts `Ablehnen`, sowie `Bearb.` und `Abmelden` im Header
-- `SmartLFG` nutzt den Platz kompakter, schliesst beim frischen Anmelden das grosse Blizzard-Fenster sauberer und zeigt kyrillische Spielernamen robuster an
+- `SmartLFG` heißt jetzt sichtbar konsistent `SmartLFG` statt `Easy LFG`
+- `SmartLFG` hat jetzt größere Bewerber-Buttons, links `Annehmen`, rechts `Ablehnen`, sowie `Bearb.` und `Abmelden` im Header
+- `SmartLFG` nutzt den Platz kompakter, schließt beim frischen Anmelden das große Blizzard-Fenster sauberer und zeigt kyrillische Spielernamen robuster an
 - `Markerleiste` kann jetzt optional automatisch nur in Dungeons und Raids eingeblendet werden
 - `Chonky Character Sheet` zeigt im `Loadout`-Feld jetzt den aktiven Loadout-Namen statt nur der Spezialisierung
-- `Boss Guides` bauen ihre Boss-Tabs beim Oeffnen stabiler auf, damit Bossnamen nicht mehr sporadisch verschwinden
-- die nicht funktionale Text-/Bissanzeige der `Angelhilfe` wurde wieder vollstaendig entfernt
+- `Boss Guides` bauen ihre Boss-Tabs beim Öffnen stabiler auf, damit Bossnamen nicht mehr sporadisch verschwinden
+- die nicht funktionale Text-/Bissanzeige der `Angelhilfe` wurde wieder vollständig entfernt
 
 ## 0.36.8 - 2026-04-13
 
 ### Hotfix
 
-- `Checkliste` entfernt die taegliche Aufgabe `M0 World Tour fuer zusaetzliche Beute`
-- `Checkliste` enthaelt stattdessen jetzt die Weekly-Aufgabe `Woechentliche Housing-Quest`
+- `Checkliste` entfernt die tägliche Aufgabe `M0 World Tour für zusätzliche Beute`
+- `Checkliste` enthält stattdessen jetzt die Weekly-Aufgabe `Wöchentliche Housing-Quest`
 - alte gespeicherte Built-in-Reste der entfernten `M0 World Tour` werden bei der Checkliste bereinigt
 
 ## 0.36.7 - 2026-04-13
 
 ### Hotfix
 
-- Minimap-Button-Shortcuts neu belegt: `Strg+Linksklick` oeffnet jetzt `Saison Portale`
+- Minimap-Button-Shortcuts neu belegt: `Strg+Linksklick` öffnet jetzt `Saison Portale`
 - `Strg+Rechtsklick` auf den BeavisQoL-Minimap-Button schaltet jetzt das `Minimap-HUD`
 - Tooltip des Minimap-Buttons zeigt die neue `Strg`-Belegung jetzt getrennt und korrekt an
 
@@ -43,9 +57,9 @@
 - `Minimap-HUD` nutzt jetzt ein Live-Minimap-Overlay: Rahmen/Buttons bleiben oben rechts
 - `Minimap-HUD` dreht die Karte bei aktivem HUD automatisch nach Norden (Pfeil bleibt oben)
 - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das Minimap-HUD an/aus
-- Keystone-Fenster schliesst nach Aktivierung automatisch (auch nach Ladebildschirm)
+- Keystone-Fenster schließt nach Aktivierung automatisch (auch nach Ladebildschirm)
 - Keystone-Buttons umgestellt auf `Bereitschaftscheck`, `Timer`, `Start` mit Auto-Kette
-- `MouseHelper` rendert Kreis, Cast-Ring und Trail effizienter und vermeidet unnoetige Neuberechnungen pro Frame
+- `MouseHelper` rendert Kreis, Cast-Ring und Trail effizienter und vermeidet unnötige Neuberechnungen pro Frame
 - `StreamerPlanner` cached Namens-/Lookup-Daten robuster und aktualisiert Slots, Overlay und Bewerberliste konsistenter
 
 ## 0.36.5 - 2026-04-12
@@ -53,7 +67,7 @@
 ### Hotfix
 
 - `MinimapCollector` erkennt jetzt, wenn `Minimap Button Button` installiert und aktiv ist
-- BeavisQoL fragt bei einem Konflikt, welches Addon die Minimap-Button-Verwaltung uebernehmen soll
+- BeavisQoL fragt bei einem Konflikt, welches Addon die Minimap-Button-Verwaltung übernehmen soll
 - bei Auswahl von `BeavisQoL` wird `Minimap Button Button` deaktiviert und die UI neu geladen
 - bei Auswahl von `Minimap Button Button` wird nur der BeavisQoL-Minimap-Sammler deaktiviert
 
@@ -61,21 +75,21 @@
 
 ### Hotfix
 
-- `FlightMasterTimer` blendet sein Overlay jetzt aus, solange die Weltkarte geoeffnet ist
-- Flugtimer-Overlay liegt beim Oeffnen der Weltkarte nicht mehr ueber der Map und erscheint nach dem Schliessen wieder normal
+- `FlightMasterTimer` blendet sein Overlay jetzt aus, solange die Weltkarte geöffnet ist
+- Flugtimer-Overlay liegt beim Öffnen der Weltkarte nicht mehr über der Map und erscheint nach dem Schließen wieder normal
 
 ## 0.36.3 - 2026-04-12
 
 ### Hotfix
 
 - `AuctionHouse` scannt Blizzard-Frames jetzt defensiv, damit beim rekursiven Filter-Scan keine `bad self`-Fehler mehr auf Sonder-Frames wie `ServicesLogoutPopup` auftreten
-- Favoritengruppen-Kontextmenue im Auktionshaus zeigt fuer den Bearbeiten-Eintrag wieder einen sichtbaren Text an
+- Favoritengruppen-Kontextmenü im Auktionshaus zeigt für den Bearbeiten-Eintrag wieder einen sichtbaren Text an
 
 ## 0.36.2 - 2026-04-12
 
 ### Hotfix
 
-- `MinimapCollector` sammelt selbstverwaltete Minimap-Buttons jetzt ueber einen separaten Host statt sie direkt unter das Collector-Fenster umzuhängen
+- `MinimapCollector` sammelt selbstverwaltete Minimap-Buttons jetzt über einen separaten Host statt sie direkt unter das Collector-Fenster umzuhängen
 - Anchor-Family-Fehler mit der `TomCats`-MapIcon-Sammlung beim Einsammeln des Minimap-Buttons behoben
 
 ## 0.36.1 - 2026-04-12

@@ -32,8 +32,16 @@ local DEFAULT_OFFSET_X = -86
 local DEFAULT_OFFSET_Y = 420
 local BASE_OVERLAY_WIDTH = 344
 local REFRESH_INTERVAL = 0.35
+local GROUP_KEYS_RESPONSE_TIMEOUT = 0.8
+local GROUP_KEYS_OPENRAID_RESPONSE_TIMEOUT = 1.4
+local GROUP_KEYS_DEBUG_ENABLED = true
+local GROUP_KEYS_DEBUG_MODULE_KEY = "grpkeys"
+local OPENRAID_ADDON_PREFIX = "LRS"
 local TRACKED_DUNGEON_CONTEXT_TTL = 20
 local MAX_TRACKED_DUNGEON_RUNS = 40
+local GROUP_KEYS_PREFIX = "BEAVISQOLWK"
+local GROUP_KEYS_MESSAGE_QUERY = "QUERY"
+local GROUP_KEYS_MESSAGE_REPLY = "REPLY"
 local DIM_COLOR = { 0.60, 0.60, 0.64 }
 local TEXT_COLOR = { 0.96, 0.96, 0.96 }
 local GOLD_COLOR = { 1.00, 0.82, 0.00 }
@@ -57,6 +65,7 @@ local HideInRaidCheckbox
 local FontSizeSlider
 local ScaleSlider
 local BackgroundAlphaSlider
+local GroupKeysButton
 
 local trackedDungeonContext = {
     key = nil,
@@ -84,6 +93,101 @@ local OverlayGlow
 local OverlayAccent
 local OverlayTitle
 local OverlaySummary
+local CachedDisplayRows = nil
+local CachedDisplaySummaryText = nil
+local DisplayRowsDirty = true
+local pendingGroupKeyRequest = nil
+local groupKeyRequestSequence = 0
+local AddChatMessage
+local SendGroupKeysMessage
+local AddGroupKeysDebugMessage
+local GetShortName
+local GetDefaultRealmName
+local NormalizePlayerName
+local GetUnitFullNameSafe
+local GetPlayerFullName
+local OpenRaidLib
+local OpenRaidCallbackRegistered = false
+local OpenRaidCallbackBridge = {}
+
+if BeavisQoL.DebugConsole and BeavisQoL.DebugConsole.RegisterModule then
+    BeavisQoL.DebugConsole.RegisterModule(
+        GROUP_KEYS_DEBUG_MODULE_KEY,
+        { titleText = "GRP-Keys" }
+    )
+end
+
+OpenRaidCallbackBridge.OnKeystoneUpdate = function(unitName, keystoneInfo)
+    local request = pendingGroupKeyRequest
+    if not request or request.openRaidAttempted ~= true or request.allowOpenRaidFallback ~= true then
+        return
+    end
+
+    local normalizedUnitName = NormalizePlayerName(unitName)
+    if AddGroupKeysDebugMessage and request.debugEnabled == true then
+        AddGroupKeysDebugMessage(string.format(
+            "Details KeystoneUpdate raw=%s normalized=%s",
+            tostring(unitName),
+            tostring(normalizedUnitName)
+        ))
+    end
+    if not normalizedUnitName
+        or not request.membersByName
+        or not request.membersByName[normalizedUnitName]
+    then
+        if AddGroupKeysDebugMessage and request.debugEnabled == true then
+            AddGroupKeysDebugMessage("Details KeystoneUpdate verworfen: kein passendes Gruppenmitglied")
+        end
+        return
+    end
+
+    request.openRaidResponders = request.openRaidResponders or {}
+    request.openRaidResponders[normalizedUnitName] = keystoneInfo or true
+    if AddGroupKeysDebugMessage and request.debugEnabled == true then
+        AddGroupKeysDebugMessage(string.format(
+            "Details KeystoneUpdate %s level=%s map=%s challenge=%s mythic=%s",
+            GetShortName(normalizedUnitName),
+            tostring(keystoneInfo and keystoneInfo.level or nil),
+            tostring(keystoneInfo and keystoneInfo.mapID or nil),
+            tostring(keystoneInfo and keystoneInfo.challengeMapID or nil),
+            tostring(keystoneInfo and keystoneInfo.mythicPlusMapID or nil)
+        ))
+    end
+end
+
+OpenRaidCallbackBridge.OnRatingUpdate = function(unitName)
+    local request = pendingGroupKeyRequest
+    if not request or request.openRaidAttempted ~= true or request.allowOpenRaidFallback ~= true then
+        return
+    end
+
+    local normalizedUnitName = NormalizePlayerName(unitName)
+    if AddGroupKeysDebugMessage and request.debugEnabled == true then
+        AddGroupKeysDebugMessage(string.format(
+            "Details RatingUpdate raw=%s normalized=%s",
+            tostring(unitName),
+            tostring(normalizedUnitName)
+        ))
+    end
+    if not normalizedUnitName
+        or not request.membersByName
+        or not request.membersByName[normalizedUnitName]
+    then
+        if AddGroupKeysDebugMessage and request.debugEnabled == true then
+            AddGroupKeysDebugMessage("Details RatingUpdate verworfen: kein passendes Gruppenmitglied")
+        end
+        return
+    end
+
+    request.openRaidRatingResponders = request.openRaidRatingResponders or {}
+    request.openRaidRatingResponders[normalizedUnitName] = true
+    if AddGroupKeysDebugMessage and request.debugEnabled == true then
+        AddGroupKeysDebugMessage(string.format(
+            "Details RatingUpdate %s",
+            GetShortName(normalizedUnitName)
+        ))
+    end
+end
 
 local function Clamp(value, minValue, maxValue)
     -- Schutz gegen kaputte DB-Werte und Slider-Ausreisser.
@@ -438,7 +542,7 @@ local function GetExampleRewardItemLevel(activity)
 end
 
 local function RequestVaultData()
-    -- Die Requests stossen nur an, dass Blizzard seine internen Daten auffrischt.
+    -- Die Requests stoßen nur an, dass Blizzard seine internen Daten auffrischt.
     -- Die eigentliche Anzeige lesen wir danach über die normalen APIs.
     if C_MythicPlus and C_MythicPlus.RequestMapInfo then
         C_MythicPlus.RequestMapInfo()
@@ -484,7 +588,12 @@ local function GetDungeonSlotData()
     return slots
 end
 
-local function GetMapName(mapChallengeModeID)
+local function GetMapNameByChallengeMapID(mapChallengeModeID)
+    mapChallengeModeID = tonumber(mapChallengeModeID) or 0
+    if mapChallengeModeID <= 0 then
+        return nil
+    end
+
     if C_ChallengeMode and C_ChallengeMode.GetMapUIInfo then
         local name = C_ChallengeMode.GetMapUIInfo(mapChallengeModeID)
         if name and name ~= "" then
@@ -492,12 +601,647 @@ local function GetMapName(mapChallengeModeID)
         end
     end
 
+    return nil
+end
+
+local function GetMapName(mapChallengeModeID)
+    local name = GetMapNameByChallengeMapID(mapChallengeModeID)
+    if name then
+        return name
+    end
+
     return L("UNKNOWN_DUNGEON")
+end
+
+local function ResolveKeystoneMapName(challengeMapID, mapID, mythicPlusMapID)
+    return GetMapNameByChallengeMapID(challengeMapID)
+        or GetMapNameByChallengeMapID(mapID)
+        or GetMapNameByChallengeMapID(mythicPlusMapID)
+        or L("UNKNOWN_DUNGEON")
+end
+
+local function BuildKeystoneText(keystoneLevel, challengeMapID, mapID, mythicPlusMapID)
+    keystoneLevel = tonumber(keystoneLevel) or 0
+    if keystoneLevel <= 0 then
+        return nil
+    end
+
+    return string.format("+%d %s", keystoneLevel, ResolveKeystoneMapName(challengeMapID, mapID, mythicPlusMapID))
+end
+
+local function GetOwnedKeystoneData()
+    if not C_MythicPlus then
+        return 0, 0, 0
+    end
+
+    local mapID = C_MythicPlus.GetOwnedKeystoneMapID and C_MythicPlus.GetOwnedKeystoneMapID() or 0
+    local challengeMapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID and C_MythicPlus.GetOwnedKeystoneChallengeMapID() or 0
+    local keystoneLevel = C_MythicPlus.GetOwnedKeystoneLevel and C_MythicPlus.GetOwnedKeystoneLevel() or 0
+
+    mapID = tonumber(mapID) or 0
+    challengeMapID = tonumber(challengeMapID) or 0
+    keystoneLevel = tonumber(keystoneLevel) or 0
+
+    return keystoneLevel, challengeMapID, mapID
+end
+
+local function GetOwnedKeystoneText()
+    local keystoneLevel, challengeMapID, mapID = GetOwnedKeystoneData()
+    return BuildKeystoneText(keystoneLevel, challengeMapID, mapID)
+end
+
+local function GetGroupKeysChannel()
+    if LE_PARTY_CATEGORY_INSTANCE and IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
+        return "INSTANCE_CHAT"
+    end
+
+    if IsInRaid() then
+        return "RAID"
+    end
+
+    if IsInGroup() then
+        return "PARTY"
+    end
+
+    return nil
+end
+
+local function GetOpenRaidLib()
+    if OpenRaidLib then
+        local request = pendingGroupKeyRequest
+        if request
+            and request.debugEnabled == true
+            and request.debugLoggedLibState ~= true
+            and AddGroupKeysDebugMessage
+        then
+            request.debugLoggedLibState = true
+            AddGroupKeysDebugMessage(string.format(
+                "LibOpenRaid gefunden, callbacksRegistered=%s",
+                tostring(OpenRaidCallbackRegistered == true)
+            ))
+        end
+        return OpenRaidLib
+    end
+
+    if type(LibStub) == "table" and type(LibStub.GetLibrary) == "function" then
+        OpenRaidLib = LibStub:GetLibrary("LibOpenRaid-1.0", true)
+    end
+
+    if OpenRaidLib
+        and OpenRaidCallbackRegistered ~= true
+        and type(OpenRaidLib.RegisterCallback) == "function"
+    then
+        local ok, registered = pcall(
+            OpenRaidLib.RegisterCallback,
+            OpenRaidCallbackBridge,
+            "KeystoneUpdate",
+            "OnKeystoneUpdate"
+        )
+        local ratingOk, ratingRegistered = pcall(
+            OpenRaidLib.RegisterCallback,
+            OpenRaidCallbackBridge,
+            "RatingUpdate",
+            "OnRatingUpdate"
+        )
+        if ok and registered == true and ratingOk and ratingRegistered == true then
+            OpenRaidCallbackRegistered = true
+        end
+    end
+
+    local request = pendingGroupKeyRequest
+    if request
+        and request.debugEnabled == true
+        and request.debugLoggedLibState ~= true
+        and AddGroupKeysDebugMessage
+    then
+        request.debugLoggedLibState = true
+        AddGroupKeysDebugMessage(string.format(
+            "LibOpenRaid load=%s callbacksRegistered=%s",
+            tostring(OpenRaidLib ~= nil),
+            tostring(OpenRaidCallbackRegistered == true)
+        ))
+    end
+
+    return OpenRaidLib
+end
+
+local function RequestOpenRaidGroupKeys()
+    local openRaidLib = GetOpenRaidLib()
+    if not openRaidLib then
+        if pendingGroupKeyRequest and pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+            AddGroupKeysDebugMessage("Details Keystone-Request: LibOpenRaid nicht gefunden")
+        end
+        return false
+    end
+
+    local requestFunc = nil
+    local requestTarget = "none"
+    if IsInRaid() then
+        requestFunc = openRaidLib.RequestKeystoneDataFromRaid
+        requestTarget = "raid"
+    elseif IsInGroup() then
+        requestFunc = openRaidLib.RequestKeystoneDataFromParty
+        requestTarget = "party"
+    end
+
+    if type(requestFunc) ~= "function" then
+        if pendingGroupKeyRequest and pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+            AddGroupKeysDebugMessage("Details Keystone-Request: keine passende Request-Funktion")
+        end
+        return false
+    end
+
+    local ok, requested = pcall(requestFunc)
+    if pendingGroupKeyRequest and pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+        AddGroupKeysDebugMessage(string.format(
+            "Details Keystone-Request %s ok=%s requested=%s",
+            requestTarget,
+            tostring(ok),
+            tostring(requested)
+        ))
+    end
+    return ok and requested == true
+end
+
+local function RequestOpenRaidGroupRatings()
+    local openRaidLib = GetOpenRaidLib()
+    if not openRaidLib then
+        if pendingGroupKeyRequest and pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+            AddGroupKeysDebugMessage("Details Rating-Request: LibOpenRaid nicht gefunden")
+        end
+        return false
+    end
+
+    local requestFunc = nil
+    local requestTarget = "none"
+    if IsInRaid() then
+        requestFunc = openRaidLib.RequestRatingDataFromRaid
+        requestTarget = "raid"
+    elseif IsInGroup() then
+        requestFunc = openRaidLib.RequestRatingDataFromParty
+        requestTarget = "party"
+    end
+
+    if type(requestFunc) ~= "function" then
+        if pendingGroupKeyRequest and pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+            AddGroupKeysDebugMessage("Details Rating-Request: keine passende Request-Funktion")
+        end
+        return false
+    end
+
+    local ok, requested = pcall(requestFunc)
+    if pendingGroupKeyRequest and pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+        AddGroupKeysDebugMessage(string.format(
+            "Details Rating-Request %s ok=%s requested=%s",
+            requestTarget,
+            tostring(ok),
+            tostring(requested)
+        ))
+    end
+    return ok and requested == true
+end
+
+local function GetAllOpenRaidKeystones()
+    local openRaidLib = GetOpenRaidLib()
+    if not openRaidLib or type(openRaidLib.GetAllKeystonesInfo) ~= "function" then
+        return nil
+    end
+
+    local ok, keystoneData = pcall(openRaidLib.GetAllKeystonesInfo)
+    if ok and type(keystoneData) == "table" then
+        return keystoneData
+    end
+
+    return nil
+end
+
+local function FindOpenRaidKeystoneInfo(playerName)
+    local normalizedPlayerName = NormalizePlayerName(playerName)
+    if not normalizedPlayerName then
+        return nil
+    end
+
+    local allKeystones = GetAllOpenRaidKeystones()
+    if type(allKeystones) ~= "table" then
+        return nil
+    end
+
+    if type(allKeystones[normalizedPlayerName]) == "table" then
+        return allKeystones[normalizedPlayerName]
+    end
+
+    if type(allKeystones[playerName]) == "table" then
+        return allKeystones[playerName]
+    end
+
+    local shortName = GetShortName(normalizedPlayerName)
+    if shortName and type(allKeystones[shortName]) == "table" then
+        return allKeystones[shortName]
+    end
+
+    for openRaidName, keystoneInfo in pairs(allKeystones) do
+        if type(openRaidName) == "string"
+            and type(keystoneInfo) == "table"
+            and NormalizePlayerName(openRaidName) == normalizedPlayerName
+        then
+            return keystoneInfo
+        end
+    end
+
+    return nil
+end
+
+local function IsUnknownGroupKeyText(keyText)
+    local unknownDungeonName = L("UNKNOWN_DUNGEON")
+    return type(keyText) == "string"
+        and type(unknownDungeonName) == "string"
+        and unknownDungeonName ~= ""
+        and string.find(keyText, unknownDungeonName, 1, true) ~= nil
+end
+
+local function TrySupplementGroupKeyEntryFromOpenRaid(entry, request)
+    if type(entry) ~= "table" or entry.respondedViaOpenRaid == true then
+        return false
+    end
+
+    if entry.responded == true and (not entry.keyText or entry.keyText == "") then
+        return false
+    end
+
+    if entry.responded == true and not IsUnknownGroupKeyText(entry.keyText) then
+        return false
+    end
+
+    local normalizedName = NormalizePlayerName(entry.fullName)
+    local openRaidResponse = normalizedName
+        and request
+        and type(request.openRaidResponders) == "table"
+        and request.openRaidResponders[normalizedName]
+        or nil
+    local ratingResponder = normalizedName
+        and request
+        and type(request.openRaidRatingResponders) == "table"
+        and request.openRaidRatingResponders[normalizedName] == true
+        or false
+    if openRaidResponse == nil and ratingResponder ~= true then
+        return false
+    end
+
+    local keystoneInfo = nil
+    if type(openRaidResponse) == "table" then
+        keystoneInfo = openRaidResponse
+    elseif openRaidResponse ~= nil then
+        keystoneInfo = FindOpenRaidKeystoneInfo(entry.fullName)
+    end
+    local keyText = BuildKeystoneText(
+        keystoneInfo and keystoneInfo.level,
+        keystoneInfo and keystoneInfo.challengeMapID,
+        keystoneInfo and keystoneInfo.mapID,
+        keystoneInfo and keystoneInfo.mythicPlusMapID
+    )
+
+    entry.respondedViaOpenRaid = true
+    entry.keyText = keyText
+    if request and request.debugEnabled == true and AddGroupKeysDebugMessage then
+        AddGroupKeysDebugMessage(string.format(
+            "Details Auswertung %s keystoneReply=%s ratingReply=%s keyText=%s",
+            entry.shortName or GetShortName(entry.fullName),
+            tostring(openRaidResponse ~= nil),
+            tostring(ratingResponder == true),
+            tostring(keyText or "nil")
+        ))
+    end
+    return true
+end
+
+local function DoesGroupKeyEntryNeedOpenRaidFallback(entry)
+    if type(entry) ~= "table" then
+        return false
+    end
+
+    if entry.responded ~= true then
+        return true
+    end
+
+    return IsUnknownGroupKeyText(entry.keyText)
+end
+
+local function BuildGroupKeysRoster()
+    local playerFullName = GetPlayerFullName()
+    local members = {}
+    local membersByName = {}
+
+    local function AddUnit(unit)
+        local fullName = GetUnitFullNameSafe(unit)
+        if not fullName or membersByName[fullName] then
+            return
+        end
+
+        local entry = {
+            fullName = fullName,
+            shortName = GetShortName(fullName),
+            responded = false,
+            respondedViaOpenRaid = false,
+            keyText = nil,
+        }
+
+        members[#members + 1] = entry
+        membersByName[fullName] = entry
+    end
+
+    AddUnit("player")
+
+    if IsInRaid() then
+        for index = 1, (GetNumGroupMembers() or 0) do
+            AddUnit("raid" .. index)
+        end
+    elseif IsInGroup() then
+        for index = 1, (GetNumSubgroupMembers() or 0) do
+            AddUnit("party" .. index)
+        end
+    end
+
+    table.sort(members, function(a, b)
+        if a.fullName == playerFullName then
+            return true
+        end
+
+        if b.fullName == playerFullName then
+            return false
+        end
+
+        return a.shortName < b.shortName
+    end)
+
+    return members, membersByName
+end
+
+local function ParseGroupKeysMessage(message)
+    if type(strsplit) == "function" then
+        return strsplit("\t", tostring(message or ""))
+    end
+
+    local values = {}
+    for value in string.gmatch(tostring(message or "") .. "\t", "(.-)\t") do
+        values[#values + 1] = value
+    end
+
+    return values[1], values[2], values[3], values[4], values[5], values[6]
+end
+
+local function FinalizeGroupKeyRequest(requestID)
+    local request = pendingGroupKeyRequest
+    if not request or request.id ~= requestID then
+        return
+    end
+
+    local outputChannel = GetGroupKeysChannel() or request.channelName
+
+    SendGroupKeysMessage(L("WEEKLY_KEYS_GROUP_KEYS_HEADER"), outputChannel)
+
+    for _, entry in ipairs(request.members) do
+        local usedOpenRaidFallback = false
+        if request.allowOpenRaidFallback == true then
+            usedOpenRaidFallback = TrySupplementGroupKeyEntryFromOpenRaid(entry, request)
+        end
+
+        local keyText = entry.keyText
+
+        if entry.responded ~= true and usedOpenRaidFallback ~= true then
+            keyText = L("WEEKLY_KEYS_GROUP_KEYS_NO_RESPONSE")
+        elseif not keyText or keyText == "" then
+            keyText = L("WEEKLY_KEYS_GROUP_KEYS_NONE")
+        end
+
+        if request.debugEnabled == true and AddGroupKeysDebugMessage then
+            AddGroupKeysDebugMessage(string.format(
+                "Final %s responded=%s viaDetails=%s keyText=%s",
+                entry.shortName,
+                tostring(entry.responded == true),
+                tostring(usedOpenRaidFallback == true),
+                tostring(keyText)
+            ))
+        end
+
+        SendGroupKeysMessage(string.format(L("WEEKLY_KEYS_GROUP_KEYS_ENTRY"), entry.shortName, keyText), outputChannel)
+    end
+
+    pendingGroupKeyRequest = nil
+end
+
+local function ContinueGroupKeyRequestWithFallback(requestID)
+    local request = pendingGroupKeyRequest
+    if not request or request.id ~= requestID then
+        return
+    end
+
+    if request.openRaidAttempted == true then
+        FinalizeGroupKeyRequest(requestID)
+        return
+    end
+
+    local needsOpenRaidFallback = false
+    for _, entry in ipairs(request.members) do
+        if DoesGroupKeyEntryNeedOpenRaidFallback(entry) then
+            needsOpenRaidFallback = true
+            break
+        end
+    end
+
+    if not needsOpenRaidFallback then
+        if request.debugEnabled == true and AddGroupKeysDebugMessage then
+            AddGroupKeysDebugMessage("Details Fallback nicht nötig")
+        end
+        FinalizeGroupKeyRequest(requestID)
+        return
+    end
+
+    if request.debugEnabled == true and AddGroupKeysDebugMessage then
+        AddGroupKeysDebugMessage("Details Fallback gestartet")
+    end
+
+    request.openRaidAttempted = true
+    request.openRaidResponders = {}
+    request.openRaidRatingResponders = {}
+    local requestedKeystoneData = RequestOpenRaidGroupKeys()
+    local requestedRatingData = RequestOpenRaidGroupRatings()
+    request.allowOpenRaidFallback = requestedKeystoneData == true or requestedRatingData == true
+    if request.debugEnabled == true and AddGroupKeysDebugMessage then
+        AddGroupKeysDebugMessage(string.format(
+            "Details Fallback Ergebnis keystone=%s rating=%s active=%s",
+            tostring(requestedKeystoneData == true),
+            tostring(requestedRatingData == true),
+            tostring(request.allowOpenRaidFallback == true)
+        ))
+    end
+    if request.allowOpenRaidFallback ~= true then
+        FinalizeGroupKeyRequest(requestID)
+        return
+    end
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(GROUP_KEYS_OPENRAID_RESPONSE_TIMEOUT, function()
+            FinalizeGroupKeyRequest(requestID)
+        end)
+    else
+        FinalizeGroupKeyRequest(requestID)
+    end
+end
+
+local function StartGroupKeyRequest()
+    local channelName = GetGroupKeysChannel()
+    if not channelName then
+        AddChatMessage(L("WEEKLY_KEYS_GROUP_KEYS_NO_GROUP"))
+        return
+    end
+
+    if not C_ChatInfo or not C_ChatInfo.SendAddonMessage then
+        AddChatMessage(L("WEEKLY_KEYS_GROUP_KEYS_UNAVAILABLE"))
+        return
+    end
+
+    if C_MythicPlus and C_MythicPlus.RequestMapInfo then
+        C_MythicPlus.RequestMapInfo()
+    end
+
+    local members, membersByName = BuildGroupKeysRoster()
+    if #members <= 0 then
+        AddChatMessage(L("WEEKLY_KEYS_GROUP_KEYS_NO_GROUP"))
+        return
+    end
+
+    groupKeyRequestSequence = groupKeyRequestSequence + 1
+
+    local requestID = string.format("%d-%d", GetTimestamp(), groupKeyRequestSequence)
+    local playerFullName = GetPlayerFullName()
+
+    if GROUP_KEYS_DEBUG_ENABLED == true
+        and BeavisQoL.DebugConsole
+        and BeavisQoL.DebugConsole.Clear
+    then
+        BeavisQoL.DebugConsole.Clear(
+            GROUP_KEYS_DEBUG_MODULE_KEY,
+            { titleText = "GRP-Keys", select = true }
+        )
+    end
+
+    pendingGroupKeyRequest = {
+        id = requestID,
+        channelName = channelName,
+        members = members,
+        membersByName = membersByName,
+        allowOpenRaidFallback = false,
+        openRaidAttempted = false,
+        openRaidResponders = nil,
+        openRaidRatingResponders = nil,
+        debugEnabled = GROUP_KEYS_DEBUG_ENABLED == true,
+        debugLoggedLibState = false,
+        debugLines = {},
+    }
+
+    local ownEntry = playerFullName and membersByName[playerFullName] or nil
+    if ownEntry then
+        ownEntry.responded = true
+        ownEntry.keyText = GetOwnedKeystoneText()
+    end
+
+    if pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+        AddGroupKeysDebugMessage(string.format(
+            "Start req=%s channel=%s members=%d own=%s",
+            requestID,
+            tostring(channelName),
+            #members,
+            tostring((ownEntry and ownEntry.keyText) or "nil")
+        ))
+    end
+
+    C_ChatInfo.SendAddonMessage(
+        GROUP_KEYS_PREFIX,
+        GROUP_KEYS_MESSAGE_QUERY .. "\t" .. requestID,
+        channelName
+    )
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(GROUP_KEYS_RESPONSE_TIMEOUT, function()
+            ContinueGroupKeyRequestWithFallback(requestID)
+        end)
+    else
+        ContinueGroupKeyRequestWithFallback(requestID)
+    end
+end
+
+local function HandleGroupKeysAddonMessage(prefix, message, channelName, sender)
+    if prefix ~= GROUP_KEYS_PREFIX then
+        return false
+    end
+
+    local messageType, requestID, mapIDText, levelText, challengeMapIDText, mythicPlusMapIDText = ParseGroupKeysMessage(message)
+    local normalizedSender = NormalizePlayerName(sender)
+
+    if messageType == GROUP_KEYS_MESSAGE_QUERY then
+        if normalizedSender ~= GetPlayerFullName()
+            and C_ChatInfo
+            and C_ChatInfo.SendAddonMessage
+            and channelName
+            and requestID
+            and requestID ~= ""
+        then
+            local keystoneLevel, challengeMapID, mapID = GetOwnedKeystoneData()
+
+            C_ChatInfo.SendAddonMessage(
+                GROUP_KEYS_PREFIX,
+                table.concat({
+                    GROUP_KEYS_MESSAGE_REPLY,
+                    requestID,
+                    tostring(tonumber(mapID) or 0),
+                    tostring(tonumber(keystoneLevel) or 0),
+                    tostring(tonumber(challengeMapID) or 0),
+                }, "\t"),
+                channelName
+            )
+        end
+
+        return true
+    end
+
+    if messageType ~= GROUP_KEYS_MESSAGE_REPLY
+        or not pendingGroupKeyRequest
+        or requestID ~= pendingGroupKeyRequest.id
+        or not normalizedSender
+    then
+        return true
+    end
+
+    local entry = pendingGroupKeyRequest.membersByName and pendingGroupKeyRequest.membersByName[normalizedSender] or nil
+    if not entry then
+        return true
+    end
+
+    local mapID = tonumber(mapIDText) or 0
+    local keystoneLevel = tonumber(levelText) or 0
+    local challengeMapID = tonumber(challengeMapIDText) or 0
+    local mythicPlusMapID = tonumber(mythicPlusMapIDText) or 0
+
+    entry.responded = true
+    entry.keyText = BuildKeystoneText(keystoneLevel, challengeMapID, mapID, mythicPlusMapID)
+    if pendingGroupKeyRequest and pendingGroupKeyRequest.debugEnabled == true and AddGroupKeysDebugMessage then
+        AddGroupKeysDebugMessage(string.format(
+            "Beavis Reply %s level=%s map=%s challenge=%s mythic=%s keyText=%s",
+            entry.shortName,
+            tostring(keystoneLevel),
+            tostring(mapID),
+            tostring(challengeMapID),
+            tostring(mythicPlusMapID),
+            tostring(entry.keyText or "nil")
+        ))
+    end
+
+    return true
 end
 
 local function GetWeeklyRunHistory()
     -- Die Rohdaten aus der API werden direkt nach "wichtigster Lauf zuerst"
-    -- sortiert: hoehere Stufe, dann timed vor depleted, dann Name.
+    -- sortiert: höhere Stufe, dann timed vor depleted, dann Name.
     if not C_MythicPlus or not C_MythicPlus.GetRunHistory then
         return {}
     end
@@ -626,7 +1370,7 @@ end
 
 local function GetWeeklyKeysSettings()
     -- Wie im Stats-Modul normalisieren wir alle SavedVariables an einer Stelle.
-    -- So bleibt die restliche Datei frei von nil- und Altwert-Sonderfaellen.
+    -- So bleibt die restliche Datei frei von nil- und Altwert-Sonderfällen.
     BeavisQoLDB = BeavisQoLDB or {}
     BeavisQoLDB.weeklyKeys = BeavisQoLDB.weeklyKeys or {}
 
@@ -683,6 +1427,129 @@ end
 local function ShouldHideOverlayInCombat()
     return BeavisQoL.ShouldHideOverlay
         and BeavisQoL.ShouldHideOverlay("weekly")
+end
+
+AddChatMessage = function(message)
+    if type(message) ~= "string" or message == "" then
+        return
+    end
+
+    if DEFAULT_CHAT_FRAME and type(DEFAULT_CHAT_FRAME.AddMessage) == "function" then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff66d9efBeavisQoL:|r " .. message)
+    end
+end
+
+SendGroupKeysMessage = function(message, channelName)
+    if type(message) ~= "string" or message == "" then
+        return
+    end
+
+    local effectiveChannel = channelName
+    if type(effectiveChannel) ~= "string" or effectiveChannel == "" then
+        effectiveChannel = GetGroupKeysChannel()
+    end
+
+    if type(effectiveChannel) == "string"
+        and effectiveChannel ~= ""
+        and type(SendChatMessage) == "function"
+    then
+        local ok = pcall(SendChatMessage, message, effectiveChannel)
+        if ok then
+            return
+        end
+    end
+
+    AddChatMessage(message)
+end
+
+AddGroupKeysDebugMessage = function(message)
+    if GROUP_KEYS_DEBUG_ENABLED ~= true then
+        return
+    end
+
+    local request = pendingGroupKeyRequest
+    if not request or request.debugEnabled ~= true then
+        return
+    end
+
+    local debugLine = "GRP-Keys Debug: " .. tostring(message)
+    request.debugLines = request.debugLines or {}
+    request.debugLines[#request.debugLines + 1] = debugLine
+
+    if BeavisQoL.DebugConsole and BeavisQoL.DebugConsole.AppendLine then
+        BeavisQoL.DebugConsole.AppendLine(
+            GROUP_KEYS_DEBUG_MODULE_KEY,
+            debugLine,
+            { titleText = "GRP-Keys", select = true }
+        )
+    end
+end
+
+GetShortName = function(name)
+    if not name or name == "" then
+        return L("UNKNOWN")
+    end
+
+    if Ambiguate then
+        return Ambiguate(name, "short")
+    end
+
+    return name
+end
+
+GetDefaultRealmName = function()
+    if GetNormalizedRealmName then
+        local normalizedRealmName = GetNormalizedRealmName()
+        if normalizedRealmName and normalizedRealmName ~= "" then
+            return normalizedRealmName
+        end
+    end
+
+    local _, realmName = UnitFullName("player")
+    if realmName and realmName ~= "" then
+        return realmName
+    end
+
+    return nil
+end
+
+NormalizePlayerName = function(name)
+    if type(name) ~= "string" or name == "" then
+        return nil
+    end
+
+    if string.find(name, "-", 1, true) then
+        return name
+    end
+
+    local realmName = GetDefaultRealmName()
+    if realmName and realmName ~= "" then
+        return name .. "-" .. realmName
+    end
+
+    return name
+end
+
+GetUnitFullNameSafe = function(unit)
+    if not unit or not UnitExists or not UnitExists(unit) then
+        return nil
+    end
+
+    local playerName, realmName = UnitFullName(unit)
+    if not playerName or playerName == "" then
+        return nil
+    end
+
+    realmName = realmName or GetDefaultRealmName()
+    if realmName and realmName ~= "" then
+        return playerName .. "-" .. realmName
+    end
+
+    return playerName
+end
+
+GetPlayerFullName = function()
+    return GetUnitFullNameSafe("player")
 end
 
 local function IsPlayerInAnyRaidGroup()
@@ -1115,6 +1982,19 @@ local function BuildDisplayRows()
     return rows, summaryText
 end
 
+local function InvalidateDisplayRowsCache()
+    DisplayRowsDirty = true
+end
+
+local function GetCachedDisplayRows()
+    if DisplayRowsDirty or CachedDisplayRows == nil or CachedDisplaySummaryText == nil then
+        CachedDisplayRows, CachedDisplaySummaryText = BuildDisplayRows()
+        DisplayRowsDirty = false
+    end
+
+    return CachedDisplayRows, CachedDisplaySummaryText
+end
+
 local function GetLayoutMetrics(fontSize, scale)
     -- Auch hier steckt das Overlay-Design in einer reinen Zahlenfunktion.
     local effectiveScale = Clamp(scale or DEFAULT_OVERLAY_SCALE, MIN_OVERLAY_SCALE, MAX_OVERLAY_SCALE)
@@ -1161,7 +2041,7 @@ local function UpdateRunRows(parent, targetRows, fontSize, summaryFontSize, scal
     -- Zuerst werden die Zeileninhalte gebaut, danach werden Fonts, Abstaende
     -- und Positionen auf die sichtbaren Rows verteilt.
     local settings = GetWeeklyKeysSettings()
-    local rowsData, summaryText = BuildDisplayRows()
+    local rowsData, summaryText = GetCachedDisplayRows()
     local metrics = GetLayoutMetrics(fontSize, scale)
     local currentY = -metrics.topPadding
 
@@ -1285,11 +2165,28 @@ local function RunWeeklyKeysRefreshTicker()
         return
     end
 
+    local settings = GetWeeklyKeysSettings()
+
+    if not DisplayRowsDirty then
+        if OverlayFrame then
+            if settings.overlayEnabled and not ShouldHideWeeklyKeysOverlay() then
+                OverlayFrame:Show()
+            else
+                OverlayFrame:Hide()
+            end
+        end
+
+        if profiler and profiler.EndSample then
+            profiler.EndSample("WeeklyKeys.RefreshTicker", sampleToken)
+        end
+        return
+    end
+
     if PageWeeklyKeys and PageWeeklyKeys:IsShown() then
         RefreshPreview()
     end
 
-    if OverlayFrame and OverlayFrame:IsShown() then
+    if OverlayFrame and (OverlayFrame:IsShown() or settings.overlayEnabled) then
         WeeklyKeysModule.RefreshOverlayWindow()
     end
 
@@ -1328,6 +2225,7 @@ UpdateWeeklyKeysRefreshTickerState = function()
 end
 
 local function RefreshAllDisplays()
+    InvalidateDisplayRowsCache()
     -- Ein Aufruf für Vorschau, Overlay und Datenanfrage.
     RequestVaultData()
     RefreshPreview()
@@ -1701,10 +2599,17 @@ OverlayTitle:SetText(L("WEEKLY_KEYS"))
 
 OverlaySummary = OverlayFrame:CreateFontString(nil, "OVERLAY")
 OverlaySummary:SetPoint("TOPLEFT", OverlayTitle, "BOTTOMLEFT", 0, -4)
-OverlaySummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -12, 0)
+OverlaySummary:SetPoint("RIGHT", OverlayFrame, "RIGHT", -86, 0)
 OverlaySummary:SetJustifyH("LEFT")
 OverlaySummary:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
 OverlaySummary:SetTextColor(0.78, 0.74, 0.69, 1)
+
+GroupKeysButton = CreateFrame("Button", nil, OverlayFrame, "UIPanelButtonTemplate")
+GroupKeysButton:SetSize(64, 18)
+GroupKeysButton:SetPoint("TOPRIGHT", OverlayFrame, "TOPRIGHT", -10, -8)
+GroupKeysButton:SetText(L("WEEKLY_KEYS_GROUP_KEYS_BUTTON"))
+GroupKeysButton:SetNormalFontObject(GameFontNormalSmall)
+GroupKeysButton:SetHighlightFontObject(GameFontHighlightSmall)
 
 CreateRunRows(OverlayFrame, OverlayRows)
 
@@ -1750,6 +2655,27 @@ ResetPositionButton:SetScript("OnClick", function()
     WeeklyKeysModule.ResetOverlayPosition()
 end)
 
+GroupKeysButton:SetScript("OnClick", function()
+    StartGroupKeyRequest()
+end)
+
+GroupKeysButton:SetScript("OnEnter", function(self)
+    if not GameTooltip then
+        return
+    end
+
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText(L("WEEKLY_KEYS_GROUP_KEYS_BUTTON"), 1, 0.82, 0)
+    GameTooltip:AddLine(L("WEEKLY_KEYS_GROUP_KEYS_HINT"), 0.9, 0.9, 0.9, true)
+    GameTooltip:Show()
+end)
+
+GroupKeysButton:SetScript("OnLeave", function()
+    if GameTooltip then
+        GameTooltip:Hide()
+    end
+end)
+
 function PageWeeklyKeys:RefreshState()
     -- Liest den kompletten Modulzustand aus der DB und schreibt ihn gesammelt
     -- in Checkboxen, Slider und Vorschau.
@@ -1776,6 +2702,7 @@ function PageWeeklyKeys:RefreshState()
     BackgroundAlphaSlider.Text:SetText(L("BACKGROUND_ALPHA"))
     ResetPositionButton:SetText(L("RESET_POSITION"))
     ResetHint:SetText(L("WEEKLY_KEYS_RESET_HINT"))
+    GroupKeysButton:SetText(L("WEEKLY_KEYS_GROUP_KEYS_BUTTON"))
     OverlayTitle:SetText(L("WEEKLY_KEYS"))
 
     isRefreshing = true
@@ -1836,8 +2763,35 @@ WeeklyKeysEvents:RegisterEvent("UPDATE_INSTANCE_INFO")
 WeeklyKeysEvents:RegisterEvent("GROUP_ROSTER_UPDATE")
 WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_DISABLED")
 WeeklyKeysEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
-WeeklyKeysEvents:SetScript("OnEvent", function(_, eventName)
+WeeklyKeysEvents:RegisterEvent("CHAT_MSG_ADDON")
+WeeklyKeysEvents:SetScript("OnEvent", function(_, eventName, ...)
     -- Alle relevanten Weekly-Vault- und Mythic+-Änderungen laufen hier zusammen.
+    if eventName == "CHAT_MSG_ADDON" then
+        local prefix, message, channelName, sender = ...
+        if prefix == OPENRAID_ADDON_PREFIX
+            and pendingGroupKeyRequest
+            and pendingGroupKeyRequest.debugEnabled == true
+            and pendingGroupKeyRequest.openRaidAttempted == true
+            and AddGroupKeysDebugMessage
+        then
+            AddGroupKeysDebugMessage(string.format(
+                "Raw LRS sender=%s channel=%s bytes=%s",
+                tostring(sender),
+                tostring(channelName),
+                tostring(message and string.len(message) or 0)
+            ))
+        end
+        HandleGroupKeysAddonMessage(prefix, message, channelName, sender)
+        return
+    end
+
+    if eventName == "PLAYER_LOGIN"
+        and C_ChatInfo
+        and C_ChatInfo.RegisterAddonMessagePrefix
+    then
+        C_ChatInfo.RegisterAddonMessagePrefix(GROUP_KEYS_PREFIX)
+    end
+
     MarkChallengeModeActivityIfNeeded()
 
     if eventName == "PLAYER_ENTERING_WORLD"
