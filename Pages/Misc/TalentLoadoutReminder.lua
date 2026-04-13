@@ -69,22 +69,70 @@ local function GetLastSelectedSavedConfigID(specID)
     return C_ClassTalents.GetLastSelectedSavedConfigID(specID)
 end
 
-local function GetCurrentLoadoutName()
-    local _, specID, specName = GetCurrentSpecInfo()
-    local activeConfigID = GetActiveConfigID()
-    local activeConfigName = GetConfigName(activeConfigID)
-    if activeConfigName then
-        return activeConfigName
+local function BuildLoadoutOptions(specID)
+    if type(specID) ~= "number" or not C_ClassTalents or type(C_ClassTalents.GetConfigIDsBySpecID) ~= "function" then
+        return {}
     end
 
+    local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID) or {}
+    local options = {}
+    for index, configID in ipairs(configIDs) do
+        local name = GetConfigName(configID)
+        if not name or name == "" then
+            name = L("CHONKY_LOADOUT_FALLBACK_NAME"):format(index)
+        end
+
+        options[#options + 1] = {
+            configID = configID,
+            name = name,
+        }
+    end
+
+    return options
+end
+
+local function FindLoadoutOptionByConfigID(options, configID)
+    if type(configID) ~= "number" then
+        return nil
+    end
+
+    for _, option in ipairs(options or {}) do
+        if option.configID == configID then
+            return option
+        end
+    end
+
+    return nil
+end
+
+local function GetCurrentLoadoutName()
+    local _, specID, specName = GetCurrentSpecInfo()
+    local options = BuildLoadoutOptions(specID)
+    local activeConfigID = GetActiveConfigID()
     local selectedSavedConfigID = GetLastSelectedSavedConfigID(specID)
+
+    local activeOption = FindLoadoutOptionByConfigID(options, activeConfigID)
+    if activeOption then
+        return activeOption.name
+    end
+
+    local selectedSavedOption = FindLoadoutOptionByConfigID(options, selectedSavedConfigID)
+    if selectedSavedOption then
+        return selectedSavedOption.name
+    end
+
     local selectedSavedName = GetConfigName(selectedSavedConfigID)
-    if selectedSavedName then
+    if selectedSavedName and selectedSavedName ~= specName then
         return selectedSavedName
     end
 
-    if type(specName) == "string" and specName ~= "" then
-        return specName
+    local activeConfigName = GetConfigName(activeConfigID)
+    if activeConfigName and activeConfigName ~= specName then
+        return activeConfigName
+    end
+
+    if #options == 0 then
+        return L("CHONKY_LOADOUT_NO_LOADOUTS")
     end
 
     return L("CHONKY_LOADOUT_NONE")

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.1 - 2026-04-13
+
+### Hotfix
+
+- `Talent-Loadout-Reminder` zeigt jetzt den aktiven Loadout-Namen (z. B. deine Retri-Skillung) statt nur der Spezialisierung an
+
 ## 0.37.0 - 2026-04-13
 
 ### Neu
