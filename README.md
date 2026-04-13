@@ -4,14 +4,11 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.11`
+- Version: `0.36.12`
 - Release-Datum: `2026-04-13`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `WeeklyKeys` hat jetzt `GRP-Keys` mit robusterer Key-Auflösung, `Details`-Fallback und direkter Gruppenchat-Ausgabe
-  - das frühere `GRP-Keys`-Debugfenster ist jetzt die zentrale `Beavis Debug`-Konsole und lässt sich per `/beavis debug open` öffnen
-  - `Organisierte Gruppen` fangen abrupte Invite-/Kick-Wechsel jetzt robuster ab, damit der Blizzard-Bereich nicht leer hängen bleibt
-  - `MouseHelper` rendert den `max fps`-Trail wieder weicher und sichtbar länger, bei gleichzeitig abgespeckter Laufzeitlogik
+  - `Tooltip-Itemlevel` vermeidet im sicheren Tooltip-Pfad jetzt direkte Vergleiche gegen mögliche Secret-Unit-Strings und löst dadurch keinen Taint-Fehler mehr aus
 
 ## Download
 

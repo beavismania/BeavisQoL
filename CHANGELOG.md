@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.36.12 - 2026-04-13
+
+### Hotfix
+
+- `Tooltip Itemlevel` vergleicht mögliche Secret-Unit-Strings im sicheren Tooltip-Pfad nicht mehr direkt, damit kein `attempt to compare local 'unit'`-Taint mehr ausgelöst wird
+
 ## 0.36.11 - 2026-04-13
 
 ### Hotfix
