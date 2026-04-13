@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.2 - 2026-04-13
+
+### Verbessert
+
+- `Saison Portale` erkennt jetzt, ob ein Portal auf Abklingzeit ist, und zeigt die Abklingzeit direkt in der Liste an
+
 ## 0.37.1 - 2026-04-13
 
 ### Hotfix

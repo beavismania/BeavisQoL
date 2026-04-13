@@ -328,6 +328,62 @@ local function ResolveKnownPortalSpellID(dungeonData)
     return nil
 end
 
+local function GetSpellCooldownRemaining(spellID)
+    if type(spellID) ~= "number" then
+        return 0
+    end
+
+    local startTime
+    local duration
+    local enabled
+
+    if C_Spell and type(C_Spell.GetSpellCooldown) == "function" then
+        local cooldownInfo = C_Spell.GetSpellCooldown(spellID)
+        if type(cooldownInfo) == "table" then
+            startTime = cooldownInfo.startTime or cooldownInfo.start
+            duration = cooldownInfo.duration
+            enabled = cooldownInfo.isEnabled
+            if enabled == nil then
+                enabled = cooldownInfo.enabled
+            end
+        end
+    elseif type(GetSpellCooldown) == "function" then
+        startTime, duration, enabled = GetSpellCooldown(spellID)
+    end
+
+    if not startTime or not duration or duration <= 0 then
+        return 0
+    end
+
+    if enabled == 0 then
+        return 0
+    end
+
+    local remaining = (startTime + duration) - (GetTime and GetTime() or 0)
+    if remaining <= 0 then
+        return 0
+    end
+
+    return remaining
+end
+
+local function FormatCooldownTime(seconds)
+    if type(seconds) ~= "number" or seconds <= 0 then
+        return nil
+    end
+
+    local totalSeconds = math.floor(seconds + 0.5)
+    local hours = math.floor(totalSeconds / 3600)
+    local minutes = math.floor((totalSeconds % 3600) / 60)
+    local secs = totalSeconds % 60
+
+    if hours > 0 then
+        return string.format("%d:%02d:%02d", hours, minutes, secs)
+    end
+
+    return string.format("%d:%02d", minutes, secs)
+end
+
 local function GetDungeonDisplayName(dungeonData)
     return L(dungeonData.dungeonNameKey)
 end
@@ -395,6 +451,11 @@ local function CreatePortalRow(parent)
 
         if self.unlocked then
             GameTooltip:AddLine(self.spellName or "", 0.92, 0.92, 0.96)
+            local cooldownRemaining = GetSpellCooldownRemaining(self.spellID)
+            local cooldownText = FormatCooldownTime(cooldownRemaining)
+            if cooldownText then
+                GameTooltip:AddLine(L("PORTAL_VIEWER_COOLDOWN_REMAINING"):format(cooldownText), 1, 0.82, 0.20)
+            end
             GameTooltip:AddLine(L("PORTAL_VIEWER_CLICK_HINT"), 0.30, 0.90, 0.40)
         else
             GameTooltip:AddLine(L("PORTAL_VIEWER_LOCKED"), 1.00, 0.42, 0.32)
@@ -442,17 +503,24 @@ local function GetPortalStatusByDungeon()
     return PortalStatusCache
 end
 
-local function ApplyRowVisual(row, unlocked)
+local function ApplyRowVisual(row, unlocked, onCooldown)
     if unlocked then
-        row:SetBackdropColor(0.05, 0.09, 0.07, 0.58)
-        row:SetBackdropBorderColor(0.24, 0.72, 0.36, 0.58)
-        row.Accent:SetColorTexture(0.24, 0.84, 0.38, 0.92)
+        if onCooldown then
+            row:SetBackdropColor(0.10, 0.08, 0.05, 0.58)
+            row:SetBackdropBorderColor(0.86, 0.64, 0.24, 0.58)
+            row.Accent:SetColorTexture(0.95, 0.74, 0.24, 0.92)
+            row.StateText:SetTextColor(1.00, 0.82, 0.20, 1)
+        else
+            row:SetBackdropColor(0.05, 0.09, 0.07, 0.58)
+            row:SetBackdropBorderColor(0.24, 0.72, 0.36, 0.58)
+            row.Accent:SetColorTexture(0.24, 0.84, 0.38, 0.92)
+            row.StateText:SetTextColor(0.30, 0.96, 0.40, 1)
+        end
         row.Icon:SetVertexColor(1, 1, 1, 1)
         if row.Icon.SetDesaturated then
             row.Icon:SetDesaturated(false)
         end
         row.DungeonText:SetTextColor(0.96, 0.96, 0.98, 1)
-        row.StateText:SetTextColor(0.30, 0.96, 0.40, 1)
         return
     end
 
@@ -473,7 +541,16 @@ local function ConfigureRow(row, dungeonData, dungeonStatus)
     row.spellName = dungeonStatus.spellName or dungeonData.englishSpellName
     row.fullDungeonName = L(dungeonData.dungeonNameKey)
     row.DungeonText:SetText(GetDungeonDisplayName(dungeonData))
-    row.StateText:SetText(row.unlocked and L("PORTAL_VIEWER_ACTION_USE") or L("PORTAL_VIEWER_ACTION_MISSING"))
+    row.cooldownRemaining = 0
+    if row.unlocked then
+        row.cooldownRemaining = GetSpellCooldownRemaining(row.spellID)
+    end
+    local cooldownText = FormatCooldownTime(row.cooldownRemaining)
+    if row.unlocked and cooldownText then
+        row.StateText:SetText(L("PORTAL_VIEWER_ACTION_COOLDOWN"):format(cooldownText))
+    else
+        row.StateText:SetText(row.unlocked and L("PORTAL_VIEWER_ACTION_USE") or L("PORTAL_VIEWER_ACTION_MISSING"))
+    end
     row.Icon:SetTexture(dungeonStatus.iconID or GENERIC_PORTAL_ICON)
 
     if not (InCombatLockdown and InCombatLockdown()) then
@@ -490,7 +567,7 @@ local function ConfigureRow(row, dungeonData, dungeonStatus)
         end
     end
 
-    ApplyRowVisual(row, row.unlocked)
+    ApplyRowVisual(row, row.unlocked, cooldownText ~= nil)
 end
 
 local function EnsureRow(pool, parent, index)
@@ -676,7 +753,18 @@ local PortalViewerEvents = CreateFrame("Frame")
 PortalViewerEvents:RegisterEvent("PLAYER_LOGIN")
 PortalViewerEvents:RegisterEvent("PLAYER_ENTERING_WORLD")
 PortalViewerEvents:RegisterEvent("SPELLS_CHANGED")
-PortalViewerEvents:SetScript("OnEvent", function()
+PortalViewerEvents:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+PortalViewerEvents:SetScript("OnEvent", function(_, event)
+    if event == "SPELL_UPDATE_COOLDOWN" then
+        if PortalViewerModule and PortalViewerModule.RefreshWindow and PortalViewerModule.IsWindowEnabled and PortalViewerModule.IsWindowEnabled() then
+            PortalViewerModule.RefreshWindow()
+        end
+        return
+    end
+
     InvalidatePortalStatusCache()
+    if PortalViewerModule and PortalViewerModule.RefreshWindow and PortalViewerModule.IsWindowEnabled and PortalViewerModule.IsWindowEnabled() then
+        PortalViewerModule.RefreshWindow()
+    end
 end)
 
