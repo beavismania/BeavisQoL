@@ -23,6 +23,36 @@ local function FormatMinimapHudPercent(value)
     return string.format("%d%%", math.floor((numericValue * 100) + 0.5))
 end
 
+local function CreateSectionBackground(panel)
+    local background = panel:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.1, 0.068, 0.046, 0.94)
+
+    local border = panel:CreateTexture(nil, "ARTWORK")
+    border:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 0, 0)
+    border:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
+    border:SetHeight(1)
+    border:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+end
+
+local function ConfigureSliderLabels(slider, lowText, highText)
+    local sliderLow = _G[slider:GetName() .. "Low"]
+    local sliderHigh = _G[slider:GetName() .. "High"]
+    local sliderText = _G[slider:GetName() .. "Text"]
+
+    if sliderLow then
+        sliderLow:SetText(lowText)
+    end
+
+    if sliderHigh then
+        sliderHigh:SetText(highText)
+    end
+
+    if sliderText then
+        sliderText:SetText("")
+    end
+end
+
 if not rawget(_G, "UIDropDownMenuTemplate") then
     local dropdownAddonName = "Blizzard_UIDropDownMenu"
     local dropdownAddonExists = not C_AddOns or not C_AddOns.DoesAddOnExist or C_AddOns.DoesAddOnExist(dropdownAddonName)
@@ -67,16 +97,7 @@ local IntroPanel = CreateFrame("Frame", nil, PageMiscContent)
 IntroPanel:SetPoint("TOPLEFT", PageMiscContent, "TOPLEFT", 20, -20)
 IntroPanel:SetPoint("TOPRIGHT", PageMiscContent, "TOPRIGHT", -20, -20)
 IntroPanel:SetHeight(110)
-
-local IntroBg = IntroPanel:CreateTexture(nil, "BACKGROUND")
-IntroBg:SetAllPoints()
-IntroBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local IntroBorder = IntroPanel:CreateTexture(nil, "ARTWORK")
-IntroBorder:SetPoint("BOTTOMLEFT", IntroPanel, "BOTTOMLEFT", 0, 0)
-IntroBorder:SetPoint("BOTTOMRIGHT", IntroPanel, "BOTTOMRIGHT", 0, 0)
-IntroBorder:SetHeight(1)
-IntroBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(IntroPanel)
 
 local IntroTitle = IntroPanel:CreateFontString(nil, "OVERLAY")
 IntroTitle:SetPoint("TOPLEFT", IntroPanel, "TOPLEFT", 18, -16)
@@ -101,16 +122,7 @@ local AutoSellPanel = CreateFrame("Frame", nil, PageMiscContent)
 AutoSellPanel:SetPoint("TOPLEFT", IntroPanel, "BOTTOMLEFT", 0, -18)
 AutoSellPanel:SetPoint("TOPRIGHT", IntroPanel, "BOTTOMRIGHT", 0, -18)
 AutoSellPanel:SetHeight(115)
-
-local AutoSellBg = AutoSellPanel:CreateTexture(nil, "BACKGROUND")
-AutoSellBg:SetAllPoints()
-AutoSellBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local AutoSellBorder = AutoSellPanel:CreateTexture(nil, "ARTWORK")
-AutoSellBorder:SetPoint("BOTTOMLEFT", AutoSellPanel, "BOTTOMLEFT", 0, 0)
-AutoSellBorder:SetPoint("BOTTOMRIGHT", AutoSellPanel, "BOTTOMRIGHT", 0, 0)
-AutoSellBorder:SetHeight(1)
-AutoSellBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(AutoSellPanel)
 
 local AutoSellTitle = AutoSellPanel:CreateFontString(nil, "OVERLAY")
 AutoSellTitle:SetPoint("TOPLEFT", AutoSellPanel, "TOPLEFT", 18, -14)
@@ -144,16 +156,7 @@ local AutoRepairPanel = CreateFrame("Frame", nil, PageMiscContent)
 AutoRepairPanel:SetPoint("TOPLEFT", AutoSellPanel, "BOTTOMLEFT", 0, -18)
 AutoRepairPanel:SetPoint("TOPRIGHT", AutoSellPanel, "BOTTOMRIGHT", 0, -18)
 AutoRepairPanel:SetHeight(180)
-
-local AutoRepairBg = AutoRepairPanel:CreateTexture(nil, "BACKGROUND")
-AutoRepairBg:SetAllPoints()
-AutoRepairBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local AutoRepairBorder = AutoRepairPanel:CreateTexture(nil, "ARTWORK")
-AutoRepairBorder:SetPoint("BOTTOMLEFT", AutoRepairPanel, "BOTTOMLEFT", 0, 0)
-AutoRepairBorder:SetPoint("BOTTOMRIGHT", AutoRepairPanel, "BOTTOMRIGHT", 0, 0)
-AutoRepairBorder:SetHeight(1)
-AutoRepairBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(AutoRepairPanel)
 
 local AutoRepairTitle = AutoRepairPanel:CreateFontString(nil, "OVERLAY")
 AutoRepairTitle:SetPoint("TOPLEFT", AutoRepairPanel, "TOPLEFT", 18, -14)
@@ -206,16 +209,7 @@ local AuctionHousePanel = CreateFrame("Frame", nil, PageMiscContent)
 AuctionHousePanel:SetPoint("TOPLEFT", AutoRepairPanel, "BOTTOMLEFT", 0, -18)
 AuctionHousePanel:SetPoint("TOPRIGHT", AutoRepairPanel, "BOTTOMRIGHT", 0, -18)
 AuctionHousePanel:SetHeight(232)
-
-local AuctionHouseBg = AuctionHousePanel:CreateTexture(nil, "BACKGROUND")
-AuctionHouseBg:SetAllPoints()
-AuctionHouseBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local AuctionHouseBorder = AuctionHousePanel:CreateTexture(nil, "ARTWORK")
-AuctionHouseBorder:SetPoint("BOTTOMLEFT", AuctionHousePanel, "BOTTOMLEFT", 0, 0)
-AuctionHouseBorder:SetPoint("BOTTOMRIGHT", AuctionHousePanel, "BOTTOMRIGHT", 0, 0)
-AuctionHouseBorder:SetHeight(1)
-AuctionHouseBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(AuctionHousePanel)
 
 local AuctionHouseTitle = AuctionHousePanel:CreateFontString(nil, "OVERLAY")
 AuctionHouseTitle:SetPoint("TOPLEFT", AuctionHousePanel, "TOPLEFT", 18, -14)
@@ -287,16 +281,7 @@ local EasyDeletePanel = CreateFrame("Frame", nil, PageMiscContent)
 EasyDeletePanel:SetPoint("TOPLEFT", AuctionHousePanel, "BOTTOMLEFT", 0, -18)
 EasyDeletePanel:SetPoint("TOPRIGHT", AuctionHousePanel, "BOTTOMRIGHT", 0, -18)
 EasyDeletePanel:SetHeight(115)
-
-local EasyDeleteBg = EasyDeletePanel:CreateTexture(nil, "BACKGROUND")
-EasyDeleteBg:SetAllPoints()
-EasyDeleteBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local EasyDeleteBorder = EasyDeletePanel:CreateTexture(nil, "ARTWORK")
-EasyDeleteBorder:SetPoint("BOTTOMLEFT", EasyDeletePanel, "BOTTOMLEFT", 0, 0)
-EasyDeleteBorder:SetPoint("BOTTOMRIGHT", EasyDeletePanel, "BOTTOMRIGHT", 0, 0)
-EasyDeleteBorder:SetHeight(1)
-EasyDeleteBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(EasyDeletePanel)
 
 local EasyDeleteTitle = EasyDeletePanel:CreateFontString(nil, "OVERLAY")
 EasyDeleteTitle:SetPoint("TOPLEFT", EasyDeletePanel, "TOPLEFT", 18, -14)
@@ -330,16 +315,7 @@ local FastLootPanel = CreateFrame("Frame", nil, PageMiscContent)
 FastLootPanel:SetPoint("TOPLEFT", EasyDeletePanel, "BOTTOMLEFT", 0, -18)
 FastLootPanel:SetPoint("TOPRIGHT", EasyDeletePanel, "BOTTOMRIGHT", 0, -18)
 FastLootPanel:SetHeight(115)
-
-local FastLootBg = FastLootPanel:CreateTexture(nil, "BACKGROUND")
-FastLootBg:SetAllPoints()
-FastLootBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local FastLootBorder = FastLootPanel:CreateTexture(nil, "ARTWORK")
-FastLootBorder:SetPoint("BOTTOMLEFT", FastLootPanel, "BOTTOMLEFT", 0, 0)
-FastLootBorder:SetPoint("BOTTOMRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, 0)
-FastLootBorder:SetHeight(1)
-FastLootBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(FastLootPanel)
 
 local FastLootTitle = FastLootPanel:CreateFontString(nil, "OVERLAY")
 FastLootTitle:SetPoint("TOPLEFT", FastLootPanel, "TOPLEFT", 18, -14)
@@ -373,16 +349,7 @@ local CutsceneSkipPanel = CreateFrame("Frame", nil, PageMiscContent)
 CutsceneSkipPanel:SetPoint("TOPLEFT", FastLootPanel, "BOTTOMLEFT", 0, -18)
 CutsceneSkipPanel:SetPoint("TOPRIGHT", FastLootPanel, "BOTTOMRIGHT", 0, -18)
 CutsceneSkipPanel:SetHeight(115)
-
-local CutsceneSkipBg = CutsceneSkipPanel:CreateTexture(nil, "BACKGROUND")
-CutsceneSkipBg:SetAllPoints()
-CutsceneSkipBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local CutsceneSkipBorder = CutsceneSkipPanel:CreateTexture(nil, "ARTWORK")
-CutsceneSkipBorder:SetPoint("BOTTOMLEFT", CutsceneSkipPanel, "BOTTOMLEFT", 0, 0)
-CutsceneSkipBorder:SetPoint("BOTTOMRIGHT", CutsceneSkipPanel, "BOTTOMRIGHT", 0, 0)
-CutsceneSkipBorder:SetHeight(1)
-CutsceneSkipBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(CutsceneSkipPanel)
 
 local CutsceneSkipTitle = CutsceneSkipPanel:CreateFontString(nil, "OVERLAY")
 CutsceneSkipTitle:SetPoint("TOPLEFT", CutsceneSkipPanel, "TOPLEFT", 18, -14)
@@ -416,16 +383,7 @@ local AutoRespawnPetPanel = CreateFrame("Frame", nil, PageMiscContent)
 AutoRespawnPetPanel:SetPoint("TOPLEFT", CutsceneSkipPanel, "BOTTOMLEFT", 0, -18)
 AutoRespawnPetPanel:SetPoint("TOPRIGHT", CutsceneSkipPanel, "BOTTOMRIGHT", 0, -18)
 AutoRespawnPetPanel:SetHeight(128)
-
-local AutoRespawnPetBg = AutoRespawnPetPanel:CreateTexture(nil, "BACKGROUND")
-AutoRespawnPetBg:SetAllPoints()
-AutoRespawnPetBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local AutoRespawnPetBorder = AutoRespawnPetPanel:CreateTexture(nil, "ARTWORK")
-AutoRespawnPetBorder:SetPoint("BOTTOMLEFT", AutoRespawnPetPanel, "BOTTOMLEFT", 0, 0)
-AutoRespawnPetBorder:SetPoint("BOTTOMRIGHT", AutoRespawnPetPanel, "BOTTOMRIGHT", 0, 0)
-AutoRespawnPetBorder:SetHeight(1)
-AutoRespawnPetBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(AutoRespawnPetPanel)
 
 local AutoRespawnPetTitle = AutoRespawnPetPanel:CreateFontString(nil, "OVERLAY")
 AutoRespawnPetTitle:SetPoint("TOPLEFT", AutoRespawnPetPanel, "TOPLEFT", 18, -14)
@@ -461,16 +419,7 @@ local FLIGHT_MASTER_TIMER_PANEL_BOTTOM_PADDING = 18
 FlightMasterTimerPanel:SetPoint("TOPLEFT", AutoRespawnPetPanel, "BOTTOMLEFT", 0, -18)
 FlightMasterTimerPanel:SetPoint("TOPRIGHT", AutoRespawnPetPanel, "BOTTOMRIGHT", 0, -18)
 FlightMasterTimerPanel:SetHeight(FLIGHT_MASTER_TIMER_PANEL_MIN_HEIGHT)
-
-local FlightMasterTimerBg = FlightMasterTimerPanel:CreateTexture(nil, "BACKGROUND")
-FlightMasterTimerBg:SetAllPoints()
-FlightMasterTimerBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local FlightMasterTimerBorder = FlightMasterTimerPanel:CreateTexture(nil, "ARTWORK")
-FlightMasterTimerBorder:SetPoint("BOTTOMLEFT", FlightMasterTimerPanel, "BOTTOMLEFT", 0, 0)
-FlightMasterTimerBorder:SetPoint("BOTTOMRIGHT", FlightMasterTimerPanel, "BOTTOMRIGHT", 0, 0)
-FlightMasterTimerBorder:SetHeight(1)
-FlightMasterTimerBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(FlightMasterTimerPanel)
 
 local FlightMasterTimerTitle = FlightMasterTimerPanel:CreateFontString(nil, "OVERLAY")
 FlightMasterTimerTitle:SetPoint("TOPLEFT", FlightMasterTimerPanel, "TOPLEFT", 18, -14)
@@ -627,16 +576,7 @@ local TooltipItemLevelPanel = CreateFrame("Frame", nil, PageMiscContent)
 TooltipItemLevelPanel:SetPoint("TOPLEFT", FlightMasterTimerPanel, "BOTTOMLEFT", 0, -18)
 TooltipItemLevelPanel:SetPoint("TOPRIGHT", FlightMasterTimerPanel, "BOTTOMRIGHT", 0, -18)
 TooltipItemLevelPanel:SetHeight(115)
-
-local TooltipItemLevelBg = TooltipItemLevelPanel:CreateTexture(nil, "BACKGROUND")
-TooltipItemLevelBg:SetAllPoints()
-TooltipItemLevelBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local TooltipItemLevelBorder = TooltipItemLevelPanel:CreateTexture(nil, "ARTWORK")
-TooltipItemLevelBorder:SetPoint("BOTTOMLEFT", TooltipItemLevelPanel, "BOTTOMLEFT", 0, 0)
-TooltipItemLevelBorder:SetPoint("BOTTOMRIGHT", TooltipItemLevelPanel, "BOTTOMRIGHT", 0, 0)
-TooltipItemLevelBorder:SetHeight(1)
-TooltipItemLevelBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(TooltipItemLevelPanel)
 
 local TooltipItemLevelTitle = TooltipItemLevelPanel:CreateFontString(nil, "OVERLAY")
 TooltipItemLevelTitle:SetPoint("TOPLEFT", TooltipItemLevelPanel, "TOPLEFT", 18, -14)
@@ -675,16 +615,7 @@ local CameraDistancePanel = CreateFrame("Frame", nil, PageMiscContent)
 CameraDistancePanel:SetPoint("TOPLEFT", TooltipItemLevelPanel, "BOTTOMLEFT", 0, -18)
 CameraDistancePanel:SetPoint("TOPRIGHT", TooltipItemLevelPanel, "BOTTOMRIGHT", 0, -18)
 CameraDistancePanel:SetHeight(145)
-
-local CameraDistanceBg = CameraDistancePanel:CreateTexture(nil, "BACKGROUND")
-CameraDistanceBg:SetAllPoints()
-CameraDistanceBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local CameraDistanceBorder = CameraDistancePanel:CreateTexture(nil, "ARTWORK")
-CameraDistanceBorder:SetPoint("BOTTOMLEFT", CameraDistancePanel, "BOTTOMLEFT", 0, 0)
-CameraDistanceBorder:SetPoint("BOTTOMRIGHT", CameraDistancePanel, "BOTTOMRIGHT", 0, 0)
-CameraDistanceBorder:SetHeight(1)
-CameraDistanceBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(CameraDistancePanel)
 
 local CameraDistanceTitle = CameraDistancePanel:CreateFontString(nil, "OVERLAY")
 CameraDistanceTitle:SetPoint("TOPLEFT", CameraDistancePanel, "TOPLEFT", 18, -14)
@@ -736,16 +667,7 @@ local MacroFramePanel = CreateFrame("Frame", nil, PageMiscContent)
 MacroFramePanel:SetPoint("TOPLEFT", CameraDistancePanel, "BOTTOMLEFT", 0, -18)
 MacroFramePanel:SetPoint("TOPRIGHT", CameraDistancePanel, "BOTTOMRIGHT", 0, -18)
 MacroFramePanel:SetHeight(115)
-
-local MacroFrameBg = MacroFramePanel:CreateTexture(nil, "BACKGROUND")
-MacroFrameBg:SetAllPoints()
-MacroFrameBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local MacroFrameBorder = MacroFramePanel:CreateTexture(nil, "ARTWORK")
-MacroFrameBorder:SetPoint("BOTTOMLEFT", MacroFramePanel, "BOTTOMLEFT", 0, 0)
-MacroFrameBorder:SetPoint("BOTTOMRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, 0)
-MacroFrameBorder:SetHeight(1)
-MacroFrameBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(MacroFramePanel)
 
 local MacroFrameTitle = MacroFramePanel:CreateFontString(nil, "OVERLAY")
 MacroFrameTitle:SetPoint("TOPLEFT", MacroFramePanel, "TOPLEFT", 18, -14)
@@ -779,16 +701,7 @@ local TalentFrameScalePanel = CreateFrame("Frame", nil, PageMiscContent)
 TalentFrameScalePanel:SetPoint("TOPLEFT", MacroFramePanel, "BOTTOMLEFT", 0, -18)
 TalentFrameScalePanel:SetPoint("TOPRIGHT", MacroFramePanel, "BOTTOMRIGHT", 0, -18)
 TalentFrameScalePanel:SetHeight(186)
-
-local TalentFrameScaleBg = TalentFrameScalePanel:CreateTexture(nil, "BACKGROUND")
-TalentFrameScaleBg:SetAllPoints()
-TalentFrameScaleBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local TalentFrameScaleBorder = TalentFrameScalePanel:CreateTexture(nil, "ARTWORK")
-TalentFrameScaleBorder:SetPoint("BOTTOMLEFT", TalentFrameScalePanel, "BOTTOMLEFT", 0, 0)
-TalentFrameScaleBorder:SetPoint("BOTTOMRIGHT", TalentFrameScalePanel, "BOTTOMRIGHT", 0, 0)
-TalentFrameScaleBorder:SetHeight(1)
-TalentFrameScaleBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(TalentFrameScalePanel)
 
 local TalentFrameScaleTitle = TalentFrameScalePanel:CreateFontString(nil, "OVERLAY")
 TalentFrameScaleTitle:SetPoint("TOPLEFT", TalentFrameScalePanel, "TOPLEFT", 18, -14)
@@ -832,22 +745,7 @@ TalentFrameScaleSlider:SetWidth(190)
 TalentFrameScaleSlider:SetMinMaxValues(0.50, 1.50)
 TalentFrameScaleSlider:SetValueStep(0.05)
 TalentFrameScaleSlider:SetObeyStepOnDrag(true)
-
-local TalentFrameScaleSliderLow = _G[TalentFrameScaleSlider:GetName() .. "Low"]
-local TalentFrameScaleSliderHigh = _G[TalentFrameScaleSlider:GetName() .. "High"]
-local TalentFrameScaleSliderText = _G[TalentFrameScaleSlider:GetName() .. "Text"]
-
-if TalentFrameScaleSliderLow then
-    TalentFrameScaleSliderLow:SetText("50%")
-end
-
-if TalentFrameScaleSliderHigh then
-    TalentFrameScaleSliderHigh:SetText("150%")
-end
-
-if TalentFrameScaleSliderText then
-    TalentFrameScaleSliderText:SetText("")
-end
+ConfigureSliderLabels(TalentFrameScaleSlider, "50%", "150%")
 
 TalentFrameScaleSlider:SetScript("OnValueChanged", function(self, value)
     local normalizedValue = math.floor(((tonumber(value) or 1) * 20) + 0.5) / 20
@@ -866,6 +764,40 @@ TalentFrameScaleSlider:SetScript("OnValueChanged", function(self, value)
 
     PageMisc:RefreshState()
 end)
+
+-- ========================================
+-- Bereich: Talent Loadout Reminder
+-- ========================================
+
+local TalentLoadoutReminderPanel = CreateFrame("Frame", nil, PageMiscContent)
+TalentLoadoutReminderPanel:SetPoint("TOPLEFT", TalentFrameScalePanel, "BOTTOMLEFT", 0, -18)
+TalentLoadoutReminderPanel:SetPoint("TOPRIGHT", TalentFrameScalePanel, "BOTTOMRIGHT", 0, -18)
+TalentLoadoutReminderPanel:SetHeight(115)
+CreateSectionBackground(TalentLoadoutReminderPanel)
+
+local TalentLoadoutReminderTitle = TalentLoadoutReminderPanel:CreateFontString(nil, "OVERLAY")
+TalentLoadoutReminderTitle:SetPoint("TOPLEFT", TalentLoadoutReminderPanel, "TOPLEFT", 18, -14)
+TalentLoadoutReminderTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+TalentLoadoutReminderTitle:SetTextColor(1, 0.88, 0.62, 1)
+TalentLoadoutReminderTitle:SetText(L("TALENT_LOADOUT_REMINDER"))
+
+local TalentLoadoutReminderCheckbox = CreateFrame("CheckButton", nil, TalentLoadoutReminderPanel, "UICheckButtonTemplate")
+TalentLoadoutReminderCheckbox:SetPoint("TOPLEFT", TalentLoadoutReminderTitle, "BOTTOMLEFT", -4, -12)
+
+local TalentLoadoutReminderLabel = TalentLoadoutReminderPanel:CreateFontString(nil, "OVERLAY")
+TalentLoadoutReminderLabel:SetPoint("LEFT", TalentLoadoutReminderCheckbox, "RIGHT", 6, 0)
+TalentLoadoutReminderLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TalentLoadoutReminderLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+TalentLoadoutReminderLabel:SetText(L("ACTIVE"))
+
+local TalentLoadoutReminderHint = TalentLoadoutReminderPanel:CreateFontString(nil, "OVERLAY")
+TalentLoadoutReminderHint:SetPoint("TOPLEFT", TalentLoadoutReminderCheckbox, "BOTTOMLEFT", 34, -2)
+TalentLoadoutReminderHint:SetPoint("RIGHT", TalentLoadoutReminderPanel, "RIGHT", -18, 0)
+TalentLoadoutReminderHint:SetJustifyH("LEFT")
+TalentLoadoutReminderHint:SetJustifyV("TOP")
+TalentLoadoutReminderHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+TalentLoadoutReminderHint:SetTextColor(0.78, 0.74, 0.69, 1)
+TalentLoadoutReminderHint:SetText(L("TALENT_LOADOUT_REMINDER_HINT"))
 
 -- ========================================
 -- Bereich: Minimap HUD
@@ -1127,7 +1059,7 @@ local function CreateMinimapHudSection(contentParent, anchorPanel)
     return section
 end
 
-local MinimapHudSection = CreateMinimapHudSection(PageMiscContent, TalentFrameScalePanel)
+local MinimapHudSection = CreateMinimapHudSection(PageMiscContent, TalentLoadoutReminderPanel)
 local MinimapHudPanel = MinimapHudSection.Panel
 
 -- ========================================
@@ -1138,16 +1070,7 @@ local ReputationSearchPanel = CreateFrame("Frame", nil, PageMiscContent)
 ReputationSearchPanel:SetPoint("TOPLEFT", MinimapHudPanel, "BOTTOMLEFT", 0, -18)
 ReputationSearchPanel:SetPoint("TOPRIGHT", MinimapHudPanel, "BOTTOMRIGHT", 0, -18)
 ReputationSearchPanel:SetHeight(115)
-
-local ReputationSearchBg = ReputationSearchPanel:CreateTexture(nil, "BACKGROUND")
-ReputationSearchBg:SetAllPoints()
-ReputationSearchBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local ReputationSearchBorder = ReputationSearchPanel:CreateTexture(nil, "ARTWORK")
-ReputationSearchBorder:SetPoint("BOTTOMLEFT", ReputationSearchPanel, "BOTTOMLEFT", 0, 0)
-ReputationSearchBorder:SetPoint("BOTTOMRIGHT", ReputationSearchPanel, "BOTTOMRIGHT", 0, 0)
-ReputationSearchBorder:SetHeight(1)
-ReputationSearchBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(ReputationSearchPanel)
 
 local ReputationSearchTitle = ReputationSearchPanel:CreateFontString(nil, "OVERLAY")
 ReputationSearchTitle:SetPoint("TOPLEFT", ReputationSearchPanel, "TOPLEFT", 18, -14)
@@ -1181,16 +1104,7 @@ local CurrencySearchPanel = CreateFrame("Frame", nil, PageMiscContent)
 CurrencySearchPanel:SetPoint("TOPLEFT", ReputationSearchPanel, "BOTTOMLEFT", 0, -18)
 CurrencySearchPanel:SetPoint("TOPRIGHT", ReputationSearchPanel, "BOTTOMRIGHT", 0, -18)
 CurrencySearchPanel:SetHeight(115)
-
-local CurrencySearchBg = CurrencySearchPanel:CreateTexture(nil, "BACKGROUND")
-CurrencySearchBg:SetAllPoints()
-CurrencySearchBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local CurrencySearchBorder = CurrencySearchPanel:CreateTexture(nil, "ARTWORK")
-CurrencySearchBorder:SetPoint("BOTTOMLEFT", CurrencySearchPanel, "BOTTOMLEFT", 0, 0)
-CurrencySearchBorder:SetPoint("BOTTOMRIGHT", CurrencySearchPanel, "BOTTOMRIGHT", 0, 0)
-CurrencySearchBorder:SetHeight(1)
-CurrencySearchBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(CurrencySearchPanel)
 
 local CurrencySearchTitle = CurrencySearchPanel:CreateFontString(nil, "OVERLAY")
 CurrencySearchTitle:SetPoint("TOPLEFT", CurrencySearchPanel, "TOPLEFT", 18, -14)
@@ -1224,16 +1138,7 @@ local PreyHuntProgressPanel = CreateFrame("Frame", nil, PageMiscContent)
 PreyHuntProgressPanel:SetPoint("TOPLEFT", CurrencySearchPanel, "BOTTOMLEFT", 0, -18)
 PreyHuntProgressPanel:SetPoint("TOPRIGHT", CurrencySearchPanel, "BOTTOMRIGHT", 0, -18)
 PreyHuntProgressPanel:SetHeight(115)
-
-local PreyHuntProgressBg = PreyHuntProgressPanel:CreateTexture(nil, "BACKGROUND")
-PreyHuntProgressBg:SetAllPoints()
-PreyHuntProgressBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local PreyHuntProgressBorder = PreyHuntProgressPanel:CreateTexture(nil, "ARTWORK")
-PreyHuntProgressBorder:SetPoint("BOTTOMLEFT", PreyHuntProgressPanel, "BOTTOMLEFT", 0, 0)
-PreyHuntProgressBorder:SetPoint("BOTTOMRIGHT", PreyHuntProgressPanel, "BOTTOMRIGHT", 0, 0)
-PreyHuntProgressBorder:SetHeight(1)
-PreyHuntProgressBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(PreyHuntProgressPanel)
 
 local PreyHuntProgressTitle = PreyHuntProgressPanel:CreateFontString(nil, "OVERLAY")
 PreyHuntProgressTitle:SetPoint("TOPLEFT", PreyHuntProgressPanel, "TOPLEFT", 18, -14)
@@ -1267,16 +1172,7 @@ local KeystoneActionsPanel = CreateFrame("Frame", nil, PageMiscContent)
 KeystoneActionsPanel:SetPoint("TOPLEFT", PreyHuntProgressPanel, "BOTTOMLEFT", 0, -18)
 KeystoneActionsPanel:SetPoint("TOPRIGHT", PreyHuntProgressPanel, "BOTTOMRIGHT", 0, -18)
 KeystoneActionsPanel:SetHeight(250)
-
-local KeystoneActionsBg = KeystoneActionsPanel:CreateTexture(nil, "BACKGROUND")
-KeystoneActionsBg:SetAllPoints()
-KeystoneActionsBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local KeystoneActionsBorder = KeystoneActionsPanel:CreateTexture(nil, "ARTWORK")
-KeystoneActionsBorder:SetPoint("BOTTOMLEFT", KeystoneActionsPanel, "BOTTOMLEFT", 0, 0)
-KeystoneActionsBorder:SetPoint("BOTTOMRIGHT", KeystoneActionsPanel, "BOTTOMRIGHT", 0, 0)
-KeystoneActionsBorder:SetHeight(1)
-KeystoneActionsBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(KeystoneActionsPanel)
 
 local KeystoneActionsTitle = KeystoneActionsPanel:CreateFontString(nil, "OVERLAY")
 KeystoneActionsTitle:SetPoint("TOPLEFT", KeystoneActionsPanel, "TOPLEFT", 18, -14)
@@ -1352,16 +1248,7 @@ local PortalViewerPanel = CreateFrame("Frame", nil, PageMiscContent)
 PortalViewerPanel:SetPoint("TOPLEFT", KeystoneActionsPanel, "BOTTOMLEFT", 0, -18)
 PortalViewerPanel:SetPoint("TOPRIGHT", KeystoneActionsPanel, "BOTTOMRIGHT", 0, -18)
 PortalViewerPanel:SetHeight(PORTAL_VIEWER_PANEL_MIN_HEIGHT)
-
-local PortalViewerBg = PortalViewerPanel:CreateTexture(nil, "BACKGROUND")
-PortalViewerBg:SetAllPoints()
-PortalViewerBg:SetColorTexture(0.1, 0.068, 0.046, 0.94)
-
-local PortalViewerBorder = PortalViewerPanel:CreateTexture(nil, "ARTWORK")
-PortalViewerBorder:SetPoint("BOTTOMLEFT", PortalViewerPanel, "BOTTOMLEFT", 0, 0)
-PortalViewerBorder:SetPoint("BOTTOMRIGHT", PortalViewerPanel, "BOTTOMRIGHT", 0, 0)
-PortalViewerBorder:SetHeight(1)
-PortalViewerBorder:SetColorTexture(0.88, 0.72, 0.46, 0.82)
+CreateSectionBackground(PortalViewerPanel)
 
 local PortalViewerTitle = PortalViewerPanel:CreateFontString(nil, "OVERLAY")
 PortalViewerTitle:SetPoint("TOPLEFT", PortalViewerPanel, "TOPLEFT", 18, -14)
@@ -1492,6 +1379,7 @@ local SectionPanels = {
     CameraDistance = CameraDistancePanel,
     MacroFrame = MacroFramePanel,
     TalentFrameScale = TalentFrameScalePanel,
+    TalentLoadoutReminder = TalentLoadoutReminderPanel,
     MinimapHud = MinimapHudPanel,
     ReputationSearch = ReputationSearchPanel,
     CurrencySearch = CurrencySearchPanel,
@@ -1513,6 +1401,7 @@ local SectionOrder = {
     "CameraDistance",
     "MacroFrame",
     "TalentFrameScale",
+    "TalentLoadoutReminder",
     "MinimapHud",
     "ReputationSearch",
     "CurrencySearch",
@@ -1534,6 +1423,7 @@ local SectionMeta = {
     CameraDistance = { titleKey = "CAMERA_DISTANCE", descKey = "CAMERA_DISTANCE_HINT" },
     MacroFrame = { titleKey = "MACRO_FRAME", descKey = "MACRO_FRAME_HINT" },
     TalentFrameScale = { titleKey = "TALENT_FRAME_SCALE", descKey = "TALENT_FRAME_SCALE_HINT" },
+    TalentLoadoutReminder = { titleKey = "TALENT_LOADOUT_REMINDER", descKey = "TALENT_LOADOUT_REMINDER_HINT" },
     MinimapHud = { titleKey = "MINIMAP_HUD", descKey = "MINIMAP_HUD_HINT" },
     ReputationSearch = { titleKey = "REPUTATION_SEARCH", descKey = "REPUTATION_SEARCH_HINT" },
     CurrencySearch = { titleKey = "CURRENCY_SEARCH", descKey = "CURRENCY_SEARCH_HINT" },
@@ -1654,6 +1544,10 @@ PageMisc.Widgets = {
     TalentFrameScaleValueLabel = TalentFrameScaleValueLabel,
     TalentFrameScaleValue = TalentFrameScaleValue,
     TalentFrameScaleSlider = TalentFrameScaleSlider,
+    TalentLoadoutReminderTitle = TalentLoadoutReminderTitle,
+    TalentLoadoutReminderLabel = TalentLoadoutReminderLabel,
+    TalentLoadoutReminderHint = TalentLoadoutReminderHint,
+    TalentLoadoutReminderCheckbox = TalentLoadoutReminderCheckbox,
     MinimapHudTitle = MinimapHudSection.Title,
     MinimapHudLabel = MinimapHudSection.Label,
     MinimapHudHint = MinimapHudSection.Hint,
@@ -1790,6 +1684,7 @@ function PageMisc:RefreshState()
     local macroFrameEnabled = false
     local talentFrameScaleEnabled = false
     local talentFrameScale = 1
+    local talentLoadoutReminderEnabled = false
     local minimapHudEnabled = false
     local minimapHudActive = false
     local minimapHudSize = 0.58
@@ -1884,6 +1779,10 @@ function PageMisc:RefreshState()
 
     if Misc.GetTalentFrameScale then
         talentFrameScale = Misc.GetTalentFrameScale()
+    end
+
+    if Misc.IsTalentLoadoutReminderEnabled then
+        talentLoadoutReminderEnabled = Misc.IsTalentLoadoutReminderEnabled()
     end
 
     if Misc.IsMinimapHudEnabled then
@@ -2022,6 +1921,9 @@ function PageMisc:RefreshState()
     widgets.TalentFrameScaleHint:SetText(L("TALENT_FRAME_SCALE_HINT"))
     widgets.TalentFrameScaleValueLabel:SetText(L("WINDOW_SCALE"))
     widgets.TalentFrameScaleValue:SetText(FormatTalentScalePercent(talentFrameScale))
+    widgets.TalentLoadoutReminderTitle:SetText(L("TALENT_LOADOUT_REMINDER"))
+    widgets.TalentLoadoutReminderLabel:SetText(L("ACTIVE"))
+    widgets.TalentLoadoutReminderHint:SetText(L("TALENT_LOADOUT_REMINDER_HINT"))
     widgets.MinimapHudTitle:SetText(L("MINIMAP_HUD"))
     widgets.MinimapHudLabel:SetText(L("ACTIVE"))
     widgets.MinimapHudHint:SetText(L("MINIMAP_HUD_HINT"))
@@ -2089,6 +1991,7 @@ function PageMisc:RefreshState()
     talentFrameScaleSliderIsRefreshing = true
     widgets.TalentFrameScaleSlider:SetValue(talentFrameScale)
     talentFrameScaleSliderIsRefreshing = false
+    widgets.TalentLoadoutReminderCheckbox:SetChecked(talentLoadoutReminderEnabled)
     widgets.MinimapHudCheckbox:SetChecked(minimapHudEnabled)
     minimapHudSizeSliderIsRefreshing = true
     widgets.MinimapHudSizeSlider:SetValue(minimapHudSize)
@@ -2489,6 +2392,14 @@ end)
 TalentFrameScaleCheckbox:SetScript("OnClick", function(self)
     if Misc.SetTalentFrameScaleEnabled then
         Misc.SetTalentFrameScaleEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+TalentLoadoutReminderCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetTalentLoadoutReminderEnabled then
+        Misc.SetTalentLoadoutReminderEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

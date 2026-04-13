@@ -749,6 +749,11 @@ local TalentFrameScaleEntry = RegisterModuleEntry(WindowsSection, "TALENT_FRAME_
     searchTextKeys = { "TALENT_FRAME_SCALE_HINT", "TALENT_FRAME_SCALE_BUTTON_TOOLTIP" },
     searchAliases = "talent talents talentframe player spells spellbook scale smaller compact window",
 })
+local TalentLoadoutReminderEntry = RegisterModuleEntry(GroupSection, "TALENT_LOADOUT_REMINDER", "TalentLoadoutReminder", {
+    miscSection = "TalentLoadoutReminder",
+    searchTextKeys = { "TALENT_LOADOUT_REMINDER_HINT", "TALENT_LOADOUT_REMINDER_CURRENT", "TALENT_LOADOUT_REMINDER_WARNING" },
+    searchAliases = "talent talents loadout build reminder readycheck ready check group",
+})
 local ReputationSearchEntry = RegisterModuleEntry(WindowsSection, "REPUTATION_SEARCH", "ReputationSearch", {
     miscSection = "ReputationSearch",
     searchTextKeys = { "REPUTATION_SEARCH_HINT", "REPUTATION_SEARCH_PLACEHOLDER" },
@@ -901,6 +906,7 @@ local TreeLocalizedTextTargets = {
     { target = CameraDistanceEntry.text, textKey = "CAMERA_DISTANCE" },
     { target = MacroFrameEntry.text, textKey = "MACRO_FRAME" },
     { target = TalentFrameScaleEntry.text, textKey = "TALENT_FRAME_SCALE" },
+    { target = TalentLoadoutReminderEntry.text, textKey = "TALENT_LOADOUT_REMINDER" },
     { target = ReputationSearchEntry.text, textKey = "REPUTATION_SEARCH" },
     { target = CurrencySearchEntry.text, textKey = "CURRENCY_SEARCH" },
     { target = PreyHuntProgressEntry.text, textKey = "PREY_HUNT_PROGRESS" },

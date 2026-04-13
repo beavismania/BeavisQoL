@@ -4,11 +4,12 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.13`
+- Version: `0.37.0`
 - Release-Datum: `2026-04-13`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Tooltip-Itemlevel` kapselt riskante Unit-/GUID-Zugriffe im sicheren Tooltip-Pfad jetzt zusätzlich defensiv ab, damit Secret-String-Taint nicht an weiteren API-Aufrufen oder Vergleichen hängen bleibt
+  - `Talent-Loadout-Reminder` zeigt bei jedem Bereitschaftscheck oben mittig das aktuelle Talent-Loadout an und blendet sich nach zehn Sekunden oder per `x` wieder aus
+  - `Tooltip-Itemlevel` cached bekannte Spieler jetzt GUID-basiert und erkennt seine eigene Tooltip-Zeile nach Rebuilds robuster wieder, damit Mouseover-Infos auch neben Addons wie Raider.IO stabiler sichtbar bleiben
 
 ## Download
 
@@ -131,6 +132,9 @@ Beispiele:
   - skaliert das Blizzard-Talent- und Zauberbuchfenster
   - bietet ein separates Skalierungsfenster mit gespeicherter Position
   - kann das Fenster fixieren oder zum Verschieben freigeben
+- `Talent-Loadout-Reminder`
+  - zeigt bei jedem Bereitschaftscheck oben mittig das aktuell aktive Talent-Loadout an
+  - blendet sich nach zehn Sekunden automatisch aus oder lässt sich per kleinem `x` schließen
 
 ### Interface & Kampf
 

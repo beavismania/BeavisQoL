@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.37.0 - 2026-04-13
+
+### Neu
+
+- neues Modul `Talent-Loadout-Reminder` ergänzt; zeigt bei jedem Bereitschaftscheck oben mittig das aktuelle Talent-Loadout an und schließt nach zehn Sekunden oder per kleinem `x`
+
+### Verbessert
+
+- `Tooltip Itemlevel` cached bekannte Spieler jetzt GUID-basiert und erkennt die eigene Zeile nach Tooltip-Rebuilds robuster wieder, damit Mouseover-Infos auch neben Addons wie Raider.IO stabiler sichtbar bleiben
+
 ## 0.36.13 - 2026-04-13
 
 ### Hotfix

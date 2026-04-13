@@ -127,6 +127,19 @@ local function SafeUnitGUID(unit)
     return nil
 end
 
+local function GetInspectCacheKey(unit)
+    local guid = SafeUnitGUID(unit)
+    if guid then
+        return guid
+    end
+
+    if type(unit) == "string" and unit ~= "" then
+        return "unit:" .. unit
+    end
+
+    return nil
+end
+
 local function SafeGetInspectItemLevel(unit)
     if not C_PaperDollInfo or type(C_PaperDollInfo.GetInspectItemLevel) ~= "function" then
         return nil
@@ -279,17 +292,18 @@ end
 -- Holt einen Cache-Eintrag nur dann zurück, wenn er noch gültig ist.
 -- Abgelaufene Daten werden direkt entfernt, damit der Cache klein bleibt.
 local function GetCachedItemLevel(unit)
-    if not unit then
+    local cacheKey = GetInspectCacheKey(unit)
+    if not cacheKey then
         return nil
     end
 
-    local cacheEntry = inspectCache[unit]
+    local cacheEntry = inspectCache[cacheKey]
     if not cacheEntry then
         return nil
     end
 
     if cacheEntry.expiresAt <= GetNow() then
-        inspectCache[unit] = nil
+        inspectCache[cacheKey] = nil
         return nil
     end
 
@@ -300,11 +314,12 @@ end
 -- Ungültige oder leere Werte werden bewusst ignoriert.
 local function SetCachedItemLevel(unit, itemLevel)
     local numericItemLevel = tonumber(itemLevel)
-    if not unit or not numericItemLevel or numericItemLevel <= 0 then
+    local cacheKey = GetInspectCacheKey(unit)
+    if not cacheKey or not numericItemLevel or numericItemLevel <= 0 then
         return
     end
 
-    inspectCache[unit] = {
+    inspectCache[cacheKey] = {
         itemLevel = numericItemLevel,
         expiresAt = GetNow() + INSPECT_CACHE_TTL,
     }
@@ -323,7 +338,23 @@ local function GetTooltipItemLevelLine(tooltip)
         return nil, nil
     end
 
-    return lineInfo.leftLine, lineInfo.rightLine
+    if tooltip.GetName and tooltip.NumLines then
+        local tooltipName = tooltip:GetName()
+        local lineCount = tooltip:NumLines() or 0
+        if tooltipName and lineCount > 0 then
+            for lineIndex = 1, lineCount do
+                local currentLeftLine = _G[tooltipName .. "TextLeft" .. lineIndex]
+                local currentRightLine = _G[tooltipName .. "TextRight" .. lineIndex]
+                if currentLeftLine == lineInfo.leftLine and currentRightLine == lineInfo.rightLine then
+                    return lineInfo.leftLine, lineInfo.rightLine
+                end
+            end
+        end
+    end
+
+    tooltipItemLevelLines[tooltip] = nil
+
+    return nil, nil
 end
 
 -- Schreibt die sichtbare Itemlevel-Zeile in den Tooltip.
@@ -491,10 +522,16 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
     if itemLevel then
         SetCachedItemLevel(unit, itemLevel)
 
-        -- Nur wenn der Tooltip noch immer denselben festen Unit-Token benutzt,
-        -- schreiben wir das frisch geladene Itemlevel sichtbar hinein.
+        -- Nur wenn der Tooltip noch immer denselben Spieler zeigt, schreiben
+        -- wir das frisch geladene Itemlevel sichtbar hinein.
         local tooltipUnit = ResolveTooltipUnit(GameTooltip, nil)
-        if tooltipUnit and SafeStringsEqual(tooltipUnit, unit) and Misc.IsTooltipItemLevelEnabled and Misc.IsTooltipItemLevelEnabled() then
+        local tooltipCacheKey = GetInspectCacheKey(tooltipUnit)
+        local inspectedCacheKey = GetInspectCacheKey(unit)
+        if tooltipCacheKey
+            and inspectedCacheKey
+            and SafeStringsEqual(tooltipCacheKey, inspectedCacheKey)
+            and Misc.IsTooltipItemLevelEnabled
+            and Misc.IsTooltipItemLevelEnabled() then
             local formattedItemLevel = FormatItemLevel(itemLevel)
             if formattedItemLevel then
                 SetTooltipItemLevelLine(GameTooltip, formattedItemLevel, 0.25, 0.85, 0.25)
@@ -540,5 +577,11 @@ end
 if GameTooltip and GameTooltip.HookScript and GameTooltip.HasScript and GameTooltip:HasScript("OnTooltipSetUnit") then
     GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
         HandleTooltipUnitUpdate(tooltip, nil)
+    end)
+end
+
+if GameTooltip and GameTooltip.HookScript and GameTooltip.HasScript and GameTooltip:HasScript("OnTooltipCleared") then
+    GameTooltip:HookScript("OnTooltipCleared", function(tooltip)
+        tooltipItemLevelLines[tooltip] = nil
     end)
 end
