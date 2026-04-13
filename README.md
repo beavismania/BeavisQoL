@@ -4,12 +4,14 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.36.8`
+- Version: `0.36.9`
 - Release-Datum: `2026-04-13`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Checkliste` ersetzt `M0 World Tour fuer zusaetzliche Beute` durch `Woechentliche Housing-Quest`
-  - entfernte `M0 World Tour`-Reste werden aus alten Checklisten-Speicherstaenden bereinigt
+  - `SmartLFG` wurde sichtbar umbenannt und im Overlay um `Bearb.`, `Abmelden` und kompaktere Bewerberzeilen erweitert
+  - `Markerleiste` kann optional automatisch nur noch in Dungeons und Raids erscheinen
+  - das `Loadout`-Feld im `Chonky Character Sheet` zeigt jetzt den aktiven Loadout-Namen
+  - `Boss Guides` bauen Boss-Tabs robuster auf, damit Tabnamen nicht mehr sporadisch leer bleiben
 
 ## Download
 
@@ -152,7 +154,7 @@ Beispiele:
 
 - `Gruppensuche`
   - Länderflaggen in der Premade-Suche mit robusterer Realm-Erkennung für mehr Regionen
-  - `Easy LFG` als kompaktes Bewerber-Overlay für eigene aktive Listungen
+  - `SmartLFG` als kompaktes Bewerber-Overlay für eigene aktive Listungen
   - Invite-Timer für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen
   - optionaler Countdown-Sound in den letzten fünf Sekunden
 - `Listing-Presets`
@@ -177,7 +179,7 @@ Beispiele:
   - Linksklick: Hauptfenster zeigen / verstecken
   - Rechtsklick: Schnellmenü öffnen
   - Shift-Klick: `ReloadUI()`
-  - Schnellmenü: direkter Zugriff auf Checkliste-, Weekly-Keys-, Stats-, `Easy LFG`- und `Gruppenplaner`-Overlay
+  - Schnellmenü: direkter Zugriff auf Checkliste-, Weekly-Keys-, Stats-, `SmartLFG`- und `Gruppenplaner`-Overlay
   - Schnellmenü: `Portal Viewer` für die aktuellen Midnight-S1-Dungeonportale
   - Schnellmenü: Master-Schalter `Overlays schnell ausblenden`
 

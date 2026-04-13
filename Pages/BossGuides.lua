@@ -341,6 +341,7 @@ local PinBtn
 local GuideTextSegments = {}
 local GuideSpellButtons = {}
 local GuideSectionButtons = {}
+local BossMenuMeasureText
 local GuideHomeTitleText
 local GuideHomeBodyText
 local GuideHomeSectionTitle
@@ -1727,6 +1728,20 @@ local function GetBossName(bossData)
     return bossData and bossData.name or ""
 end
 
+local function GetBossTabLabel(bossData, bossIndex)
+    local label = GetBossName(bossData)
+    if type(label) ~= "string" then
+        label = ""
+    end
+
+    label = label:gsub("^%s+", ""):gsub("%s+$", "")
+    if label == "" then
+        return L("BOSS_GUIDES_BOSS_FALLBACK_LABEL"):format(tonumber(bossIndex) or 0)
+    end
+
+    return label
+end
+
 local function GetBossBody(bossData)
     if bossData and bossData.bodyKey then
         return L(bossData.bodyKey)
@@ -2129,6 +2144,36 @@ local function ApplyNavigationButtonVisual(btn)
     btn.Text:SetTextColor(isHovered and 1.00 or 0.82, isHovered and 0.94 or 0.84, isHovered and 0.47 or 0.88, 1)
 end
 
+local function AcquireBossMenuMeasureText()
+    if BossMenuMeasureText then
+        return BossMenuMeasureText
+    end
+
+    local parent = BossMenuPanel or GuideWindow or UIParent
+    if not parent then
+        return nil
+    end
+
+    BossMenuMeasureText = parent:CreateFontString(nil, "OVERLAY")
+    BossMenuMeasureText:Hide()
+    BossMenuMeasureText:SetWordWrap(false)
+    return BossMenuMeasureText
+end
+
+local function GetBossMenuTextWidth(text, fontSize)
+    local measureText = AcquireBossMenuMeasureText()
+    if not measureText then
+        return 0
+    end
+
+    measureText:SetFont(FONT_PATH, fontSize or DEFAULT_FONT_SIZE, "OUTLINE")
+    measureText:SetText(text or "")
+
+    local boundedWidth = measureText:GetStringWidth() or 0
+    local unboundedWidth = measureText.GetUnboundedStringWidth and measureText:GetUnboundedStringWidth() or 0
+    return math.max(boundedWidth, unboundedWidth)
+end
+
 local SEP_ROLE = "|cFF2B6B5A" .. string.rep("-", 34) .. "|r"
 local SEP_HC   = "|cFF444444" .. string.rep("-", 34) .. "|r"
 
@@ -2435,7 +2480,8 @@ local function AcquireBossMenuButton(buttonIndex)
     tabButton.Accent = accent
 
     local text = tabButton:CreateFontString(nil, "OVERLAY")
-    text:SetAllPoints(tabButton)
+    text:SetPoint("LEFT", tabButton, "LEFT", 10, 0)
+    text:SetPoint("RIGHT", tabButton, "RIGHT", -10, 0)
     text:SetFont(FONT_PATH, DEFAULT_FONT_SIZE, "OUTLINE")
     text:SetJustifyH("CENTER")
     text:SetJustifyV("MIDDLE")
@@ -2509,6 +2555,7 @@ local function RebuildBossMenu()
     local ROW_GAP = 2    -- Abstand zwischen Reihen
     local PAD_L   = 6    -- linker/rechter Innenabstand
     local PAD_T   = 4    -- oberer Innenabstand
+    local buttonFontSize = Clamp((GetBossGuidesSettings() and GetBossGuidesSettings().fontSize) or DEFAULT_FONT_SIZE, MIN_FONT_SIZE, MAX_FONT_SIZE)
 
     local panelW = BossMenuPanel:GetWidth()
     if panelW < 10 then
@@ -2522,9 +2569,10 @@ local function RebuildBossMenu()
     local homeButton = AcquireBossMenuButton(1)
     homeButton.IsHomeButton = true
     homeButton.BossIndex = nil
+    homeButton.Text:SetFont(FONT_PATH, buttonFontSize, "OUTLINE")
     homeButton.Text:SetText("<")
 
-    local homeButtonWidth = math.max(homeButton.Text:GetStringWidth() + 18, 28)
+    local homeButtonWidth = math.max(GetBossMenuTextWidth(homeButton.Text:GetText(), buttonFontSize) + 20, 32)
     homeButton:ClearAllPoints()
     homeButton:SetPoint("TOPLEFT", BossMenuPanel, "TOPLEFT", rowX, rowY)
     homeButton:SetHeight(BTN_H)
@@ -2536,13 +2584,14 @@ local function RebuildBossMenu()
 
     for bossIndex, bossData in ipairs(guideData.bosses) do
         local tabButton = AcquireBossMenuButton(bossIndex + 1)
+        local bossLabel = GetBossTabLabel(bossData, bossIndex)
 
         tabButton.IsHomeButton = false
         tabButton.BossIndex = bossIndex
-        tabButton.Text:SetText(GetBossName(bossData))
+        tabButton.Text:SetFont(FONT_PATH, buttonFontSize, "OUTLINE")
+        tabButton.Text:SetText(bossLabel)
 
-        -- Buttonbreite an Textlänge anpassen
-        local btnW = math.max(tabButton.Text:GetStringWidth() + 20, 60)
+        local btnW = math.max(GetBossMenuTextWidth(bossLabel, buttonFontSize) + 24, 72)
 
         -- Zeilenumbruch wenn Button nicht mehr in die aktuelle Reihe passt
         if rowX + btnW > PAD_L + availW and rowX > PAD_L then
@@ -2930,6 +2979,8 @@ local function CreateOverlayFrames()
         if OverlayButton and OverlayButton.RefreshVisual then
             OverlayButton:RefreshVisual()
         end
+        UpdateGuideUi()
+        SyncContentScrollbar()
     end)
 
     GuideWindow:SetScript("OnHide", function()
@@ -3194,7 +3245,6 @@ local function CreateOverlayFrames()
         if GuideWindow:IsShown() then
             GuideWindow:Hide()
         else
-            UpdateGuideUi()
             GuideWindow:Show()
         end
     end)

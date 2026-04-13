@@ -49,6 +49,8 @@ local WHISPER_SPEC_PROMPT_BUTTON_SPACING = 12
 local ROLE_ICON_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-ROLES"
 local WHISPER_ROLE_PROMPT_BUTTON_SIZE = 42
 local WHISPER_ROLE_PROMPT_BUTTON_SPACING = 8
+local EASY_LFG_TEXT_FONT_PATH = "Fonts\\ARIALN.TTF"
+local EASY_LFG_TEXT_FALLBACK_FONT_PATH = "Fonts\\FRIZQT__.TTF"
 
 StreamerPlannerModule.SPEC_DATA_BY_CLASS = {
     WARRIOR = { 71, 72, 73 },
@@ -362,6 +364,18 @@ local function Clamp(value, minValue, maxValue)
     end
 
     return value
+end
+
+local function SetEasyLFGFont(fontString, fontSize, flags)
+    if not fontString or not fontString.SetFont then
+        return false
+    end
+
+    if fontString:SetFont(EASY_LFG_TEXT_FONT_PATH, fontSize, flags or "") then
+        return true
+    end
+
+    return fontString:SetFont(EASY_LFG_TEXT_FALLBACK_FONT_PATH, fontSize, flags or "")
 end
 
 local function GetCurrentTimestamp()
@@ -5082,19 +5096,19 @@ PlannerPrivate.EnsureApplicantRow = function(index)
     row.Name:SetPoint("TOPLEFT", row, "TOPLEFT", 10, -5)
     row.Name:SetPoint("RIGHT", row, "RIGHT", -168, 0)
     row.Name:SetJustifyH("LEFT")
-    row.Name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    SetEasyLFGFont(row.Name, 10, "OUTLINE")
 
     row.Meta = row:CreateFontString(nil, "OVERLAY")
     row.Meta:SetPoint("TOPLEFT", row.Name, "BOTTOMLEFT", 0, -1)
     row.Meta:SetPoint("RIGHT", row, "RIGHT", -168, 0)
     row.Meta:SetJustifyH("LEFT")
-    row.Meta:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    SetEasyLFGFont(row.Meta, 10, "")
     row.Meta:SetTextColor(0.78, 0.78, 0.80, 1)
 
     row.Status = row:CreateFontString(nil, "OVERLAY")
     row.Status:SetPoint("RIGHT", row, "RIGHT", -84, 0)
     row.Status:SetJustifyH("RIGHT")
-    row.Status:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+    SetEasyLFGFont(row.Status, 10, "")
     row.Status:SetTextColor(1, 0.88, 0.62, 1)
 
     row.InviteButton = CreateActionButton(row, 72, "", function(self)
@@ -5388,7 +5402,7 @@ local function CreateSlotButton(parent, width, height, layout, index)
     value:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -10, 6)
     value:SetJustifyH("LEFT")
     value:SetJustifyV("TOP")
-    value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+    SetEasyLFGFont(value, 9, "OUTLINE")
     value:SetTextColor(0.95, 0.91, 0.85, 1)
     value:SetWordWrap(false)
     button.Value = value
@@ -5411,12 +5425,12 @@ local function CreateSlotButton(parent, width, height, layout, index)
         value:ClearAllPoints()
         value:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, 0)
         value:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -8, 4)
-        value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+        SetEasyLFGFont(value, 9, "OUTLINE")
     elseif height <= 30 then
         value:ClearAllPoints()
         value:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, 0)
         value:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -10, 4)
-        value:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        SetEasyLFGFont(value, 10, "OUTLINE")
     end
 
     button:SetScript("OnEnter", function(self)
@@ -5558,7 +5572,7 @@ local function RefreshSlotButton(button, refreshContext)
 
         button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, 0)
         button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 4)
-        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+        SetEasyLFGFont(button.Value, 9, "OUTLINE")
     elseif button.SlotHeight <= 30 then
         button.Label:SetPoint("TOPLEFT", button, "TOPLEFT", 10, -7)
         button.Label:SetPoint("RIGHT", rightAnchor, rightPoint, rightOffset, 0)
@@ -5566,7 +5580,7 @@ local function RefreshSlotButton(button, refreshContext)
 
         button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, 0)
         button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 4)
-        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        SetEasyLFGFont(button.Value, 10, "OUTLINE")
     else
         button.Label:SetPoint("TOPLEFT", button, "TOPLEFT", 10, -7)
         button.Label:SetPoint("RIGHT", rightAnchor, rightPoint, rightOffset, 0)
@@ -5574,7 +5588,7 @@ local function RefreshSlotButton(button, refreshContext)
 
         button.Value:SetPoint("TOPLEFT", button.Label, "BOTTOMLEFT", 0, -3)
         button.Value:SetPoint("BOTTOMRIGHT", rightAnchor, "BOTTOMRIGHT", rightOffset, 6)
-        button.Value:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+        SetEasyLFGFont(button.Value, 9, "OUTLINE")
     end
 
     button.Label:SetText(slotLabel)
@@ -6072,7 +6086,7 @@ WhisperSpecPromptUI.Name = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVER
 WhisperSpecPromptUI.Name:SetPoint("TOPLEFT", WhisperSpecPromptUI.Hint, "BOTTOMLEFT", 0, -6)
 WhisperSpecPromptUI.Name:SetPoint("RIGHT", WhisperSpecPromptUI.Frame, "RIGHT", -16, 0)
 WhisperSpecPromptUI.Name:SetJustifyH("LEFT")
-WhisperSpecPromptUI.Name:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+SetEasyLFGFont(WhisperSpecPromptUI.Name, 15, "OUTLINE")
 
 WhisperSpecPromptUI.Class = WhisperSpecPromptUI.Frame:CreateFontString(nil, "OVERLAY")
 WhisperSpecPromptUI.Class:SetPoint("TOPLEFT", WhisperSpecPromptUI.Name, "BOTTOMLEFT", 0, -2)

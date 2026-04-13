@@ -50,6 +50,14 @@ local function GetActiveConfigID()
     return nil
 end
 
+local function GetLastSelectedSavedConfigID(specID)
+    if not specID or not C_ClassTalents or not C_ClassTalents.GetLastSelectedSavedConfigID then
+        return nil
+    end
+
+    return C_ClassTalents.GetLastSelectedSavedConfigID(specID)
+end
+
 local function GetConfigName(configID)
     if not configID or not C_Traits or not C_Traits.GetConfigInfo then
         return nil
@@ -82,19 +90,51 @@ local function BuildLoadoutOptions()
     return options
 end
 
-local function GetCurrentLoadoutText()
-    local activeConfigID = GetActiveConfigID()
-    local activeName = GetConfigName(activeConfigID)
-    if activeName then
-        return activeName
+local function FindLoadoutOptionByConfigID(options, configID)
+    if type(configID) ~= "number" then
+        return nil
     end
 
+    for _, option in ipairs(options or {}) do
+        if option.configID == configID then
+            return option
+        end
+    end
+
+    return nil
+end
+
+local function ResolveCurrentLoadoutState()
+    local _, specID, specName = GetSpecInfo()
     local options = BuildLoadoutOptions()
-    if #options == 0 then
-        return L("CHONKY_LOADOUT_NO_LOADOUTS")
+    local activeConfigID = GetActiveConfigID()
+    local selectedSavedConfigID = GetLastSelectedSavedConfigID(specID)
+
+    local activeOption = FindLoadoutOptionByConfigID(options, activeConfigID)
+    if activeOption then
+        return activeOption.configID, activeOption.name, options
     end
 
-    return L("CHONKY_LOADOUT_NONE")
+    local selectedSavedOption = FindLoadoutOptionByConfigID(options, selectedSavedConfigID)
+    if selectedSavedOption then
+        return selectedSavedOption.configID, selectedSavedOption.name, options
+    end
+
+    local selectedSavedName = GetConfigName(selectedSavedConfigID)
+    if selectedSavedName and selectedSavedName ~= specName then
+        return selectedSavedConfigID, selectedSavedName, options
+    end
+
+    local activeName = GetConfigName(activeConfigID)
+    if activeName and activeName ~= specName then
+        return activeConfigID, activeName, options
+    end
+
+    if #options == 0 then
+        return nil, L("CHONKY_LOADOUT_NO_LOADOUTS"), options
+    end
+
+    return nil, L("CHONKY_LOADOUT_NONE"), options
 end
 
 local function GetLastVisibleChonkySpecButton()
@@ -145,10 +185,11 @@ local function RefreshDropdownText()
         return
     end
 
+    local selectedConfigID, currentText = ResolveCurrentLoadoutState()
     Dropdown:SetWidth(Dropdown.beavisWidth or DROPDOWN_WIDTH)
-    Dropdown.activeConfigID = GetActiveConfigID() or 0
+    Dropdown.activeConfigID = selectedConfigID or 0
     if Dropdown.Text then
-        Dropdown.Text:SetText(GetCurrentLoadoutText())
+        Dropdown.Text:SetText(currentText)
     end
 end
 
@@ -247,8 +288,7 @@ local function SelectLoadout(option)
 end
 
 local function ShowLoadoutMenu(owner)
-    local activeConfigID = GetActiveConfigID()
-    local options = BuildLoadoutOptions()
+    local selectedConfigID, _, options = ResolveCurrentLoadoutState()
 
     if not MenuUtil or type(MenuUtil.CreateContextMenu) ~= "function" then
         PrintAddonMessage(L("CHONKY_LOADOUT_MENU_MISSING"))
@@ -274,7 +314,7 @@ local function ShowLoadoutMenu(owner)
             local menuButton = rootDescription:CreateButton(loadoutOption.name, function()
                 SelectLoadout(loadoutOption)
             end)
-            if loadoutOption.configID == activeConfigID and menuButton and menuButton.SetIsSelected then
+            if loadoutOption.configID == selectedConfigID and menuButton and menuButton.SetIsSelected then
                 menuButton:SetIsSelected(true)
             end
         end

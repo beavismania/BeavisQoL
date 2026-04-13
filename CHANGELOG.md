@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.36.9 - 2026-04-13
+
+### Hotfix
+
+- `SmartLFG` heisst jetzt sichtbar konsistent `SmartLFG` statt `Easy LFG`
+- `SmartLFG` hat jetzt groessere Bewerber-Buttons, links `Annehmen`, rechts `Ablehnen`, sowie `Bearb.` und `Abmelden` im Header
+- `SmartLFG` nutzt den Platz kompakter, schliesst beim frischen Anmelden das grosse Blizzard-Fenster sauberer und zeigt kyrillische Spielernamen robuster an
+- `Markerleiste` kann jetzt optional automatisch nur in Dungeons und Raids eingeblendet werden
+- `Chonky Character Sheet` zeigt im `Loadout`-Feld jetzt den aktiven Loadout-Namen statt nur der Spezialisierung
+- `Boss Guides` bauen ihre Boss-Tabs beim Oeffnen stabiler auf, damit Bossnamen nicht mehr sporadisch verschwinden
+- die nicht funktionale Text-/Bissanzeige der `Angelhilfe` wurde wieder vollstaendig entfernt
+
 ## 0.36.8 - 2026-04-13
 
 ### Hotfix
@@ -99,7 +111,7 @@
 ### Qualitätsverbesserungen
 
 - Performance-Verbesserungen am `Maus-Helfer` vorgenommen
-- Verbesserungen an `Weekly Keys`, `Easy LFG` und weiteren Overlay-Bereichen vorgenommen
+- Verbesserungen an `Weekly Keys`, `SmartLFG` und weiteren Overlay-Bereichen vorgenommen
 - Bedienung und Darstellung in bestehenden Fenstern und Menüs weiter vereinheitlicht
 - mehrere bestehende Module in Performance, Stabilität und Kompatibilität weiter überarbeitet
 
@@ -289,7 +301,7 @@
 - `Weekly Keys` verhindert doppelte Einträge, wenn ein Key zusätzlich als normaler mythischer Dungeon erkannt wurde
 - `Angelhilfe`-Soundregler nutzt wieder einen sauberen Bereich und lässt sich korrekt ziehen
 - `Maus-Helfer` richtet den unteren Farbbutton jetzt sauber wie den oberen aus
-- `Gruppensuche` zeigt die `Easy LFG`-Slider und den unteren Bedienbereich wieder ohne Überlappungen
+- `Gruppensuche` zeigt die `SmartLFG`-Slider und den unteren Bedienbereich wieder ohne Überlappungen
 - `Gruppenplaner` schneidet den unteren Bereich rechts nicht mehr ab
 
 ## 0.23.0 - 2026-03-24
@@ -312,21 +324,21 @@
 
 ### Neu
 
-- `Easy LFG` als kompaktes Applicant-Overlay für eigene Gruppenanzeigen ergänzt
+- `SmartLFG` als kompaktes Applicant-Overlay für eigene Gruppenanzeigen ergänzt
 - Bewerber können direkt im Overlay eingeladen oder abgelehnt werden
 - Rollen- und Spezialisierungsanzeige für Bewerber im Overlay ergänzt
 - Mehrspieler-Bewerbungen werden als aufklappbare Gruppen über den Gruppenleiter dargestellt
-- Minimap-Schnellmenü um `Easy LFG` und den `Gruppenplaner` erweitert
+- Minimap-Schnellmenü um `SmartLFG` und den `Gruppenplaner` erweitert
 - `Angelhilfe` als Ein-Tasten-Komfortmodul für entspannteres Angeln ergänzt
 - `Gruppenplaner` um Zielvorschläge für Dungeon-, Raid- und Tiefenziele inklusive `M+0` bis `M+20` erweitert
 - `Gruppenplaner`-Sloteditor um Klassen- und Spezialisierungswahl ergänzt
 
 ### Verbessert
 
-- `Easy LFG` öffnet und schließt sich automatisch anhand der eigenen aktiven Listung
-- `Easy LFG` unterstützt jetzt Position, Lock, Skalierung, Transparenz, Größenänderung und Scrollliste dauerhaft gespeichert
-- `Easy LFG` zeigt Länderflaggen, Gruppierung, Rollen- und Spec-Symbole kompakter und übersichtlicher an
-- abgelaufene oder inaktive Bewerbungen werden im `Easy LFG` nicht mehr angezeigt
+- `SmartLFG` öffnet und schließt sich automatisch anhand der eigenen aktiven Listung
+- `SmartLFG` unterstützt jetzt Position, Lock, Skalierung, Transparenz, Größenänderung und Scrollliste dauerhaft gespeichert
+- `SmartLFG` zeigt Länderflaggen, Gruppierung, Rollen- und Spec-Symbole kompakter und übersichtlicher an
+- abgelaufene oder inaktive Bewerbungen werden im `SmartLFG` nicht mehr angezeigt
 - `Gruppenplaner`-Overlay um `Menü`, `X`, `Alle leeren` und einen integrierten Timerblock ergänzt
 - Header-, Timer- und Ziellayout des `Gruppenplaners` neu gestapelt, damit Überlappungen im Overlay wegfallen
 - Slot-Bearbeiten-Dialog des `Gruppenplaners` wächst jetzt sauber mit Klassen- und Spec-Auswahl mit, ohne dass Buttons überlappt werden

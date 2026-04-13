@@ -794,7 +794,7 @@ local StatsEntry = RegisterModuleEntry(InterfaceSection, "STATS", "Stats", {
     searchAliases = "secondary stats overlay crit haste mastery versa",
 })
 local MarkerBarEntry = RegisterModuleEntry(InterfaceSection, "MARKER_BAR", "MarkerBar", {
-    searchTextKeys = { "MARKER_BAR_DESC", "MARKER_BAR_USAGE_HINT", "MARKER_BAR_PERMISSION_HINT", "MARKER_BAR_SHOW_OVERLAY", "MARKER_BAR_LOCK_OVERLAY", "MARKER_BAR_SCALE_HINT" },
+    searchTextKeys = { "MARKER_BAR_DESC", "MARKER_BAR_USAGE_HINT", "MARKER_BAR_PERMISSION_HINT", "MARKER_BAR_SHOW_OVERLAY", "MARKER_BAR_LOCK_OVERLAY", "MARKER_BAR_INSTANCE_ONLY", "MARKER_BAR_INSTANCE_ONLY_HINT", "MARKER_BAR_SCALE_HINT" },
     searchAliases = "raid marker marks skull star circle cross diamond moon square triangle world marker overlay bar",
 })
 local CombatTextEntry = RegisterModuleEntry(InterfaceSection, "COMBAT_TEXT", "DamageText", {
@@ -831,7 +831,7 @@ local BossGuidesEntry = RegisterModuleEntry(GroupSection, "BOSS_GUIDES", "BossGu
 })
 local LFGEntry = RegisterModuleEntry(GroupSection, "LFG", "LFG", {
     searchTextKeys = { "LFG_DESC", "FLAGS_HINT", "EASY_LFG_HINT", "EASY_LFG_SHOW_OVERLAY_HINT", "INVITE_TIMER_HINT" },
-    searchAliases = "group finder premade flags realms applicants invite easy lfg overlay queue timer countdown ready",
+    searchAliases = "group finder premade flags realms applicants invite smartlfg smart lfg easy lfg overlay queue timer countdown ready",
 })
 local StreamerPlannerEntry = RegisterModuleEntry(StreamerSection, "STREAMER_PLANNER", "StreamerPlanner", {
     searchTextKeys = {

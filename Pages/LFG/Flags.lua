@@ -44,6 +44,13 @@ local EasyLFGApplicantStates = {}
 local EasyLFGNextApplicantOrder = 1
 local EasyLFGRemovalRefreshAt = nil
 local EasyLFGRemovalRefreshSerial = 0
+-- Raider.IO public ShowProfile defaults to the smaller unit-tooltip layout.
+-- This source-derived option mask requests the extended profile view and ignores modifier-only behavior.
+local RAIDERIO_EXTENDED_PROFILE_OPTIONS = 32440
+local EasyLFGRioTooltip = nil
+local EasyLFGRioAnchor = nil
+local EasyLFGRioSelectedFullName = nil
+local EasyLFGRioSelectedDisplayName = nil
 
 local function NormalizeListingPresetLineEndings(text)
     if type(text) ~= "string" then
@@ -343,6 +350,10 @@ function LFG.GetLFGDB()
         BeavisQoLDB.lfg.easyLFGLocked = false
     end
 
+    if BeavisQoLDB.lfg.easyLFGRioExpanded == nil then
+        BeavisQoLDB.lfg.easyLFGRioExpanded = false
+    end
+
     if type(BeavisQoLDB.lfg.easyLFGScale) ~= "number" then
         BeavisQoLDB.lfg.easyLFGScale = DEFAULT_EASY_LFG_SCALE
     end
@@ -404,6 +415,24 @@ function LFG.GetLFGDB()
     BeavisQoLDB.lfg.listingPlaystylePreset = math.max(0, math.floor(BeavisQoLDB.lfg.listingPlaystylePreset + 0.5))
 
     return BeavisQoLDB.lfg
+end
+
+local function IsEasyLFGRioExpanded()
+    return LFG.GetLFGDB().easyLFGRioExpanded == true
+end
+
+local function GetRaiderIOAPI()
+    local api = rawget(_G, "RaiderIO")
+    if type(api) ~= "table" then
+        return nil
+    end
+
+    return api
+end
+
+local function IsRaiderIOAvailable()
+    local api = GetRaiderIOAPI()
+    return api ~= nil and (type(api.ShowProfile) == "function" or type(api.GetProfile) == "function")
 end
 
 function LFG.IsFlagsEnabled()
@@ -1309,6 +1338,260 @@ local function IsPlayerListingLeader()
     return true
 end
 
+local function HideBlizzardLFGWindow()
+    if PVEFrame and PVEFrame.IsShown and PVEFrame:IsShown() then
+        if type(HideUIPanel) == "function" then
+            pcall(HideUIPanel, PVEFrame)
+        elseif PVEFrame.Hide then
+            pcall(PVEFrame.Hide, PVEFrame)
+        end
+        return
+    end
+
+    if LFGListFrame and LFGListFrame.IsShown and LFGListFrame:IsShown() and LFGListFrame.Hide then
+        pcall(LFGListFrame.Hide, LFGListFrame)
+    end
+end
+
+local function OpenActiveEasyLFGListingEditor()
+    if not HasActiveListing() or not IsPlayerListingLeader() then
+        return
+    end
+
+    if type(PVEFrame_ShowFrame) == "function" then
+        pcall(PVEFrame_ShowFrame, "GroupFinderFrame", rawget(_G, "LFGListPVEStub"))
+    elseif type(PVEFrame_ToggleFrame) == "function" and (not PVEFrame or not PVEFrame:IsShown()) then
+        pcall(PVEFrame_ToggleFrame)
+    end
+
+    if C_LFGList and type(C_LFGList.EditEntry) == "function" then
+        pcall(C_LFGList.EditEntry)
+    end
+
+    local applicationViewer = LFGListFrame and LFGListFrame.ApplicationViewer or nil
+    if applicationViewer and applicationViewer.EditButton and applicationViewer.EditButton.Click then
+        if applicationViewer.EditButton.IsEnabled == nil or applicationViewer.EditButton:IsEnabled() then
+            applicationViewer.EditButton:Click()
+            return
+        end
+    end
+
+    local entryCreation = LFGListFrame and LFGListFrame.EntryCreation or nil
+    if not entryCreation then
+        return
+    end
+
+    if type(C_LFGList.CopyActiveEntryInfoToCreationFields) == "function" then
+        pcall(C_LFGList.CopyActiveEntryInfoToCreationFields)
+    end
+
+    if type(LFGListFrame_SetActivePanel) == "function" then
+        local ok = pcall(LFGListFrame_SetActivePanel, entryCreation)
+        if not ok then
+            pcall(LFGListFrame_SetActivePanel, LFGListFrame, entryCreation)
+        end
+    elseif entryCreation.Show then
+        pcall(entryCreation.Show, entryCreation)
+    end
+
+    if type(LFGListEntryCreation_Update) == "function" then
+        pcall(LFGListEntryCreation_Update, entryCreation)
+    end
+end
+
+local function RemoveActiveEasyLFGListing()
+    if not C_LFGList or type(C_LFGList.RemoveListing) ~= "function" then
+        return
+    end
+
+    if not HasActiveListing() or not IsPlayerListingLeader() then
+        return
+    end
+
+    C_LFGList.RemoveListing()
+    EasyLFGSuppressed = false
+
+    if LFG.RefreshEasyLFGOverlay then
+        LFG.RefreshEasyLFGOverlay()
+    end
+end
+
+local function HideEasyLFGRioTooltip()
+    if EasyLFGRioTooltip and EasyLFGRioTooltip.Hide then
+        EasyLFGRioTooltip:Hide()
+    end
+end
+
+local function PopulateEasyLFGRioFallbackTooltip(tooltip, fullName, displayName, profile)
+    if not tooltip then
+        return
+    end
+
+    local titleText = displayName
+    if not IsUsablePlainString(titleText) then
+        titleText = GetDisplayNameFromFullName(fullName)
+    end
+    if not IsUsablePlainString(titleText) then
+        titleText = fullName
+    end
+
+    local realmName = profile and profile.realm or GetRealmNameFromFullName(fullName)
+    local keystoneProfile = profile and profile.mythicKeystoneProfile or nil
+    local currentScore = keystoneProfile and keystoneProfile.mplusCurrent and tonumber(keystoneProfile.mplusCurrent.score) or 0
+    local bestDungeon = keystoneProfile and keystoneProfile.maxDungeon or nil
+    local bestLevel = keystoneProfile and tonumber(keystoneProfile.maxDungeonLevel) or 0
+    local bestRunText = nil
+
+    if bestDungeon and bestLevel and bestLevel > 0 then
+        local bestDungeonName = bestDungeon.shortNameLocale or bestDungeon.shortName or bestDungeon.name or bestDungeon.nameLocale
+        if IsUsablePlainString(bestDungeonName) then
+            bestRunText = string.format("+%d %s", bestLevel, bestDungeonName)
+        else
+            bestRunText = string.format("+%d", bestLevel)
+        end
+    end
+
+    tooltip:ClearLines()
+
+    if IsUsablePlainString(realmName) and realmName ~= titleText then
+        tooltip:AddLine(string.format("%s (%s)", titleText or UNKNOWN or "Unknown", realmName), 1, 1, 1)
+    else
+        tooltip:AddLine(titleText or UNKNOWN or "Unknown", 1, 1, 1)
+    end
+
+    tooltip:AddLine(" ")
+
+    if currentScore and currentScore > 0 then
+        local scoreColorRed, scoreColorGreen, scoreColorBlue = 1, 1, 1
+        local api = GetRaiderIOAPI()
+        if api and type(api.GetScoreColor) == "function" then
+            local red, green, blue = api.GetScoreColor(currentScore)
+            if type(red) == "number" and type(green) == "number" and type(blue) == "number" then
+                scoreColorRed, scoreColorGreen, scoreColorBlue = red, green, blue
+            end
+        end
+
+        tooltip:AddDoubleLine(L("EASY_LFG_OVERLAY_RIO_SCORE"), tostring(math.floor(currentScore + 0.5)), 1, 0.85, 0, scoreColorRed, scoreColorGreen, scoreColorBlue)
+    end
+
+    if IsUsablePlainString(bestRunText) then
+        tooltip:AddDoubleLine(L("EASY_LFG_OVERLAY_RIO_BEST_RUN"), bestRunText, 1, 1, 1, 1, 1, 1)
+    end
+
+    if (not currentScore or currentScore <= 0) and not IsUsablePlainString(bestRunText) then
+        tooltip:AddLine(L("EASY_LFG_OVERLAY_RIO_NO_PROFILE"), 0.88, 0.88, 0.88, true)
+    end
+
+    tooltip:AddLine(L("EASY_LFG_OVERLAY_RIO_RENDER_HINT"), 0.70, 0.70, 0.72, true)
+    tooltip:Show()
+end
+
+local function EnsureEasyLFGRioTooltip()
+    if EasyLFGRioAnchor and EasyLFGRioTooltip then
+        return EasyLFGRioAnchor, EasyLFGRioTooltip
+    end
+
+    if not EasyLFGOverlay then
+        return nil, nil
+    end
+
+    EasyLFGRioAnchor = CreateFrame("Frame", nil, EasyLFGOverlay)
+    EasyLFGRioAnchor:SetSize(1, 1)
+    EasyLFGRioAnchor:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPRIGHT", 14, -10)
+
+    EasyLFGRioTooltip = CreateFrame("GameTooltip", "BeavisQoLEasyLFGRioTooltip", UIParent, "GameTooltipTemplate")
+    EasyLFGRioTooltip:SetClampedToScreen(true)
+    EasyLFGRioTooltip:SetOwner(EasyLFGRioAnchor, "ANCHOR_NONE")
+    EasyLFGRioTooltip:ClearAllPoints()
+    EasyLFGRioTooltip:SetPoint("TOPLEFT", EasyLFGRioAnchor, "TOPRIGHT", 0, 0)
+
+    return EasyLFGRioAnchor, EasyLFGRioTooltip
+end
+
+local function UpdateEasyLFGRioSelectionVisuals()
+    local showSelection = IsEasyLFGRioExpanded() and IsUsablePlainString(EasyLFGRioSelectedFullName)
+
+    for _, row in ipairs(EasyLFGRows) do
+        if row.Selection then
+            row.Selection:SetShown(showSelection and row:IsShown() and row.FullName == EasyLFGRioSelectedFullName)
+        end
+    end
+end
+
+local function RefreshEasyLFGRioTooltip()
+    if not EasyLFGOverlay or not EasyLFGOverlay.IsShown or not EasyLFGOverlay:IsShown() then
+        HideEasyLFGRioTooltip()
+        return
+    end
+
+    if not IsEasyLFGRioExpanded() or not IsRaiderIOAvailable() or not IsUsablePlainString(EasyLFGRioSelectedFullName) then
+        HideEasyLFGRioTooltip()
+        return
+    end
+
+    local anchor, tooltip = EnsureEasyLFGRioTooltip()
+    local api = GetRaiderIOAPI()
+    if not anchor or not tooltip or not api then
+        HideEasyLFGRioTooltip()
+        return
+    end
+
+    tooltip:SetOwner(anchor, "ANCHOR_NONE")
+    tooltip:ClearAllPoints()
+    tooltip:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 6, 0)
+    tooltip:SetFrameStrata("TOOLTIP")
+    tooltip:SetFrameLevel(math.max(100, (EasyLFGOverlay.GetFrameLevel and EasyLFGOverlay:GetFrameLevel() or 0) + 20))
+    tooltip:SetScale(EasyLFGOverlay and EasyLFGOverlay.GetScale and EasyLFGOverlay:GetScale() or 1)
+    tooltip:Hide()
+    tooltip:ClearLines()
+
+    local showSucceeded = false
+    if type(api.ShowProfile) == "function" then
+        showSucceeded = api.ShowProfile(tooltip, EasyLFGRioSelectedFullName, RAIDERIO_EXTENDED_PROFILE_OPTIONS) == true
+        if not showSucceeded then
+            local characterName = GetDisplayNameFromFullName(EasyLFGRioSelectedFullName)
+            local characterRealm = GetRealmNameFromFullName(EasyLFGRioSelectedFullName)
+            if IsUsablePlainString(characterName) then
+                showSucceeded = api.ShowProfile(tooltip, characterName, characterRealm, RAIDERIO_EXTENDED_PROFILE_OPTIONS) == true
+            end
+        end
+    end
+
+    if showSucceeded then
+        tooltip:Show()
+        return
+    end
+
+    local profile = nil
+    if type(api.GetProfile) == "function" then
+        profile = api.GetProfile(EasyLFGRioSelectedFullName)
+        if not profile then
+            local characterName = GetDisplayNameFromFullName(EasyLFGRioSelectedFullName)
+            local characterRealm = GetRealmNameFromFullName(EasyLFGRioSelectedFullName)
+            if IsUsablePlainString(characterName) then
+                profile = api.GetProfile(characterName, characterRealm)
+            end
+        end
+    end
+
+    if profile or IsUsablePlainString(EasyLFGRioSelectedFullName) then
+        PopulateEasyLFGRioFallbackTooltip(tooltip, EasyLFGRioSelectedFullName, EasyLFGRioSelectedDisplayName, profile)
+    else
+        HideEasyLFGRioTooltip()
+    end
+end
+
+local function SetEasyLFGRioSelection(fullName, displayName)
+    if not IsUsablePlainString(fullName) then
+        return
+    end
+
+    EasyLFGRioSelectedFullName = fullName
+    EasyLFGRioSelectedDisplayName = displayName
+    UpdateEasyLFGRioSelectionVisuals()
+    RefreshEasyLFGRioTooltip()
+end
+
 local function GetEasyLFGClassColor(classFile)
     if RAID_CLASS_COLORS and classFile and RAID_CLASS_COLORS[classFile] then
         local color = RAID_CLASS_COLORS[classFile]
@@ -1622,6 +1905,18 @@ local function ApplyEasyLFGOverlayTextScale()
         ApplyScaledFont(EasyLFGOverlay.PinButton.Label, 9, "OUTLINE")
     end
 
+    if EasyLFGOverlay.EditButton and EasyLFGOverlay.EditButton.Label then
+        ApplyScaledFont(EasyLFGOverlay.EditButton.Label, 9, "OUTLINE")
+    end
+
+    if EasyLFGOverlay.DelistButton and EasyLFGOverlay.DelistButton.Label then
+        ApplyScaledFont(EasyLFGOverlay.DelistButton.Label, 9, "OUTLINE")
+    end
+
+    if EasyLFGOverlay.RioButton and EasyLFGOverlay.RioButton.Label then
+        ApplyScaledFont(EasyLFGOverlay.RioButton.Label, 9, "OUTLINE")
+    end
+
     for _, row in ipairs(EasyLFGRows) do
         ApplyScaledFont(row.ToggleButton and row.ToggleButton.Label, 10, "OUTLINE")
         ApplyScaledFont(row.Name, 10, "OUTLINE")
@@ -1765,7 +2060,7 @@ end
 
 local function CreateEasyLFGActionButton(parent)
     local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    button:SetSize(28, 18)
+    button:SetSize(34, 22)
 
     if button.SetNormalFontObject then
         button:SetNormalFontObject(GameFontNormalSmall)
@@ -1775,13 +2070,13 @@ local function CreateEasyLFGActionButton(parent)
 
     local buttonText = button.GetFontString and button:GetFontString() or nil
     if buttonText then
-        buttonText:SetWidth(20)
+        buttonText:SetWidth(26)
         buttonText:SetJustifyH("CENTER")
     end
 
     local icon = button:CreateTexture(nil, "OVERLAY")
     icon:SetPoint("CENTER", button, "CENTER", 0, 0)
-    icon:SetSize(12, 12)
+    icon:SetSize(16, 16)
     icon:Hide()
     button.Icon = icon
 
@@ -1813,9 +2108,36 @@ local function CreateEasyLFGHeaderButton(parent, width, labelText, onClick, tool
 
     button.TooltipTitle = tooltipTitle
     button.TooltipText = tooltipText
+
+    local function ApplyVisualState(self, isHovered)
+        local isActive = self.Active == true
+
+        if isHovered then
+            if isActive then
+                self.Background:SetColorTexture(0.24, 0.18, 0.06, 0.96)
+                self.Border:SetColorTexture(1.00, 0.84, 0.24, 0.90)
+                self.Label:SetTextColor(1, 0.94, 0.54, 1)
+            else
+                self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
+                self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.72)
+                self.Label:SetTextColor(1, 0.88, 0.62, 1)
+            end
+            return
+        end
+
+        if isActive then
+            self.Background:SetColorTexture(0.15, 0.11, 0.04, 0.86)
+            self.Border:SetColorTexture(1.00, 0.80, 0.22, 0.74)
+            self.Label:SetTextColor(1, 0.92, 0.42, 1)
+        else
+            self.Background:SetColorTexture(0.05, 0.05, 0.06, 0.58)
+            self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
+            self.Label:SetTextColor(1, 0.88, 0.62, 1)
+        end
+    end
+
     button:SetScript("OnEnter", function(self)
-        self.Background:SetColorTexture(0.17, 0.17, 0.19, 0.92)
-        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.72)
+        ApplyVisualState(self, true)
 
         if self.TooltipTitle and GameTooltip then
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -1827,13 +2149,14 @@ local function CreateEasyLFGHeaderButton(parent, width, labelText, onClick, tool
         end
     end)
     button:SetScript("OnLeave", function(self)
-        self.Background:SetColorTexture(0.05, 0.05, 0.06, 0.58)
-        self.Border:SetColorTexture(0.88, 0.72, 0.46, 0.34)
+        ApplyVisualState(self, false)
         if GameTooltip then
             GameTooltip:Hide()
         end
     end)
     button:SetScript("OnClick", onClick)
+    button.ApplyVisualState = ApplyVisualState
+    ApplyVisualState(button, false)
 
     return button
 end
@@ -1841,6 +2164,51 @@ end
 local function UpdateEasyLFGHeaderButtons()
     if not EasyLFGOverlay or not EasyLFGOverlay.PinButton then
         return
+    end
+
+    local hasControllableListing = HasActiveListing() and IsPlayerListingLeader()
+    local showRioButton = hasControllableListing and IsRaiderIOAvailable()
+
+    if EasyLFGOverlay.EditButton then
+        EasyLFGOverlay.EditButton:SetShown(hasControllableListing)
+        EasyLFGOverlay.EditButton:SetEnabled(hasControllableListing)
+    end
+
+    if EasyLFGOverlay.DelistButton then
+        EasyLFGOverlay.DelistButton:SetShown(hasControllableListing)
+        EasyLFGOverlay.DelistButton:SetEnabled(hasControllableListing and C_LFGList and type(C_LFGList.RemoveListing) == "function")
+    end
+
+    if EasyLFGOverlay.RioButton then
+        EasyLFGOverlay.RioButton:SetShown(showRioButton)
+        EasyLFGOverlay.RioButton:SetEnabled(showRioButton)
+        EasyLFGOverlay.RioButton.Active = showRioButton and IsEasyLFGRioExpanded()
+        EasyLFGOverlay.RioButton.TooltipTitle = L(IsEasyLFGRioExpanded() and "EASY_LFG_OVERLAY_RIO_HIDE_TOOLTIP" or "EASY_LFG_OVERLAY_RIO_SHOW_TOOLTIP")
+        EasyLFGOverlay.RioButton.TooltipText = L("EASY_LFG_OVERLAY_RIO_TOOLTIP_HINT")
+        if EasyLFGOverlay.RioButton.ApplyVisualState then
+            EasyLFGOverlay.RioButton:ApplyVisualState(EasyLFGOverlay.RioButton.IsMouseOver and EasyLFGOverlay.RioButton:IsMouseOver())
+        end
+    end
+
+    if not showRioButton then
+        HideEasyLFGRioTooltip()
+    end
+
+    if EasyLFGOverlay.Title then
+        local titleAnchor = EasyLFGOverlay.PinButton
+        if EasyLFGOverlay.DelistButton and EasyLFGOverlay.DelistButton:IsShown() then
+            titleAnchor = EasyLFGOverlay.DelistButton
+        end
+        if EasyLFGOverlay.EditButton and EasyLFGOverlay.EditButton:IsShown() then
+            titleAnchor = EasyLFGOverlay.EditButton
+        end
+        if EasyLFGOverlay.RioButton and EasyLFGOverlay.RioButton:IsShown() then
+            titleAnchor = EasyLFGOverlay.RioButton
+        end
+
+        EasyLFGOverlay.Title:ClearAllPoints()
+        EasyLFGOverlay.Title:SetPoint("TOPLEFT", EasyLFGOverlay, "TOPLEFT", 18, -16)
+        EasyLFGOverlay.Title:SetPoint("RIGHT", titleAnchor, "LEFT", -8, 0)
     end
 
     if LFG.IsEasyLFGLocked and LFG.IsEasyLFGLocked() then
@@ -1888,11 +2256,18 @@ local function EnsureEasyLFGRow(index)
 
     local row = CreateFrame("Frame", nil, EasyLFGOverlay)
     row:SetHeight(36)
+    row:EnableMouse(true)
 
     local background = row:CreateTexture(nil, "BACKGROUND")
     background:SetAllPoints()
     background:SetColorTexture(0.05, 0.05, 0.06, 0.54)
     row.Background = background
+
+    local selection = row:CreateTexture(nil, "ARTWORK")
+    selection:SetAllPoints()
+    selection:SetColorTexture(0.88, 0.72, 0.46, 0.10)
+    selection:Hide()
+    row.Selection = selection
 
     local border = row:CreateTexture(nil, "ARTWORK")
     border:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
@@ -1902,13 +2277,13 @@ local function EnsureEasyLFGRow(index)
     row.Border = border
 
     local actionArea = CreateFrame("Frame", nil, row)
-    actionArea:SetSize(64, 18)
-    actionArea:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    actionArea:SetSize(72, 22)
+    actionArea:SetPoint("RIGHT", row, "RIGHT", -2, 0)
     row.ActionArea = actionArea
 
     local flagAnchor = CreateFrame("Frame", nil, row)
     flagAnchor:SetSize(1, 1)
-    flagAnchor:SetPoint("RIGHT", actionArea, "LEFT", -24, 0)
+    flagAnchor:SetPoint("RIGHT", actionArea, "LEFT", -12, 0)
     row.FlagAnchor = flagAnchor
 
     local toggleButton = CreateFrame("Button", nil, row)
@@ -1949,7 +2324,7 @@ local function EnsureEasyLFGRow(index)
 
     local declineButton = CreateEasyLFGActionButton(row)
     declineButton:SetParent(actionArea)
-    declineButton:SetPoint("LEFT", actionArea, "LEFT", 0, 0)
+    declineButton:SetPoint("RIGHT", actionArea, "RIGHT", 0, 0)
     declineButton:SetScript("OnClick", function(self)
         if not self.ApplicantID or not CanDeclineApplicantStatus(self.StatusKey) or not C_LFGList or not C_LFGList.DeclineApplicant then
             return
@@ -1964,7 +2339,7 @@ local function EnsureEasyLFGRow(index)
 
     local inviteButton = CreateEasyLFGActionButton(row)
     inviteButton:SetParent(actionArea)
-    inviteButton:SetPoint("RIGHT", actionArea, "RIGHT", 0, 0)
+    inviteButton:SetPoint("LEFT", actionArea, "LEFT", 0, 0)
     inviteButton:SetScript("OnClick", function(self)
         if not self.ApplicantID or not CanInviteApplicantStatus(self.StatusKey) then
             return
@@ -1984,6 +2359,12 @@ local function EnsureEasyLFGRow(index)
     badge:SetWordWrap(false)
     badge:Hide()
     row.Badge = badge
+
+    row:SetScript("OnEnter", function(self)
+        if IsEasyLFGRioExpanded() and IsUsablePlainString(self.FullName) then
+            SetEasyLFGRioSelection(self.FullName, self.DisplayName)
+        end
+    end)
 
     EasyLFGRows[index] = row
     return row
@@ -2077,7 +2458,47 @@ local function EnsureEasyLFGOverlay()
     EasyLFGOverlay.PinButton.Icon = EasyLFGOverlay.PinButton:CreateTexture(nil, "OVERLAY")
     EasyLFGOverlay.PinButton.Icon:SetPoint("CENTER", EasyLFGOverlay.PinButton, "CENTER", 0, 0)
     EasyLFGOverlay.PinButton.Icon:SetSize(12, 12)
-    EasyLFGOverlay.Title:SetPoint("RIGHT", EasyLFGOverlay.PinButton, "LEFT", -8, 0)
+
+    EasyLFGOverlay.DelistButton = CreateEasyLFGHeaderButton(
+        EasyLFGOverlay,
+        84,
+        L("EASY_LFG_OVERLAY_DELIST"),
+        function()
+            RemoveActiveEasyLFGListing()
+        end,
+        L("EASY_LFG_OVERLAY_DELIST_TOOLTIP"),
+        L("EASY_LFG_OVERLAY_DELIST_TOOLTIP_HINT")
+    )
+    EasyLFGOverlay.DelistButton:SetPoint("RIGHT", EasyLFGOverlay.PinButton, "LEFT", -6, 0)
+    EasyLFGOverlay.DelistButton:Hide()
+
+    EasyLFGOverlay.EditButton = CreateEasyLFGHeaderButton(
+        EasyLFGOverlay,
+        50,
+        L("EASY_LFG_OVERLAY_EDIT"),
+        function()
+            OpenActiveEasyLFGListingEditor()
+        end,
+        L("EASY_LFG_OVERLAY_EDIT_TOOLTIP"),
+        L("EASY_LFG_OVERLAY_EDIT_TOOLTIP_HINT")
+    )
+    EasyLFGOverlay.EditButton:SetPoint("RIGHT", EasyLFGOverlay.DelistButton, "LEFT", -6, 0)
+    EasyLFGOverlay.EditButton:Hide()
+
+    EasyLFGOverlay.RioButton = CreateEasyLFGHeaderButton(
+        EasyLFGOverlay,
+        36,
+        L("EASY_LFG_OVERLAY_RIO"),
+        function()
+            LFG.SetEasyLFGRioExpanded(not IsEasyLFGRioExpanded())
+        end,
+        L("EASY_LFG_OVERLAY_RIO_SHOW_TOOLTIP"),
+        L("EASY_LFG_OVERLAY_RIO_TOOLTIP_HINT")
+    )
+    EasyLFGOverlay.RioButton:SetPoint("RIGHT", EasyLFGOverlay.EditButton, "LEFT", -6, 0)
+    EasyLFGOverlay.RioButton:Hide()
+
+    EasyLFGOverlay.Title:SetPoint("RIGHT", EasyLFGOverlay.RioButton, "LEFT", -8, 0)
 
     EasyLFGOverlay.Summary = EasyLFGOverlay:CreateFontString(nil, "OVERLAY")
     EasyLFGOverlay.Summary:SetPoint("TOPLEFT", EasyLFGOverlay.Title, "BOTTOMLEFT", 0, -4)
@@ -2087,8 +2508,8 @@ local function EnsureEasyLFGOverlay()
     EasyLFGOverlay.Summary:SetTextColor(0.78, 0.74, 0.69, 1)
 
     EasyLFGOverlay.ScrollFrame = CreateFrame("ScrollFrame", nil, EasyLFGOverlay, "UIPanelScrollFrameTemplate")
-    EasyLFGOverlay.ScrollFrame:SetPoint("TOPLEFT", EasyLFGOverlay.Summary, "BOTTOMLEFT", -2, -10)
-    EasyLFGOverlay.ScrollFrame:SetPoint("BOTTOMRIGHT", EasyLFGOverlay, "BOTTOMRIGHT", -28, 10)
+    EasyLFGOverlay.ScrollFrame:SetPoint("TOPLEFT", EasyLFGOverlay.Summary, "BOTTOMLEFT", -1, -10)
+    EasyLFGOverlay.ScrollFrame:SetPoint("BOTTOMRIGHT", EasyLFGOverlay, "BOTTOMRIGHT", -24, 10)
     EasyLFGOverlay.ScrollFrame:EnableMouseWheel(true)
 
     EasyLFGOverlay.ScrollChild = CreateFrame("Frame", nil, EasyLFGOverlay.ScrollFrame)
@@ -2156,7 +2577,7 @@ end
 local function LayoutEasyLFGRows(visibleRows, hasActiveListing)
     local overlay = EnsureEasyLFGOverlay()
     local rowHeight = 36
-    local rowGap = 4
+    local rowGap = 2
     local contentRows = visibleRows > 0 and visibleRows or 1
     local rowsHeight = (contentRows * rowHeight) + ((contentRows - 1) * rowGap)
     local emptyHeight = visibleRows == 0 and 36 or 0
@@ -2181,8 +2602,8 @@ local function LayoutEasyLFGRows(visibleRows, hasActiveListing)
     for index, row in ipairs(EasyLFGRows) do
         if index <= visibleRows then
             row:ClearAllPoints()
-            row:SetPoint("TOPLEFT", overlay.ScrollChild, "TOPLEFT", 2, -((index - 1) * (rowHeight + rowGap)))
-            row:SetPoint("RIGHT", overlay.ScrollChild, "RIGHT", -2, 0)
+            row:SetPoint("TOPLEFT", overlay.ScrollChild, "TOPLEFT", 1, -((index - 1) * (rowHeight + rowGap)))
+            row:SetPoint("RIGHT", overlay.ScrollChild, "RIGHT", 0, 0)
             row:Show()
         else
             row:Hide()
@@ -2207,6 +2628,7 @@ local function RefreshEasyLFGOverlay()
 
     if not db.easyLFGEnabled then
         EasyLFGSuppressed = false
+        HideEasyLFGRioTooltip()
         overlay:Hide()
         return
     end
@@ -2216,20 +2638,26 @@ local function RefreshEasyLFGOverlay()
     if controllableListing and not EasyLFGWasActiveListing then
         EasyLFGSuppressed = false
         ResetEasyLFGApplicantState()
+        HideBlizzardLFGWindow()
     elseif not controllableListing then
         EasyLFGSuppressed = false
         ResetEasyLFGApplicantState()
+        EasyLFGRioSelectedFullName = nil
+        EasyLFGRioSelectedDisplayName = nil
     end
     EasyLFGWasActiveListing = controllableListing
 
     if not controllableListing then
         overlay.Summary:SetText(L("EASY_LFG_OVERLAY_NO_GROUP_SHORT"))
         LayoutEasyLFGRows(0, false)
+        UpdateEasyLFGRioSelectionVisuals()
+        HideEasyLFGRioTooltip()
         overlay:Hide()
         return
     end
 
     if EasyLFGSuppressed then
+        HideEasyLFGRioTooltip()
         overlay:Hide()
         return
     end
@@ -2267,6 +2695,33 @@ local function RefreshEasyLFGOverlay()
     end
 
     local visibleRows = #applicants
+    local visibleApplicantsByFullName = {}
+
+    for _, rowData in ipairs(applicants) do
+        if IsUsablePlainString(rowData.fullName) then
+            visibleApplicantsByFullName[rowData.fullName] = rowData
+        end
+    end
+
+    if not visibleApplicantsByFullName[EasyLFGRioSelectedFullName] then
+        EasyLFGRioSelectedFullName = nil
+        EasyLFGRioSelectedDisplayName = nil
+
+        for _, rowData in ipairs(applicants) do
+            if IsUsablePlainString(rowData.fullName) and rowData.isPrimary then
+                EasyLFGRioSelectedFullName = rowData.fullName
+                EasyLFGRioSelectedDisplayName = rowData.displayName
+                break
+            end
+        end
+
+        if not EasyLFGRioSelectedFullName and applicants[1] and IsUsablePlainString(applicants[1].fullName) then
+            EasyLFGRioSelectedFullName = applicants[1].fullName
+            EasyLFGRioSelectedDisplayName = applicants[1].displayName
+        end
+    elseif visibleApplicantsByFullName[EasyLFGRioSelectedFullName] then
+        EasyLFGRioSelectedDisplayName = visibleApplicantsByFullName[EasyLFGRioSelectedFullName].displayName or EasyLFGRioSelectedDisplayName
+    end
 
     overlay.Summary:SetText(L("EASY_LFG_OVERLAY_SUMMARY"):format(applicantCount, memberCount))
 
@@ -2288,11 +2743,11 @@ local function RefreshEasyLFGOverlay()
 
         row.Name:ClearAllPoints()
         row.Name:SetPoint("TOPLEFT", row, "TOPLEFT", nameLeft, -4)
-        row.Name:SetPoint("RIGHT", row.FlagAnchor, "LEFT", -8, 0)
+        row.Name:SetPoint("RIGHT", row.FlagAnchor, "LEFT", -4, 0)
 
         row.Meta:ClearAllPoints()
         row.Meta:SetPoint("TOPLEFT", row.Name, "BOTTOMLEFT", 0, -1)
-        row.Meta:SetPoint("RIGHT", row.FlagAnchor, "LEFT", -8, 0)
+        row.Meta:SetPoint("RIGHT", row.FlagAnchor, "LEFT", -4, 0)
 
         if isInactivePlaceholder then
             row.Background:SetColorTexture(0.10, 0.045, 0.045, 0.70)
@@ -2302,6 +2757,8 @@ local function RefreshEasyLFGOverlay()
             row.Name:SetTextColor(0.78, 0.78, 0.78, 1)
             row.Meta:SetText(L("EASY_LFG_STATUS_INACTIVE"))
             row.Meta:SetTextColor(0.92, 0.54, 0.54, 1)
+            row.FullName = nil
+            row.DisplayName = nil
 
             row.Badge:SetText("")
             row.Badge:Hide()
@@ -2343,6 +2800,8 @@ local function RefreshEasyLFGOverlay()
             row.Name:SetText(rowData.displayName)
             row.Name:SetTextColor(classRed, classGreen, classBlue, 1)
             row.Meta:SetText(table.concat(metaParts, " | "))
+            row.FullName = rowData.fullName
+            row.DisplayName = rowData.displayName
 
             row.Badge:SetText("")
             row.Badge:Hide()
@@ -2376,8 +2835,11 @@ local function RefreshEasyLFGOverlay()
     end
 
     ApplyEasyLFGOverlayTextScale()
+    UpdateEasyLFGHeaderButtons()
     LayoutEasyLFGRows(visibleRows, true)
+    UpdateEasyLFGRioSelectionVisuals()
     overlay:Show()
+    RefreshEasyLFGRioTooltip()
 end
 
 LFG.RefreshEasyLFGOverlay = RefreshEasyLFGOverlay
@@ -2397,6 +2859,18 @@ end
 
 function LFG.SetEasyLFGLocked(value)
     LFG.GetLFGDB().easyLFGLocked = value and true or false
+    RefreshEasyLFGOverlay()
+end
+
+function LFG.IsEasyLFGRioExpanded()
+    return IsEasyLFGRioExpanded()
+end
+
+function LFG.SetEasyLFGRioExpanded(value)
+    LFG.GetLFGDB().easyLFGRioExpanded = value and true or false
+    if not value then
+        HideEasyLFGRioTooltip()
+    end
     RefreshEasyLFGOverlay()
 end
 

@@ -457,7 +457,7 @@ ListingPresetPlaystyleHint:SetTextColor(0.72, 0.72, 0.72, 1)
 ListingPresetPlaystyleHint:SetText(L("LFG_LISTING_PLAYSTYLE_HINT"))
 
 -- ========================================
--- Bereich: Easy LFG
+-- Bereich: SmartLFG
 -- ========================================
 
 local EasyLFGPanel = CreateFrame("Frame", nil, PageContentFrame)

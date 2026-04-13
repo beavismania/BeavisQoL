@@ -8,6 +8,7 @@ local FishingModule = BeavisQoL.FishingModule
 
 local FISHING_SPELL_ID = 131474
 local WAITING_TIMEOUT = 32
+local BITE_READY_MIN_DELAY = 1.25
 local STANDARD_SFX = 1.00
 local DEFAULT_SOUND_MULTIPLIER = 1.00
 local MIN_SOUND_MULTIPLIER = 1.00
@@ -47,7 +48,13 @@ local CastButton
 local isRefreshingPage = false
 local isCapturingKey = false
 local currentMode = "idle"
+local waitingStartedAt = 0
 local waitingExpiresAt = 0
+local waitingInitialSoftTargetGUID = nil
+local waitingInitialSoftTargetPresent = false
+local waitingInitialSoftTargetInteractable = false
+local waitingReadyTriggered = false
+local lastSoftInteractGUID = nil
 local pendingBindingRefresh = false
 local pendingStateRefresh = false
 local pendingCastButtonRefresh = false
@@ -91,6 +98,10 @@ local function GetFishingSettings()
 
     if db.soundBoostEnabled == nil then
         db.soundBoostEnabled = true
+    end
+
+    if db.bitePromptEnabled ~= nil then
+        db.bitePromptEnabled = nil
     end
 
     if type(db.soundMultiplier) ~= "number" then
@@ -183,6 +194,102 @@ end
 
 local function GetSliderPercentText(value)
     return string.format("%d%%", math.floor((Clamp(tonumber(value) or DEFAULT_SOUND_MULTIPLIER, MIN_SOUND_MULTIPLIER, MAX_SOUND_MULTIPLIER) * 100) + 0.5))
+end
+
+local function IsFishingActiveMode(mode)
+    return mode == "waiting" or mode == "ready"
+end
+
+local function GetCurrentSoftInteractState()
+    local state = {
+        exists = false,
+        guid = lastSoftInteractGUID,
+        isGameObject = true,
+        interactable = false,
+    }
+
+    if state.guid ~= nil then
+        state.exists = true
+    end
+
+    if UnitExists and UnitExists("softinteract") then
+        state.exists = true
+
+        if UnitGUID then
+            state.guid = UnitGUID("softinteract") or state.guid
+        end
+
+        if state.guid == nil then
+            state.guid = "softinteract"
+        end
+
+        if UnitIsGameObject then
+            state.isGameObject = UnitIsGameObject("softinteract") == true
+        end
+
+        if UnitIsInteractable then
+            state.interactable = UnitIsInteractable("softinteract") == true
+        else
+            state.interactable = true
+        end
+    end
+
+    return state
+end
+
+local function GetCurrentSoftInteractGUID(requireInteractable)
+    local state = GetCurrentSoftInteractState()
+    if not state.exists or state.isGameObject ~= true then
+        return nil
+    end
+
+    if requireInteractable == true and state.interactable ~= true then
+        return nil
+    end
+
+    return state.guid
+end
+
+local function MarkFishingBiteReady(softTargetGUID)
+    if softTargetGUID ~= nil then
+        lastSoftInteractGUID = softTargetGUID
+    end
+
+    if waitingStartedAt <= 0 or GetTime() < (waitingStartedAt + BITE_READY_MIN_DELAY) then
+        return
+    end
+
+    if softTargetGUID == nil and GetCurrentSoftInteractGUID(false) == nil then
+        return
+    end
+
+    waitingReadyTriggered = true
+end
+
+local function HasFishingBiteReadyTarget(checkTime)
+    local now = tonumber(checkTime) or GetTime()
+    if waitingStartedAt <= 0 or now < (waitingStartedAt + BITE_READY_MIN_DELAY) then
+        return false
+    end
+
+    local currentSoftTargetState = GetCurrentSoftInteractState()
+    if not currentSoftTargetState.exists or currentSoftTargetState.isGameObject ~= true then
+        return false
+    end
+
+    if currentSoftTargetState.interactable == true and waitingInitialSoftTargetInteractable ~= true then
+        return true
+    end
+
+    if waitingInitialSoftTargetPresent ~= true then
+        return currentSoftTargetState.guid ~= nil
+    end
+
+    if waitingInitialSoftTargetGUID ~= nil and currentSoftTargetState.guid ~= nil and currentSoftTargetState.guid ~= waitingInitialSoftTargetGUID then
+        return true
+    end
+
+    return waitingReadyTriggered == true
 end
 
 local function CaptureFishingSoundSettings()
@@ -318,7 +425,7 @@ end
 
 local function RefreshSoftInteractCVar()
     local settings = GetFishingSettings()
-    local shouldEnableSoftInteract = settings.enabled == true and currentMode == "waiting"
+    local shouldEnableSoftInteract = settings.enabled == true and IsFishingActiveMode(currentMode)
 
     if shouldEnableSoftInteract then
         local currentValue = GetCurrentCVarValue(SOFT_INTERACT_CVAR)
@@ -343,7 +450,7 @@ end
 
 local function RefreshSoundBoost()
     local settings = GetFishingSettings()
-    local shouldBoost = settings.enabled == true and settings.soundBoostEnabled == true and currentMode == "waiting"
+    local shouldBoost = settings.enabled == true and settings.soundBoostEnabled == true and IsFishingActiveMode(currentMode)
 
     if shouldBoost then
         ApplyFishingSoundSettings(settings.soundMultiplier)
@@ -374,7 +481,7 @@ local function RefreshOverrideBinding()
         return
     end
 
-    if currentMode == "waiting" then
+    if IsFishingActiveMode(currentMode) then
         SetOverrideBinding(BindingOwner, true, settings.key, INTERACTION_COMMAND)
         return
     end
@@ -387,12 +494,30 @@ end
 local function RefreshStateFromGame()
     pendingStateRefresh = false
 
+    local now = GetTime()
+    local wasActiveMode = IsFishingActiveMode(currentMode)
+
     if IsFishingChannelActive() then
-        currentMode = "waiting"
-        waitingExpiresAt = GetTime() + WAITING_TIMEOUT
+        if not wasActiveMode then
+            local initialSoftTargetState = GetCurrentSoftInteractState()
+            waitingStartedAt = now
+            waitingInitialSoftTargetGUID = initialSoftTargetState.guid
+            waitingInitialSoftTargetPresent = initialSoftTargetState.exists and initialSoftTargetState.isGameObject == true
+            waitingInitialSoftTargetInteractable = initialSoftTargetState.interactable == true
+            waitingReadyTriggered = false
+        end
+
+        currentMode = HasFishingBiteReadyTarget(now) and "ready" or "waiting"
+        waitingExpiresAt = now + WAITING_TIMEOUT
     else
         currentMode = "idle"
+        waitingStartedAt = 0
         waitingExpiresAt = 0
+        waitingInitialSoftTargetGUID = nil
+        waitingInitialSoftTargetPresent = false
+        waitingInitialSoftTargetInteractable = false
+        waitingReadyTriggered = false
+        lastSoftInteractGUID = nil
     end
 
     RefreshSoundBoost()
@@ -527,6 +652,10 @@ local function GetStatusText()
 
     if not IsFishingKnown() then
         return L("FISHING_HELPER_STATUS_NO_SPELL")
+    end
+
+    if currentMode == "ready" then
+        return L("FISHING_HELPER_STATUS_READY")
     end
 
     if currentMode == "waiting" then
@@ -690,7 +819,7 @@ EnableCheckbox:SetPoint("TOPLEFT", ControlTitle, "BOTTOMLEFT", -4, -12)
 SetKeyButton = CreateActionButton(ControlPanel, 160, L("FISHING_HELPER_SET_KEY"), function()
     BeginCaptureMode()
 end)
-SetKeyButton:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", 8, -18)
+SetKeyButton:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", -4, -18)
 
 ClearKeyButton = CreateActionButton(ControlPanel, 160, L("FISHING_HELPER_CLEAR_KEY"), function()
     FishingModule.ClearKey()
@@ -896,7 +1025,7 @@ local function LayoutFishingPage()
     EnableCheckbox:SetPoint("TOPLEFT", ControlTitle, "BOTTOMLEFT", -4, -10)
 
     SetKeyButton:ClearAllPoints()
-    SetKeyButton:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", 8, -16)
+    SetKeyButton:SetPoint("TOPLEFT", EnableCheckbox, "BOTTOMLEFT", -4, -16)
 
     ClearKeyButton:ClearAllPoints()
     if stackButtons then
@@ -1029,7 +1158,13 @@ function PageFishing:RefreshState()
     CurrentKeyValue:SetText(FormatBindingKey(settings.key))
     StatusLabel:SetText(L("FISHING_HELPER_STATUS"))
     StatusValue:SetText(GetStatusText())
-    StatusValue:SetTextColor(hasSpell and 1 or 1, hasSpell and 0.82 or 0.35, hasSpell and 0 or 0.35, 1)
+    if not hasSpell then
+        StatusValue:SetTextColor(1, 0.35, 0.35, 1)
+    elseif currentMode == "ready" then
+        StatusValue:SetTextColor(1, 0.92, 0.24, 1)
+    else
+        StatusValue:SetTextColor(1, 0.82, 0, 1)
+    end
 
     InteractionTitle:SetText(L("FISHING_HELPER_INTERACT_BINDING"))
     InteractValue:SetText(GetInteractionBindingText())
@@ -1092,11 +1227,21 @@ eventFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
 eventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
 eventFrame:RegisterEvent("UNIT_SPELLCAST_FAILED_QUIET")
 eventFrame:RegisterEvent("LOOT_CLOSED")
+eventFrame:RegisterEvent("PLAYER_SOFT_INTERACT_CHANGED")
+eventFrame:RegisterEvent("PLAYER_SOFT_TARGET_INTERACTION")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGOUT" then
         ClearFishingOverrideBinding()
         RestoreSoundBoost()
         RestoreSoftInteractCVar()
+        currentMode = "idle"
+        waitingStartedAt = 0
+        waitingExpiresAt = 0
+        waitingInitialSoftTargetGUID = nil
+        waitingInitialSoftTargetPresent = false
+        waitingInitialSoftTargetInteractable = false
+        waitingReadyTriggered = false
+        lastSoftInteractGUID = nil
         return
     end
 
@@ -1117,6 +1262,9 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     end
 
     if event == "SPELLS_CHANGED" or event == "SKILL_LINES_CHANGED" or event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+        if event == "PLAYER_ENTERING_WORLD" then
+            lastSoftInteractGUID = nil
+        end
         RefreshCastButtonAttributes()
         RefreshStateFromGame()
         return
@@ -1127,6 +1275,26 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             RefreshStateFromGame()
         end
 
+        return
+    end
+
+    if event == "PLAYER_SOFT_INTERACT_CHANGED" or event == "PLAYER_SOFT_TARGET_INTERACTION" then
+        local _, newTarget = ...
+        if event == "PLAYER_SOFT_INTERACT_CHANGED" then
+            lastSoftInteractGUID = newTarget
+        end
+
+        if not IsFishingActiveMode(currentMode) and not IsFishingChannelActive() then
+            return
+        end
+
+        if InCombatLockdown and InCombatLockdown() then
+            QueueStateRefresh()
+            return
+        end
+
+        MarkFishingBiteReady(newTarget)
+        RefreshStateFromGame()
         return
     end
 
@@ -1154,8 +1322,18 @@ watchdogFrame:SetScript("OnUpdate", function(_, elapsed)
 
     elapsedSinceCheck = 0
 
-    if currentMode == "waiting" and waitingExpiresAt > 0 and GetTime() >= waitingExpiresAt then
+    local now = GetTime()
+
+    if IsFishingActiveMode(currentMode) and waitingExpiresAt > 0 and now >= waitingExpiresAt then
         RefreshStateFromGame()
+        return
+    end
+
+    if IsFishingActiveMode(currentMode) then
+        local shouldBeReady = HasFishingBiteReadyTarget(now)
+        if (currentMode == "ready") ~= shouldBeReady then
+            RefreshStateFromGame()
+        end
     end
 end)
 

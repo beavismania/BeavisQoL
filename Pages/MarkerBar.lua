@@ -37,6 +37,7 @@ local OverlayButtons = {}
 local PageMarkerBar
 local ShowOverlayCheckbox
 local LockOverlayCheckbox
+local InstanceOnlyCheckbox
 local ScaleSlider
 local ScaleSliderText
 local LayoutMarkerBarPage
@@ -82,6 +83,10 @@ local function GetMarkerBarSettings()
 
     if db.overlayLocked == nil then
         db.overlayLocked = false
+    end
+
+    if db.instanceOnly == nil then
+        db.instanceOnly = false
     end
 
     if type(db.overlayScale) ~= "number" then
@@ -140,6 +145,32 @@ local function RefreshScaleSliderText()
     ScaleSliderText:SetText(string.format("%s: %s", L("MARKER_BAR_SCALE"), GetSliderPercentText(ScaleSlider:GetValue())))
 end
 
+local function IsMarkerBarInstanceType(instanceType)
+    return instanceType == "party" or instanceType == "raid"
+end
+
+local function ShouldShowOverlayInCurrentContext()
+    local settings = GetMarkerBarSettings()
+    if settings.overlayEnabled ~= true then
+        return false
+    end
+
+    if settings.instanceOnly ~= true then
+        return true
+    end
+
+    if not IsInInstance then
+        return false
+    end
+
+    local inInstance, instanceType = IsInInstance()
+    if not inInstance then
+        return false
+    end
+
+    return IsMarkerBarInstanceType(instanceType)
+end
+
 local function RefreshOverlayWindow()
     if not OverlayFrame then
         return
@@ -160,7 +191,7 @@ local function RefreshOverlayWindow()
     OverlayFrame:SetMovable(settings.overlayLocked ~= true)
     OverlayFrame:EnableMouse(true)
 
-    if settings.overlayEnabled then
+    if ShouldShowOverlayInCurrentContext() then
         OverlayFrame:Show()
     else
         OverlayFrame:Hide()
@@ -182,6 +213,15 @@ end
 
 function MarkerBarModule.SetOverlayLocked(locked)
     GetMarkerBarSettings().overlayLocked = locked == true
+    RefreshOverlayWindow()
+end
+
+function MarkerBarModule.IsInstanceOnlyEnabled()
+    return GetMarkerBarSettings().instanceOnly == true
+end
+
+function MarkerBarModule.SetInstanceOnlyEnabled(enabled)
+    GetMarkerBarSettings().instanceOnly = enabled == true
     RefreshOverlayWindow()
 end
 
@@ -494,12 +534,31 @@ LockOverlayCheckbox = CreateCheckbox(SettingsPanel, L("MARKER_BAR_LOCK_OVERLAY")
 end)
 LockOverlayCheckbox:SetPoint("TOPLEFT", ShowOverlayCheckbox, "BOTTOMLEFT", 0, -10)
 
+InstanceOnlyCheckbox = CreateCheckbox(SettingsPanel, L("MARKER_BAR_INSTANCE_ONLY"), function(self)
+    if MarkerBarModule.SetInstanceOnlyEnabled then
+        MarkerBarModule.SetInstanceOnlyEnabled(self:GetChecked())
+    end
+
+    if PageMarkerBar and PageMarkerBar.RefreshState then
+        PageMarkerBar:RefreshState()
+    end
+end)
+InstanceOnlyCheckbox:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 0, -10)
+
+local InstanceOnlyHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
+InstanceOnlyHint:SetPoint("TOPLEFT", InstanceOnlyCheckbox, "BOTTOMLEFT", 34, -10)
+InstanceOnlyHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+InstanceOnlyHint:SetJustifyH("LEFT")
+InstanceOnlyHint:SetJustifyV("TOP")
+InstanceOnlyHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+InstanceOnlyHint:SetTextColor(0.78, 0.74, 0.69, 1)
+
 local MinimapContextCheckbox = CreateCheckbox(SettingsPanel, L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"), function(self)
     if BeavisQoL.SetMinimapContextMenuEntryVisible then
         BeavisQoL.SetMinimapContextMenuEntryVisible("markerBar", self:GetChecked())
     end
 end)
-MinimapContextCheckbox:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 0, -10)
+MinimapContextCheckbox:SetPoint("TOPLEFT", InstanceOnlyHint, "BOTTOMLEFT", -34, -10)
 
 local MinimapContextHint = SettingsPanel:CreateFontString(nil, "OVERLAY")
 MinimapContextHint:SetPoint("TOPLEFT", MinimapContextCheckbox, "BOTTOMLEFT", 34, -10)
@@ -558,6 +617,8 @@ function PageMarkerBar:RefreshState()
     SettingsTitle:SetText(L("DISPLAY"))
     ShowOverlayCheckbox.Label:SetText(L("MARKER_BAR_SHOW_OVERLAY"))
     LockOverlayCheckbox.Label:SetText(L("MARKER_BAR_LOCK_OVERLAY"))
+    InstanceOnlyCheckbox.Label:SetText(L("MARKER_BAR_INSTANCE_ONLY"))
+    InstanceOnlyHint:SetText(L("MARKER_BAR_INSTANCE_ONLY_HINT"))
     MinimapContextCheckbox.Label:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE"))
     MinimapContextHint:SetText(L("MINIMAP_CONTEXT_MENU_ENTRY_VISIBLE_HINT"))
     ScaleHint:SetText(L("MARKER_BAR_SCALE_HINT"))
@@ -566,6 +627,7 @@ function PageMarkerBar:RefreshState()
 
     ShowOverlayCheckbox:SetChecked(MarkerBarModule.IsOverlayEnabled and MarkerBarModule.IsOverlayEnabled() or false)
     LockOverlayCheckbox:SetChecked(MarkerBarModule.IsOverlayLocked and MarkerBarModule.IsOverlayLocked() or false)
+    InstanceOnlyCheckbox:SetChecked(MarkerBarModule.IsInstanceOnlyEnabled and MarkerBarModule.IsInstanceOnlyEnabled() or false)
     MinimapContextCheckbox:SetChecked(BeavisQoL.IsMinimapContextMenuEntryVisible and BeavisQoL.IsMinimapContextMenuEntryVisible("markerBar") or true)
 
     ScaleSlider:SetValue(MarkerBarModule.GetOverlayScale and MarkerBarModule.GetOverlayScale() or DEFAULT_OVERLAY_SCALE)
@@ -619,8 +681,15 @@ LayoutMarkerBarPage = function()
     LockOverlayCheckbox:ClearAllPoints()
     LockOverlayCheckbox:SetPoint("TOPLEFT", ShowOverlayCheckbox, "BOTTOMLEFT", 0, -8)
 
+    InstanceOnlyCheckbox:ClearAllPoints()
+    InstanceOnlyCheckbox:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 0, -8)
+
+    InstanceOnlyHint:ClearAllPoints()
+    InstanceOnlyHint:SetPoint("TOPLEFT", InstanceOnlyCheckbox, "BOTTOMLEFT", 34, -8)
+    InstanceOnlyHint:SetPoint("RIGHT", SettingsPanel, "RIGHT", -18, 0)
+
     MinimapContextCheckbox:ClearAllPoints()
-    MinimapContextCheckbox:SetPoint("TOPLEFT", LockOverlayCheckbox, "BOTTOMLEFT", 0, -8)
+    MinimapContextCheckbox:SetPoint("TOPLEFT", InstanceOnlyHint, "BOTTOMLEFT", -34, -8)
 
     MinimapContextHint:ClearAllPoints()
     MinimapContextHint:SetPoint("TOPLEFT", MinimapContextCheckbox, "BOTTOMLEFT", 34, -8)
@@ -650,6 +719,10 @@ LayoutMarkerBarPage = function()
         + ShowOverlayCheckbox:GetHeight()
         + 8
         + LockOverlayCheckbox:GetHeight()
+        + 8
+        + InstanceOnlyCheckbox:GetHeight()
+        + 8
+        + GetTextHeight(InstanceOnlyHint, 34)
         + 8
         + MinimapContextCheckbox:GetHeight()
         + 8
@@ -699,6 +772,9 @@ end)
 local refreshWatcher = CreateFrame("Frame")
 refreshWatcher:RegisterEvent("PLAYER_LOGIN")
 refreshWatcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+refreshWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+refreshWatcher:RegisterEvent("PLAYER_DIFFICULTY_CHANGED")
+refreshWatcher:RegisterEvent("UPDATE_INSTANCE_INFO")
 refreshWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
 refreshWatcher:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_REGEN_ENABLED" then
