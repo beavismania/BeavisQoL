@@ -13,7 +13,7 @@ Die Originaldateien bleiben bewusst an ihrem bisherigen Ort, damit GitHub, Relea
 ## Technik und Struktur
 
 - [Dateiuebersicht und Leseempfehlung](./FILE_MAP.md)
-- [Cleanup-Kandidaten und Altlastenliste](./CLEANUP_CANDIDATES.md)
+- Cleanup der bisherigen Altlasten ist abgeschlossen; eine separate Cleanup-Liste wird nicht mehr gepflegt.
 
 ## Release und Repo-Hygiene
 
