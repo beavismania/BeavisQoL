@@ -4,7 +4,7 @@
 
 ### Hotfix
 
-- `Minimap-HUD` nutzt jetzt den FarmHUD-Ansatz: Live-Minimap als Overlay, Rahmen/Buttons bleiben oben rechts
+- `Minimap-HUD` nutzt jetzt ein Live-Minimap-Overlay: Rahmen/Buttons bleiben oben rechts
 - `Minimap-HUD` dreht die Karte bei aktivem HUD automatisch nach Norden (Pfeil bleibt oben)
 - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das Minimap-HUD an/aus
 - Keystone-Fenster schliesst nach Aktivierung automatisch (auch nach Ladebildschirm)

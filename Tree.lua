@@ -726,7 +726,7 @@ local MinimapHudEntry = RegisterModuleEntry(WorldSection, "MINIMAP_HUD", "Minima
         "MINIMAP_HUD_MOUSE_HINT",
         "MINIMAP_HUD_HIDE_ELEMENTS_HINT",
     },
-    searchAliases = "farmhud farming gather ore herb mining minimap hud scanner scan center overlay",
+    searchAliases = "farming gather ore herb mining minimap hud scanner scan center overlay radial circular",
 })
 local TooltipItemLevelEntry = RegisterModuleEntry(WindowsSection, "TOOLTIP_ITEMLEVEL", "TooltipItemLevel", {
     tabLabelTextKey = "TOOLTIP_SETTINGS",

@@ -8,7 +8,7 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 - Release-Datum: `2026-04-12`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - neues FarmHUD-aehnliches `Minimap-HUD` mit separatem Overlay und festem Minimap-Rahmen oben rechts
+  - neues kreisfoermiges `Minimap-HUD` mit separatem Overlay und festem Minimap-Rahmen oben rechts
   - `Strg+Linksklick` auf den BeavisQoL-Minimap-Button schaltet das HUD
   - Keystone-Fenster schliesst nach Aktivierung automatisch und Buttons sind auf `Bereitschaftscheck`, `Timer`, `Start` umgestellt
 
