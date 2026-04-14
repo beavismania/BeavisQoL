@@ -2,6 +2,12 @@
 
 ## Unveröffentlicht
 
+## 0.37.8 - 2026-04-14
+
+### Hotfix
+
+- kleiner Aufräum-Release ohne beabsichtigte Funktionsänderung: tote LFG-Hilfsfunktion entfernt und ungenutzte doppelte Font-Dateien aus dem Release-Paket bereinigt
+
 ## 0.37.7 - 2026-04-14
 
 ### Hotfix

@@ -1389,10 +1389,6 @@ local function IsPlayerListingLeader()
     return true
 end
 
-local function IsLFGPanelShown(panel)
-    return panel and panel.IsShown and panel:IsShown() == true
-end
-
 local function HideBlizzardLFGWindow()
     if PVEFrame and PVEFrame.IsShown and PVEFrame:IsShown() then
         if type(HideUIPanel) == "function" then

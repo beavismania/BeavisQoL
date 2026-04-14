@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.7`
+- Version: `0.37.8`
 - Release-Datum: `2026-04-14`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `SmartLFG` schließt bei eigener aktiver Listung weiterhin das große Blizzard-Fenster, verzichtet aber auf die problematische automatische Blizzard-Panel-Reparatur
-  - explizite SmartLFG-Aktionen wie `Bearb.` bleiben erhalten, ohne das Blizzard-Fenster dauerhaft im Hintergrund umzubauen
-  - der `Talent-Loadout-Reminder` zeigt als Titel jetzt `Readycheck Info`
+  - `SmartLFG` behält die gewünschte Bedienung bei, während problematische automatische Blizzard-LFG-Eingriffe entfernt bleiben
+  - das Release-Paket wurde um ungenutzte Font-Dubletten bereinigt
+  - kleiner interner Cleanup ohne beabsichtigte Funktionsänderung für Spieler
 
 ## Download
 
