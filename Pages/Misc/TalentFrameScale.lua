@@ -8,6 +8,7 @@ local baseGetMiscDB = Misc.GetMiscDB
 local TalentFrameScaleWatcher = CreateFrame("Frame")
 
 local PLAYER_SPELLS_ADDON_NAME = "Blizzard_PlayerSpells"
+local TALENT_TREE_TWEAKS_ADDON_NAME = "TalentTreeTweaks"
 local DEFAULT_TALENT_FRAME_SCALE = 1.00
 local MIN_TALENT_FRAME_SCALE = 0.50
 local MAX_TALENT_FRAME_SCALE = 1.50
@@ -58,6 +59,37 @@ end
 
 local function FormatScalePercent(value)
     return string.format("%d%%", floor((NormalizeTalentFrameScale(value) * 100) + 0.5))
+end
+
+local function GetTalentTreeTweaksScaleDB()
+    local talentTreeTweaksDB = rawget(_G, "TalentTreeTweaksDB")
+    if type(talentTreeTweaksDB) ~= "table" then
+        return nil
+    end
+
+    local modules = talentTreeTweaksDB.modules
+    if type(modules) ~= "table" or modules.ScaleTalentFrame ~= true then
+        return nil
+    end
+
+    if type(talentTreeTweaksDB.moduleDb) ~= "table" then
+        talentTreeTweaksDB.moduleDb = {}
+    end
+
+    if type(talentTreeTweaksDB.moduleDb.ScaleTalentFrame) ~= "table" then
+        talentTreeTweaksDB.moduleDb.ScaleTalentFrame = {}
+    end
+
+    return talentTreeTweaksDB.moduleDb.ScaleTalentFrame
+end
+
+local function SyncTalentTreeTweaksScale(value)
+    local scaleDB = GetTalentTreeTweaksScaleDB()
+    if not scaleDB then
+        return
+    end
+
+    scaleDB.scale = NormalizeTalentFrameScale(value)
 end
 
 local function TryLoadPlayerSpellsAddon()
@@ -193,6 +225,10 @@ end
 local function ApplyTalentFrameLayout(frame)
     local targetScale = Misc.IsTalentFrameScaleEnabled() and Misc.GetTalentFrameScale() or DEFAULT_TALENT_FRAME_SCALE
     local point, relativePoint, xOfs, yOfs = GetStoredTalentFrameAnchor()
+
+    -- TalentTreeTweaks can actively reset PlayerSpellsFrame scale on show.
+    -- Keep both addons in sync so BeavisQoL remains the visible source of truth.
+    SyncTalentTreeTweaksScale(targetScale)
 
     frame:SetParent(UIParent)
     frame:SetScale(targetScale)
@@ -694,7 +730,7 @@ TalentFrameScaleWatcher:SetScript("OnEvent", function(_, event, addonName)
         return
     end
 
-    if addonName == PLAYER_SPELLS_ADDON_NAME then
+    if addonName == PLAYER_SPELLS_ADDON_NAME or addonName == TALENT_TREE_TWEAKS_ADDON_NAME then
         AttachPlayerSpellsFrame()
     end
 end)

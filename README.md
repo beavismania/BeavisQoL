@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.2`
-- Release-Datum: `2026-04-13`
+- Version: `0.37.3`
+- Release-Datum: `2026-04-14`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
+  - `Talentfenster-Skalierung` bleibt jetzt auch mit aktivem `TalentTreeTweaks` stabil auf dem in BeavisQoL eingestellten Wert
   - `Saison Portale` erkennt jetzt, ob ein Portal auf Abklingzeit ist, und zeigt die Abklingzeit direkt in der Liste an
   - `Talent-Loadout-Reminder` zeigt bei jedem Bereitschaftscheck oben mittig das aktuelle Talent-Loadout inklusive aktivem Loadout-Namen an und blendet sich nach zehn Sekunden oder per `x` wieder aus
-  - `Tooltip-Itemlevel` cached bekannte Spieler jetzt GUID-basiert und erkennt seine eigene Tooltip-Zeile nach Rebuilds robuster wieder, damit Mouseover-Infos auch neben Addons wie Raider.IO stabiler sichtbar bleiben
 
 ## Download
 

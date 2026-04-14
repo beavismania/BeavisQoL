@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.3 - 2026-04-14
+
+### Hotfix
+
+- `Talentfenster-Skalierung` synchronisiert ihre Zielskalierung jetzt mit aktivem `TalentTreeTweaks`, damit beide Addons das Blizzard-Talentfenster nicht mehr gegenseitig auf unterschiedliche Werte zurÃ¼cksetzen
+
 ## 0.37.2 - 2026-04-13
 
 ### Verbessert
