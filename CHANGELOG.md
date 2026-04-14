@@ -2,6 +2,14 @@
 
 ## Unveröffentlicht
 
+## 0.37.5 - 2026-04-14
+
+### Hotfix
+
+- `Talentfenster-Skalierung` lädt `Blizzard_PlayerSpells` nicht mehr schon beim Login vorab, damit BeavisQoL den Blizzard-Talentframe nicht mehr unnötig früh initialisiert
+- `Loadout`-Logik synchronisiert bei Arbeitskopien mit passendem gespeicherten Build jetzt auch `lastSelectedSaved`, damit Blizzard die aktive Auswahl wieder einem gespeicherten Loadout zuordnen kann
+- neues Talent-Debug über `/beavis talents debug` ergänzt, damit sich Blizzard-Loadout-Listen und aktive Konfigurationswerte direkt live auslesen lassen
+
 ## 0.37.4 - 2026-04-14
 
 ### Hotfix

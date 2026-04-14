@@ -22,10 +22,11 @@ When the user says only `commit` in this repository, treat that as the default r
 1. Bump the version according to the versioning rules in `README.md`.
 2. Update `CHANGELOG.md`.
 3. For visible release changes, also update `README.md` and addon metadata such as `BeavisQoL.toc`.
-4. Then commit the full current workspace state, not just a subset you selected yourself.
+4. Keep the local version state unified across the repository; `commit` is a local workspace action and does not imply any dev/prod target by itself.
+5. Then commit the full current workspace state, not just a subset you selected yourself.
 
 ## Branch / Push Defaults
 
-1. Normal work goes to `dev` first.
-2. Do not push to `main` unless the user explicitly asks for it.
+1. Do not infer a push target from `commit`.
+2. Only push when the user explicitly asks for `push` and states where it should go; if the destination is missing, ask once briefly before pushing.
 3. Before pushing, verify local branch, remote, and target branch.

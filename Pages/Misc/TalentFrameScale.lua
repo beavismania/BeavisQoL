@@ -92,30 +92,7 @@ local function SyncTalentTreeTweaksScale(value)
     scaleDB.scale = NormalizeTalentFrameScale(value)
 end
 
-local function TryLoadPlayerSpellsAddon()
-    local loader = nil
-
-    if C_AddOns and C_AddOns.LoadAddOn then
-        loader = C_AddOns.LoadAddOn
-    elseif LoadAddOn then
-        loader = LoadAddOn
-    end
-
-    if loader then
-        pcall(loader, PLAYER_SPELLS_ADDON_NAME)
-    end
-end
-
 local function GetPlayerSpellsFrame()
-    for _, frameName in ipairs({ "PlayerSpellsFrame", "SpellBookFrame" }) do
-        local frame = rawget(_G, frameName)
-        if frame then
-            return frame
-        end
-    end
-
-    TryLoadPlayerSpellsAddon()
-
     for _, frameName in ipairs({ "PlayerSpellsFrame", "SpellBookFrame" }) do
         local frame = rawget(_G, frameName)
         if frame then
@@ -726,7 +703,11 @@ TalentFrameScaleWatcher:RegisterEvent("PLAYER_LOGIN")
 TalentFrameScaleWatcher:RegisterEvent("ADDON_LOADED")
 TalentFrameScaleWatcher:SetScript("OnEvent", function(_, event, addonName)
     if event == "PLAYER_LOGIN" then
-        AttachPlayerSpellsFrame()
+        -- Do not force-load Blizzard_PlayerSpells on login.
+        -- Hook lazily once Blizzard opens the talents UI itself.
+        if rawget(_G, "PlayerSpellsFrame") or rawget(_G, "SpellBookFrame") then
+            AttachPlayerSpellsFrame()
+        end
         return
     end
 

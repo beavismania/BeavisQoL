@@ -5,19 +5,90 @@ local L = BeavisQoL.L
 
 local CHONKY_ADDON_NAME = "ChonkyCharacterSheet"
 local PAPERDOLL_ADDON_NAME = "Blizzard_UIPanels_Game"
+local PLAYER_SPELLS_ADDON_NAME = "Blizzard_PlayerSpells"
 local DROPDOWN_NAME = "BeavisQoLChonkyLoadoutDropdown"
 local DROPDOWN_WIDTH = 170
 local DROPDOWN_HEIGHT = 24
 local DROPDOWN_REFRESH_DELAY = 0.05
+local DEBUG_MODULE_KEY = "talents"
+local DEBUG_MODULE_TITLE = "Talente / Loadouts"
 
 local Watcher = CreateFrame("Frame")
 local Dropdown
 local DropdownLabel
 local RefreshSerial = 0
 local PaperDollHookInstalled = false
+local LastRequestedSavedConfigIDBySpec = {}
 
 local function PrintAddonMessage(message)
     print(L("ADDON_MESSAGE"):format(message))
+end
+
+local function FormatDebugValue(value)
+    local valueType = type(value)
+    if valueType == "nil" then
+        return "nil"
+    end
+
+    if valueType == "boolean" then
+        return value and "true" or "false"
+    end
+
+    if valueType == "string" then
+        if value == "" then
+            return "\"\""
+        end
+
+        return string.format("%q", value)
+    end
+
+    return tostring(value)
+end
+
+local function FormatExportPreview(exportString)
+    if type(exportString) ~= "string" or exportString == "" then
+        return "nil"
+    end
+
+    local previewLength = math.min(24, #exportString)
+    local preview = string.sub(exportString, 1, previewLength)
+    if previewLength < #exportString then
+        preview = preview .. "..."
+    end
+
+    return string.format("%q (len=%d)", preview, #exportString)
+end
+
+local function AppendScalarTable(moduleKey, heading, values)
+    if not BeavisQoL.DebugConsole or not BeavisQoL.DebugConsole.AppendLine then
+        return
+    end
+
+    BeavisQoL.DebugConsole.AppendLine(moduleKey, heading)
+
+    local entries = {}
+    for key, value in pairs(values or {}) do
+        local valueType = type(value)
+        if valueType == "string" or valueType == "number" or valueType == "boolean" then
+            entries[#entries + 1] = {
+                key = tostring(key),
+                value = FormatDebugValue(value),
+            }
+        end
+    end
+
+    table.sort(entries, function(left, right)
+        return left.key < right.key
+    end)
+
+    if #entries == 0 then
+        BeavisQoL.DebugConsole.AppendLine(moduleKey, "  (keine skalaren Felder)")
+        return
+    end
+
+    for _, entry in ipairs(entries) do
+        BeavisQoL.DebugConsole.AppendLine(moduleKey, string.format("  %s = %s", entry.key, entry.value))
+    end
 end
 
 local function IsChonkyLoaded()
@@ -58,13 +129,22 @@ local function GetLastSelectedSavedConfigID(specID)
     return C_ClassTalents.GetLastSelectedSavedConfigID(specID)
 end
 
-local function GetConfigName(configID)
-    if type(configID) ~= "number" or not C_Traits or not C_Traits.GetConfigInfo then
+local function GetConfigInfo(configID)
+    if type(configID) ~= "number" or not C_Traits or type(C_Traits.GetConfigInfo) ~= "function" then
         return nil
     end
 
     local ok, configInfo = pcall(C_Traits.GetConfigInfo, configID)
-    if ok and type(configInfo) == "table" and type(configInfo.name) == "string" and configInfo.name ~= "" then
+    if ok and type(configInfo) == "table" then
+        return configInfo
+    end
+
+    return nil
+end
+
+local function GetConfigName(configID)
+    local configInfo = GetConfigInfo(configID)
+    if configInfo and type(configInfo.name) == "string" and configInfo.name ~= "" then
         return configInfo.name
     end
 
@@ -159,6 +239,64 @@ local function FindLoadoutOptionByExportString(options, exportString)
     return nil
 end
 
+local function FindActiveLoadoutOption(options, activeConfigID)
+    local activeOption = FindLoadoutOptionByConfigID(options, activeConfigID)
+    if activeOption then
+        return activeOption, "configID"
+    end
+
+    local activeExportString = GetConfigExportString(activeConfigID)
+    local activeExportOption = FindLoadoutOptionByExportString(options, activeExportString)
+    if activeExportOption then
+        return activeExportOption, "exportString"
+    end
+
+    return nil, nil
+end
+
+local function SyncLastSelectedSavedConfigID(specID, configID)
+    if type(specID) ~= "number"
+        or type(configID) ~= "number"
+        or not C_ClassTalents
+        or type(C_ClassTalents.UpdateLastSelectedSavedConfigID) ~= "function"
+    then
+        return false
+    end
+
+    local currentSavedConfigID = GetLastSelectedSavedConfigID(specID)
+    if currentSavedConfigID == configID then
+        LastRequestedSavedConfigIDBySpec[specID] = configID
+        return false
+    end
+
+    if LastRequestedSavedConfigIDBySpec[specID] == configID then
+        return false
+    end
+
+    local ok = pcall(C_ClassTalents.UpdateLastSelectedSavedConfigID, specID, configID)
+    if ok then
+        LastRequestedSavedConfigIDBySpec[specID] = configID
+    end
+
+    return ok
+end
+
+local function TrySyncSavedLoadoutSelection()
+    local _, specID = GetSpecInfo()
+    if type(specID) ~= "number" then
+        return nil, nil
+    end
+
+    local options = BuildLoadoutOptions()
+    local activeConfigID = GetActiveConfigID()
+    local matchedOption, matchMethod = FindActiveLoadoutOption(options, activeConfigID)
+    if matchedOption then
+        SyncLastSelectedSavedConfigID(specID, matchedOption.configID)
+    end
+
+    return matchedOption, matchMethod
+end
+
 local function ResolveCurrentLoadoutState()
     local _, specID, specName = GetSpecInfo()
     local options = BuildLoadoutOptions()
@@ -170,8 +308,7 @@ local function ResolveCurrentLoadoutState()
         return activeOption.configID, activeOption.name, options
     end
 
-    local activeExportString = GetConfigExportString(activeConfigID)
-    local activeExportOption = FindLoadoutOptionByExportString(options, activeExportString)
+    local activeExportOption = FindLoadoutOptionByExportString(options, GetConfigExportString(activeConfigID))
     if activeExportOption then
         return activeExportOption.configID, activeExportOption.name, options
     end
@@ -292,16 +429,6 @@ local function FallbackLoadConfig(configID)
 end
 
 local function LoadConfigThroughTalentFrame(configID, loadoutIndex)
-    local classTalentHelper = rawget(_G, "ClassTalentHelper")
-    if classTalentHelper and type(classTalentHelper.SwitchToLoadoutByIndex) == "function" and loadoutIndex then
-        local ok, err = pcall(classTalentHelper.SwitchToLoadoutByIndex, loadoutIndex)
-        if ok then
-            return true, nil
-        end
-
-        return false, err
-    end
-
     if type(PlayerSpellsFrame_LoadUI) == "function" and not rawget(_G, "PlayerSpellsFrame") then
         pcall(PlayerSpellsFrame_LoadUI)
     end
@@ -309,9 +436,21 @@ local function LoadConfigThroughTalentFrame(configID, loadoutIndex)
     local playerSpellsFrame = rawget(_G, "PlayerSpellsFrame")
     local talentsFrame = playerSpellsFrame and playerSpellsFrame.TalentsFrame
     if not talentsFrame or type(talentsFrame.LoadConfigByPredicate) ~= "function" then
+        local classTalentHelper = rawget(_G, "ClassTalentHelper")
+        if classTalentHelper and type(classTalentHelper.SwitchToLoadoutByIndex) == "function" and loadoutIndex then
+            local helperOk, helperErr = pcall(classTalentHelper.SwitchToLoadoutByIndex, loadoutIndex)
+            if helperOk then
+                return true, nil
+            end
+
+            return false, helperErr
+        end
+
         return FallbackLoadConfig(configID)
     end
 
+    -- Prefer the configID-based Blizzard path.
+    -- Index-based helper switching can drift when Blizzard's visible list is stale.
     local ok, err = pcall(function()
         talentsFrame:LoadConfigByPredicate(function(_, candidateConfigID)
             return candidateConfigID == configID
@@ -324,6 +463,138 @@ local function LoadConfigThroughTalentFrame(configID, loadoutIndex)
 
     return true, nil
 end
+
+local function DumpTalentLoadoutDebug(openConsole)
+    local debugConsole = BeavisQoL.DebugConsole
+    local moduleKey = DEBUG_MODULE_KEY
+
+    if not debugConsole or not debugConsole.Clear or not debugConsole.AppendLine then
+        PrintAddonMessage("Talent-Debug-Konsole ist nicht verfügbar.")
+        return false
+    end
+
+    debugConsole.Clear(moduleKey, { titleText = DEBUG_MODULE_TITLE, select = true })
+
+    if date then
+        debugConsole.AppendLine(moduleKey, "Zeit: " .. date("%Y-%m-%d %H:%M:%S"))
+    end
+
+    local _, specID, specName = GetSpecInfo()
+    local activeConfigID = GetActiveConfigID()
+    local selectedSavedConfigID = GetLastSelectedSavedConfigID(specID)
+    local rawConfigIDs = {}
+    local options = BuildLoadoutOptions()
+
+    if type(specID) == "number" and C_ClassTalents and type(C_ClassTalents.GetConfigIDsBySpecID) == "function" then
+        rawConfigIDs = C_ClassTalents.GetConfigIDsBySpecID(specID) or {}
+    end
+
+    local orderedConfigEntries = GetOrderedConfigIDs(rawConfigIDs)
+    local playerSpellsFrame = rawget(_G, "PlayerSpellsFrame")
+    local talentsFrame = playerSpellsFrame and playerSpellsFrame.TalentsFrame
+    local blizzardPlayerSpellsLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded(PLAYER_SPELLS_ADDON_NAME) == true or false
+
+    debugConsole.AppendLine(moduleKey, string.format(
+        "Spec: specID=%s | Name=%s",
+        tostring(specID),
+        tostring(specName or "?")
+    ))
+    debugConsole.AppendLine(moduleKey, string.format(
+        "ConfigIDs: active=%s | lastSelectedSaved=%s | savedCount=%d",
+        tostring(activeConfigID),
+        tostring(selectedSavedConfigID),
+        #orderedConfigEntries
+    ))
+    debugConsole.AppendLine(moduleKey, string.format(
+        "Frames: Blizzard_PlayerSpells=%s | PlayerSpellsFrame=%s | shown=%s | TalentsFrame=%s | LoadConfigByPredicate=%s",
+        tostring(blizzardPlayerSpellsLoaded),
+        tostring(playerSpellsFrame ~= nil),
+        tostring(playerSpellsFrame and playerSpellsFrame:IsShown() or false),
+        tostring(talentsFrame ~= nil),
+        tostring(talentsFrame and type(talentsFrame.LoadConfigByPredicate) == "function" or false)
+    ))
+    debugConsole.AppendLine(moduleKey, "")
+    debugConsole.AppendLine(moduleKey, "Raw ConfigIDs von Blizzard:")
+
+    local rawEntries = {}
+    for order, configID in pairs(rawConfigIDs) do
+        rawEntries[#rawEntries + 1] = {
+            order = order,
+            configID = configID,
+        }
+    end
+
+    table.sort(rawEntries, function(left, right)
+        local leftOrder = tostring(left.order)
+        local rightOrder = tostring(right.order)
+        if leftOrder == rightOrder then
+            return tostring(left.configID) < tostring(right.configID)
+        end
+
+        return leftOrder < rightOrder
+    end)
+
+    if #rawEntries == 0 then
+        debugConsole.AppendLine(moduleKey, "  (leer)")
+    else
+        for _, entry in ipairs(rawEntries) do
+            debugConsole.AppendLine(moduleKey, string.format("  [%s] = %s", tostring(entry.order), tostring(entry.configID)))
+        end
+    end
+
+    debugConsole.AppendLine(moduleKey, "")
+    debugConsole.AppendLine(moduleKey, "Gespeicherte Loadouts:")
+
+    if #orderedConfigEntries == 0 then
+        debugConsole.AppendLine(moduleKey, "  (keine gespeicherten Loadouts für diese Spec)")
+    else
+        for index, entry in ipairs(orderedConfigEntries) do
+            local configID = entry.configID
+            local configName = GetConfigName(configID)
+            local exportString = GetConfigExportString(configID)
+            debugConsole.AppendLine(moduleKey, string.format(
+                "  %d. configID=%s | name=%s | export=%s",
+                index,
+                tostring(configID),
+                tostring(configName or "?"),
+                FormatExportPreview(exportString)
+            ))
+        end
+    end
+
+    debugConsole.AppendLine(moduleKey, "")
+    debugConsole.AppendLine(moduleKey, string.format(
+        "Aktive Config: name=%s | export=%s",
+        tostring(GetConfigName(activeConfigID) or "?"),
+        FormatExportPreview(GetConfigExportString(activeConfigID))
+    ))
+    local matchedActiveOption, matchedBy = FindActiveLoadoutOption(options, activeConfigID)
+    debugConsole.AppendLine(moduleKey, string.format(
+        "Aktive Config-Match: method=%s | savedConfigID=%s | name=%s",
+        tostring(matchedBy or "none"),
+        tostring(matchedActiveOption and matchedActiveOption.configID or nil),
+        tostring(matchedActiveOption and matchedActiveOption.name or nil)
+    ))
+    debugConsole.AppendLine(moduleKey, string.format(
+        "Last Selected Saved: name=%s | export=%s",
+        tostring(GetConfigName(selectedSavedConfigID) or "?"),
+        FormatExportPreview(GetConfigExportString(selectedSavedConfigID))
+    ))
+    debugConsole.AppendLine(moduleKey, "")
+
+    AppendScalarTable(moduleKey, "Aktive ConfigInfo:", GetConfigInfo(activeConfigID))
+    debugConsole.AppendLine(moduleKey, "")
+    AppendScalarTable(moduleKey, "LastSelectedSaved ConfigInfo:", GetConfigInfo(selectedSavedConfigID))
+
+    if openConsole and debugConsole.Open then
+        debugConsole.Open(moduleKey)
+    end
+
+    PrintAddonMessage("Talent-Debug-Snapshot wurde in der Debug-Konsole aktualisiert.")
+    return true
+end
+
+BeavisQoL.DebugTalentLoadouts = DumpTalentLoadoutDebug
 
 local function SelectLoadout(option)
     if not option or not option.configID then
@@ -533,6 +804,7 @@ Watcher:SetScript("OnEvent", function(_, event, addonName)
         return
     end
 
+    TrySyncSavedLoadoutSelection()
     QueueRefresh(event == "PLAYER_ENTERING_WORLD" and 0.5 or DROPDOWN_REFRESH_DELAY)
 end)
 

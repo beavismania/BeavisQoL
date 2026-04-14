@@ -901,6 +901,10 @@ local function PrintDebugHelp()
     PrintBeavisMessage("Befehle: /beavis debug open [modul]")
 end
 
+local function PrintTalentDebugHelp()
+    PrintBeavisMessage("Befehle: /beavis talents debug")
+end
+
 SamplerFrame:SetScript("OnUpdate", function(_, elapsed)
     if not Profiler.IsEnabled() then
         return
@@ -945,6 +949,27 @@ function BeavisQoL.HandleSlashCommand(msg)
         end
 
         PrintDebugHelp()
+        return true
+    end
+
+    if commandName == "talent" or commandName == "talents" or commandName == "loadout" or commandName == "loadouts" then
+        local talentAction = string.lower(commandAction)
+
+        if talentAction == "" or talentAction == "help" then
+            PrintTalentDebugHelp()
+            return true
+        end
+
+        if talentAction == "debug" or talentAction == "dump" or talentAction == "open" then
+            if BeavisQoL.DebugTalentLoadouts then
+                BeavisQoL.DebugTalentLoadouts(true)
+            else
+                PrintBeavisMessage("Talent-Debug ist aktuell nicht verfügbar.")
+            end
+            return true
+        end
+
+        PrintTalentDebugHelp()
         return true
     end
 

@@ -1,7 +1,7 @@
 ## Title: Beavis Quality of Life
 ## Notes: Beavis QoL
 ## Author: Beavis
-## Version: 0.37.4
+## Version: 0.37.5
 ## Interface: 120001 
 ##X-GameVersion: 120001
 ## X-GameVersionLabel: Patch 12.0.1
