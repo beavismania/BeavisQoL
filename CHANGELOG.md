@@ -2,6 +2,15 @@
 
 ## Unveröffentlicht
 
+## 0.37.6 - 2026-04-14
+
+### Hotfix
+
+- `Organisierte Gruppen` repariert leere rechte Blizzard-Inhalte nach Gruppen- oder Raidwechsel jetzt auch dann robuster, wenn das Fenster erst später erneut geöffnet wird
+- `Organisierte Gruppen` ruft die Blizzard-Panel-Reparatur jetzt taint-ärmer über sichere Aufrufe auf, damit der `attempt to compare a secret number value`-Fehler im Application Viewer nicht mehr ausgelöst wird
+- `Talent-Loadout-Reminder` zeigt jetzt links neben dem Loadout das Spezialisierungs-Icon und darunter zusätzlich die aktuelle Looteinstellung mit Icon an
+- `Talent-Loadout-Reminder` nutzt jetzt ein kompakteres Kartenlayout und sitzt wieder fest oben mittig statt dynamisch unter dem Blizzard-Bereitschaftscheck
+
 ## 0.37.5 - 2026-04-14
 
 ### Hotfix

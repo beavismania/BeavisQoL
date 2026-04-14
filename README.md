@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.5`
+- Version: `0.37.6`
 - Release-Datum: `2026-04-14`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Talentfenster-Skalierung` lädt `Blizzard_PlayerSpells` nicht mehr schon beim Login vorab und greift damit weniger invasiv in den Blizzard-Talentframe ein
-  - `Loadout`-Logik ordnet aktive Arbeitskopien jetzt wieder dem passenden gespeicherten Build zu und synchronisiert dafür bei Bedarf auch `lastSelectedSaved`
-  - neues Talent-Debug über `/beavis talents debug` zeigt Blizzard-Loadoutliste, aktive Konfiguration und Match-Zuordnung direkt live an
+  - `Organisierte Gruppen` fängt leere rechte Blizzard-Inhalte nach Gruppen- und Raidwechseln robuster ab
+  - `Organisierte Gruppen` ruft die Blizzard-Panel-Reparatur jetzt taint-ärmer auf und entschärft damit den `secret number value`-Fehler im Application Viewer
+  - `Talent-Loadout-Reminder` zeigt jetzt Spezialisierungs- und Loot-Icons in einem kompakteren, fest oben mittig sitzenden Layout
 
 ## Download
 
@@ -135,6 +135,7 @@ Beispiele:
   - kann das Fenster fixieren oder zum Verschieben freigeben
 - `Talent-Loadout-Reminder`
   - zeigt bei jedem Bereitschaftscheck oben mittig das aktuell aktive Talent-Loadout an
+  - blendet links neben dem Loadout das Spezialisierungs-Icon und darunter die aktuelle Looteinstellung mit Icon ein
   - blendet sich nach zehn Sekunden automatisch aus oder lässt sich per kleinem `x` schließen
 
 ### Interface & Kampf

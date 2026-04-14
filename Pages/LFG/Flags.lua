@@ -13,6 +13,7 @@ local L = BeavisQoL.L
 -- Applicant- und Suchergebnis-Hooks kommen getrennt rein, weil Blizzard beides zu unterschiedlichen Zeitpunkten laden kann.
 local applicantHookInstalled = false
 local searchResultHookInstalled = false
+local lfgListFrameRepairHookInstalled = false
 local DEFAULT_EASY_LFG_SCALE = 0.90
 local MIN_EASY_LFG_SCALE = 0.70
 local MAX_EASY_LFG_SCALE = 1.15
@@ -45,6 +46,7 @@ local EasyLFGNextApplicantOrder = 1
 local EasyLFGRemovalRefreshAt = nil
 local EasyLFGRemovalRefreshSerial = 0
 local EasyLFGPanelRepairSerial = 0
+local BLIZZARD_LFG_PANEL_REPAIR_DELAYS = { 0, 0.05, 0.20 }
 local EasyLFGRioTooltip = nil
 local EasyLFGRioAnchor = nil
 local EasyLFGRioPanel = nil
@@ -68,6 +70,41 @@ local EASY_LFG_RIO_DIFFICULTY_LABELS = {
     [3] = "HC",
     [4] = "M",
 }
+
+local function SafeSecureCall(func, ...)
+    if type(func) ~= "function" then
+        return false
+    end
+
+    local secureCall = rawget(_G, "securecallfunction")
+    if type(secureCall) == "function" then
+        local ok = pcall(secureCall, func, ...)
+        return ok == true
+    end
+
+    local ok = pcall(func, ...)
+    return ok == true
+end
+
+local function SafeSecureCallMethod(target, methodName, ...)
+    if not target or type(methodName) ~= "string" or methodName == "" then
+        return false
+    end
+
+    local method = target[methodName]
+    if type(method) ~= "function" then
+        return false
+    end
+
+    local secureCall = rawget(_G, "securecallfunction")
+    if type(secureCall) == "function" then
+        local ok = pcall(secureCall, method, target, ...)
+        return ok == true
+    end
+
+    local ok = pcall(method, target, ...)
+    return ok == true
+end
 
 local function NormalizeListingPresetLineEndings(text)
     if type(text) ~= "string" then
@@ -1360,27 +1397,21 @@ local function IsLFGPanelShown(panel)
 end
 
 local function SetLFGListActivePanelSafe(panel)
-    if not panel then
+    if not panel or not LFGListFrame then
         return false
     end
 
     if type(LFGListFrame_SetActivePanel) == "function" then
-        local ok = pcall(LFGListFrame_SetActivePanel, panel)
+        local ok = SafeSecureCall(LFGListFrame_SetActivePanel, LFGListFrame, panel)
         if ok then
             return true
         end
 
-        if LFGListFrame then
-            ok = pcall(LFGListFrame_SetActivePanel, LFGListFrame, panel)
-            if ok then
-                return true
-            end
-        end
+        return false
     end
 
     if panel.Show then
-        local ok = pcall(panel.Show, panel)
-        return ok == true
+        return SafeSecureCallMethod(panel, "Show")
     end
 
     return false
@@ -1393,24 +1424,23 @@ local function RefreshLFGFallbackPanel(panel)
 
     if LFGListFrame and panel == LFGListFrame.SearchPanel then
         if type(LFGListSearchPanel_UpdateResultList) == "function" then
-            pcall(LFGListSearchPanel_UpdateResultList, panel)
+            SafeSecureCall(LFGListSearchPanel_UpdateResultList, panel)
         elseif type(LFGListSearchPanel_UpdateResults) == "function" then
-            pcall(LFGListSearchPanel_UpdateResults, panel)
+            SafeSecureCall(LFGListSearchPanel_UpdateResults, panel)
         elseif type(LFGListSearchPanel_Update) == "function" then
-            pcall(LFGListSearchPanel_Update, panel)
+            SafeSecureCall(LFGListSearchPanel_Update, panel)
         end
         return
     end
 
     if LFGListFrame and panel == LFGListFrame.EntryCreation and type(LFGListEntryCreation_Update) == "function" then
-        pcall(LFGListEntryCreation_Update, panel)
+        SafeSecureCall(LFGListEntryCreation_Update, panel)
     end
 end
 
 local function RepairBlizzardLFGPanelState()
     local lfgListFrame = LFGListFrame
-    local pveFrameShown = PVEFrame and PVEFrame.IsShown and PVEFrame:IsShown() == true
-    if not lfgListFrame or (not pveFrameShown and not IsLFGPanelShown(lfgListFrame)) then
+    if not lfgListFrame or not IsLFGPanelShown(lfgListFrame) then
         return false
     end
 
@@ -1446,14 +1476,14 @@ end
 
 local function ScheduleBlizzardLFGPanelRepair(delaySeconds)
     local delay = tonumber(delaySeconds) or 0
+    EasyLFGPanelRepairSerial = EasyLFGPanelRepairSerial + 1
+    local repairSerial = EasyLFGPanelRepairSerial
 
     if not C_Timer or type(C_Timer.After) ~= "function" then
         RepairBlizzardLFGPanelState()
-        return
+        return repairSerial
     end
 
-    EasyLFGPanelRepairSerial = EasyLFGPanelRepairSerial + 1
-    local repairSerial = EasyLFGPanelRepairSerial
     C_Timer.After(math.max(0, delay), function()
         if repairSerial ~= EasyLFGPanelRepairSerial then
             return
@@ -1461,20 +1491,50 @@ local function ScheduleBlizzardLFGPanelRepair(delaySeconds)
 
         RepairBlizzardLFGPanelState()
     end)
+
+    return repairSerial
+end
+
+local function ScheduleBlizzardLFGPanelRepairBurst()
+    local repairSerial = ScheduleBlizzardLFGPanelRepair(0)
+
+    if not repairSerial or not C_Timer or type(C_Timer.After) ~= "function" then
+        return
+    end
+
+    for index = 2, #BLIZZARD_LFG_PANEL_REPAIR_DELAYS do
+        local delay = BLIZZARD_LFG_PANEL_REPAIR_DELAYS[index]
+        C_Timer.After(delay, function()
+            if repairSerial ~= EasyLFGPanelRepairSerial then
+                return
+            end
+
+            RepairBlizzardLFGPanelState()
+        end)
+    end
+end
+
+local function TryInstallBlizzardLFGPanelRepairHooks()
+    if not lfgListFrameRepairHookInstalled and LFGListFrame and LFGListFrame.HookScript then
+        LFGListFrame:HookScript("OnShow", function()
+            ScheduleBlizzardLFGPanelRepairBurst()
+        end)
+        lfgListFrameRepairHookInstalled = true
+    end
 end
 
 local function HideBlizzardLFGWindow()
     if PVEFrame and PVEFrame.IsShown and PVEFrame:IsShown() then
         if type(HideUIPanel) == "function" then
-            pcall(HideUIPanel, PVEFrame)
+            SafeSecureCall(HideUIPanel, PVEFrame)
         elseif PVEFrame.Hide then
-            pcall(PVEFrame.Hide, PVEFrame)
+            SafeSecureCallMethod(PVEFrame, "Hide")
         end
         return
     end
 
     if LFGListFrame and LFGListFrame.IsShown and LFGListFrame:IsShown() and LFGListFrame.Hide then
-        pcall(LFGListFrame.Hide, LFGListFrame)
+        SafeSecureCallMethod(LFGListFrame, "Hide")
     end
 end
 
@@ -1484,19 +1544,19 @@ local function OpenActiveEasyLFGListingEditor()
     end
 
     if type(PVEFrame_ShowFrame) == "function" then
-        pcall(PVEFrame_ShowFrame, "GroupFinderFrame", rawget(_G, "LFGListPVEStub"))
+        SafeSecureCall(PVEFrame_ShowFrame, "GroupFinderFrame", rawget(_G, "LFGListPVEStub"))
     elseif type(PVEFrame_ToggleFrame) == "function" and (not PVEFrame or not PVEFrame:IsShown()) then
-        pcall(PVEFrame_ToggleFrame)
+        SafeSecureCall(PVEFrame_ToggleFrame)
     end
 
     if C_LFGList and type(C_LFGList.EditEntry) == "function" then
-        pcall(C_LFGList.EditEntry)
+        SafeSecureCall(C_LFGList.EditEntry)
     end
 
     local applicationViewer = LFGListFrame and LFGListFrame.ApplicationViewer or nil
     if applicationViewer and applicationViewer.EditButton and applicationViewer.EditButton.Click then
         if applicationViewer.EditButton.IsEnabled == nil or applicationViewer.EditButton:IsEnabled() then
-            applicationViewer.EditButton:Click()
+            SafeSecureCallMethod(applicationViewer.EditButton, "Click")
             return
         end
     end
@@ -1507,20 +1567,17 @@ local function OpenActiveEasyLFGListingEditor()
     end
 
     if type(C_LFGList.CopyActiveEntryInfoToCreationFields) == "function" then
-        pcall(C_LFGList.CopyActiveEntryInfoToCreationFields)
+        SafeSecureCall(C_LFGList.CopyActiveEntryInfoToCreationFields)
     end
 
-    if type(LFGListFrame_SetActivePanel) == "function" then
-        local ok = pcall(LFGListFrame_SetActivePanel, entryCreation)
-        if not ok then
-            pcall(LFGListFrame_SetActivePanel, LFGListFrame, entryCreation)
-        end
+    if type(LFGListFrame_SetActivePanel) == "function" and LFGListFrame then
+        SafeSecureCall(LFGListFrame_SetActivePanel, LFGListFrame, entryCreation)
     elseif entryCreation.Show then
-        pcall(entryCreation.Show, entryCreation)
+        SafeSecureCallMethod(entryCreation, "Show")
     end
 
     if type(LFGListEntryCreation_Update) == "function" then
-        pcall(LFGListEntryCreation_Update, entryCreation)
+        SafeSecureCall(LFGListEntryCreation_Update, entryCreation)
     end
 end
 
@@ -3324,6 +3381,7 @@ FlagWatcher:SetScript("OnEvent", function(_, event, ...)
     end
 
     TryInstallHooks()
+    TryInstallBlizzardLFGPanelRepairHooks()
 
     if LFG.IsFlagsEnabled() then
         RefreshVisibleApplicantFlags()
@@ -3332,9 +3390,10 @@ FlagWatcher:SetScript("OnEvent", function(_, event, ...)
 
     if LFG.IsEasyLFGEnabled and LFG.IsEasyLFGEnabled() then
         RefreshEasyLFGOverlay()
-        if event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" or event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
-            ScheduleBlizzardLFGPanelRepair(0.05)
-        end
+    end
+
+    if event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" or event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
+        ScheduleBlizzardLFGPanelRepairBurst()
     end
 end)
 
