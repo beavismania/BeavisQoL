@@ -45,9 +45,22 @@ local function GetConfigName(configID)
         return nil
     end
 
-    local configInfo = C_Traits.GetConfigInfo(configID)
-    if type(configInfo) == "table" and type(configInfo.name) == "string" and configInfo.name ~= "" then
+    local ok, configInfo = pcall(C_Traits.GetConfigInfo, configID)
+    if ok and type(configInfo) == "table" and type(configInfo.name) == "string" and configInfo.name ~= "" then
         return configInfo.name
+    end
+
+    return nil
+end
+
+local function GetConfigExportString(configID)
+    if type(configID) ~= "number" or not C_Traits or type(C_Traits.GenerateImportString) ~= "function" then
+        return nil
+    end
+
+    local ok, exportString = pcall(C_Traits.GenerateImportString, configID)
+    if ok and type(exportString) == "string" and exportString ~= "" then
+        return exportString
     end
 
     return nil
@@ -75,8 +88,27 @@ local function BuildLoadoutOptions(specID)
     end
 
     local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID) or {}
+    local orderedEntries = {}
+    for order, configID in pairs(configIDs) do
+        if type(configID) == "number" then
+            orderedEntries[#orderedEntries + 1] = {
+                order = type(order) == "number" and order or (#orderedEntries + 1),
+                configID = configID,
+            }
+        end
+    end
+
+    table.sort(orderedEntries, function(left, right)
+        if left.order == right.order then
+            return left.configID < right.configID
+        end
+
+        return left.order < right.order
+    end)
+
     local options = {}
-    for index, configID in ipairs(configIDs) do
+    for index, entry in ipairs(orderedEntries) do
+        local configID = entry.configID
         local name = GetConfigName(configID)
         if not name or name == "" then
             name = L("CHONKY_LOADOUT_FALLBACK_NAME"):format(index)
@@ -105,6 +137,24 @@ local function FindLoadoutOptionByConfigID(options, configID)
     return nil
 end
 
+local function FindLoadoutOptionByExportString(options, exportString)
+    if type(exportString) ~= "string" or exportString == "" then
+        return nil
+    end
+
+    for _, option in ipairs(options or {}) do
+        if option.exportString == nil then
+            option.exportString = GetConfigExportString(option.configID) or false
+        end
+
+        if option.exportString == exportString then
+            return option
+        end
+    end
+
+    return nil
+end
+
 local function GetCurrentLoadoutName()
     local _, specID, specName = GetCurrentSpecInfo()
     local options = BuildLoadoutOptions(specID)
@@ -114,6 +164,12 @@ local function GetCurrentLoadoutName()
     local activeOption = FindLoadoutOptionByConfigID(options, activeConfigID)
     if activeOption then
         return activeOption.name
+    end
+
+    local activeExportString = GetConfigExportString(activeConfigID)
+    local activeExportOption = FindLoadoutOptionByExportString(options, activeExportString)
+    if activeExportOption then
+        return activeExportOption.name
     end
 
     local selectedSavedOption = FindLoadoutOptionByConfigID(options, selectedSavedConfigID)

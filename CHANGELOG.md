@@ -1,5 +1,15 @@
 # Changelog
 
+## Unveröffentlicht
+
+## 0.37.4 - 2026-04-14
+
+### Hotfix
+
+- `Saison Portale` zeigt Abklingzeiten in der Liste und im Tooltip jetzt nur noch als Stunden/Minuten ohne Sekunden an
+- `Loadout`-Anzeigen lesen Blizzard-Konfigurationslisten jetzt robuster aus, damit `Chonky`-Dropdown und `Talent-Loadout-Reminder` aktive Talent-Loadouts wieder korrekt darstellen
+- `Loadout`-Anzeigen gleichen die aktive Blizzard-Konfiguration bei Bedarf zusätzlich über den tatsächlichen Build-String mit gespeicherten Loadouts ab, damit nicht mehr fälschlich `Kein Loadout` erscheint
+
 ## 0.37.3 - 2026-04-14
 
 ### Hotfix

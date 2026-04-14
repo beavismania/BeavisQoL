@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.3`
+- Version: `0.37.4`
 - Release-Datum: `2026-04-14`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Talentfenster-Skalierung` bleibt jetzt auch mit aktivem `TalentTreeTweaks` stabil auf dem in BeavisQoL eingestellten Wert
-  - `Saison Portale` erkennt jetzt, ob ein Portal auf Abklingzeit ist, und zeigt die Abklingzeit direkt in der Liste an
-  - `Talent-Loadout-Reminder` zeigt bei jedem Bereitschaftscheck oben mittig das aktuelle Talent-Loadout inklusive aktivem Loadout-Namen an und blendet sich nach zehn Sekunden oder per `x` wieder aus
+  - `Saison Portale` zeigt Abklingzeiten in Liste und Tooltip jetzt nur noch als Stunden/Minuten ohne Sekunden an
+  - `Chonky`-Dropdown und `Talent-Loadout-Reminder` lesen Blizzard-Konfigurationslisten robuster aus und erkennen aktive Talent-Loadouts wieder zuverlässiger
+  - `Loadout`-Anzeigen gleichen aktive Blizzard-Konfigurationen bei Bedarf zusätzlich über den tatsächlichen Talent-Build ab, damit nicht mehr fälschlich `Kein Loadout` erscheint
 
 ## Download
 

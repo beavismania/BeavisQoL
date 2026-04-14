@@ -372,16 +372,15 @@ local function FormatCooldownTime(seconds)
         return nil
     end
 
-    local totalSeconds = math.floor(seconds + 0.5)
+    local totalSeconds = math.floor(seconds)
     local hours = math.floor(totalSeconds / 3600)
     local minutes = math.floor((totalSeconds % 3600) / 60)
-    local secs = totalSeconds % 60
 
     if hours > 0 then
-        return string.format("%d:%02d:%02d", hours, minutes, secs)
+        return string.format("%d:%02d", hours, minutes)
     end
 
-    return string.format("%d:%02d", minutes, secs)
+    return string.format("0:%02d", math.max(1, minutes))
 end
 
 local function GetDungeonDisplayName(dungeonData)
