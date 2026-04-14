@@ -2,6 +2,13 @@
 
 ## Unveröffentlicht
 
+## 0.37.7 - 2026-04-14
+
+### Hotfix
+
+- `SmartLFG` steuert das Blizzard-Fenster `Dungeons & Schlachtzüge` automatisch nur noch zum Schließen bei eigener aktiver Listung an; die problematische automatische Panel-Reparatur wurde entfernt, während die expliziten SmartLFG-Aktionen wie `Bearb.` erhalten bleiben
+- der Titel im `Talent-Loadout-Reminder` heißt jetzt `Readycheck Info` statt `Achtung!`
+
 ## 0.37.6 - 2026-04-14
 
 ### Hotfix

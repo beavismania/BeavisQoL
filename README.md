@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.6`
+- Version: `0.37.7`
 - Release-Datum: `2026-04-14`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Organisierte Gruppen` fängt leere rechte Blizzard-Inhalte nach Gruppen- und Raidwechseln robuster ab
-  - `Organisierte Gruppen` ruft die Blizzard-Panel-Reparatur jetzt taint-ärmer auf und entschärft damit den `secret number value`-Fehler im Application Viewer
-  - `Talent-Loadout-Reminder` zeigt jetzt Spezialisierungs- und Loot-Icons in einem kompakteren, fest oben mittig sitzenden Layout
+  - `SmartLFG` schließt bei eigener aktiver Listung weiterhin das große Blizzard-Fenster, verzichtet aber auf die problematische automatische Blizzard-Panel-Reparatur
+  - explizite SmartLFG-Aktionen wie `Bearb.` bleiben erhalten, ohne das Blizzard-Fenster dauerhaft im Hintergrund umzubauen
+  - der `Talent-Loadout-Reminder` zeigt als Titel jetzt `Readycheck Info`
 
 ## Download
 
@@ -158,6 +158,7 @@ Beispiele:
 - `Gruppensuche`
   - Länderflaggen in der Premade-Suche mit robusterer Realm-Erkennung für mehr Regionen
   - `SmartLFG` als kompaktes Bewerber-Overlay für eigene aktive Listungen
+  - `SmartLFG` schließt beim Wechsel auf eine eigene aktive Listung das große Blizzard-Fenster; die automatische Blizzard-Fenster-Reparatur wurde entfernt, die expliziten SmartLFG-Aktionen wie `Bearb.` bleiben erhalten
   - Invite-Timer für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen
   - optionaler Countdown-Sound in den letzten fünf Sekunden
 - `Listing-Presets`

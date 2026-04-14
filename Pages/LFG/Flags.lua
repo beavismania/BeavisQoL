@@ -13,7 +13,6 @@ local L = BeavisQoL.L
 -- Applicant- und Suchergebnis-Hooks kommen getrennt rein, weil Blizzard beides zu unterschiedlichen Zeitpunkten laden kann.
 local applicantHookInstalled = false
 local searchResultHookInstalled = false
-local lfgListFrameRepairHookInstalled = false
 local DEFAULT_EASY_LFG_SCALE = 0.90
 local MIN_EASY_LFG_SCALE = 0.70
 local MAX_EASY_LFG_SCALE = 1.15
@@ -45,8 +44,6 @@ local EasyLFGApplicantStates = {}
 local EasyLFGNextApplicantOrder = 1
 local EasyLFGRemovalRefreshAt = nil
 local EasyLFGRemovalRefreshSerial = 0
-local EasyLFGPanelRepairSerial = 0
-local BLIZZARD_LFG_PANEL_REPAIR_DELAYS = { 0, 0.05, 0.20 }
 local EasyLFGRioTooltip = nil
 local EasyLFGRioAnchor = nil
 local EasyLFGRioPanel = nil
@@ -1394,133 +1391,6 @@ end
 
 local function IsLFGPanelShown(panel)
     return panel and panel.IsShown and panel:IsShown() == true
-end
-
-local function SetLFGListActivePanelSafe(panel)
-    if not panel or not LFGListFrame then
-        return false
-    end
-
-    if type(LFGListFrame_SetActivePanel) == "function" then
-        local ok = SafeSecureCall(LFGListFrame_SetActivePanel, LFGListFrame, panel)
-        if ok then
-            return true
-        end
-
-        return false
-    end
-
-    if panel.Show then
-        return SafeSecureCallMethod(panel, "Show")
-    end
-
-    return false
-end
-
-local function RefreshLFGFallbackPanel(panel)
-    if not panel then
-        return
-    end
-
-    if LFGListFrame and panel == LFGListFrame.SearchPanel then
-        if type(LFGListSearchPanel_UpdateResultList) == "function" then
-            SafeSecureCall(LFGListSearchPanel_UpdateResultList, panel)
-        elseif type(LFGListSearchPanel_UpdateResults) == "function" then
-            SafeSecureCall(LFGListSearchPanel_UpdateResults, panel)
-        elseif type(LFGListSearchPanel_Update) == "function" then
-            SafeSecureCall(LFGListSearchPanel_Update, panel)
-        end
-        return
-    end
-
-    if LFGListFrame and panel == LFGListFrame.EntryCreation and type(LFGListEntryCreation_Update) == "function" then
-        SafeSecureCall(LFGListEntryCreation_Update, panel)
-    end
-end
-
-local function RepairBlizzardLFGPanelState()
-    local lfgListFrame = LFGListFrame
-    if not lfgListFrame or not IsLFGPanelShown(lfgListFrame) then
-        return false
-    end
-
-    local categorySelection = lfgListFrame.CategorySelection or rawget(_G, "LFGListCategorySelection")
-    local searchPanel = lfgListFrame.SearchPanel
-    local applicationViewer = lfgListFrame.ApplicationViewer
-    local entryCreation = lfgListFrame.EntryCreation
-
-    local hasVisiblePanel = IsLFGPanelShown(categorySelection)
-        or IsLFGPanelShown(searchPanel)
-        or IsLFGPanelShown(applicationViewer)
-        or IsLFGPanelShown(entryCreation)
-    local controllableListing = HasActiveListing() and IsPlayerListingLeader()
-    local stuckOnListingPanel = not controllableListing
-        and IsLFGPanelShown(applicationViewer)
-
-    if hasVisiblePanel and not stuckOnListingPanel then
-        return false
-    end
-
-    local fallbackPanel = categorySelection or searchPanel
-    if not fallbackPanel then
-        return false
-    end
-
-    local restored = SetLFGListActivePanelSafe(fallbackPanel)
-    if restored then
-        RefreshLFGFallbackPanel(fallbackPanel)
-    end
-
-    return restored
-end
-
-local function ScheduleBlizzardLFGPanelRepair(delaySeconds)
-    local delay = tonumber(delaySeconds) or 0
-    EasyLFGPanelRepairSerial = EasyLFGPanelRepairSerial + 1
-    local repairSerial = EasyLFGPanelRepairSerial
-
-    if not C_Timer or type(C_Timer.After) ~= "function" then
-        RepairBlizzardLFGPanelState()
-        return repairSerial
-    end
-
-    C_Timer.After(math.max(0, delay), function()
-        if repairSerial ~= EasyLFGPanelRepairSerial then
-            return
-        end
-
-        RepairBlizzardLFGPanelState()
-    end)
-
-    return repairSerial
-end
-
-local function ScheduleBlizzardLFGPanelRepairBurst()
-    local repairSerial = ScheduleBlizzardLFGPanelRepair(0)
-
-    if not repairSerial or not C_Timer or type(C_Timer.After) ~= "function" then
-        return
-    end
-
-    for index = 2, #BLIZZARD_LFG_PANEL_REPAIR_DELAYS do
-        local delay = BLIZZARD_LFG_PANEL_REPAIR_DELAYS[index]
-        C_Timer.After(delay, function()
-            if repairSerial ~= EasyLFGPanelRepairSerial then
-                return
-            end
-
-            RepairBlizzardLFGPanelState()
-        end)
-    end
-end
-
-local function TryInstallBlizzardLFGPanelRepairHooks()
-    if not lfgListFrameRepairHookInstalled and LFGListFrame and LFGListFrame.HookScript then
-        LFGListFrame:HookScript("OnShow", function()
-            ScheduleBlizzardLFGPanelRepairBurst()
-        end)
-        lfgListFrameRepairHookInstalled = true
-    end
 end
 
 local function HideBlizzardLFGWindow()
@@ -3381,7 +3251,6 @@ FlagWatcher:SetScript("OnEvent", function(_, event, ...)
     end
 
     TryInstallHooks()
-    TryInstallBlizzardLFGPanelRepairHooks()
 
     if LFG.IsFlagsEnabled() then
         RefreshVisibleApplicantFlags()
@@ -3390,10 +3259,6 @@ FlagWatcher:SetScript("OnEvent", function(_, event, ...)
 
     if LFG.IsEasyLFGEnabled and LFG.IsEasyLFGEnabled() then
         RefreshEasyLFGOverlay()
-    end
-
-    if event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" or event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_ENTERING_WORLD" then
-        ScheduleBlizzardLFGPanelRepairBurst()
     end
 end)
 
