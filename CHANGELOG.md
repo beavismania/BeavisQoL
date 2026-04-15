@@ -2,23 +2,29 @@
 
 ## Unveröffentlicht
 
+## 0.37.10 - 2026-04-15
+
+### Hotfix
+
+- `Währungssuche` reagiert beim Tippen wieder direkt auf Treffer.
+- `Tooltip-Itemlevel` wurde für Mouseover-Tooltips weiter stabilisiert.
+- `Jagd-Fortschritt` zählt aktive Midnight-Jagden jetzt direkt über echte Prey-Widget-Updates innerhalb der aktuellen Stufe als Prozent am Blizzard-Symbol hoch.
+
 ## 0.37.9 - 2026-04-15
 
 ### Hotfix
 
-- `Währungssuche` lässt den Blizzard-Transferpfad für kontoweite Währungen jetzt unangetastet, damit beim Überweisen kein `ADDON_ACTION_FORBIDDEN` mehr über `RequestCurrencyFromAccountCharacter` ausgelöst wird
-- `Saison Portale` verschiebt geschützte Fenster-Refreshes jetzt bis nach dem Kampf, damit kein `ADDON_ACTION_BLOCKED` mehr durch `Button:Hide()` aus der Portal-Liste ausgelöst wird
-- `SmartLFG` greift beim Wechsel auf die eigene aktive Listung nicht mehr automatisch in das Blizzard-LFG-Fenster ein, damit das Overlay ohne zusätzliche Panel-Eingriffe stabil bleibt
-- `Gruppenplaner` nutzt bei `!enter` wieder einen einfachen Rollen-Workflow ohne Klassenzwang, damit Whisper-Einträge schneller in die Planung und wieder sauber in normale sowie Battle.net-Invites laufen
-- `Gruppenplaner` validiert Rollen jetzt strenger gegen bekannte Klasse und Spec, damit unmögliche Zuordnungen wie `Tank` auf einem Heilschamanen nicht im Dungeon-Planer hängenbleiben
+- `Saison Portale` Versch. Fehler wurden behoben.
+- `SmartLFG` Versch. Fehler wurden behoben.
+- `Gruppenplaner` nutzt nun wieder Rollenautomatisierung.
 - der `Gruppenplaner` erlaubt beim Slot-Bearbeiten jetzt eine feste Rollenwahl für Spieler im Planer, tauscht Dungeon-Slots bei Bedarf passend um und behandelt die manuelle Rolle wichtiger als später erkannte Gruppenspezialisierungen
-- der Slot-Editor im `Gruppenplaner` befüllt bestehende Namen robuster vor, statt bekannte Einträge beim Bearbeiten leer zu zeigen
+- der Slot-Editor im `Gruppenplaner` befüllt Namen jetzt vor.
 
 ## 0.37.8 - 2026-04-14
 
 ### Hotfix
 
-- kleiner Aufräum-Release ohne beabsichtigte Funktionsänderung: tote LFG-Hilfsfunktion entfernt und ungenutzte doppelte Font-Dateien aus dem Release-Paket bereinigt
+- Verschlankung der Addonstruktur
 
 ## 0.37.7 - 2026-04-14
 

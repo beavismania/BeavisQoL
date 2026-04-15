@@ -21,7 +21,6 @@ local tooltipItemLevelLines = setmetatable({}, { __mode = "k" })
 -- Solange eine Inspect-Anfrage läuft, merken wir uns nur den festen Unit-Token.
 -- Auch hier vermeiden wir absichtlich GUIDs im Laufweg dieses Moduls.
 local pendingInspectUnit = nil
-local pendingInspectGUID = nil
 local lastInspectRequestTime = 0
 local inspectFrameProtectionUntil = 0
 local inspectFrameHooksInstalled = false
@@ -120,7 +119,7 @@ end
 
 local function SafeUnitGUID(unit)
     local guid = SafeCall(UnitGUID, unit)
-    if type(guid) == "string" and guid ~= "" then
+    if type(guid) == "string" then
         return guid
     end
 
@@ -128,11 +127,6 @@ local function SafeUnitGUID(unit)
 end
 
 local function GetInspectCacheKey(unit)
-    local guid = SafeUnitGUID(unit)
-    if guid then
-        return guid
-    end
-
     if type(unit) == "string" and unit ~= "" then
         return "unit:" .. unit
     end
@@ -415,7 +409,6 @@ end
 -- Das ist wichtig, damit keine alte Anfrage später falsche Tooltips verändert.
 local function ClearPendingInspect()
     pendingInspectUnit = nil
-    pendingInspectGUID = nil
 end
 
 -- Zeigt ein Itemlevel sofort aus dem Cache an.
@@ -480,7 +473,6 @@ local function RequestInspectForTooltip(tooltip, unit)
     end
 
     pendingInspectUnit = unit
-    pendingInspectGUID = SafeUnitGUID(unit)
     lastInspectRequestTime = now
 
     SafeNotifyInspect(unit)
@@ -497,8 +489,14 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
         return
     end
 
-    if pendingInspectGUID and type(inspecteeGUID) == "string" and inspecteeGUID ~= "" then
-        if not SafeStringsEqual(inspecteeGUID, pendingInspectGUID) then
+    -- GUID-Abgleich erst hier, nie im geschützten Tooltip-Laufweg.
+    local pendingUnitGUID = SafeUnitGUID(pendingInspectUnit)
+    if pendingUnitGUID and type(inspecteeGUID) == "string" then
+        if not SafeStringsEqual(inspecteeGUID, pendingUnitGUID) then
+            if ClearInspectPlayer then
+                ClearInspectPlayer()
+            end
+            ClearPendingInspect()
             return
         end
     end

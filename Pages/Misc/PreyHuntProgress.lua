@@ -12,18 +12,23 @@ local GetPreyHuntProgressWidgetVisualizationInfo = C_UIWidgetManager and C_UIWid
 local GetNumQuestLeaderBoards = rawget(_G, "GetNumQuestLeaderBoards")
 local GetQuestObjectiveInfo = rawget(_G, "GetQuestObjectiveInfo")
 local GetQuestProgressBarPercent = rawget(_G, "GetQuestProgressBarPercent")
+local GetCurrencyInfo = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo
+local GetCurrencyListSize = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListSize
+local GetCurrencyListInfo = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListInfo
+local GetTimeSeconds = rawget(_G, "GetTime")
 
 local PREY_UPDATE_INTERVAL = 0.25
+local PREY_WIDGET_SIGNAL_DEBOUNCE = 0.20
 local PREY_HUNT_WIDGET_TYPE = (Enum and Enum.UIWidgetVisualizationType and Enum.UIWidgetVisualizationType.PreyHuntProgress) or 31
 -- Stand 12.0.1 nutzt Blizzard für die Jagd-Widgets dieses Set.
 -- Die Suche läuft trotzdem erst dynamisch über registrierte Container
 -- und fällt nur im Zweifel auf diese bekannte ID zurück.
 local KNOWN_PREY_WIDGET_SET_ID = 1843
-local PREY_STAGE_PERCENT = {
-    [0] = 0,
-    [1] = 34,
-    [2] = 67,
-    [3] = 100,
+local PREY_STAGE_RANGES = {
+    [0] = { min = 0, max = 33 },
+    [1] = { min = 34, max = 66 },
+    [2] = { min = 67, max = 99 },
+    [3] = { min = 100, max = 100 },
 }
 
 local baseGetMiscDB = Misc.GetMiscDB
@@ -31,6 +36,15 @@ local watcherActive = false
 local cachedWidgetSetID = nil
 local livePreyWidgetID = nil
 local livePreyWidgetSetID = nil
+local trackedPreyCurrencyID = nil
+local trackedPreyCurrencyQuantity = nil
+local heuristicPreyPercent = nil
+local heuristicPreyStage = nil
+local lastObservedQuestPercent = nil
+local lastObservedWidgetPercent = nil
+local lastObservedPreyTooltip = nil
+local lastDirectWidgetSignalStage = nil
+local lastDirectWidgetSignalAt = nil
 
 local PreyHuntOverlay = CreateFrame("Frame", "BeavisQoLPreyHuntProgressOverlay", UIParent)
 PreyHuntOverlay:SetSize(40, 16)
@@ -156,49 +170,179 @@ local function GetOverlayColorForProgressState(progressState)
 end
 
 local function GetProgressPercentFromStage(progressState)
-    if progressState == nil then
+    local stageRange = progressState ~= nil and PREY_STAGE_RANGES[progressState] or nil
+    if not stageRange then
         return nil
     end
 
-    return PREY_STAGE_PERCENT[progressState]
+    return stageRange.min
 end
 
-local function GetStageIndexFromProgress(progressState, progressPercent)
-    if progressState ~= nil then
-        return math.max(1, math.min(4, progressState + 1))
+local function GetProgressPercentCapForStage(progressState)
+    local stageRange = progressState ~= nil and PREY_STAGE_RANGES[progressState] or nil
+    if not stageRange then
+        return nil
     end
 
+    return stageRange.max
+end
+
+local function GetVisiblePercentValue(progressPercent)
     local numericPercent = tonumber(progressPercent)
     if not numericPercent then
         return nil
     end
 
-    if numericPercent >= 100 then
-        return 4
+    numericPercent = math.max(0, math.min(100, numericPercent))
+    if numericPercent > 0 and numericPercent < 1 then
+        return 1
     end
 
-    if numericPercent >= 67 then
-        return 3
-    end
-
-    if numericPercent >= 34 then
-        return 2
-    end
-
-    return 1
+    return math.floor(numericPercent + 0.5)
 end
 
-local function GetStageDisplayText(progressState, progressPercent)
-    local stageIndex = GetStageIndexFromProgress(progressState, progressPercent)
-    if not stageIndex then
+local function ClampHeuristicPercentToStage(progressState, progressPercent)
+    local stageMinPercent = GetProgressPercentFromStage(progressState)
+    local stageMaxPercent = GetProgressPercentCapForStage(progressState)
+    if stageMinPercent == nil or stageMaxPercent == nil then
         return nil
     end
 
-    if stageIndex >= 4 then
-        return L("PREY_HUNT_STAGE_READY")
+    local numericPercent = tonumber(progressPercent) or stageMinPercent
+    return math.max(stageMinPercent, math.min(stageMaxPercent, numericPercent))
+end
+
+local function ResetPreyHeuristicState()
+    trackedPreyCurrencyQuantity = nil
+    heuristicPreyPercent = nil
+    heuristicPreyStage = nil
+    lastObservedQuestPercent = nil
+    lastObservedWidgetPercent = nil
+    lastObservedPreyTooltip = nil
+    lastDirectWidgetSignalStage = nil
+    lastDirectWidgetSignalAt = nil
+end
+
+local function BeginHeuristicStage(progressState)
+    local stageMinPercent = GetProgressPercentFromStage(progressState)
+    local stageMaxPercent = GetProgressPercentCapForStage(progressState)
+    if stageMinPercent == nil or stageMaxPercent == nil then
+        return nil
     end
 
-    return L("PREY_HUNT_STAGE_FORMAT"):format(stageIndex, 4)
+    if heuristicPreyStage ~= progressState then
+        heuristicPreyStage = progressState
+        heuristicPreyPercent = stageMinPercent
+        lastObservedQuestPercent = nil
+        lastObservedWidgetPercent = nil
+        lastObservedPreyTooltip = nil
+    else
+        heuristicPreyPercent = ClampHeuristicPercentToStage(progressState, heuristicPreyPercent)
+    end
+
+    if progressState >= 3 then
+        heuristicPreyPercent = stageMaxPercent
+    end
+
+    return heuristicPreyPercent
+end
+
+local function AddHeuristicProgress(progressState, amount)
+    local stageMaxPercent = GetProgressPercentCapForStage(progressState)
+    if stageMaxPercent == nil then
+        return nil
+    end
+
+    local currentPercent = BeginHeuristicStage(progressState)
+    if currentPercent == nil then
+        return nil
+    end
+
+    if progressState >= 3 then
+        heuristicPreyPercent = stageMaxPercent
+        return heuristicPreyPercent
+    end
+
+    local increment = math.max(1, math.floor((tonumber(amount) or 0) + 0.5))
+    heuristicPreyPercent = math.min(stageMaxPercent, currentPercent + increment)
+    return heuristicPreyPercent
+end
+
+local function GetProgressDisplayText(progressPercent)
+    local numericPercent = GetVisiblePercentValue(progressPercent)
+    if not numericPercent then
+        return nil
+    end
+
+    return L("PREY_HUNT_PERCENT_FORMAT"):format(numericPercent)
+end
+
+local function NormalizePreyCurrencyName(currencyName)
+    if type(currencyName) ~= "string" or currencyName == "" then
+        return nil
+    end
+
+    return string.lower(currencyName)
+end
+
+local function IsPreyRewardCurrencyName(currencyName)
+    local normalizedCurrencyName = NormalizePreyCurrencyName(currencyName)
+    if not normalizedCurrencyName then
+        return false
+    end
+
+    return normalizedCurrencyName:find("anguish", 1, true) ~= nil
+        or normalizedCurrencyName:find("pein", 1, true) ~= nil
+end
+
+local function GetTrackedCurrencySnapshotInfo(currencyID)
+    if type(GetCurrencyInfo) ~= "function" or type(currencyID) ~= "number" then
+        return nil
+    end
+
+    local currencyInfo = GetCurrencyInfo(currencyID)
+    if type(currencyInfo) ~= "table" then
+        return nil
+    end
+
+    local quantity = tonumber(currencyInfo.quantity or currencyInfo.count)
+    if quantity == nil then
+        return nil
+    end
+
+    return {
+        currencyID = currencyID,
+        quantity = math.max(0, math.floor(quantity + 0.5)),
+        name = currencyInfo.name,
+    }
+end
+
+local function RefreshTrackedPreyCurrencySnapshot()
+    if type(GetCurrencyListSize) == "function" and type(GetCurrencyListInfo) == "function" then
+        for index = 1, (GetCurrencyListSize() or 0) do
+            local currencyInfo = GetCurrencyListInfo(index)
+            local currencyID = type(currencyInfo) == "table" and (currencyInfo.currencyTypesID or currencyInfo.currencyID) or nil
+            local quantity = type(currencyInfo) == "table" and tonumber(currencyInfo.quantity or currencyInfo.count) or nil
+
+            if type(currencyID) == "number"
+                and quantity ~= nil
+                and not currencyInfo.isHeader
+                and not currencyInfo.isHeaderWithChild
+                and IsPreyRewardCurrencyName(currencyInfo.name)
+            then
+                trackedPreyCurrencyID = currencyID
+                trackedPreyCurrencyQuantity = math.max(0, math.floor(quantity + 0.5))
+                return
+            end
+        end
+    end
+
+    if type(trackedPreyCurrencyID) == "number" then
+        local trackedSnapshot = GetTrackedCurrencySnapshotInfo(trackedPreyCurrencyID)
+        if trackedSnapshot then
+            trackedPreyCurrencyQuantity = trackedSnapshot.quantity
+        end
+    end
 end
 
 local function GetProgressPercentFromWidget(progressInfo)
@@ -212,7 +356,7 @@ local function GetProgressPercentFromWidget(progressInfo)
         return nil
     end
 
-    return math.max(0, math.min(100, math.floor(((currentValue / maxValue) * 100) + 0.5)))
+    return math.max(0, math.min(100, (currentValue / maxValue) * 100))
 end
 
 local function GetQuestProgressPercent(questID)
@@ -262,7 +406,74 @@ local function GetQuestProgressPercent(questID)
         return nil
     end
 
-    return math.max(0, math.min(100, math.floor(((totalValue / totalMax) * 100) + 0.5)))
+    return math.max(0, math.min(100, (totalValue / totalMax) * 100))
+end
+
+local function TrackObservedProgressIncrease(progressState, preyInfo, widgetPercent, questPercent)
+    if progressState == nil or progressState >= 3 then
+        return
+    end
+
+    local numericWidgetPercent = tonumber(widgetPercent)
+    local numericQuestPercent = tonumber(questPercent)
+    local currentTooltip = preyInfo and preyInfo.tooltip or nil
+
+    if numericWidgetPercent ~= nil then
+        if lastObservedWidgetPercent == nil or numericWidgetPercent > lastObservedWidgetPercent then
+            lastObservedWidgetPercent = numericWidgetPercent
+        end
+    end
+
+    if numericQuestPercent ~= nil then
+        if lastObservedQuestPercent == nil or numericQuestPercent > lastObservedQuestPercent then
+            lastObservedQuestPercent = numericQuestPercent
+        end
+    end
+
+    if type(currentTooltip) == "string" and currentTooltip ~= "" then
+        lastObservedPreyTooltip = currentTooltip
+    end
+end
+
+local function ResolveProgressPercent(preyInfo, progressInfo, questID)
+    local widgetPercent = GetProgressPercentFromWidget(progressInfo)
+    local questPercent = questID and GetQuestProgressPercent(questID)
+    local progressState = preyInfo and tonumber(preyInfo.progressState) or nil
+    local visibleWidgetPercent = GetVisiblePercentValue(widgetPercent)
+    local visibleQuestPercent = GetVisiblePercentValue(questPercent)
+
+    if progressState ~= nil then
+        BeginHeuristicStage(progressState)
+        TrackObservedProgressIncrease(progressState, preyInfo, widgetPercent, questPercent)
+
+        local heuristicPercent = ClampHeuristicPercentToStage(progressState, heuristicPreyPercent)
+        if heuristicPercent ~= nil then
+            return heuristicPercent
+        end
+    end
+
+    if visibleWidgetPercent and visibleWidgetPercent > 0 then
+        return widgetPercent
+    end
+
+    if visibleQuestPercent and visibleQuestPercent > 0 then
+        return questPercent
+    end
+
+    local stagePercent = GetProgressPercentFromStage(progressState)
+    if stagePercent and stagePercent >= 100 then
+        return stagePercent
+    end
+
+    if widgetPercent ~= nil then
+        return widgetPercent
+    end
+
+    if questPercent ~= nil then
+        return questPercent
+    end
+
+    return stagePercent
 end
 
 local function GetFirstVisibleChild(frame)
@@ -406,6 +617,84 @@ local function FindActivePreyWidgetData()
     return nil
 end
 
+local function ProcessPreyCurrencyDelta(currencyID)
+    if type(currencyID) ~= "number" then
+        if trackedPreyCurrencyID == nil then
+            RefreshTrackedPreyCurrencySnapshot()
+        end
+
+        return
+    end
+
+    local trackedSnapshot = GetTrackedCurrencySnapshotInfo(currencyID)
+    if not trackedSnapshot then
+        if trackedPreyCurrencyID == currencyID then
+            trackedPreyCurrencyQuantity = nil
+        end
+
+        return
+    end
+
+    if trackedPreyCurrencyID ~= currencyID then
+        if not IsPreyRewardCurrencyName(trackedSnapshot.name) then
+            return
+        end
+
+        trackedPreyCurrencyID = currencyID
+    end
+
+    local previousQuantity = trackedPreyCurrencyQuantity
+    trackedPreyCurrencyQuantity = trackedSnapshot.quantity
+
+    if previousQuantity == nil then
+        return
+    end
+
+    local quantityDelta = trackedSnapshot.quantity - previousQuantity
+    if quantityDelta <= 0 then
+        return
+    end
+
+    local widgetData = FindActivePreyWidgetData()
+    local progressState = widgetData and widgetData.preyInfo and tonumber(widgetData.preyInfo.progressState) or nil
+    if progressState == nil then
+        return
+    end
+
+    AddHeuristicProgress(progressState, quantityDelta)
+end
+
+local function HandleDirectPreyWidgetUpdate(preyInfo)
+    local progressState = preyInfo and tonumber(preyInfo.progressState) or nil
+    if progressState == nil then
+        return
+    end
+
+    BeginHeuristicStage(progressState)
+
+    local currentSignalTime = type(GetTimeSeconds) == "function" and GetTimeSeconds() or nil
+    if lastDirectWidgetSignalStage ~= progressState then
+        lastDirectWidgetSignalStage = progressState
+        lastDirectWidgetSignalAt = currentSignalTime
+        return
+    end
+
+    if progressState >= 3 then
+        lastDirectWidgetSignalAt = currentSignalTime
+        return
+    end
+
+    if currentSignalTime ~= nil
+        and lastDirectWidgetSignalAt ~= nil
+        and (currentSignalTime - lastDirectWidgetSignalAt) < PREY_WIDGET_SIGNAL_DEBOUNCE
+    then
+        return
+    end
+
+    lastDirectWidgetSignalAt = currentSignalTime
+    AddHeuristicProgress(progressState, 1)
+end
+
 local function ResolvePreyOverlayAnchor(widgetData)
     if widgetData then
         local widgetContainer = GetWidgetContainerBySetID(widgetData.widgetSetID)
@@ -456,12 +745,14 @@ end
 
 local function UpdatePreyHuntOverlay()
     if not Misc.IsPreyHuntProgressEnabled() then
+        ResetPreyHeuristicState()
         HidePreyHuntOverlay()
         return
     end
 
     local inInstance = IsInInstance and select(1, IsInInstance())
     if inInstance then
+        ResetPreyHeuristicState()
         HidePreyHuntOverlay()
         ClearPreyHuntCache()
         return
@@ -470,19 +761,21 @@ local function UpdatePreyHuntOverlay()
     local activeQuestID = GetActivePreyQuest and GetActivePreyQuest()
     local widgetData = FindActivePreyWidgetData()
     if not activeQuestID and not widgetData then
+        ResetPreyHeuristicState()
         HidePreyHuntOverlay()
         ClearPreyHuntCache()
         return
     end
 
     local anchorFrame = ResolvePreyOverlayAnchor(widgetData)
-    -- Die eigentliche Jagd-Anzeige soll sich am Blizzard-Prey-Widget
-    -- orientieren. Questziele zählen oft den Endboss noch mit und zeigen
-    -- dadurch am Bossstein irreführend nur 50%.
-    local progressValue = (widgetData and widgetData.preyInfo and GetProgressPercentFromStage(widgetData.preyInfo.progressState))
-        or (widgetData and GetProgressPercentFromWidget(widgetData.progressInfo))
-        or (activeQuestID and GetQuestProgressPercent(activeQuestID))
-    local displayText = GetStageDisplayText(widgetData and widgetData.preyInfo and widgetData.preyInfo.progressState, progressValue)
+    -- Blizzard liefert fuer die Jagd nur die grobe Stufe.
+    -- Darum zaehlen wir lokale Fortschritts-Signale innerhalb des aktiven Stufenbands hoch.
+    local progressValue = ResolveProgressPercent(
+        widgetData and widgetData.preyInfo,
+        widgetData and widgetData.progressInfo,
+        activeQuestID
+    )
+    local displayText = GetProgressDisplayText(progressValue)
     if not anchorFrame or not displayText then
         HidePreyHuntOverlay()
         return
@@ -566,6 +859,7 @@ PreyHuntWatcher:SetScript("OnEvent", function(self, event, ...)
         HidePreyHuntOverlay()
         self.needsRefresh = false
         ClearPreyHuntCache()
+        ResetPreyHeuristicState()
         return
     end
 
@@ -577,11 +871,16 @@ PreyHuntWatcher:SetScript("OnEvent", function(self, event, ...)
                 livePreyWidgetID = widgetInfo.widgetID
                 livePreyWidgetSetID = widgetInfo.widgetSetID
                 cachedWidgetSetID = widgetInfo.widgetSetID or cachedWidgetSetID
+                HandleDirectPreyWidgetUpdate(preyInfo)
             elseif livePreyWidgetID == widgetInfo.widgetID then
                 livePreyWidgetID = nil
                 livePreyWidgetSetID = nil
             end
         end
+    elseif event == "CURRENCY_DISPLAY_UPDATE" then
+        ProcessPreyCurrencyDelta(...)
+    elseif event == "PLAYER_ENTERING_WORLD" or event == "UPDATE_ALL_UI_WIDGETS" then
+        RefreshTrackedPreyCurrencySnapshot()
     end
 
     self.needsRefresh = true
@@ -600,17 +899,20 @@ local function UpdateWatcherState()
             PreyHuntWatcher:RegisterEvent("ZONE_CHANGED_NEW_AREA")
             PreyHuntWatcher:RegisterEvent("UPDATE_ALL_UI_WIDGETS")
             PreyHuntWatcher:RegisterEvent("UPDATE_UI_WIDGET")
+            PreyHuntWatcher:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
             PreyHuntWatcher.needsRefresh = true
         else
             PreyHuntWatcher.needsRefresh = true
         end
 
+        RefreshTrackedPreyCurrencySnapshot()
         UpdatePreyHuntOverlay()
         return
     end
 
     watcherActive = false
     ClearPreyHuntCache()
+    ResetPreyHeuristicState()
     PreyHuntWatcher.elapsed = 0
     PreyHuntWatcher.needsRefresh = false
     preyHuntRefreshScheduled = false
@@ -625,6 +927,7 @@ local function ReinitializeEnabledWatcher()
 
     watcherActive = false
     ClearPreyHuntCache()
+    ResetPreyHeuristicState()
     PreyHuntWatcher.elapsed = 0
     PreyHuntWatcher.needsRefresh = true
     preyHuntRefreshScheduled = false

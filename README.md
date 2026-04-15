@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.9`
+- Version: `0.37.10`
 - Release-Datum: `2026-04-15`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Gruppenplaner` bringt `!enter` wieder in einen einfachen Rollen-Workflow und erlaubt feste Rollen beim Bearbeiten von Slots
-  - `Währungssuche`, `Portal Viewer` und `SmartLFG` greifen taint-ärmer in sensible Blizzard-Fenster ein
-  - Whisper-, LFG- und Slot-Daten im `Gruppenplaner` bleiben bei Einträgen und Einladungen robuster erhalten
+  - `Währungssuche` reagiert beim Tippen wieder direkt auf Treffer
+  - `Tooltip-Itemlevel` wurde für Mouseover-Tooltips weiter stabilisiert
+  - `Jagd-Fortschritt` zählt den Jagdfortschritt am Blizzard-Symbol jetzt direkt als Prozent hoch
 
 ## Download
 
@@ -121,7 +121,7 @@ Beispiele:
   - Ein-Tasten-Helfer für entspanntes Angeln
   - hebt auf Wunsch den Bobber-Sound hervor und stellt den vorherigen Soundmix danach wieder her
 - `Jagd-Fortschritt`
-  - blendet bei aktiven Midnight-Jagden die aktuelle Stufe direkt am Blizzard-Symbol ein
+  - blendet bei aktiven Midnight-Jagden den aktuellen Fortschritt in Prozent direkt am Blizzard-Symbol ein
 - `Portal Viewer`
   - Schnellansicht für die aktuellen Midnight-S1-Dungeonportale
   - zeigt freigeschaltete und fehlende Portale direkt in einem kompakten Fenster

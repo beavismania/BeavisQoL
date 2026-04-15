@@ -3,15 +3,23 @@ local _, BeavisQoL = ...
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 local L = BeavisQoL.L
-local HookSecureFunction = rawget(_G, "hooksecurefunc")
-local TimerAfter = C_Timer and C_Timer.After
 local baseGetMiscDB = Misc.GetMiscDB
+local HookSecureFunction = rawget(_G, "hooksecurefunc")
 local CurrencySearchWatcher = CreateFrame("Frame")
 
 local TOKEN_UI_ADDON_NAME = "Blizzard_TokenUI"
+local CHONKY_ADDON_NAME = "ChonkyCharacterSheet"
 
 local currencySearchQuery = ""
-local defaultCurrencyScrollBoxPoints = nil
+local currencySearchBox = nil
+local savedHeaderExpansionStates = nil
+local headersExpandedForSearch = false
+local refreshHooksInstalled = false
+local runtimeEventsRegistered = false
+local tokenFrameHooksInstalled = false
+local currencyFrameHooksInstalled = false
+local applyingFilter = false
+local RefreshCurrencySearchIfVisible
 
 local function NormalizeSearchText(text)
     local normalizedText = tostring(text or "")
@@ -23,35 +31,49 @@ local function NormalizeSearchText(text)
     return normalizedText
 end
 
-local function SearchTextContains(text, query)
-    if not query or query == "" then
-        return true
+local function TokenizeSearchText(text)
+    local tokens = {}
+
+    for token in string.gmatch(text or "", "%S+") do
+        tokens[#tokens + 1] = token
     end
 
-    if not text or text == "" then
+    return tokens
+end
+
+local function MatchesSearchQuery(labelText, query)
+    local normalizedLabel = NormalizeSearchText(labelText)
+    if normalizedLabel == "" or query == "" then
         return false
     end
 
-    return string.find(NormalizeSearchText(text), query, 1, true) ~= nil
-end
-
-local function BuildCurrencySearchText(entry)
-    if not entry then
-        return ""
+    if string.find(normalizedLabel, query, 1, true) ~= nil then
+        return true
     end
 
-    local parts = {}
-    if entry.name and entry.name ~= "" then
-        parts[#parts + 1] = entry.name
+    local labelWords = TokenizeSearchText(normalizedLabel)
+    local queryWords = TokenizeSearchText(query)
+
+    if #queryWords == 0 then
+        return false
     end
 
-    if entry.isAccountTransferable and type(ACCOUNT_TRANSFERRABLE_CURRENCY) == "string" then
-        parts[#parts + 1] = ACCOUNT_TRANSFERRABLE_CURRENCY
-    elseif entry.isAccountWide and type(ACCOUNT_LEVEL_CURRENCY) == "string" then
-        parts[#parts + 1] = ACCOUNT_LEVEL_CURRENCY
+    for _, queryWord in ipairs(queryWords) do
+        local matchedWord = false
+
+        for _, labelWord in ipairs(labelWords) do
+            if string.find(labelWord, queryWord, 1, true) ~= nil then
+                matchedWord = true
+                break
+            end
+        end
+
+        if not matchedWord then
+            return false
+        end
     end
 
-    return table.concat(parts, " ")
+    return true
 end
 
 local function IsTokenUILoaded()
@@ -62,68 +84,19 @@ local function IsTokenUILoaded()
     return rawget(_G, "TokenFrame") ~= nil
 end
 
+local function IsChonkyLoaded()
+    if C_AddOns and C_AddOns.IsAddOnLoaded then
+        return C_AddOns.IsAddOnLoaded(CHONKY_ADDON_NAME) == true
+    end
+
+    return rawget(_G, "CCS_PSpecBtn1") ~= nil
+end
+
 local function RefreshMiscPageState()
     local miscPage = BeavisQoL.Pages and BeavisQoL.Pages.Misc
     if miscPage and miscPage:IsShown() and miscPage.RefreshState then
         miscPage:RefreshState()
     end
-end
-
-local function CaptureAnchorPoints(frame)
-    local points = {}
-    if not frame or not frame.GetNumPoints or not frame.GetPoint then
-        return points
-    end
-
-    for pointIndex = 1, (frame:GetNumPoints() or 0) do
-        local point, relativeTo, relativePoint, xOffset, yOffset = frame:GetPoint(pointIndex)
-        if point then
-            points[#points + 1] = {
-                point = point,
-                relativeTo = relativeTo,
-                relativePoint = relativePoint,
-                xOffset = xOffset or 0,
-                yOffset = yOffset or 0,
-            }
-        end
-    end
-
-    return points
-end
-
-local function RestoreAnchorPoints(frame, points)
-    if not frame or not frame.ClearAllPoints or not frame.SetPoint or not points or #points == 0 then
-        return
-    end
-
-    if frame.IsProtected and frame:IsProtected() then
-        return
-    end
-
-    frame:ClearAllPoints()
-    for _, pointInfo in ipairs(points) do
-        frame:SetPoint(
-            pointInfo.point,
-            pointInfo.relativeTo,
-            pointInfo.relativePoint,
-            pointInfo.xOffset,
-            pointInfo.yOffset
-        )
-    end
-end
-
-local function RememberCurrencyDefaultLayout(frame)
-    if not frame then
-        return
-    end
-
-    if (not defaultCurrencyScrollBoxPoints or #defaultCurrencyScrollBoxPoints == 0) and frame.ScrollBox then
-        defaultCurrencyScrollBoxPoints = CaptureAnchorPoints(frame.ScrollBox)
-    end
-end
-
-local function CanAdjustFrameLayout(frame)
-    return frame and not (frame.IsProtected and frame:IsProtected())
 end
 
 function Misc.GetMiscDB()
@@ -148,154 +121,201 @@ function Misc.IsCurrencySearchEnabled()
     return Misc.GetMiscDB().currencySearchEnabled == true
 end
 
-local function UpdatePlaceholder(editBox)
-    if not editBox or not editBox.Placeholder then
+local function GetCurrencyRootFrame()
+    if TokenFrame and TokenFrame.IsObjectType and TokenFrame:IsObjectType("Frame") then
+        return TokenFrame
+    end
+
+    if CurrencyFrame and CurrencyFrame.IsObjectType and CurrencyFrame:IsObjectType("Frame") then
+        return CurrencyFrame
+    end
+
+    return nil
+end
+
+local function GetCurrencyButtonData(button)
+    if not button then
+        return nil
+    end
+
+    if button.GetElementData then
+        local elementData = button:GetElementData()
+        if elementData then
+            return elementData
+        end
+    end
+
+    return button.data
+end
+
+local function GetCurrencyButtonInfo(button)
+    if not button then
+        return nil
+    end
+
+    if button.currencyInfo then
+        return button.currencyInfo
+    end
+
+    if button.info then
+        return button.info
+    end
+
+    local data = GetCurrencyButtonData(button)
+    if data then
+        if data.currencyInfo then
+            return data.currencyInfo
+        end
+
+        if data.info then
+            return data.info
+        end
+
+        if data.name or data.isHeader ~= nil then
+            return data
+        end
+    end
+
+    if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyListInfo then
+        local index = button.index or button.currencyIndex or button.dataIndex or (button.GetID and button:GetID())
+        if not index and data then
+            index = data.index or data.currencyIndex or data.listIndex
+        end
+
+        if index then
+            return C_CurrencyInfo.GetCurrencyListInfo(index)
+        end
+    end
+
+    return nil
+end
+
+local function GetCurrencyListIndex(button, info)
+    local data = GetCurrencyButtonData(button)
+
+    if info then
+        if info.index then
+            return info.index
+        end
+
+        if info.currencyIndex then
+            return info.currencyIndex
+        end
+
+        if info.listIndex then
+            return info.listIndex
+        end
+    end
+
+    if data then
+        if data.index then
+            return data.index
+        end
+
+        if data.currencyIndex then
+            return data.currencyIndex
+        end
+
+        if data.listIndex then
+            return data.listIndex
+        end
+    end
+
+    return button and (button.index or button.currencyIndex or button.dataIndex or (button.GetID and button:GetID())) or nil
+end
+local function IsHeaderExpanded(info)
+    if not info then
+        return nil
+    end
+
+    if info.isHeaderExpanded ~= nil then
+        return info.isHeaderExpanded
+    end
+
+    if info.isExpanded ~= nil then
+        return info.isExpanded
+    end
+
+    return nil
+end
+
+local function SetHeaderExpanded(index, shouldExpand)
+    if not index then
         return
     end
 
-    if editBox:HasFocus() or editBox:GetText() ~= "" then
-        editBox.Placeholder:Hide()
-    else
-        editBox.Placeholder:Show()
-    end
-end
-
-local function IsInsetLayoutActive(inset)
-    return inset and inset.IsShown and inset:IsShown()
-end
-
-local function ApplyFrameOrderFromReference(referenceFrame, targetFrame)
-    if not referenceFrame or not targetFrame then
+    if C_CurrencyInfo and C_CurrencyInfo.ExpandCurrencyList then
+        pcall(C_CurrencyInfo.ExpandCurrencyList, index, shouldExpand)
         return
     end
 
-    if referenceFrame.GetFrameStrata and targetFrame.SetFrameStrata then
-        targetFrame:SetFrameStrata(referenceFrame:GetFrameStrata())
-    end
-
-    if referenceFrame.GetFrameLevel and targetFrame.SetFrameLevel then
-        targetFrame:SetFrameLevel((referenceFrame:GetFrameLevel() or 0) + 5)
+    if ExpandCurrencyList then
+        pcall(ExpandCurrencyList, index, shouldExpand and 1 or 0)
     end
 end
 
-local function BuildCurrencyHierarchy(currencyList)
-    local hierarchy = {}
-    local headerStack = {}
-
-    for index, entry in ipairs(currencyList) do
-        local depth = math.max(tonumber(entry and entry.currencyListDepth) or 0, 0)
-
-        while #headerStack > 0 and headerStack[#headerStack].depth >= depth do
-            headerStack[#headerStack] = nil
-        end
-
-        local ancestors = {}
-        for ancestorIndex = 1, #headerStack do
-            ancestors[ancestorIndex] = headerStack[ancestorIndex].index
-        end
-
-        hierarchy[index] = {
-            depth = depth,
-            ancestors = ancestors,
-        }
-
-        if entry and entry.isHeader then
-            headerStack[#headerStack + 1] = {
-                index = index,
-                depth = depth,
-            }
-        end
+local function GetCurrencyButtonLabel(button, info)
+    if info and info.name and info.name ~= "" then
+        return info.name
     end
 
-    return hierarchy
-end
-
-local function FilterCurrencyList(currencyList, query, selectedCurrencyIndex)
-    if query == "" then
-        return currencyList, true
+    if button and button.Name and button.Name.GetText then
+        return button.Name:GetText()
     end
 
-    local hierarchy = BuildCurrencyHierarchy(currencyList)
-    local includedEntries = {}
-    local filteredList = {}
-    local selectedVisible = false
-
-    local function IncludeEntry(index)
-        if includedEntries[index] then
-            return
-        end
-
-        local entry = currencyList[index]
-        if not entry then
-            return
-        end
-
-        includedEntries[index] = true
-        if selectedCurrencyIndex and entry.currencyIndex == selectedCurrencyIndex then
-            selectedVisible = true
-        end
+    if button and button.name and button.name.GetText then
+        return button.name:GetText()
     end
 
-    local function IncludeAncestors(index)
-        local entryInfo = hierarchy[index]
-        if not entryInfo then
-            return
-        end
-
-        for _, ancestorIndex in ipairs(entryInfo.ancestors) do
-            IncludeEntry(ancestorIndex)
-        end
+    if button and button.CurrencyName and button.CurrencyName.GetText then
+        return button.CurrencyName:GetText()
     end
 
-    local function IncludeDescendants(index)
-        local entryInfo = hierarchy[index]
-        if not entryInfo then
-            return
-        end
-
-        local parentDepth = entryInfo.depth
-        for descendantIndex = index + 1, #currencyList do
-            local descendantInfo = hierarchy[descendantIndex]
-            if not descendantInfo or descendantInfo.depth <= parentDepth then
-                break
-            end
-
-            IncludeEntry(descendantIndex)
-        end
-    end
-
-    for index, entry in ipairs(currencyList) do
-        if SearchTextContains(BuildCurrencySearchText(entry), query) then
-            IncludeAncestors(index)
-            IncludeEntry(index)
-
-            if entry.isHeader then
-                IncludeDescendants(index)
+    if button and button.GetRegions then
+        for _, region in ipairs({ button:GetRegions() }) do
+            if region and region.GetObjectType and region:GetObjectType() == "FontString" then
+                local text = region:GetText()
+                if text and text ~= "" then
+                    return text
+                end
             end
         end
     end
 
-    for index, entry in ipairs(currencyList) do
-        if includedEntries[index] then
-            filteredList[#filteredList + 1] = entry
-        end
-    end
-
-    return filteredList, selectedVisible
+    return nil
 end
 
-local function IsCurrencyTransferInteractionActive(frame)
-    if frame and frame.Popup and frame.Popup.IsShown and frame.Popup:IsShown() then
+local function IsHeaderButton(button, info)
+    if info and info.isHeader ~= nil then
+        return info.isHeader
+    end
+
+    if button and button.isHeader ~= nil then
+        return button.isHeader
+    end
+
+    local data = GetCurrencyButtonData(button)
+    if data and data.isHeader ~= nil then
+        return data.isHeader
+    end
+
+    return false
+end
+
+local function IsTransferUtilityButton(button)
+    if not button then
+        return false
+    end
+
+    local objectName = button.GetName and button:GetName() or nil
+    if objectName and string.find(objectName, "Transfer", 1, true) then
         return true
     end
 
-    local currencyTransferMenu = rawget(_G, "CurrencyTransferMenu")
-    return currencyTransferMenu and currencyTransferMenu.IsShown and currencyTransferMenu:IsShown() or false
-end
-
-local function ContainsAccountTransferableCurrency(currencyList)
-    for _, entry in ipairs(currencyList) do
-        if entry and entry.isAccountTransferable then
+    local data = GetCurrencyButtonData(button)
+    if data then
+        local dataType = data.entryType or data.type or data.buttonType
+        if dataType == "transfer" or dataType == "transferLog" then
             return true
         end
     end
@@ -303,251 +323,418 @@ local function ContainsAccountTransferableCurrency(currencyList)
     return false
 end
 
-local function ApplyCurrencySearchFilter(frame)
-    if not Misc.IsCurrencySearchEnabled or not Misc.IsCurrencySearchEnabled() then
-        return
+local function IsFilterableCurrencyButton(button, info)
+    if IsHeaderButton(button, info) then
+        return false
     end
 
-    if not frame
-        or not frame.ScrollBox
-        or not C_CurrencyInfo
-        or not C_CurrencyInfo.GetCurrencyListSize
-        or not C_CurrencyInfo.GetCurrencyListInfo then
-        return
+    if info and info.name ~= nil then
+        return true
     end
 
-    if currencySearchQuery == "" or IsCurrencyTransferInteractionActive(frame) then
-        return
-    end
-
-    local requiresAccountData = C_CurrencyInfo.DoesCurrentFilterRequireAccountCurrencyData
-        and C_CurrencyInfo.DoesCurrentFilterRequireAccountCurrencyData()
-    local isAccountDataReady = not requiresAccountData
-        or (C_CurrencyInfo.IsAccountCharacterCurrencyDataReady and C_CurrencyInfo.IsAccountCharacterCurrencyDataReady())
-    if not isAccountDataReady or requiresAccountData then
-        return
-    end
-
-    local currencyList = {}
-    for currencyIndex = 1, C_CurrencyInfo.GetCurrencyListSize() do
-        local currencyData = C_CurrencyInfo.GetCurrencyListInfo(currencyIndex)
-        if currencyData then
-            currencyData.currencyIndex = currencyIndex
-            currencyList[#currencyList + 1] = currencyData
-        end
-    end
-
-    local selectedCurrencyIndex = frame.selectedID
-    local filteredList = FilterCurrencyList(currencyList, currencySearchQuery, selectedCurrencyIndex)
-
-    -- Keep Blizzard's own provider for protected transfer rows so the confirm
-    -- button path stays on Blizzard's secure data provider.
-    if ContainsAccountTransferableCurrency(filteredList) then
-        return
-    end
-
-    frame.ScrollBox:SetDataProvider(CreateDataProvider(filteredList), ScrollBoxConstants.RetainScrollPosition)
+    local label = GetCurrencyButtonLabel(button, info)
+    return label ~= nil and NormalizeSearchText(label) ~= ""
 end
 
-local function RestoreDefaultCurrencyLayout(frame)
-    if not frame then
-        return
-    end
+local function CollectCurrencyButtons()
+    local buttons = {}
 
-    RememberCurrencyDefaultLayout(frame)
-    RestoreAnchorPoints(frame.ScrollBox, defaultCurrencyScrollBoxPoints)
-end
-
-local function LayoutCurrencySearchUI(frame, searchBox)
-    if not frame or not searchBox then
-        return
-    end
-
-    local inset = frame:GetParent() and frame:GetParent().Inset or nil
-    local filterDropdown = frame.filterDropdown
-    local transferLogButton = frame.CurrencyTransferLogToggleButton
-    local useInsetLayout = IsInsetLayoutActive(inset)
-    local frameReference = filterDropdown or transferLogButton or frame
-    local canAdjustScrollBoxLayout = CanAdjustFrameLayout(frame.ScrollBox)
-
-    searchBox:ClearAllPoints()
-    ApplyFrameOrderFromReference(frameReference, searchBox)
-
-    if useInsetLayout and filterDropdown and transferLogButton then
-        searchBox:SetPoint("LEFT", inset, "TOPLEFT", 8, -19)
-        searchBox:SetPoint("RIGHT", transferLogButton, "LEFT", -8, 0)
-
-        if canAdjustScrollBoxLayout then
-            frame.ScrollBox:ClearAllPoints()
-            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
-            frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
-        end
-    elseif useInsetLayout and filterDropdown then
-        searchBox:SetPoint("LEFT", inset, "TOPLEFT", 8, -19)
-        searchBox:SetPoint("RIGHT", filterDropdown, "LEFT", -12, 0)
-
-        if canAdjustScrollBoxLayout then
-            frame.ScrollBox:ClearAllPoints()
-            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
-            frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
-        end
-    elseif filterDropdown and transferLogButton then
-        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -62)
-        searchBox:SetPoint("RIGHT", transferLogButton, "LEFT", -8, 0)
-
-        if canAdjustScrollBoxLayout then
-            frame.ScrollBox:ClearAllPoints()
-            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -20, -10)
-            frame.ScrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -30, 26)
-        end
-    elseif filterDropdown then
-        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -62)
-        searchBox:SetPoint("RIGHT", filterDropdown, "LEFT", -12, 0)
-
-        if canAdjustScrollBoxLayout then
-            frame.ScrollBox:ClearAllPoints()
-            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -20, -10)
-            frame.ScrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -30, 26)
-        end
-    else
-        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -56)
-        searchBox:SetSize(170, 22)
-    end
-end
-
-local function RefreshCurrencySearchLayout(frame, searchBox)
-    LayoutCurrencySearchUI(frame, searchBox)
-
-    if TimerAfter then
-        TimerAfter(0, function()
-            local liveFrame = rawget(_G, "TokenFrame")
-            if liveFrame and liveFrame == frame and searchBox and searchBox:IsShown() then
-                LayoutCurrencySearchUI(liveFrame, searchBox)
+    if TokenFrameContainer and TokenFrameContainer.buttons then
+        for _, button in ipairs(TokenFrameContainer.buttons) do
+            if button and button.IsObjectType and button:IsObjectType("Button") then
+                buttons[#buttons + 1] = button
             end
+        end
+    end
+
+    if CurrencyFrame and CurrencyFrame.Container and CurrencyFrame.Container.buttons then
+        for _, button in ipairs(CurrencyFrame.Container.buttons) do
+            if button and button.IsObjectType and button:IsObjectType("Button") then
+                buttons[#buttons + 1] = button
+            end
+        end
+    end
+
+    if #buttons > 0 then
+        return buttons
+    end
+
+    local root = GetCurrencyRootFrame()
+    if not root then
+        return buttons
+    end
+
+    local stack = { root }
+    while #stack > 0 do
+        local node = table.remove(stack)
+        for _, child in ipairs({ node:GetChildren() }) do
+            stack[#stack + 1] = child
+            if child and child.IsObjectType and child:IsObjectType("Button") then
+                local info = GetCurrencyButtonInfo(child)
+                if info and (info.name or info.isHeader ~= nil) then
+                    buttons[#buttons + 1] = child
+                end
+            end
+        end
+    end
+
+    return buttons
+end
+
+local function HookCurrencyButtons(buttons)
+    for _, button in ipairs(buttons) do
+        if button and not button.BeavisCurrencySearchHooked and button.HookScript then
+            button:HookScript("OnShow", function()
+                if RefreshCurrencySearchIfVisible and GetCurrencyRootFrame() and GetCurrencyRootFrame():IsShown() then
+                    RefreshCurrencySearchIfVisible()
+                end
+            end)
+            button.BeavisCurrencySearchHooked = true
+        end
+    end
+end
+
+local function RestoreSavedHeaderStates()
+    if not headersExpandedForSearch or not savedHeaderExpansionStates then
+        savedHeaderExpansionStates = nil
+        headersExpandedForSearch = false
+        return
+    end
+
+    for index, expanded in pairs(savedHeaderExpansionStates) do
+        SetHeaderExpanded(index, expanded)
+    end
+
+    savedHeaderExpansionStates = nil
+    headersExpandedForSearch = false
+end
+
+local function RememberAndExpandHeaders(buttons)
+    if headersExpandedForSearch then
+        return
+    end
+
+    savedHeaderExpansionStates = {}
+
+    for _, button in ipairs(buttons) do
+        local info = GetCurrencyButtonInfo(button)
+
+        if IsHeaderButton(button, info) then
+            local index = GetCurrencyListIndex(button, info)
+            local expanded = IsHeaderExpanded(info)
+
+            if index and expanded ~= nil and savedHeaderExpansionStates[index] == nil then
+                savedHeaderExpansionStates[index] = expanded
+            end
+
+            if index and expanded == false then
+                SetHeaderExpanded(index, true)
+            end
+        end
+    end
+
+    headersExpandedForSearch = true
+end
+
+local function ShouldShowSearchBox()
+    local root = GetCurrencyRootFrame()
+    return Misc.IsCurrencySearchEnabled() and root and root:IsShown()
+end
+
+local function IsInsetLayoutActive(inset)
+    return inset and inset.IsShown and inset:IsShown()
+end
+
+local function LayoutCurrencySearchBox()
+    if not currencySearchBox then
+        return
+    end
+
+    local root = GetCurrencyRootFrame()
+    if not root then
+        return
+    end
+
+    local referenceFrame = root.filterDropdown or root
+    if referenceFrame and referenceFrame.GetFrameStrata and currencySearchBox.SetFrameStrata then
+        currencySearchBox:SetFrameStrata(referenceFrame:GetFrameStrata())
+    end
+
+    if referenceFrame and referenceFrame.GetFrameLevel and currencySearchBox.SetFrameLevel then
+        currencySearchBox:SetFrameLevel((referenceFrame:GetFrameLevel() or 0) + 5)
+    end
+
+    currencySearchBox:ClearAllPoints()
+
+    local characterFrame = rawget(_G, "CharacterFrame")
+    local characterInset = rawget(_G, "CharacterFrameInset") or (characterFrame and characterFrame.Inset)
+    local filterDropdown = root.filterDropdown
+
+    if IsChonkyLoaded() and filterDropdown then
+        currencySearchBox:SetPoint("TOPLEFT", root, "TOPLEFT", 24, -30)
+        currencySearchBox:SetPoint("TOPRIGHT", filterDropdown, "TOPLEFT", -12, -2)
+    elseif IsInsetLayoutActive(characterInset) and filterDropdown then
+        currencySearchBox:SetPoint("LEFT", characterInset, "TOPLEFT", 8, -19)
+        currencySearchBox:SetPoint("RIGHT", filterDropdown, "LEFT", -12, 0)
+    elseif filterDropdown then
+        currencySearchBox:SetPoint("TOPLEFT", root, "TOPLEFT", 24, -62)
+        currencySearchBox:SetPoint("TOPRIGHT", root, "TOPRIGHT", -72, -62)
+    else
+        currencySearchBox:SetPoint("TOPLEFT", root, "TOPLEFT", 16, -56)
+        currencySearchBox:SetSize(180, 20)
+    end
+end
+
+local function ApplyCurrencyButtonVisibility(button, shouldShow)
+    if not button then
+        return
+    end
+
+    if shouldShow then
+        button:Show()
+    else
+        button:Hide()
+    end
+end
+
+local function ApplyCurrencySearchFilter()
+    if applyingFilter then
+        return
+    end
+
+    applyingFilter = true
+
+    local enabled = Misc.IsCurrencySearchEnabled()
+    local query = NormalizeSearchText(currencySearchQuery)
+    local hasQuery = query ~= ""
+
+    local buttons = CollectCurrencyButtons()
+    HookCurrencyButtons(buttons)
+
+    if enabled and hasQuery then
+        if not headersExpandedForSearch then
+            RememberAndExpandHeaders(buttons)
+            buttons = CollectCurrencyButtons()
+            HookCurrencyButtons(buttons)
+        end
+    elseif headersExpandedForSearch then
+        RestoreSavedHeaderStates()
+        buttons = CollectCurrencyButtons()
+        HookCurrencyButtons(buttons)
+    end
+
+    for _, button in ipairs(buttons) do
+        local info = GetCurrencyButtonInfo(button)
+
+        if not enabled or not hasQuery then
+            ApplyCurrencyButtonVisibility(button, true)
+        elseif IsTransferUtilityButton(button) then
+            ApplyCurrencyButtonVisibility(button, true)
+        elseif IsHeaderButton(button, info) then
+            ApplyCurrencyButtonVisibility(button, false)
+        else
+            local label = GetCurrencyButtonLabel(button, info) or ""
+            local shouldShow = IsFilterableCurrencyButton(button, info) and MatchesSearchQuery(label, query)
+            ApplyCurrencyButtonVisibility(button, shouldShow)
+        end
+    end
+
+    applyingFilter = false
+end
+
+local function ClearCurrencySearch(clearText)
+    currencySearchQuery = ""
+
+    if clearText and currencySearchBox and currencySearchBox:GetText() ~= "" then
+        currencySearchBox:SetText("")
+    end
+
+    ApplyCurrencySearchFilter()
+end
+
+RefreshCurrencySearchIfVisible = function()
+    local root = GetCurrencyRootFrame()
+
+    if currencySearchBox then
+        LayoutCurrencySearchBox()
+
+        if ShouldShowSearchBox() then
+            currencySearchBox:Show()
+        else
+            currencySearchBox:Hide()
+        end
+    end
+
+    if root and root:IsShown() then
+        ApplyCurrencySearchFilter()
+    end
+end
+
+local function HookRefreshRegion(region)
+    if not region or not region.HookScript then
+        return
+    end
+
+    local function HookRegionScript(scriptName)
+        pcall(region.HookScript, region, scriptName, function()
+            RefreshCurrencySearchIfVisible()
         end)
     end
+
+    HookRegionScript("OnVerticalScroll")
+    HookRegionScript("OnValueChanged")
+    HookRegionScript("OnMouseWheel")
+
+    if region.ScrollBar then
+        HookRefreshRegion(region.ScrollBar)
+    end
+
+    if region.scrollBar then
+        HookRefreshRegion(region.scrollBar)
+    end
 end
 
-local function EnsureCurrencySearchUI()
-    local frame = rawget(_G, "TokenFrame")
-    if not frame or frame.BeavisCurrencySearchInitialized then
+local function InstallRefreshHooks()
+    if refreshHooksInstalled then
         return
     end
 
-    frame.BeavisCurrencySearchInitialized = true
-    RememberCurrencyDefaultLayout(frame)
+    HookRefreshRegion(TokenFrameContainer)
 
-    local searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-    searchBox:SetHeight(22)
+    if TokenFrame and TokenFrame.ScrollBar then
+        HookRefreshRegion(TokenFrame.ScrollBar)
+    end
+
+    if CurrencyFrame and CurrencyFrame.Container then
+        HookRefreshRegion(CurrencyFrame.Container)
+    end
+
+    if HookSecureFunction and TokenFrame_Update then
+        HookSecureFunction("TokenFrame_Update", function()
+            RefreshCurrencySearchIfVisible()
+        end)
+    end
+
+    refreshHooksInstalled = true
+end
+
+local function InstallRootHooks()
+    if TokenFrame and not tokenFrameHooksInstalled then
+        TokenFrame:HookScript("OnShow", function()
+            RefreshCurrencySearchIfVisible()
+        end)
+
+        TokenFrame:HookScript("OnHide", function()
+            ClearCurrencySearch(true)
+        end)
+
+        tokenFrameHooksInstalled = true
+    end
+
+    if CurrencyFrame and not currencyFrameHooksInstalled then
+        CurrencyFrame:HookScript("OnShow", function()
+            RefreshCurrencySearchIfVisible()
+        end)
+
+        CurrencyFrame:HookScript("OnHide", function()
+            ClearCurrencySearch(true)
+        end)
+
+        currencyFrameHooksInstalled = true
+    end
+end
+
+local function RegisterRuntimeEvents()
+    if runtimeEventsRegistered then
+        return
+    end
+
+    CurrencySearchWatcher:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
+    CurrencySearchWatcher:RegisterEvent("PLAYER_MONEY")
+    CurrencySearchWatcher:RegisterEvent("CURRENCY_TRANSFER_LOG_UPDATE")
+    CurrencySearchWatcher:RegisterEvent("ACCOUNT_CHARACTER_CURRENCY_DATA_RECEIVED")
+    CurrencySearchWatcher:RegisterEvent("DISPLAY_SIZE_CHANGED")
+    CurrencySearchWatcher:RegisterEvent("UI_SCALE_CHANGED")
+
+    runtimeEventsRegistered = true
+end
+
+local function CreateCurrencySearchBox()
+    if currencySearchBox then
+        LayoutCurrencySearchBox()
+        return currencySearchBox
+    end
+
+    local root = GetCurrencyRootFrame()
+    if not root then
+        return nil
+    end
+
+    local searchBox = CreateFrame("EditBox", "BeavisQoLCurrencySearchBox", root, "SearchBoxTemplate")
+    searchBox:SetSize(180, 20)
     searchBox:SetAutoFocus(false)
-    searchBox:SetMaxLetters(80)
-    searchBox:SetFontObject(ChatFontNormal)
+    searchBox:SetMaxLetters(32)
 
-    RefreshCurrencySearchLayout(frame, searchBox)
-
-    local placeholder = searchBox:CreateFontString(nil, "ARTWORK")
-    placeholder:SetPoint("LEFT", searchBox, "LEFT", 6, 0)
-    placeholder:SetPoint("RIGHT", searchBox, "RIGHT", -8, 0)
-    placeholder:SetJustifyH("LEFT")
-    placeholder:SetFont("Fonts\\FRIZQT__.TTF", 9, "")
-    placeholder:SetTextColor(0.58, 0.58, 0.60, 1)
-    placeholder:SetText(L("CURRENCY_SEARCH_PLACEHOLDER"))
-
-    searchBox.Placeholder = placeholder
-    frame.BeavisCurrencySearchBox = searchBox
-
-    frame:HookScript("OnShow", function()
-        if Misc.IsCurrencySearchEnabled and Misc.IsCurrencySearchEnabled() then
-            searchBox:Show()
-            RefreshCurrencySearchLayout(frame, searchBox)
-            UpdatePlaceholder(searchBox)
-        else
-            searchBox:Hide()
-            RestoreDefaultCurrencyLayout(frame)
-        end
-    end)
-
-    searchBox:SetScript("OnTextChanged", function(self)
-        currencySearchQuery = NormalizeSearchText(self:GetText())
-        UpdatePlaceholder(self)
-        if frame.Update then
-            frame:Update()
-        end
-    end)
-
-    searchBox:SetScript("OnEditFocusGained", function(self)
-        UpdatePlaceholder(self)
-    end)
-
-    searchBox:SetScript("OnEditFocusLost", function(self)
-        UpdatePlaceholder(self)
-    end)
-
-    searchBox:SetScript("OnEscapePressed", function(self)
-        self:SetText("")
-        self:ClearFocus()
-    end)
-
-    searchBox:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
-    end)
-
-    HookSecureFunction(frame, "Update", ApplyCurrencySearchFilter)
-    UpdatePlaceholder(searchBox)
-end
-
-local function RefreshCurrencySearchState(forceUpdate)
-    local frame = rawget(_G, "TokenFrame")
-    if not frame then
-        return
+    if searchBox.Instructions then
+        searchBox.Instructions:SetText(L("CURRENCY_SEARCH_PLACEHOLDER"))
     end
 
-    local searchBox = frame.BeavisCurrencySearchBox
-    local enabled = Misc.IsCurrencySearchEnabled and Misc.IsCurrencySearchEnabled() or false
+    searchBox:HookScript("OnTextChanged", function(editBox)
+        currencySearchQuery = editBox:GetText() or ""
+        ApplyCurrencySearchFilter()
+    end)
 
-    RememberCurrencyDefaultLayout(frame)
+    searchBox:HookScript("OnEscapePressed", function(editBox)
+        editBox:ClearFocus()
+    end)
 
-    if enabled then
-        if searchBox then
-            searchBox:Show()
-            RefreshCurrencySearchLayout(frame, searchBox)
-            UpdatePlaceholder(searchBox)
-        end
-    else
-        currencySearchQuery = ""
+    searchBox:HookScript("OnEnterPressed", function(editBox)
+        editBox:ClearFocus()
+    end)
 
-        if searchBox then
-            searchBox:SetText("")
-            searchBox:ClearFocus()
-            UpdatePlaceholder(searchBox)
-            searchBox:Hide()
-        end
-
-        RestoreDefaultCurrencyLayout(frame)
+    local clearButton = searchBox.ClearButton
+    if clearButton and clearButton.HookScript then
+        clearButton:HookScript("OnClick", function()
+            ClearCurrencySearch(false)
+        end)
     end
 
-    if forceUpdate and frame.Update then
-        frame:Update()
-    end
+    currencySearchBox = searchBox
+    LayoutCurrencySearchBox()
+    RefreshCurrencySearchIfVisible()
+
+    return searchBox
 end
 
 local function InitializeCurrencySearch()
-    EnsureCurrencySearchUI()
-    RefreshCurrencySearchState(true)
+    if not IsTokenUILoaded() then
+        return
+    end
+
+    CreateCurrencySearchBox()
+    InstallRefreshHooks()
+    InstallRootHooks()
+    RegisterRuntimeEvents()
+    RefreshCurrencySearchIfVisible()
 end
 
 function Misc.SetCurrencySearchEnabled(value)
     Misc.GetMiscDB().currencySearchEnabled = value == true
 
-    if IsTokenUILoaded() then
-        InitializeCurrencySearch()
+    if not Misc.GetMiscDB().currencySearchEnabled then
+        RestoreSavedHeaderStates()
+        ClearCurrencySearch(true)
+
+        if currencySearchBox then
+            currencySearchBox:Hide()
+        end
+    else
+        RefreshCurrencySearchIfVisible()
     end
 
     RefreshMiscPageState()
 end
 
-CurrencySearchWatcher:RegisterEvent("ADDON_LOADED")
-CurrencySearchWatcher:RegisterEvent("PLAYER_LOGIN")
 CurrencySearchWatcher:SetScript("OnEvent", function(_, event, ...)
     local eventArg1 = ...
 
@@ -559,7 +746,21 @@ CurrencySearchWatcher:SetScript("OnEvent", function(_, event, ...)
         return
     end
 
-    if event == "PLAYER_LOGIN" and IsTokenUILoaded() then
-        InitializeCurrencySearch()
+    if event == "PLAYER_LOGIN" then
+        if IsTokenUILoaded() then
+            InitializeCurrencySearch()
+        end
+
+        return
     end
+
+    if event == "DISPLAY_SIZE_CHANGED" or event == "UI_SCALE_CHANGED" then
+        LayoutCurrencySearchBox()
+        return
+    end
+
+    RefreshCurrencySearchIfVisible()
 end)
+
+CurrencySearchWatcher:RegisterEvent("ADDON_LOADED")
+CurrencySearchWatcher:RegisterEvent("PLAYER_LOGIN")
