@@ -1389,21 +1389,6 @@ local function IsPlayerListingLeader()
     return true
 end
 
-local function HideBlizzardLFGWindow()
-    if PVEFrame and PVEFrame.IsShown and PVEFrame:IsShown() then
-        if type(HideUIPanel) == "function" then
-            SafeSecureCall(HideUIPanel, PVEFrame)
-        elseif PVEFrame.Hide then
-            SafeSecureCallMethod(PVEFrame, "Hide")
-        end
-        return
-    end
-
-    if LFGListFrame and LFGListFrame.IsShown and LFGListFrame:IsShown() and LFGListFrame.Hide then
-        SafeSecureCallMethod(LFGListFrame, "Hide")
-    end
-end
-
 local function OpenActiveEasyLFGListingEditor()
     if not HasActiveListing() or not IsPlayerListingLeader() then
         return
@@ -2949,7 +2934,6 @@ local function RefreshEasyLFGOverlay()
     if controllableListing and not EasyLFGWasActiveListing then
         EasyLFGSuppressed = false
         ResetEasyLFGApplicantState()
-        HideBlizzardLFGWindow()
     elseif not controllableListing then
         EasyLFGSuppressed = false
         ResetEasyLFGApplicantState()

@@ -4,13 +4,13 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.8`
-- Release-Datum: `2026-04-14`
+- Version: `0.37.9`
+- Release-Datum: `2026-04-15`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `SmartLFG` behält die gewünschte Bedienung bei, während problematische automatische Blizzard-LFG-Eingriffe entfernt bleiben
-  - das Release-Paket wurde um ungenutzte Font-Dubletten bereinigt
-  - kleiner interner Cleanup ohne beabsichtigte Funktionsänderung für Spieler
+  - `Gruppenplaner` bringt `!enter` wieder in einen einfachen Rollen-Workflow und erlaubt feste Rollen beim Bearbeiten von Slots
+  - `Währungssuche`, `Portal Viewer` und `SmartLFG` greifen taint-ärmer in sensible Blizzard-Fenster ein
+  - Whisper-, LFG- und Slot-Daten im `Gruppenplaner` bleiben bei Einträgen und Einladungen robuster erhalten
 
 ## Download
 
@@ -158,7 +158,7 @@ Beispiele:
 - `Gruppensuche`
   - Länderflaggen in der Premade-Suche mit robusterer Realm-Erkennung für mehr Regionen
   - `SmartLFG` als kompaktes Bewerber-Overlay für eigene aktive Listungen
-  - `SmartLFG` schließt beim Wechsel auf eine eigene aktive Listung das große Blizzard-Fenster; die automatische Blizzard-Fenster-Reparatur wurde entfernt, die expliziten SmartLFG-Aktionen wie `Bearb.` bleiben erhalten
+  - `SmartLFG` bleibt beim Wechsel auf eine eigene aktive Listung als Overlay nutzbar, ohne das große Blizzard-Fenster automatisch zu schließen; die expliziten SmartLFG-Aktionen wie `Bearb.` bleiben erhalten
   - Invite-Timer für Dungeon-, LFR-, Arena- und Schlachtfeld-Einladungen
   - optionaler Countdown-Sound in den letzten fünf Sekunden
 - `Listing-Presets`
@@ -170,6 +170,8 @@ Beispiele:
 - `Gruppenplaner`
   - transparentes Overlay für feste Dungeon- und Raid-Slots
   - Timerblock, Zielanzeige und Schnellaktion `Alle leeren`
+  - `!enter`-Whisper landen wieder direkt im einfachen Rollen-Workflow und bleiben für normale sowie Battle.net-Invites nutzbar
+  - Slots lassen sich beim Bearbeiten gezielt auf `Tank`, `Heiler` oder `DPS` festlegen
 
 ### Begleiter
 

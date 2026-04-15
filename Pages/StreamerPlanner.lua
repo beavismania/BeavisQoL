@@ -1445,12 +1445,20 @@ PlannerPrivate.GetActiveEntryInfoTable = function()
         return nil
     end
 
+    local rawActiveEntryInfo = nil
+    if C_LFGList.GetActiveEntryInfo then
+        local activeEntryInfoCandidate = C_LFGList.GetActiveEntryInfo()
+        if type(activeEntryInfoCandidate) == "table" then
+            rawActiveEntryInfo = activeEntryInfoCandidate
+        end
+    end
+
     local hasActiveEntry = false
 
     if C_LFGList.HasActiveEntryInfo then
         hasActiveEntry = C_LFGList.HasActiveEntryInfo() == true
-    elseif C_LFGList.GetActiveEntryInfo then
-        hasActiveEntry = C_LFGList.GetActiveEntryInfo() ~= nil
+    else
+        hasActiveEntry = rawActiveEntryInfo ~= nil
     end
 
     if not hasActiveEntry then
@@ -1460,6 +1468,12 @@ PlannerPrivate.GetActiveEntryInfoTable = function()
     local activeEntryInfo = {
         hasActiveEntry = true,
     }
+
+    if type(rawActiveEntryInfo) == "table" then
+        for key, value in pairs(rawActiveEntryInfo) do
+            activeEntryInfo[key] = value
+        end
+    end
 
     if LFGListFrame and LFGListFrame.EntryCreation then
         local entryCreation = LFGListFrame.EntryCreation
@@ -1514,6 +1528,15 @@ PlannerPrivate.GetEntryCreationTextCandidates = function()
         if C_LFGList.GetActivityInfo then
             PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, C_LFGList.GetActivityInfo(activityID))
         end
+    end
+
+    for _, value in ipairs({
+        activeEntryInfo.name,
+        activeEntryInfo.comment,
+        activeEntryInfo.voiceChat,
+        activeEntryInfo.requiredDungeonScoreMessage,
+    }) do
+        PlannerPrivate.AddUniqueCandidate(candidates, seenCandidates, value)
     end
 
     if LFGListFrame and LFGListFrame.EntryCreation then
@@ -1623,6 +1646,7 @@ PlannerPrivate.NormalizeSlotEntry = function(entry)
             classFile = PlannerPrivate.IsUsablePlainString(entry.classFile) and entry.classFile or nil,
             specID = type(entry.specID) == "number" and entry.specID or nil,
             roleKey = PlannerPrivate.NormalizePlannerRoleKey(entry.roleKey),
+            roleLocked = entry.roleLocked == true,
             inviteName = inviteName,
             sourceKey = PlannerPrivate.IsUsablePlainString(entry.sourceKey) and entry.sourceKey or nil,
         }
@@ -1634,6 +1658,7 @@ PlannerPrivate.NormalizeSlotEntry = function(entry)
             classFile = nil,
             specID = nil,
             roleKey = nil,
+            roleLocked = false,
             inviteName = nil,
             sourceKey = nil,
         }
@@ -1644,6 +1669,7 @@ PlannerPrivate.NormalizeSlotEntry = function(entry)
         classFile = nil,
         specID = nil,
         roleKey = nil,
+        roleLocked = false,
         inviteName = nil,
         sourceKey = nil,
     }
@@ -1842,8 +1868,10 @@ end
 PlannerPrivate.FindPlayerGUIDInEventArgs = function(...)
     for argumentIndex = 1, select("#", ...) do
         local guidCandidate = select(argumentIndex, ...)
-        if type(guidCandidate) == "string" and guidCandidate:find("^Player%-") then
-            return guidCandidate
+        if type(guidCandidate) == "string" and not PlannerPrivate.IsSecretValue(guidCandidate) then
+            if string.find(guidCandidate, "^Player%-") then
+                return guidCandidate
+            end
         end
     end
 
@@ -2045,13 +2073,56 @@ PlannerPrivate.ResolveBattleNetWhisperAuthorInfo = function(senderBnetIDAccount)
             return nil, nil
         end
 
-        return PlannerPrivate.BuildCharacterFullName(gameAccountInfo.characterName, gameAccountInfo.realmName),
-            PlannerPrivate.NormalizeClassFile(gameAccountInfo.className)
+        local resolvedName = PlannerPrivate.BuildCharacterFullName(gameAccountInfo.characterName, gameAccountInfo.realmName)
+        local resolvedClassFile = PlannerPrivate.NormalizeClassFile(gameAccountInfo.className)
+        local playerGUID = PlannerPrivate.IsUsablePlainString(gameAccountInfo.playerGuid) and gameAccountInfo.playerGuid or nil
+
+        if playerGUID ~= nil then
+            local getPlayerInfoByGUID = rawget(_G, "GetPlayerInfoByGUID")
+            if type(getPlayerInfoByGUID) == "function" then
+                local _, guidClassFile, _, _, _, playerName, realmName = getPlayerInfoByGUID(playerGUID)
+                resolvedClassFile = resolvedClassFile or PlannerPrivate.NormalizeClassFile(guidClassFile)
+                if resolvedName == nil and PlannerPrivate.IsUsablePlainString(playerName) then
+                    resolvedName = PlannerPrivate.BuildCharacterFullName(playerName, realmName)
+                end
+            end
+        end
+
+        return resolvedName, resolvedClassFile
+    end
+
+    if type(battleNetAPI.GetGameAccountInfoByID) == "function" then
+        local resolvedName, resolvedClassFile = ResolveGameAccountInfo(battleNetAPI.GetGameAccountInfoByID(senderBnetIDAccount))
+        if resolvedName then
+            return resolvedName, resolvedClassFile
+        end
+    end
+
+    if type(battleNetAPI.GetAccountInfoByID) == "function" then
+        local accountInfo = battleNetAPI.GetAccountInfoByID(senderBnetIDAccount)
+        if type(accountInfo) == "table" then
+            local resolvedName, resolvedClassFile = ResolveGameAccountInfo(accountInfo.gameAccountInfo)
+            if resolvedName then
+                return resolvedName, resolvedClassFile
+            end
+        end
+    end
+
+    local function MatchesSenderAccountID(accountInfo, gameAccountInfo)
+        if type(accountInfo) == "table" and tonumber(accountInfo.bnetAccountID) == senderBnetIDAccount then
+            return true
+        end
+
+        if type(gameAccountInfo) == "table" and tonumber(gameAccountInfo.gameAccountID) == senderBnetIDAccount then
+            return true
+        end
+
+        return false
     end
 
     for friendIndex = 1, (friendCount or 0) do
         local accountInfo = battleNetAPI.GetFriendAccountInfo(friendIndex)
-        if type(accountInfo) == "table" and accountInfo.bnetAccountID == senderBnetIDAccount then
+        if MatchesSenderAccountID(accountInfo, accountInfo and accountInfo.gameAccountInfo) then
             local resolvedName, resolvedClassFile = ResolveGameAccountInfo(accountInfo.gameAccountInfo)
             if resolvedName then
                 return resolvedName, resolvedClassFile
@@ -2059,9 +2130,12 @@ PlannerPrivate.ResolveBattleNetWhisperAuthorInfo = function(senderBnetIDAccount)
 
             if type(battleNetAPI.GetFriendNumGameAccounts) == "function" and type(battleNetAPI.GetFriendGameAccountInfo) == "function" then
                 for accountIndex = 1, (battleNetAPI.GetFriendNumGameAccounts(friendIndex) or 0) do
-                    resolvedName, resolvedClassFile = ResolveGameAccountInfo(battleNetAPI.GetFriendGameAccountInfo(friendIndex, accountIndex))
-                    if resolvedName then
-                        return resolvedName, resolvedClassFile
+                    local gameAccountInfo = battleNetAPI.GetFriendGameAccountInfo(friendIndex, accountIndex)
+                    if MatchesSenderAccountID(accountInfo, gameAccountInfo) then
+                        resolvedName, resolvedClassFile = ResolveGameAccountInfo(gameAccountInfo)
+                        if resolvedName then
+                            return resolvedName, resolvedClassFile
+                        end
                     end
                 end
             end
@@ -2570,6 +2644,92 @@ PlannerPrivate.GetEntryAssignedRole = function(entry)
     return resolvedRole
 end
 
+PlannerPrivate.IsSlotEntryEmpty = function(entry)
+    local normalizedEntry = PlannerPrivate.NormalizeSlotEntry(entry)
+    return normalizedEntry.name == ""
+        and normalizedEntry.classFile == nil
+        and normalizedEntry.specID == nil
+        and normalizedEntry.roleKey == nil
+        and normalizedEntry.inviteName == nil
+        and normalizedEntry.sourceKey == nil
+end
+
+PlannerPrivate.GetEntryIdentityKeys = function(entry)
+    local identityKeys = {}
+    local seen = {}
+
+    if type(entry) ~= "table" then
+        return identityKeys
+    end
+
+    for _, candidate in ipairs({
+        entry.inviteName,
+        entry.fullName,
+        entry.name,
+        entry.displayName,
+    }) do
+        for _, identityKey in ipairs(PlannerPrivate.GetIdentityKeys(candidate)) do
+            if not seen[identityKey] then
+                seen[identityKey] = true
+                identityKeys[#identityKeys + 1] = identityKey
+            end
+        end
+    end
+
+    return identityKeys
+end
+
+PlannerPrivate.FindMatchingParticipantIndex = function(participants, usedParticipants, entry)
+    local entryIdentityLookup = {}
+
+    for _, identityKey in ipairs(PlannerPrivate.GetEntryIdentityKeys(entry)) do
+        entryIdentityLookup[identityKey] = true
+    end
+
+    if next(entryIdentityLookup) == nil then
+        return nil
+    end
+
+    for participantIndex, participant in ipairs(participants or {}) do
+        if usedParticipants[participantIndex] ~= true then
+            for _, identityKey in ipairs(PlannerPrivate.GetEntryIdentityKeys(participant)) do
+                if entryIdentityLookup[identityKey] == true then
+                    return participantIndex
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+PlannerPrivate.MergeParticipantIntoEntry = function(existingEntry, participant)
+    local normalizedEntry = PlannerPrivate.NormalizeSlotEntry(existingEntry)
+    local resolvedRoleKey = nil
+
+    if normalizedEntry.roleLocked == true then
+        resolvedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(normalizedEntry.roleKey)
+    end
+
+    if resolvedRoleKey == nil then
+        resolvedRoleKey = PlannerPrivate.GetParticipantRoleKey(participant)
+            or PlannerPrivate.NormalizePlannerRoleKey(normalizedEntry.roleKey)
+    end
+
+    local resolvedName = PlannerPrivate.IsUsablePlainString(participant and participant.name) and participant.name
+        or normalizedEntry.name
+
+    return PlannerPrivate.NormalizeSlotEntry({
+        name = resolvedName,
+        classFile = participant and participant.classFile or normalizedEntry.classFile,
+        specID = type(participant and participant.specID) == "number" and participant.specID or normalizedEntry.specID,
+        roleKey = resolvedRoleKey,
+        roleLocked = normalizedEntry.roleLocked == true,
+        inviteName = participant and participant.inviteName or normalizedEntry.inviteName,
+        sourceKey = participant and participant.sourceKey or normalizedEntry.sourceKey,
+    })
+end
+
 local function FormatTimerSeconds(totalSeconds)
     local clampedSeconds = math.max(0, math.floor((tonumber(totalSeconds) or 0) + 0.5))
     local minutes = math.floor(clampedSeconds / 60)
@@ -2918,6 +3078,67 @@ local function GetSlotEntry(layout, index, settings)
     end
 
     return PlannerPrivate.NormalizeSlotEntry(resolvedSettings.slots.dungeon[slotInfo.key])
+end
+
+local function GetSlotEditorName(slotEntry)
+    local normalizedEntry = PlannerPrivate.NormalizeSlotEntry(slotEntry)
+    if PlannerPrivate.IsUsablePlainString(normalizedEntry.name) then
+        return normalizedEntry.name
+    end
+
+    local displayName = PlannerPrivate.GetDisplayNameFromFullName(normalizedEntry.inviteName)
+    if PlannerPrivate.IsUsablePlainString(displayName) and displayName ~= (UNKNOWN or "Unknown") then
+        return displayName
+    end
+
+    return tostring(normalizedEntry.name or "")
+end
+
+local function GetEditRoleRequirement()
+    if PlannerPrivate.editingUsesSelfRoleOverride == true then
+        return nil
+    end
+
+    local explicitRoleKey = PlannerPrivate.NormalizePlannerRoleKey(PlannerPrivate.editingRoleKey)
+    if explicitRoleKey ~= nil then
+        return explicitRoleKey
+    end
+
+    return GetSlotRoleRequirement(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
+end
+
+local function FindDungeonTargetIndexForRole(currentIndex, desiredRoleKey, settings)
+    local resolvedRoleKey = PlannerPrivate.NormalizePlannerRoleKey(desiredRoleKey)
+    if resolvedRoleKey == nil then
+        return currentIndex, false
+    end
+
+    local currentSlotInfo = GetDungeonSlotInfo(currentIndex)
+    local currentRoleRequirement = currentSlotInfo and DUNGEON_SLOT_ROLE_REQUIREMENTS[currentSlotInfo.key] or nil
+    if currentRoleRequirement == resolvedRoleKey then
+        return currentIndex, false
+    end
+
+    local swapCandidateIndex = nil
+
+    for candidateIndex, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+        if DUNGEON_SLOT_ROLE_REQUIREMENTS[slotInfo.key] == resolvedRoleKey then
+            local candidateEntry = GetSlotEntry("dungeon", candidateIndex, settings)
+            if PlannerPrivate.IsSlotEntryEmpty(candidateEntry) then
+                return candidateIndex, false
+            end
+
+            if currentRoleRequirement ~= nil and PlannerPrivate.GetEntryAssignedRole(candidateEntry) == currentRoleRequirement then
+                swapCandidateIndex = swapCandidateIndex or candidateIndex
+            end
+        end
+    end
+
+    if swapCandidateIndex ~= nil then
+        return swapCandidateIndex, true
+    end
+
+    return currentIndex, false
 end
 
 local function GetRaidRoleCounts()
@@ -3412,9 +3633,7 @@ PlannerPrivate.BuildManualDungeonBlocklist = function(settings)
         local slotKey = slotInfo.key
         local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotKey])
 
-        if PlannerPrivate.IsAutoManagedEntry(currentEntry) then
-            settings.slots.dungeon[slotKey] = PlannerPrivate.NormalizeSlotEntry(nil)
-        else
+        if not PlannerPrivate.IsAutoManagedEntry(currentEntry) then
             local inviteNameKey = PlannerPrivate.GetIdentityKey(currentEntry.inviteName)
             if inviteNameKey then
                 blocked[inviteNameKey] = true
@@ -3436,9 +3655,7 @@ PlannerPrivate.BuildManualRaidBlocklist = function(settings)
     for index = 1, RAID_SLOT_COUNT do
         local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
 
-        if PlannerPrivate.IsAutoManagedEntry(currentEntry) then
-            settings.slots.raid[index] = PlannerPrivate.NormalizeSlotEntry(nil)
-        else
+        if not PlannerPrivate.IsAutoManagedEntry(currentEntry) then
             local inviteNameKey = PlannerPrivate.GetIdentityKey(currentEntry.inviteName)
             if inviteNameKey then
                 blocked[inviteNameKey] = true
@@ -3525,12 +3742,7 @@ PlannerPrivate.FindDungeonSlotForParticipant = function(settings, participant)
     for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
         local slotKey = slotInfo.key
         local slotEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotKey])
-        local isEmptySlot = slotEntry.name == ""
-            and slotEntry.classFile == nil
-            and slotEntry.specID == nil
-            and slotEntry.roleKey == nil
-            and slotEntry.inviteName == nil
-            and slotEntry.sourceKey == nil
+        local isEmptySlot = PlannerPrivate.IsSlotEntryEmpty(slotEntry)
 
         if isEmptySlot then
             fallbackSlotKey = fallbackSlotKey or slotKey
@@ -3545,17 +3757,39 @@ PlannerPrivate.FindDungeonSlotForParticipant = function(settings, participant)
 end
 
 PlannerPrivate.ApplyDungeonParticipantsToSlots = function(settings, participants)
-    for _, participant in ipairs(participants) do
-        local targetSlotKey = PlannerPrivate.FindDungeonSlotForParticipant(settings, participant)
-        if targetSlotKey then
-            settings.slots.dungeon[targetSlotKey] = PlannerPrivate.NormalizeSlotEntry({
-                name = participant.name,
-                classFile = participant.classFile,
-                specID = participant.specID,
-                roleKey = PlannerPrivate.GetParticipantRoleKey(participant),
-                inviteName = participant.inviteName,
-                sourceKey = participant.sourceKey,
-            })
+    local usedParticipants = {}
+
+    for _, slotInfo in ipairs(StreamerPlannerModule.DUNGEON_LAYOUT) do
+        local slotKey = slotInfo.key
+        local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.dungeon[slotKey])
+
+        if not PlannerPrivate.IsSlotEntryEmpty(currentEntry) then
+            local participantIndex = PlannerPrivate.FindMatchingParticipantIndex(participants, usedParticipants, currentEntry)
+            if participantIndex ~= nil then
+                settings.slots.dungeon[slotKey] = PlannerPrivate.MergeParticipantIntoEntry(currentEntry, participants[participantIndex])
+                usedParticipants[participantIndex] = true
+            elseif PlannerPrivate.IsAutoManagedEntry(currentEntry) then
+                settings.slots.dungeon[slotKey] = PlannerPrivate.NormalizeSlotEntry(nil)
+            else
+                settings.slots.dungeon[slotKey] = currentEntry
+            end
+        end
+    end
+
+    for participantIndex, participant in ipairs(participants) do
+        if usedParticipants[participantIndex] ~= true then
+            local targetSlotKey = PlannerPrivate.FindDungeonSlotForParticipant(settings, participant)
+            if targetSlotKey then
+                settings.slots.dungeon[targetSlotKey] = PlannerPrivate.NormalizeSlotEntry({
+                    name = participant.name,
+                    classFile = participant.classFile,
+                    specID = participant.specID,
+                    roleKey = PlannerPrivate.GetParticipantRoleKey(participant),
+                    roleLocked = false,
+                    inviteName = participant.inviteName,
+                    sourceKey = participant.sourceKey,
+                })
+            end
         end
     end
 end
@@ -3563,12 +3797,7 @@ end
 PlannerPrivate.FindRaidSlotForParticipant = function(settings)
     for index = 1, RAID_SLOT_COUNT do
         local slotEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
-        local isEmptySlot = slotEntry.name == ""
-            and slotEntry.classFile == nil
-            and slotEntry.specID == nil
-            and slotEntry.roleKey == nil
-            and slotEntry.inviteName == nil
-            and slotEntry.sourceKey == nil
+        local isEmptySlot = PlannerPrivate.IsSlotEntryEmpty(slotEntry)
 
         if isEmptySlot then
             return index
@@ -3579,17 +3808,38 @@ PlannerPrivate.FindRaidSlotForParticipant = function(settings)
 end
 
 PlannerPrivate.ApplyRaidParticipantsToSlots = function(settings, participants)
-    for _, participant in ipairs(participants) do
-        local targetSlotIndex = PlannerPrivate.FindRaidSlotForParticipant(settings)
-        if targetSlotIndex then
-            settings.slots.raid[targetSlotIndex] = PlannerPrivate.NormalizeSlotEntry({
-                name = participant.name,
-                classFile = participant.classFile,
-                specID = participant.specID,
-                roleKey = PlannerPrivate.GetParticipantRoleKey(participant),
-                inviteName = participant.inviteName,
-                sourceKey = participant.sourceKey,
-            })
+    local usedParticipants = {}
+
+    for index = 1, RAID_SLOT_COUNT do
+        local currentEntry = PlannerPrivate.NormalizeSlotEntry(settings.slots.raid[index])
+
+        if not PlannerPrivate.IsSlotEntryEmpty(currentEntry) then
+            local participantIndex = PlannerPrivate.FindMatchingParticipantIndex(participants, usedParticipants, currentEntry)
+            if participantIndex ~= nil then
+                settings.slots.raid[index] = PlannerPrivate.MergeParticipantIntoEntry(currentEntry, participants[participantIndex])
+                usedParticipants[participantIndex] = true
+            elseif PlannerPrivate.IsAutoManagedEntry(currentEntry) then
+                settings.slots.raid[index] = PlannerPrivate.NormalizeSlotEntry(nil)
+            else
+                settings.slots.raid[index] = currentEntry
+            end
+        end
+    end
+
+    for participantIndex, participant in ipairs(participants) do
+        if usedParticipants[participantIndex] ~= true then
+            local targetSlotIndex = PlannerPrivate.FindRaidSlotForParticipant(settings)
+            if targetSlotIndex then
+                settings.slots.raid[targetSlotIndex] = PlannerPrivate.NormalizeSlotEntry({
+                    name = participant.name,
+                    classFile = participant.classFile,
+                    specID = participant.specID,
+                    roleKey = PlannerPrivate.GetParticipantRoleKey(participant),
+                    roleLocked = false,
+                    inviteName = participant.inviteName,
+                    sourceKey = participant.sourceKey,
+                })
+            end
         end
     end
 end
@@ -4264,7 +4514,7 @@ local function RefreshClassSpecButtons()
     local isSlotEditing = PlannerPrivate.editingField == "slot"
     local isDestinationEditing = PlannerPrivate.editingField == "destination"
     local isSelfRoleEditing = isSlotEditing and PlannerPrivate.editingUsesSelfRoleOverride == true
-    local roleRequirement = GetSlotRoleRequirement(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
+    local roleRequirement = GetEditRoleRequirement()
 
     if EditDialogInput then
         if isSlotEditing and not isSelfRoleEditing then
@@ -4326,16 +4576,23 @@ local function RefreshClassSpecButtons()
 
     if EditDialog and EditDialog.RoleTitle then
         EditDialog.RoleTitle:SetText(L("STREAMER_PLANNER_ROLE"))
-        EditDialog.RoleTitle:SetShown(isSelfRoleEditing)
+        EditDialog.RoleTitle:SetShown(isSlotEditing)
     end
 
-    if isSelfRoleEditing then
+    if isSlotEditing then
         for _, button in ipairs(PlannerPrivate.editRoleButtons) do
             local isAuto = button.RoleKey == false
             local active = (isAuto and PlannerPrivate.editingRoleKey == nil) or (button.RoleKey == PlannerPrivate.editingRoleKey)
             PlannerPrivate.RefreshSelectionButton(button, active)
             button:Show()
         end
+    else
+        for _, button in ipairs(PlannerPrivate.editRoleButtons) do
+            button:Hide()
+        end
+    end
+
+    if isSelfRoleEditing then
 
         if EditClassTitle then
             EditClassTitle:Hide()
@@ -4357,10 +4614,6 @@ local function RefreshClassSpecButtons()
         return
     end
 
-    for _, button in ipairs(PlannerPrivate.editRoleButtons) do
-        button:Hide()
-    end
-
     if EditClassTitle then
         if isSlotEditing then
             EditClassTitle:Show()
@@ -4380,7 +4633,7 @@ local function RefreshClassSpecButtons()
     if isSlotEditing and PlannerPrivate.editingClassFile and not IsClassAllowedForRole(PlannerPrivate.editingClassFile, roleRequirement) then
         PlannerPrivate.editingClassFile = nil
         PlannerPrivate.editingSpecID = nil
-    elseif isSlotEditing and PlannerPrivate.editingSpecID and not IsSpecAllowedForRole(PlannerPrivate.editingSpecID, roleRequirement) then
+    elseif isSlotEditing and PlannerPrivate.editingSpecID and not PlannerPrivate.IsSpecForClass(PlannerPrivate.editingClassFile, PlannerPrivate.editingSpecID) then
         PlannerPrivate.editingSpecID = nil
     end
 
@@ -4408,7 +4661,7 @@ local function RefreshClassSpecButtons()
         return
     end
 
-    local specOptions = BuildSpecOptions(PlannerPrivate.editingClassFile, roleRequirement)
+    local specOptions = BuildSpecOptions(PlannerPrivate.editingClassFile, nil)
     local visibleIndex = 0
     for _, specInfo in ipairs(specOptions) do
         if specInfo.id ~= nil then
@@ -4486,6 +4739,39 @@ LayoutEditDialogOptionButtons = function()
         return
     end
 
+    local roleColumnCount = 2
+    local roleRowCount = math.max(0, math.ceil(#visibleRoleButtons / roleColumnCount))
+    local roleBlockHeight = 0
+
+    if #visibleRoleButtons > 0 and EditDialog and EditDialog.RoleTitle and EditDialogInput then
+        EditDialog.RoleTitle:ClearAllPoints()
+        EditDialog.RoleTitle:SetPoint("TOPLEFT", EditDialogInput, "BOTTOMLEFT", 0, -18)
+
+        for index, button in ipairs(visibleRoleButtons) do
+            local columnIndex = (index - 1) % roleColumnCount
+            local rowIndex = math.floor((index - 1) / roleColumnCount)
+            button:ClearAllPoints()
+            button:SetPoint(
+                "TOPLEFT",
+                EditDialog.RoleTitle,
+                "BOTTOMLEFT",
+                columnIndex * 132,
+                -8 - (rowIndex * 34)
+            )
+        end
+
+        roleBlockHeight = 18 + (roleRowCount * 34)
+    end
+
+    if EditClassTitle and EditDialog and EditDialog.RoleTitle and EditDialogInput then
+        EditClassTitle:ClearAllPoints()
+        if #visibleRoleButtons > 0 then
+            EditClassTitle:SetPoint("TOPLEFT", EditDialog.RoleTitle, "BOTTOMLEFT", 0, -(roleBlockHeight + 8))
+        else
+            EditClassTitle:SetPoint("TOPLEFT", EditDialogInput, "BOTTOMLEFT", 0, -18)
+        end
+    end
+
     local classRowCount = math.max(1, math.ceil(#visibleClassButtons / EDIT_CLASS_BUTTON_COLUMNS))
 
     for index, button in ipairs(visibleClassButtons) do
@@ -4540,7 +4826,11 @@ LayoutEditDialogOptionButtons = function()
         PlannerPrivate.cancelSlotButton:ClearAllPoints()
         PlannerPrivate.cancelSlotButton:SetPoint("LEFT", PlannerPrivate.clearSlotButton, "RIGHT", 10, 0)
 
-        EditDialog:SetHeight(EDIT_DIALOG_SLOT_HEIGHT + math.max(0, classRowCount - 1) * (EDIT_CLASS_BUTTON_SIZE + EDIT_CLASS_BUTTON_SPACING))
+        EditDialog:SetHeight(
+            EDIT_DIALOG_SLOT_HEIGHT
+                + math.max(0, classRowCount - 1) * (EDIT_CLASS_BUTTON_SIZE + EDIT_CLASS_BUTTON_SPACING)
+                + roleBlockHeight
+        )
     elseif PlannerPrivate.saveSlotButton and PlannerPrivate.clearSlotButton and PlannerPrivate.cancelSlotButton then
         PlannerPrivate.saveSlotButton:ClearAllPoints()
         PlannerPrivate.saveSlotButton:SetPoint("BOTTOMLEFT", EditDialog, "BOTTOMLEFT", 16, 20)
@@ -5461,7 +5751,11 @@ local function OpenEditor(layout, index, forceSelfRoleEditor)
     PlannerPrivate.editingSpecID = slotEntry.specID
     PlannerPrivate.editingUsesSelfRoleOverride = forceSelfRoleEditor == true
         or PlannerPrivate.ShouldOpenSelfRoleEditor(layout, index, slotEntry)
-    PlannerPrivate.editingRoleKey = PlannerPrivate.NormalizePlannerRoleKey(GetStreamerPlannerSettings().selfRoleOverride)
+    if PlannerPrivate.editingUsesSelfRoleOverride then
+        PlannerPrivate.editingRoleKey = PlannerPrivate.NormalizePlannerRoleKey(GetStreamerPlannerSettings().selfRoleOverride)
+    else
+        PlannerPrivate.editingRoleKey = slotEntry.roleLocked == true and PlannerPrivate.NormalizePlannerRoleKey(slotEntry.roleKey) or nil
+    end
 
     if PlannerPrivate.editingUsesSelfRoleOverride then
         EditDialog:SetSize(EDIT_DIALOG_WIDTH, 244)
@@ -5483,9 +5777,9 @@ local function OpenEditor(layout, index, forceSelfRoleEditor)
     EditDialog.Title:SetText(string.format("%s: %s", L("STREAMER_PLANNER_SLOT_EDIT"), GetSlotLabel(layout, index)))
     EditDialog.Hint:SetText(L("STREAMER_PLANNER_SLOT_EDIT_HINT"))
     EditDialogTargetLabel:SetText("")
-    EditDialogInput:SetText(slotEntry.name)
     RefreshClassSpecButtons()
     EditDialog:Show()
+    EditDialogInput:SetText(GetSlotEditorName(slotEntry))
     EditDialogInput:SetFocus()
     EditDialogInput:HighlightText()
 end
@@ -6727,15 +7021,59 @@ PlannerPrivate.saveSlotButton = CreateActionButton(EditDialog, 92, "", function(
     end
 
     local currentEntry = GetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex)
+    local whisperEntry = nil
     if PlannerPrivate.IsWhisperSourceKey(currentEntry.sourceKey) then
-        PlannerPrivate.RemoveWhisperApplicantByName(currentEntry.inviteName or currentEntry.name, true)
+        whisperEntry = PlannerPrivate.FindWhisperApplicantByName(currentEntry.inviteName or currentEntry.name)
     end
 
-    SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, {
-        name = EditDialogInput:GetText(),
+    local editedName = EditDialogInput:GetText()
+    if not PlannerPrivate.IsUsablePlainString(editedName) then
+        editedName = GetSlotEditorName(currentEntry)
+    end
+
+    local updatedEntry = PlannerPrivate.NormalizeSlotEntry({
+        name = editedName,
         classFile = PlannerPrivate.editingClassFile,
         specID = PlannerPrivate.editingSpecID,
+        roleKey = PlannerPrivate.NormalizePlannerRoleKey(PlannerPrivate.editingRoleKey),
+        roleLocked = PlannerPrivate.NormalizePlannerRoleKey(PlannerPrivate.editingRoleKey) ~= nil,
+        inviteName = currentEntry.inviteName,
+        sourceKey = currentEntry.sourceKey,
     })
+
+    if type(whisperEntry) == "table" then
+        whisperEntry.classFile = updatedEntry.classFile or whisperEntry.classFile
+        whisperEntry.specID = updatedEntry.specID
+        if updatedEntry.roleLocked == true then
+            whisperEntry.roleKey = updatedEntry.roleKey
+        else
+            whisperEntry.roleKey = nil
+        end
+        whisperEntry.updatedAt = GetCurrentTimestamp()
+        GetStreamerPlannerSettings().whisperApplicants = PlannerPrivate.NormalizeWhisperApplicantList(GetStreamerPlannerSettings().whisperApplicants)
+    end
+
+    if PlannerPrivate.editingLayout == "dungeon" then
+        local targetIndex, shouldSwap = FindDungeonTargetIndexForRole(
+            PlannerPrivate.editingSlotIndex,
+            PlannerPrivate.GetEntryAssignedRole(updatedEntry),
+            GetStreamerPlannerSettings()
+        )
+
+        if targetIndex ~= PlannerPrivate.editingSlotIndex then
+            local targetEntry = GetSlotEntry("dungeon", targetIndex)
+            if shouldSwap == true then
+                SetSlotEntry("dungeon", PlannerPrivate.editingSlotIndex, targetEntry)
+            else
+                SetSlotEntry("dungeon", PlannerPrivate.editingSlotIndex, PlannerPrivate.NormalizeSlotEntry(nil))
+            end
+            SetSlotEntry("dungeon", targetIndex, updatedEntry)
+        else
+            SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, updatedEntry)
+        end
+    else
+        SetSlotEntry(PlannerPrivate.editingLayout, PlannerPrivate.editingSlotIndex, updatedEntry)
+    end
     HideEditDialog()
     PlannerPrivate.lastDungeonSyncSignature = nil
     PlannerPrivate.SyncDynamicPlannerState(true)
@@ -7364,10 +7702,7 @@ PlannerPrivate.watcher:SetScript("OnEvent", function(_, event, ...)
     if event == "CHAT_MSG_WHISPER" or event == "CHAT_MSG_BN_WHISPER" then
         local messageText = select(1, ...)
         local authorName = select(2, ...)
-        local playerGUID = nil
-        if event == "CHAT_MSG_WHISPER" then
-            playerGUID = PlannerPrivate.FindPlayerGUIDInEventArgs(...)
-        end
+        local playerGUID = PlannerPrivate.FindPlayerGUIDInEventArgs(...)
         local senderBnetIDAccount = nil
         if event == "CHAT_MSG_BN_WHISPER" then
             senderBnetIDAccount = tonumber((select(13, ...)))

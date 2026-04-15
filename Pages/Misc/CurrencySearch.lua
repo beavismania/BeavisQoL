@@ -4,7 +4,6 @@ BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 local L = BeavisQoL.L
 local HookSecureFunction = rawget(_G, "hooksecurefunc")
-local HidePanel = rawget(_G, "HideUIPanel")
 local TimerAfter = C_Timer and C_Timer.After
 local baseGetMiscDB = Misc.GetMiscDB
 local CurrencySearchWatcher = CreateFrame("Frame")
@@ -13,7 +12,6 @@ local TOKEN_UI_ADDON_NAME = "Blizzard_TokenUI"
 
 local currencySearchQuery = ""
 local defaultCurrencyScrollBoxPoints = nil
-local defaultCurrencyTransferLogButtonPoints = nil
 
 local function NormalizeSearchText(text)
     local normalizedText = tostring(text or "")
@@ -98,6 +96,10 @@ local function RestoreAnchorPoints(frame, points)
         return
     end
 
+    if frame.IsProtected and frame:IsProtected() then
+        return
+    end
+
     frame:ClearAllPoints()
     for _, pointInfo in ipairs(points) do
         frame:SetPoint(
@@ -118,10 +120,10 @@ local function RememberCurrencyDefaultLayout(frame)
     if (not defaultCurrencyScrollBoxPoints or #defaultCurrencyScrollBoxPoints == 0) and frame.ScrollBox then
         defaultCurrencyScrollBoxPoints = CaptureAnchorPoints(frame.ScrollBox)
     end
+end
 
-    if (not defaultCurrencyTransferLogButtonPoints or #defaultCurrencyTransferLogButtonPoints == 0) and frame.CurrencyTransferLogToggleButton then
-        defaultCurrencyTransferLogButtonPoints = CaptureAnchorPoints(frame.CurrencyTransferLogToggleButton)
-    end
+local function CanAdjustFrameLayout(frame)
+    return frame and not (frame.IsProtected and frame:IsProtected())
 end
 
 function Misc.GetMiscDB()
@@ -282,22 +284,23 @@ local function FilterCurrencyList(currencyList, query, selectedCurrencyIndex)
     return filteredList, selectedVisible
 end
 
-local function ClearCurrencySelection(frame)
-    if not frame then
-        return
-    end
-
-    frame.selectedToken = nil
-    frame.selectedID = nil
-
-    if frame.Popup then
-        frame.Popup:Hide()
+local function IsCurrencyTransferInteractionActive(frame)
+    if frame and frame.Popup and frame.Popup.IsShown and frame.Popup:IsShown() then
+        return true
     end
 
     local currencyTransferMenu = rawget(_G, "CurrencyTransferMenu")
-    if currencyTransferMenu and HidePanel then
-        HidePanel(currencyTransferMenu)
+    return currencyTransferMenu and currencyTransferMenu.IsShown and currencyTransferMenu:IsShown() or false
+end
+
+local function ContainsAccountTransferableCurrency(currencyList)
+    for _, entry in ipairs(currencyList) do
+        if entry and entry.isAccountTransferable then
+            return true
+        end
     end
+
+    return false
 end
 
 local function ApplyCurrencySearchFilter(frame)
@@ -313,11 +316,15 @@ local function ApplyCurrencySearchFilter(frame)
         return
     end
 
+    if currencySearchQuery == "" or IsCurrencyTransferInteractionActive(frame) then
+        return
+    end
+
     local requiresAccountData = C_CurrencyInfo.DoesCurrentFilterRequireAccountCurrencyData
         and C_CurrencyInfo.DoesCurrentFilterRequireAccountCurrencyData()
     local isAccountDataReady = not requiresAccountData
         or (C_CurrencyInfo.IsAccountCharacterCurrencyDataReady and C_CurrencyInfo.IsAccountCharacterCurrencyDataReady())
-    if not isAccountDataReady then
+    if not isAccountDataReady or requiresAccountData then
         return
     end
 
@@ -331,10 +338,12 @@ local function ApplyCurrencySearchFilter(frame)
     end
 
     local selectedCurrencyIndex = frame.selectedID
-    local filteredList, selectedVisible = FilterCurrencyList(currencyList, currencySearchQuery, selectedCurrencyIndex)
+    local filteredList = FilterCurrencyList(currencyList, currencySearchQuery, selectedCurrencyIndex)
 
-    if currencySearchQuery ~= "" and selectedCurrencyIndex and not selectedVisible then
-        ClearCurrencySelection(frame)
+    -- Keep Blizzard's own provider for protected transfer rows so the confirm
+    -- button path stays on Blizzard's secure data provider.
+    if ContainsAccountTransferableCurrency(filteredList) then
+        return
     end
 
     frame.ScrollBox:SetDataProvider(CreateDataProvider(filteredList), ScrollBoxConstants.RetainScrollPosition)
@@ -347,7 +356,6 @@ local function RestoreDefaultCurrencyLayout(frame)
 
     RememberCurrencyDefaultLayout(frame)
     RestoreAnchorPoints(frame.ScrollBox, defaultCurrencyScrollBoxPoints)
-    RestoreAnchorPoints(frame.CurrencyTransferLogToggleButton, defaultCurrencyTransferLogButtonPoints)
 end
 
 local function LayoutCurrencySearchUI(frame, searchBox)
@@ -359,47 +367,48 @@ local function LayoutCurrencySearchUI(frame, searchBox)
     local filterDropdown = frame.filterDropdown
     local transferLogButton = frame.CurrencyTransferLogToggleButton
     local useInsetLayout = IsInsetLayoutActive(inset)
-    local frameReference = filterDropdown or frame
+    local frameReference = filterDropdown or transferLogButton or frame
+    local canAdjustScrollBoxLayout = CanAdjustFrameLayout(frame.ScrollBox)
 
     searchBox:ClearAllPoints()
     ApplyFrameOrderFromReference(frameReference, searchBox)
-
-    if transferLogButton and filterDropdown then
-        transferLogButton:ClearAllPoints()
-        transferLogButton:SetPoint("RIGHT", filterDropdown, "LEFT", -8, 0)
-        ApplyFrameOrderFromReference(frameReference, transferLogButton)
-    elseif transferLogButton then
-        ApplyFrameOrderFromReference(frameReference, transferLogButton)
-    end
 
     if useInsetLayout and filterDropdown and transferLogButton then
         searchBox:SetPoint("LEFT", inset, "TOPLEFT", 8, -19)
         searchBox:SetPoint("RIGHT", transferLogButton, "LEFT", -8, 0)
 
-        frame.ScrollBox:ClearAllPoints()
-        frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
-        frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
+        if canAdjustScrollBoxLayout then
+            frame.ScrollBox:ClearAllPoints()
+            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
+            frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
+        end
     elseif useInsetLayout and filterDropdown then
         searchBox:SetPoint("LEFT", inset, "TOPLEFT", 8, -19)
         searchBox:SetPoint("RIGHT", filterDropdown, "LEFT", -12, 0)
 
-        frame.ScrollBox:ClearAllPoints()
-        frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
-        frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
+        if canAdjustScrollBoxLayout then
+            frame.ScrollBox:ClearAllPoints()
+            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
+            frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
+        end
     elseif filterDropdown and transferLogButton then
         searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -62)
         searchBox:SetPoint("RIGHT", transferLogButton, "LEFT", -8, 0)
 
-        frame.ScrollBox:ClearAllPoints()
-        frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -20, -10)
-        frame.ScrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -30, 26)
+        if canAdjustScrollBoxLayout then
+            frame.ScrollBox:ClearAllPoints()
+            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -20, -10)
+            frame.ScrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -30, 26)
+        end
     elseif filterDropdown then
         searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -62)
         searchBox:SetPoint("RIGHT", filterDropdown, "LEFT", -12, 0)
 
-        frame.ScrollBox:ClearAllPoints()
-        frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -20, -10)
-        frame.ScrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -30, 26)
+        if canAdjustScrollBoxLayout then
+            frame.ScrollBox:ClearAllPoints()
+            frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -20, -10)
+            frame.ScrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -30, 26)
+        end
     else
         searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -56)
         searchBox:SetSize(170, 22)

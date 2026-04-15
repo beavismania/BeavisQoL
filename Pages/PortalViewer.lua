@@ -22,6 +22,7 @@ local PortalRows = {}
 local PortalStatusCache
 local PortalStatusCacheDirty = true
 local InvalidatePortalStatusCache
+local pendingPortalViewerRefresh = false
 
 local SEASON_DUNGEON_PORTALS = {
     {
@@ -205,6 +206,10 @@ local function ApplyPortalViewerPosition()
     PortalFrame:SetPoint(settings.point, UIParent, settings.relativePoint, settings.offsetX, settings.offsetY)
 end
 
+local function IsPortalViewerInCombatLockdown()
+    return InCombatLockdown and InCombatLockdown()
+end
+
 function PortalViewerModule.IsWindowEnabled()
     return GetPortalViewerSettings().enabled == true
 end
@@ -219,10 +224,9 @@ function PortalViewerModule.SetWindowEnabled(enabled)
 
     if settings.enabled then
         InvalidatePortalStatusCache()
-        PortalViewerModule.RefreshWindow()
-    elseif PortalFrame then
-        PortalFrame:Hide()
     end
+
+    PortalViewerModule.RefreshWindow()
 end
 
 function PortalViewerModule.ToggleWindow()
@@ -552,7 +556,7 @@ local function ConfigureRow(row, dungeonData, dungeonStatus)
     end
     row.Icon:SetTexture(dungeonStatus.iconID or GENERIC_PORTAL_ICON)
 
-    if not (InCombatLockdown and InCombatLockdown()) then
+    if not IsPortalViewerInCombatLockdown() then
         row:SetAttribute("type", nil)
         row:SetAttribute("type1", nil)
         row:SetAttribute("spell", nil)
@@ -721,6 +725,13 @@ local function BuildPortalViewerFrame()
 end
 
 function PortalViewerModule.RefreshWindow()
+    -- SecureActionButton rows cannot be shown, hidden, or re-laid out during combat.
+    if IsPortalViewerInCombatLockdown() then
+        pendingPortalViewerRefresh = true
+        return
+    end
+
+    pendingPortalViewerRefresh = false
     local settings = GetPortalViewerSettings()
 
     if not settings.enabled then
@@ -751,9 +762,17 @@ end
 local PortalViewerEvents = CreateFrame("Frame")
 PortalViewerEvents:RegisterEvent("PLAYER_LOGIN")
 PortalViewerEvents:RegisterEvent("PLAYER_ENTERING_WORLD")
+PortalViewerEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
 PortalViewerEvents:RegisterEvent("SPELLS_CHANGED")
 PortalViewerEvents:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 PortalViewerEvents:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_REGEN_ENABLED" then
+        if pendingPortalViewerRefresh and PortalViewerModule and PortalViewerModule.RefreshWindow then
+            PortalViewerModule.RefreshWindow()
+        end
+        return
+    end
+
     if event == "SPELL_UPDATE_COOLDOWN" then
         if PortalViewerModule and PortalViewerModule.RefreshWindow and PortalViewerModule.IsWindowEnabled and PortalViewerModule.IsWindowEnabled() then
             PortalViewerModule.RefreshWindow()

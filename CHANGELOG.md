@@ -2,6 +2,18 @@
 
 ## Unveröffentlicht
 
+## 0.37.9 - 2026-04-15
+
+### Hotfix
+
+- `Währungssuche` lässt den Blizzard-Transferpfad für kontoweite Währungen jetzt unangetastet, damit beim Überweisen kein `ADDON_ACTION_FORBIDDEN` mehr über `RequestCurrencyFromAccountCharacter` ausgelöst wird
+- `Saison Portale` verschiebt geschützte Fenster-Refreshes jetzt bis nach dem Kampf, damit kein `ADDON_ACTION_BLOCKED` mehr durch `Button:Hide()` aus der Portal-Liste ausgelöst wird
+- `SmartLFG` greift beim Wechsel auf die eigene aktive Listung nicht mehr automatisch in das Blizzard-LFG-Fenster ein, damit das Overlay ohne zusätzliche Panel-Eingriffe stabil bleibt
+- `Gruppenplaner` nutzt bei `!enter` wieder einen einfachen Rollen-Workflow ohne Klassenzwang, damit Whisper-Einträge schneller in die Planung und wieder sauber in normale sowie Battle.net-Invites laufen
+- `Gruppenplaner` validiert Rollen jetzt strenger gegen bekannte Klasse und Spec, damit unmögliche Zuordnungen wie `Tank` auf einem Heilschamanen nicht im Dungeon-Planer hängenbleiben
+- der `Gruppenplaner` erlaubt beim Slot-Bearbeiten jetzt eine feste Rollenwahl für Spieler im Planer, tauscht Dungeon-Slots bei Bedarf passend um und behandelt die manuelle Rolle wichtiger als später erkannte Gruppenspezialisierungen
+- der Slot-Editor im `Gruppenplaner` befüllt bestehende Namen robuster vor, statt bekannte Einträge beim Bearbeiten leer zu zeigen
+
 ## 0.37.8 - 2026-04-14
 
 ### Hotfix
