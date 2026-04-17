@@ -25,6 +25,7 @@ local ScalePopupTitle
 local ScalePopupValue
 local ScalePopupLockButton
 local sliderIsRefreshing = false
+local pendingTalentFrameLayout = false
 
 local abs = math.abs
 local floor = math.floor
@@ -106,6 +107,20 @@ end
 local function GetTalentFrameCloseButton()
     local playerSpellsFrame = GetPlayerSpellsFrame()
     return (playerSpellsFrame and playerSpellsFrame.CloseButton) or rawget(_G, "PlayerSpellsFrameCloseButton")
+end
+
+local function IsTalentFrameLayoutBlocked(frame)
+    local inCombatLockdown = rawget(_G, "InCombatLockdown")
+    if not frame or not frame.IsProtected or type(inCombatLockdown) ~= "function" then
+        return false
+    end
+
+    return frame:IsProtected() and inCombatLockdown() == true
+end
+
+local function QueueTalentFrameLayoutRetry()
+    pendingTalentFrameLayout = true
+    TalentFrameScaleWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
 function Misc.GetMiscDB()
@@ -200,6 +215,10 @@ local function SaveScalePopupPosition(frame)
 end
 
 local function ApplyTalentFrameLayout(frame)
+    if not frame then
+        return false
+    end
+
     local targetScale = Misc.IsTalentFrameScaleEnabled() and Misc.GetTalentFrameScale() or DEFAULT_TALENT_FRAME_SCALE
     local point, relativePoint, xOfs, yOfs = GetStoredTalentFrameAnchor()
 
@@ -207,10 +226,17 @@ local function ApplyTalentFrameLayout(frame)
     -- Keep both addons in sync so BeavisQoL remains the visible source of truth.
     SyncTalentTreeTweaksScale(targetScale)
 
-    frame:SetParent(UIParent)
+    if IsTalentFrameLayoutBlocked(frame) then
+        QueueTalentFrameLayoutRetry()
+        return false
+    end
+
     frame:SetScale(targetScale)
     frame:ClearAllPoints()
     frame:SetPoint(point, UIParent, relativePoint, xOfs, yOfs)
+    pendingTalentFrameLayout = false
+    TalentFrameScaleWatcher:UnregisterEvent("PLAYER_REGEN_ENABLED")
+    return true
 end
 
 local function RefreshScalePopupLockButton()
@@ -702,6 +728,16 @@ end
 TalentFrameScaleWatcher:RegisterEvent("PLAYER_LOGIN")
 TalentFrameScaleWatcher:RegisterEvent("ADDON_LOADED")
 TalentFrameScaleWatcher:SetScript("OnEvent", function(_, event, addonName)
+    if event == "PLAYER_REGEN_ENABLED" then
+        TalentFrameScaleWatcher:UnregisterEvent("PLAYER_REGEN_ENABLED")
+
+        if pendingTalentFrameLayout then
+            pendingTalentFrameLayout = false
+            AttachPlayerSpellsFrame()
+        end
+        return
+    end
+
     if event == "PLAYER_LOGIN" then
         -- Do not force-load Blizzard_PlayerSpells on login.
         -- Hook lazily once Blizzard opens the talents UI itself.

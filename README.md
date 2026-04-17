@@ -4,13 +4,14 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 
 ## Aktueller Stand
 
-- Version: `0.37.10`
-- Release-Datum: `2026-04-15`
+- Version: `0.38.0`
+- Release-Datum: `2026-04-17`
 - Release-Kanal: `beta`
 - Highlights dieser Version:
-  - `Währungssuche` reagiert beim Tippen wieder direkt auf Treffer
-  - `Tooltip-Itemlevel` wurde für Mouseover-Tooltips weiter stabilisiert
-  - `Jagd-Fortschritt` zählt den Jagdfortschritt am Blizzard-Symbol jetzt direkt als Prozent hoch
+  - `Chat-Link Kopieren` erkennt Weblinks im Chat und öffnet ein kopierbares Popup
+  - `Addon` wurde für `12.0.5` geprüft und die Addon-Liste zeigt jetzt Symbol und Kategorie
+  - `WeeklyKeys`, `Stats` und `ButtonSammler` merken sich ihre Position nach manueller Einstellung
+  - `Rufsuche`, `Tooltip-Itemlevel`, `Auktionshaus-Favoriten` und `Talentfenster-Skalierung` wurden weiter stabilisiert
 
 ## Download
 
@@ -115,6 +116,9 @@ Beispiele:
   - Countdown-Dauer ist einstellbar und die Buttons können optional außerhalb von Gruppen gesperrt bleiben
 - `Tooltip-Itemlevel`
   - zeigt das ausgerüstete Itemlevel anderer Spieler direkt im Mouseover-Tooltip
+- `Chat-Link Kopieren`
+  - erkennt `http://`- und `https://`-Links direkt im Chat
+  - öffnet beim Klick ein kopierbares Popup mit der URL
 - `Kameraweite`
   - schaltet zwischen Standard und Max Distance um
 - `Angelhilfe`

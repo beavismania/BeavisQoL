@@ -3,14 +3,22 @@ local _, BeavisQoL = ...
 BeavisQoL.Misc = BeavisQoL.Misc or {}
 local Misc = BeavisQoL.Misc
 local L = BeavisQoL.L
-local HookSecureFunction = rawget(_G, "hooksecurefunc")
 local baseGetMiscDB = Misc.GetMiscDB
 local ReputationSearchWatcher = CreateFrame("Frame")
 
 local REPUTATION_UI_ADDON_NAME = "Blizzard_UIPanels_Game"
+local MAX_RESULT_BUTTONS = 8
+local RESULT_BUTTON_HEIGHT = 20
 
 local reputationSearchQuery = ""
-local defaultReputationScrollBoxPoints = nil
+local reputationSearchBox = nil
+local reputationSearchFrame = nil
+local reputationSearchResultsFrame = nil
+local reputationSearchResultButtons = {}
+local reputationSearchResults = {}
+local reputationSearchFrameHooksInstalled = false
+
+local RefreshReputationSearchResults
 
 local function NormalizeSearchText(text)
     local normalizedText = tostring(text or "")
@@ -49,55 +57,6 @@ local function RefreshMiscPageState()
     end
 end
 
-local function CaptureAnchorPoints(frame)
-    local points = {}
-    if not frame or not frame.GetNumPoints or not frame.GetPoint then
-        return points
-    end
-
-    for pointIndex = 1, (frame:GetNumPoints() or 0) do
-        local point, relativeTo, relativePoint, xOffset, yOffset = frame:GetPoint(pointIndex)
-        if point then
-            points[#points + 1] = {
-                point = point,
-                relativeTo = relativeTo,
-                relativePoint = relativePoint,
-                xOffset = xOffset or 0,
-                yOffset = yOffset or 0,
-            }
-        end
-    end
-
-    return points
-end
-
-local function RestoreAnchorPoints(frame, points)
-    if not frame or not frame.ClearAllPoints or not frame.SetPoint or not points or #points == 0 then
-        return
-    end
-
-    frame:ClearAllPoints()
-    for _, pointInfo in ipairs(points) do
-        frame:SetPoint(
-            pointInfo.point,
-            pointInfo.relativeTo,
-            pointInfo.relativePoint,
-            pointInfo.xOffset,
-            pointInfo.yOffset
-        )
-    end
-end
-
-local function RememberReputationDefaultLayout(frame)
-    if not frame or not frame.ScrollBox then
-        return
-    end
-
-    if not defaultReputationScrollBoxPoints or #defaultReputationScrollBoxPoints == 0 then
-        defaultReputationScrollBoxPoints = CaptureAnchorPoints(frame.ScrollBox)
-    end
-end
-
 function Misc.GetMiscDB()
     local db
 
@@ -125,301 +84,364 @@ local function UpdatePlaceholder(editBox)
         return
     end
 
-    if editBox:HasFocus() or editBox:GetText() ~= "" then
+    local hasFocus = editBox.HasFocus and editBox:HasFocus()
+    local hasText = editBox.GetText and editBox:GetText() ~= ""
+
+    if hasFocus or hasText then
         editBox.Placeholder:Hide()
     else
         editBox.Placeholder:Show()
     end
 end
 
-local function InsertFilteredEntry(targetList, entry, selectedFactionIndex, selectedVisible)
-    targetList[#targetList + 1] = entry
-    if selectedFactionIndex and entry and entry.factionIndex == selectedFactionIndex then
-        selectedVisible = true
+local function HideReputationSearchResults()
+    reputationSearchResults = {}
+
+    if reputationSearchResultsFrame then
+        reputationSearchResultsFrame:Hide()
     end
 
-    return selectedVisible
+    for _, button in ipairs(reputationSearchResultButtons) do
+        button.Entry = nil
+        button:Hide()
+    end
 end
 
-local function FilterFactionList(factionList, query, selectedFactionIndex)
-    if query == "" then
-        return factionList, true
+local function GetVisibleReputationEntries()
+    local entries = {}
+
+    if not C_Reputation or not C_Reputation.GetNumFactions or not C_Reputation.GetFactionDataByIndex then
+        return entries
     end
 
-    local topGroups = {}
-    local currentTopGroup = nil
-    local currentChildBlock = nil
-
-    local function EnsureTopGroup(headerEntry)
-        local group = {
-            header = headerEntry,
-            blocks = {},
-        }
-        topGroups[#topGroups + 1] = group
-        currentTopGroup = group
-        currentChildBlock = nil
-        return group
-    end
-
-    local function EnsureCurrentTopGroup()
-        if currentTopGroup then
-            return currentTopGroup
-        end
-
-        return EnsureTopGroup(nil)
-    end
-
-    for _, entry in ipairs(factionList) do
-        if entry.isHeader and not entry.isChild then
-            EnsureTopGroup(entry)
-        elseif entry.isHeader and entry.isChild then
-            local topGroup = EnsureCurrentTopGroup()
-            currentChildBlock = {
-                subHeader = entry,
-                items = {},
-            }
-            topGroup.blocks[#topGroup.blocks + 1] = currentChildBlock
-        elseif entry.isChild then
-            local topGroup = EnsureCurrentTopGroup()
-
-            if not currentChildBlock then
-                currentChildBlock = {
-                    subHeader = nil,
-                    items = {},
-                }
-                topGroup.blocks[#topGroup.blocks + 1] = currentChildBlock
-            end
-
-            currentChildBlock.items[#currentChildBlock.items + 1] = entry
-        else
-            local topGroup = EnsureCurrentTopGroup()
-            topGroup.blocks[#topGroup.blocks + 1] = {
-                entry = entry,
-            }
-            currentChildBlock = nil
-        end
-    end
-
-    local filteredList = {}
-    local selectedVisible = false
-
-    for _, group in ipairs(topGroups) do
-        local topHeaderMatches = group.header and SearchTextContains(group.header.name, query) or false
-        local hasAnyMatch = topHeaderMatches
-
-        if not hasAnyMatch then
-            for _, block in ipairs(group.blocks) do
-                if block.entry then
-                    if SearchTextContains(block.entry.name, query) then
-                        hasAnyMatch = true
-                        break
-                    end
-                else
-                    local subHeaderMatches = block.subHeader and SearchTextContains(block.subHeader.name, query) or false
-                    if subHeaderMatches then
-                        hasAnyMatch = true
-                        break
-                    end
-
-                    for _, childEntry in ipairs(block.items) do
-                        if SearchTextContains(childEntry.name, query) then
-                            hasAnyMatch = true
-                            break
-                        end
-                    end
-
-                    if hasAnyMatch then
-                        break
-                    end
-                end
-            end
-        end
-
-        if hasAnyMatch then
-            local groupHeaderInserted = false
-
-            local function EnsureGroupHeader()
-                if group.header and not groupHeaderInserted then
-                    selectedVisible = InsertFilteredEntry(filteredList, group.header, selectedFactionIndex, selectedVisible)
-                    groupHeaderInserted = true
-                end
-            end
-
-            if topHeaderMatches then
-                EnsureGroupHeader()
-
-                for _, block in ipairs(group.blocks) do
-                    if block.entry then
-                        selectedVisible = InsertFilteredEntry(filteredList, block.entry, selectedFactionIndex, selectedVisible)
-                    else
-                        if block.subHeader then
-                            selectedVisible = InsertFilteredEntry(filteredList, block.subHeader, selectedFactionIndex, selectedVisible)
-                        end
-
-                        for _, childEntry in ipairs(block.items) do
-                            selectedVisible = InsertFilteredEntry(filteredList, childEntry, selectedFactionIndex, selectedVisible)
-                        end
-                    end
-                end
-            else
-                for _, block in ipairs(group.blocks) do
-                    if block.entry then
-                        if SearchTextContains(block.entry.name, query) then
-                            EnsureGroupHeader()
-                            selectedVisible = InsertFilteredEntry(filteredList, block.entry, selectedFactionIndex, selectedVisible)
-                        end
-                    else
-                        local subHeaderMatches = block.subHeader and SearchTextContains(block.subHeader.name, query) or false
-                        local matchingChildren = {}
-
-                        for _, childEntry in ipairs(block.items) do
-                            if SearchTextContains(childEntry.name, query) then
-                                matchingChildren[#matchingChildren + 1] = childEntry
-                            end
-                        end
-
-                        if subHeaderMatches or #matchingChildren > 0 then
-                            EnsureGroupHeader()
-
-                            if block.subHeader then
-                                selectedVisible = InsertFilteredEntry(filteredList, block.subHeader, selectedFactionIndex, selectedVisible)
-                            end
-
-                            if subHeaderMatches then
-                                for _, childEntry in ipairs(block.items) do
-                                    selectedVisible = InsertFilteredEntry(filteredList, childEntry, selectedFactionIndex, selectedVisible)
-                                end
-                            else
-                                for _, childEntry in ipairs(matchingChildren) do
-                                    selectedVisible = InsertFilteredEntry(filteredList, childEntry, selectedFactionIndex, selectedVisible)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    return filteredList, selectedVisible
-end
-
-local function ApplyReputationSearchFilter(frame)
-    if not Misc.IsReputationSearchEnabled or not Misc.IsReputationSearchEnabled() then
-        return
-    end
-
-    if not frame or not frame.ScrollBox or not C_Reputation or not C_Reputation.GetNumFactions or not C_Reputation.GetFactionDataByIndex then
-        return
-    end
-
-    local factionList = {}
     for index = 1, C_Reputation.GetNumFactions() do
         local factionData = C_Reputation.GetFactionDataByIndex(index)
-        if factionData then
-            factionData.factionIndex = index
-            factionList[#factionList + 1] = factionData
+        if factionData and factionData.name and factionData.name ~= "" then
+            entries[#entries + 1] = {
+                factionIndex = index,
+                factionID = factionData.factionID,
+                name = factionData.name,
+                isHeader = factionData.isHeader == true,
+                isChild = factionData.isChild == true,
+                isCollapsed = factionData.isCollapsed == true,
+            }
         end
     end
 
-    local selectedFactionIndex = C_Reputation.GetSelectedFaction and C_Reputation.GetSelectedFaction() or 0
-    local filteredList, selectedVisible = FilterFactionList(factionList, reputationSearchQuery, selectedFactionIndex)
-
-    if reputationSearchQuery ~= "" and selectedFactionIndex and selectedFactionIndex > 0 and not selectedVisible and C_Reputation.SetSelectedFaction then
-        C_Reputation.SetSelectedFaction(0)
-    end
-
-    frame.ScrollBox:SetDataProvider(CreateDataProvider(filteredList), ScrollBoxConstants.RetainScrollPosition)
-
-    if frame.ReputationDetailFrame and frame.ReputationDetailFrame.Refresh then
-        frame.ReputationDetailFrame:Refresh()
-    end
+    return entries
 end
 
-local function RestoreDefaultReputationLayout(frame)
-    if not frame or not frame.ScrollBox then
+local function BuildReputationSearchResults(query)
+    local results = {}
+
+    if query == "" then
+        return results
+    end
+
+    for _, entry in ipairs(GetVisibleReputationEntries()) do
+        if SearchTextContains(entry.name, query) then
+            results[#results + 1] = entry
+
+            if #results >= MAX_RESULT_BUTTONS then
+                break
+            end
+        end
+    end
+
+    return results
+end
+
+local function FormatReputationResultLabel(entry)
+    local indent = entry.isChild and "    " or ""
+    local prefix = entry.isHeader and "> " or ""
+    return indent .. prefix .. (entry.name or "")
+end
+
+local function ApplyResultButtonVisual(button, hovered)
+    if not button or not button.Background or not button.Label then
         return
     end
 
-    RememberReputationDefaultLayout(frame)
-    RestoreAnchorPoints(frame.ScrollBox, defaultReputationScrollBoxPoints)
+    local entry = button.Entry
+    local isHeader = entry and entry.isHeader == true
+
+    if hovered then
+        button.Background:SetColorTexture(1, 0.82, 0, 0.18)
+    else
+        button.Background:SetColorTexture(1, 1, 1, isHeader and 0.06 or 0.03)
+    end
+
+    if isHeader then
+        button.Label:SetTextColor(1, 0.82, 0, 1)
+    else
+        button.Label:SetTextColor(0.94, 0.92, 0.88, 1)
+    end
 end
 
-local function IsInsetLayoutActive(inset)
-    return inset and inset.IsShown and inset:IsShown()
+local function FindFirstSelectableEntryAfterHeader(headerEntry)
+    local foundHeader = false
+
+    for _, entry in ipairs(GetVisibleReputationEntries()) do
+        if not foundHeader then
+            if entry.factionIndex == headerEntry.factionIndex then
+                foundHeader = true
+            end
+        else
+            if headerEntry.isChild then
+                if not entry.isChild or (entry.isHeader and entry.isChild) then
+                    break
+                end
+            elseif entry.isHeader and not entry.isChild then
+                break
+            end
+
+            if not entry.isHeader then
+                return entry
+            end
+        end
+    end
+
+    return nil
 end
 
-local function ApplySearchBoxFrameOrder(frame, searchBox)
-    if not frame or not searchBox then
+local function ApplyReputationSearchResult(entry)
+    if not entry then
+        return
+    end
+
+    if entry.isHeader then
+        if entry.isCollapsed and C_Reputation and C_Reputation.ExpandFactionHeader then
+            pcall(C_Reputation.ExpandFactionHeader, entry.factionIndex)
+            return
+        end
+
+        entry = FindFirstSelectableEntryAfterHeader(entry)
+        if not entry then
+            return
+        end
+    end
+
+    if C_Reputation and C_Reputation.SetSelectedFaction then
+        pcall(C_Reputation.SetSelectedFaction, entry.factionIndex)
+    end
+end
+
+local function EnsureResultsFrame()
+    if reputationSearchResultsFrame or not reputationSearchFrame or not reputationSearchBox then
+        return reputationSearchResultsFrame
+    end
+
+    local resultsFrame = CreateFrame("Frame", nil, reputationSearchFrame)
+    resultsFrame:SetPoint("TOPLEFT", reputationSearchBox, "BOTTOMLEFT", 0, -4)
+    resultsFrame:SetPoint("TOPRIGHT", reputationSearchBox, "BOTTOMRIGHT", 0, -4)
+    resultsFrame:SetHeight(10)
+    resultsFrame:Hide()
+
+    local background = resultsFrame:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    background:SetColorTexture(0.04, 0.04, 0.05, 0.96)
+    resultsFrame.Background = background
+
+    local topBorder = resultsFrame:CreateTexture(nil, "BORDER")
+    topBorder:SetPoint("TOPLEFT")
+    topBorder:SetPoint("TOPRIGHT")
+    topBorder:SetHeight(1)
+    topBorder:SetColorTexture(1, 0.82, 0, 0.35)
+
+    local bottomBorder = resultsFrame:CreateTexture(nil, "BORDER")
+    bottomBorder:SetPoint("BOTTOMLEFT")
+    bottomBorder:SetPoint("BOTTOMRIGHT")
+    bottomBorder:SetHeight(1)
+    bottomBorder:SetColorTexture(1, 0.82, 0, 0.35)
+
+    local leftBorder = resultsFrame:CreateTexture(nil, "BORDER")
+    leftBorder:SetPoint("TOPLEFT")
+    leftBorder:SetPoint("BOTTOMLEFT")
+    leftBorder:SetWidth(1)
+    leftBorder:SetColorTexture(1, 0.82, 0, 0.35)
+
+    local rightBorder = resultsFrame:CreateTexture(nil, "BORDER")
+    rightBorder:SetPoint("TOPRIGHT")
+    rightBorder:SetPoint("BOTTOMRIGHT")
+    rightBorder:SetWidth(1)
+    rightBorder:SetColorTexture(1, 0.82, 0, 0.35)
+
+    reputationSearchResultsFrame = resultsFrame
+    return resultsFrame
+end
+
+local function EnsureResultButton(index)
+    if reputationSearchResultButtons[index] then
+        return reputationSearchResultButtons[index]
+    end
+
+    local parent = EnsureResultsFrame()
+    if not parent then
+        return nil
+    end
+
+    local button = CreateFrame("Button", nil, parent)
+    button:SetHeight(RESULT_BUTTON_HEIGHT)
+    button:SetPoint("LEFT", parent, "LEFT", 6, 0)
+    button:SetPoint("RIGHT", parent, "RIGHT", -6, 0)
+
+    if index == 1 then
+        button:SetPoint("TOP", parent, "TOP", 0, -5)
+    else
+        button:SetPoint("TOP", reputationSearchResultButtons[index - 1], "BOTTOM", 0, 0)
+    end
+
+    local background = button:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints()
+    button.Background = background
+
+    local label = button:CreateFontString(nil, "OVERLAY")
+    label:SetPoint("LEFT", button, "LEFT", 6, 0)
+    label:SetPoint("RIGHT", button, "RIGHT", -6, 0)
+    label:SetJustifyH("LEFT")
+    label:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    button.Label = label
+
+    button:SetScript("OnEnter", function(self)
+        ApplyResultButtonVisual(self, true)
+    end)
+
+    button:SetScript("OnLeave", function(self)
+        ApplyResultButtonVisual(self, false)
+    end)
+
+    button:SetScript("OnClick", function(self)
+        if not self.Entry then
+            return
+        end
+
+        ApplyReputationSearchResult(self.Entry)
+        if not self.Entry.isHeader then
+            HideReputationSearchResults()
+        end
+        RefreshReputationSearchResults()
+    end)
+
+    reputationSearchResultButtons[index] = button
+    ApplyResultButtonVisual(button, false)
+    return button
+end
+
+local function ApplySearchBoxFrameOrder(frame)
+    if not frame or not reputationSearchBox then
         return
     end
 
     local referenceFrame = frame.filterDropdown or frame
 
-    if referenceFrame.GetFrameStrata and searchBox.SetFrameStrata then
-        searchBox:SetFrameStrata(referenceFrame:GetFrameStrata())
+    if referenceFrame.GetFrameStrata and reputationSearchBox.SetFrameStrata then
+        reputationSearchBox:SetFrameStrata(referenceFrame:GetFrameStrata())
     end
 
-    if referenceFrame.GetFrameLevel and searchBox.SetFrameLevel then
-        searchBox:SetFrameLevel((referenceFrame:GetFrameLevel() or 0) + 5)
+    if referenceFrame.GetFrameLevel and reputationSearchBox.SetFrameLevel then
+        reputationSearchBox:SetFrameLevel((referenceFrame:GetFrameLevel() or 0) + 5)
+    end
+
+    if reputationSearchResultsFrame and referenceFrame.GetFrameStrata and reputationSearchResultsFrame.SetFrameStrata then
+        reputationSearchResultsFrame:SetFrameStrata(referenceFrame:GetFrameStrata())
+    end
+
+    if reputationSearchResultsFrame and referenceFrame.GetFrameLevel and reputationSearchResultsFrame.SetFrameLevel then
+        reputationSearchResultsFrame:SetFrameLevel((referenceFrame:GetFrameLevel() or 0) + 6)
     end
 end
 
-local function LayoutReputationSearchUI(frame, searchBox)
-    if not frame or not searchBox then
+local function LayoutReputationSearchUI(frame)
+    if not frame or not reputationSearchBox then
         return
     end
 
-    local inset = frame:GetParent() and frame:GetParent().Inset or nil
     local filterDropdown = frame.filterDropdown
-    local useInsetLayout = IsInsetLayoutActive(inset)
 
-    searchBox:ClearAllPoints()
-    ApplySearchBoxFrameOrder(frame, searchBox)
+    reputationSearchBox:ClearAllPoints()
+    ApplySearchBoxFrameOrder(frame)
 
-    if useInsetLayout and filterDropdown then
-        searchBox:SetPoint("LEFT", inset, "TOPLEFT", 8, -19)
-        searchBox:SetPoint("RIGHT", filterDropdown, "LEFT", -12, 0)
-
-        frame.ScrollBox:ClearAllPoints()
-        frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
-        frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
-    elseif useInsetLayout then
-        searchBox:SetPoint("TOPLEFT", inset, "TOPLEFT", 8, -8)
-        searchBox:SetSize(170, 22)
-
-        frame.ScrollBox:ClearAllPoints()
-        frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -4, -8)
-        frame.ScrollBox:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -22, 2)
-    elseif filterDropdown then
-        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 24, -62)
-        searchBox:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -72, -62)
-
-        frame.ScrollBox:ClearAllPoints()
-        frame.ScrollBox:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", -20, -10)
-        frame.ScrollBox:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -30, 7)
+    if filterDropdown then
+        reputationSearchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -30)
+        reputationSearchBox:SetPoint("RIGHT", filterDropdown, "LEFT", -10, 0)
     else
-        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -56)
-        searchBox:SetSize(170, 22)
+        reputationSearchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -30)
+        reputationSearchBox:SetSize(180, 20)
+    end
+
+    if reputationSearchResultsFrame then
+        reputationSearchResultsFrame:ClearAllPoints()
+        reputationSearchResultsFrame:SetPoint("TOPLEFT", reputationSearchBox, "BOTTOMLEFT", 0, -4)
+        reputationSearchResultsFrame:SetPoint("TOPRIGHT", reputationSearchBox, "BOTTOMRIGHT", 0, -4)
+    end
+end
+
+RefreshReputationSearchResults = function()
+    if not reputationSearchFrame or not reputationSearchBox or not reputationSearchResultsFrame then
+        return
+    end
+
+    if not Misc.IsReputationSearchEnabled or not Misc.IsReputationSearchEnabled() then
+        HideReputationSearchResults()
+        return
+    end
+
+    if not reputationSearchFrame.IsShown or not reputationSearchFrame:IsShown() then
+        HideReputationSearchResults()
+        return
+    end
+
+    local query = NormalizeSearchText(reputationSearchQuery)
+    if query == "" then
+        HideReputationSearchResults()
+        return
+    end
+
+    local results = BuildReputationSearchResults(query)
+    reputationSearchResults = results
+
+    if #results == 0 then
+        HideReputationSearchResults()
+        return
+    end
+
+    reputationSearchResultsFrame:SetHeight((#results * RESULT_BUTTON_HEIGHT) + 10)
+    reputationSearchResultsFrame:Show()
+
+    for index = 1, MAX_RESULT_BUTTONS do
+        local button = EnsureResultButton(index)
+        if button then
+            local entry = results[index]
+            if entry then
+                button.Entry = entry
+                button.Label:SetText(FormatReputationResultLabel(entry))
+                ApplyResultButtonVisual(button, false)
+                button:Show()
+            else
+                button.Entry = nil
+                button:Hide()
+            end
+        end
     end
 end
 
 local function EnsureReputationSearchUI()
-    local frame = rawget(_G, "ReputationFrame")
-    if not frame or frame.BeavisReputationSearchInitialized then
+    if reputationSearchBox then
         return
     end
 
-    frame.BeavisReputationSearchInitialized = true
-    RememberReputationDefaultLayout(frame)
+    local frame = rawget(_G, "ReputationFrame")
+    if not frame then
+        return
+    end
+
+    reputationSearchFrame = frame
 
     local searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-    searchBox:SetHeight(22)
+    searchBox:SetHeight(20)
     searchBox:SetAutoFocus(false)
     searchBox:SetMaxLetters(80)
     searchBox:SetFontObject(ChatFontNormal)
-
-    LayoutReputationSearchUI(frame, searchBox)
 
     local placeholder = searchBox:CreateFontString(nil, "ARTWORK")
     placeholder:SetPoint("LEFT", searchBox, "LEFT", 6, 0)
@@ -430,28 +452,21 @@ local function EnsureReputationSearchUI()
     placeholder:SetText(L("REPUTATION_SEARCH_PLACEHOLDER"))
 
     searchBox.Placeholder = placeholder
-    frame.BeavisReputationSearchBox = searchBox
-    frame:HookScript("OnShow", function()
-        if Misc.IsReputationSearchEnabled and Misc.IsReputationSearchEnabled() then
-            searchBox:Show()
-            LayoutReputationSearchUI(frame, searchBox)
-            UpdatePlaceholder(searchBox)
-        else
-            searchBox:Hide()
-            RestoreDefaultReputationLayout(frame)
-        end
-    end)
+    reputationSearchBox = searchBox
+
+    EnsureResultsFrame()
+    LayoutReputationSearchUI(frame)
+    UpdatePlaceholder(searchBox)
 
     searchBox:SetScript("OnTextChanged", function(self)
-        reputationSearchQuery = NormalizeSearchText(self:GetText())
+        reputationSearchQuery = self:GetText() or ""
         UpdatePlaceholder(self)
-        if frame.Update then
-            frame:Update()
-        end
+        RefreshReputationSearchResults()
     end)
 
     searchBox:SetScript("OnEditFocusGained", function(self)
         UpdatePlaceholder(self)
+        RefreshReputationSearchResults()
     end)
 
     searchBox:SetScript("OnEditFocusLost", function(self)
@@ -464,51 +479,71 @@ local function EnsureReputationSearchUI()
     end)
 
     searchBox:SetScript("OnEnterPressed", function(self)
+        local firstResult = reputationSearchResults[1]
+        if firstResult then
+            ApplyReputationSearchResult(firstResult)
+            if not firstResult.isHeader then
+                HideReputationSearchResults()
+            end
+            RefreshReputationSearchResults()
+        end
+
         self:ClearFocus()
     end)
 
-    HookSecureFunction(frame, "Update", ApplyReputationSearchFilter)
-    UpdatePlaceholder(searchBox)
+    if not reputationSearchFrameHooksInstalled then
+        frame:HookScript("OnShow", function()
+            LayoutReputationSearchUI(frame)
+
+            if Misc.IsReputationSearchEnabled and Misc.IsReputationSearchEnabled() then
+                reputationSearchBox:Show()
+                UpdatePlaceholder(reputationSearchBox)
+                RefreshReputationSearchResults()
+            else
+                HideReputationSearchResults()
+                reputationSearchBox:Hide()
+            end
+        end)
+
+        frame:HookScript("OnHide", function()
+            if reputationSearchBox then
+                reputationSearchBox:SetText("")
+                reputationSearchBox:ClearFocus()
+            end
+
+            reputationSearchQuery = ""
+            HideReputationSearchResults()
+        end)
+
+        reputationSearchFrameHooksInstalled = true
+    end
 end
 
-local function RefreshReputationSearchState(forceUpdate)
-    local frame = rawget(_G, "ReputationFrame")
-    if not frame then
+local function RefreshReputationSearchState()
+    EnsureReputationSearchUI()
+
+    if not reputationSearchFrame or not reputationSearchBox then
         return
     end
 
-    local searchBox = frame.BeavisReputationSearchBox
-    local enabled = Misc.IsReputationSearchEnabled and Misc.IsReputationSearchEnabled() or false
+    LayoutReputationSearchUI(reputationSearchFrame)
 
-    RememberReputationDefaultLayout(frame)
-
-    if enabled then
-        if searchBox then
-            searchBox:Show()
-            LayoutReputationSearchUI(frame, searchBox)
-            UpdatePlaceholder(searchBox)
-        end
+    if Misc.IsReputationSearchEnabled and Misc.IsReputationSearchEnabled() then
+        reputationSearchBox:Show()
+        UpdatePlaceholder(reputationSearchBox)
+        RefreshReputationSearchResults()
     else
         reputationSearchQuery = ""
-
-        if searchBox then
-            searchBox:SetText("")
-            searchBox:ClearFocus()
-            UpdatePlaceholder(searchBox)
-            searchBox:Hide()
-        end
-
-        RestoreDefaultReputationLayout(frame)
-    end
-
-    if forceUpdate and frame.Update then
-        frame:Update()
+        reputationSearchBox:SetText("")
+        reputationSearchBox:ClearFocus()
+        UpdatePlaceholder(reputationSearchBox)
+        HideReputationSearchResults()
+        reputationSearchBox:Hide()
     end
 end
 
 local function InitializeReputationSearch()
-    EnsureReputationSearchUI()
-    RefreshReputationSearchState(true)
+    RefreshReputationSearchState()
 end
 
 function Misc.SetReputationSearchEnabled(value)
@@ -523,6 +558,7 @@ end
 
 ReputationSearchWatcher:RegisterEvent("ADDON_LOADED")
 ReputationSearchWatcher:RegisterEvent("PLAYER_LOGIN")
+ReputationSearchWatcher:RegisterEvent("UPDATE_FACTION")
 ReputationSearchWatcher:SetScript("OnEvent", function(_, event, ...)
     local eventArg1 = ...
 
@@ -534,7 +570,15 @@ ReputationSearchWatcher:SetScript("OnEvent", function(_, event, ...)
         return
     end
 
-    if event == "PLAYER_LOGIN" and IsReputationUILoaded() then
-        InitializeReputationSearch()
+    if event == "PLAYER_LOGIN" then
+        if IsReputationUILoaded() then
+            InitializeReputationSearch()
+        end
+
+        return
+    end
+
+    if event == "UPDATE_FACTION" then
+        RefreshReputationSearchResults()
     end
 end)

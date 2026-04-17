@@ -12,15 +12,16 @@ local INSPECT_CACHE_TTL = 300
 -- Blizzard begrenzt diese Abfragen recht streng, daher drosseln wir aktiv.
 local INSPECT_REQUEST_THROTTLE = 1.5
 
--- Der Cache speichert Itemlevel pro festem Unit-Token wie "mouseover" oder
--- "target". Das ist weniger flexibel als GUID-basierte Zuordnung, vermeidet in
--- geschützten Tooltip-Pfaden aber geheime String-Werte als Tabellenindex.
+-- Der Cache speichert Itemlevel pro sichtbarer Spieleridentität.
+-- So bleibt der Wert am richtigen Charakter hängen, ohne im Tooltip-Pfad
+-- mit GUID-basierten Tabellenindizes zu arbeiten.
 local inspectCache = {}
 local tooltipItemLevelLines = setmetatable({}, { __mode = "k" })
 
--- Solange eine Inspect-Anfrage läuft, merken wir uns nur den festen Unit-Token.
--- Auch hier vermeiden wir absichtlich GUIDs im Laufweg dieses Moduls.
+-- Solange eine Inspect-Anfrage läuft, merken wir uns den aktuellen Unit-Token
+-- und zusätzlich den dazugehörigen stabilen Cache-Key.
 local pendingInspectUnit = nil
+local pendingInspectKey = nil
 local lastInspectRequestTime = 0
 local inspectFrameProtectionUntil = 0
 local inspectFrameHooksInstalled = false
@@ -126,12 +127,49 @@ local function SafeUnitGUID(unit)
     return nil
 end
 
-local function GetInspectCacheKey(unit)
-    if type(unit) == "string" and unit ~= "" then
-        return "unit:" .. unit
+local function SafeUnitFullName(unit)
+    if type(UnitFullName) ~= "function" then
+        return nil, nil
+    end
+
+    local ok, playerName, realmName = pcall(UnitFullName, unit)
+    if not ok or type(playerName) ~= "string" or playerName == "" then
+        return nil, nil
+    end
+
+    if type(realmName) ~= "string" then
+        realmName = nil
+    end
+
+    return playerName, realmName
+end
+
+local function SafeDefaultRealmName()
+    local realmName = SafeCall(GetNormalizedRealmName)
+    if type(realmName) == "string" and realmName ~= "" then
+        return realmName
     end
 
     return nil
+end
+
+local function GetInspectCacheKey(unit)
+    local playerName, realmName = SafeUnitFullName(unit)
+    if type(playerName) ~= "string" or playerName == "" then
+        local fallbackFullName = SafeCall(GetUnitName, unit, true)
+        if type(fallbackFullName) == "string" and fallbackFullName ~= "" then
+            return "player:" .. fallbackFullName
+        end
+
+        return nil
+    end
+
+    realmName = realmName or SafeDefaultRealmName()
+    if type(realmName) == "string" and realmName ~= "" then
+        return "player:" .. playerName .. "-" .. realmName
+    end
+
+    return "player:" .. playerName
 end
 
 local function SafeGetInspectItemLevel(unit)
@@ -285,9 +323,8 @@ end
 
 -- Holt einen Cache-Eintrag nur dann zurück, wenn er noch gültig ist.
 -- Abgelaufene Daten werden direkt entfernt, damit der Cache klein bleibt.
-local function GetCachedItemLevel(unit)
-    local cacheKey = GetInspectCacheKey(unit)
-    if not cacheKey then
+local function GetCachedItemLevel(cacheKey)
+    if type(cacheKey) ~= "string" or cacheKey == "" then
         return nil
     end
 
@@ -306,10 +343,9 @@ end
 
 -- Legt ein erfolgreich ausgelesenes Itemlevel im Cache ab.
 -- Ungültige oder leere Werte werden bewusst ignoriert.
-local function SetCachedItemLevel(unit, itemLevel)
+local function SetCachedItemLevel(cacheKey, itemLevel)
     local numericItemLevel = tonumber(itemLevel)
-    local cacheKey = GetInspectCacheKey(unit)
-    if not cacheKey or not numericItemLevel or numericItemLevel <= 0 then
+    if type(cacheKey) ~= "string" or cacheKey == "" or not numericItemLevel or numericItemLevel <= 0 then
         return
     end
 
@@ -409,12 +445,13 @@ end
 -- Das ist wichtig, damit keine alte Anfrage später falsche Tooltips verändert.
 local function ClearPendingInspect()
     pendingInspectUnit = nil
+    pendingInspectKey = nil
 end
 
 -- Zeigt ein Itemlevel sofort aus dem Cache an.
 -- Rückgabewert true bedeutet: Es war kein neuer Inspect mehr nötig.
-local function ShowCachedItemLevel(tooltip, unit)
-    local cachedItemLevel = GetCachedItemLevel(unit)
+local function ShowCachedItemLevel(tooltip, cacheKey)
+    local cachedItemLevel = GetCachedItemLevel(cacheKey)
     local formattedItemLevel = FormatItemLevel(cachedItemLevel)
     if not formattedItemLevel then
         return false
@@ -445,11 +482,16 @@ local function RequestInspectForTooltip(tooltip, unit)
         return
     end
 
-    if ShowCachedItemLevel(tooltip, unit) then
+    local inspectCacheKey = GetInspectCacheKey(unit)
+    if not inspectCacheKey then
         return
     end
 
-    if SafeStringsEqual(pendingInspectUnit, unit) then
+    if ShowCachedItemLevel(tooltip, inspectCacheKey) then
+        return
+    end
+
+    if SafeStringsEqual(pendingInspectKey, inspectCacheKey) then
         SetTooltipItemLevelLine(tooltip, L("TOOLTIP_ITEMLEVEL_LOADING"), 0.8, 0.8, 0.8)
         tooltip:Show()
         return
@@ -473,6 +515,7 @@ local function RequestInspectForTooltip(tooltip, unit)
     end
 
     pendingInspectUnit = unit
+    pendingInspectKey = inspectCacheKey
     lastInspectRequestTime = now
 
     SafeNotifyInspect(unit)
@@ -497,6 +540,12 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
                 ClearInspectPlayer()
             end
             ClearPendingInspect()
+
+            local tooltipUnit = ResolveTooltipUnit(GameTooltip, nil)
+            if tooltipUnit and Misc.IsTooltipItemLevelEnabled and Misc.IsTooltipItemLevelEnabled() then
+                RequestInspectForTooltip(GameTooltip, tooltipUnit)
+            end
+
             return
         end
     end
@@ -518,22 +567,23 @@ inspectFrame:SetScript("OnEvent", function(_, event, inspecteeGUID)
 
     local itemLevel = SafeGetInspectItemLevel(unit)
     if itemLevel then
-        SetCachedItemLevel(unit, itemLevel)
+        local inspectedCacheKey = pendingInspectKey or GetInspectCacheKey(unit)
+        if inspectedCacheKey then
+            SetCachedItemLevel(inspectedCacheKey, itemLevel)
 
-        -- Nur wenn der Tooltip noch immer denselben Spieler zeigt, schreiben
-        -- wir das frisch geladene Itemlevel sichtbar hinein.
-        local tooltipUnit = ResolveTooltipUnit(GameTooltip, nil)
-        local tooltipCacheKey = GetInspectCacheKey(tooltipUnit)
-        local inspectedCacheKey = GetInspectCacheKey(unit)
-        if tooltipCacheKey
-            and inspectedCacheKey
-            and SafeStringsEqual(tooltipCacheKey, inspectedCacheKey)
-            and Misc.IsTooltipItemLevelEnabled
-            and Misc.IsTooltipItemLevelEnabled() then
-            local formattedItemLevel = FormatItemLevel(itemLevel)
-            if formattedItemLevel then
-                SetTooltipItemLevelLine(GameTooltip, formattedItemLevel, 0.25, 0.85, 0.25)
-                GameTooltip:Show()
+            -- Nur wenn der Tooltip noch immer denselben Spieler zeigt, schreiben
+            -- wir das frisch geladene Itemlevel sichtbar hinein.
+            local tooltipUnit = ResolveTooltipUnit(GameTooltip, nil)
+            local tooltipCacheKey = GetInspectCacheKey(tooltipUnit)
+            if tooltipCacheKey
+                and SafeStringsEqual(tooltipCacheKey, inspectedCacheKey)
+                and Misc.IsTooltipItemLevelEnabled
+                and Misc.IsTooltipItemLevelEnabled() then
+                local formattedItemLevel = FormatItemLevel(itemLevel)
+                if formattedItemLevel then
+                    SetTooltipItemLevelLine(GameTooltip, formattedItemLevel, 0.25, 0.85, 0.25)
+                    GameTooltip:Show()
+                end
             end
         end
     end

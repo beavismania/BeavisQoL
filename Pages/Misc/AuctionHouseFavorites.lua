@@ -46,6 +46,26 @@ end
 local function PrintFavoriteGroupMessage(message)
     if type(message) == "string" and message ~= "" then
         print(L("ADDON_MESSAGE"):format(message))
+
+        if UIErrorsFrame and UIErrorsFrame.AddMessage then
+            UIErrorsFrame:AddMessage(message, 1, 0.2, 0.2, 1)
+        end
+    end
+end
+
+local function RequestFavoriteGroupsRefresh()
+    if not RefreshFavoriteGroupsState then
+        return
+    end
+
+    RefreshFavoriteGroupsState()
+
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, function()
+            if RefreshFavoriteGroupsState then
+                RefreshFavoriteGroupsState()
+            end
+        end)
     end
 end
 
@@ -54,7 +74,18 @@ local function GetPopupEditBox(dialog)
         return nil
     end
 
-    return dialog.editBox or dialog.EditBox or nil
+    if dialog.GetEditBox then
+        local editBox = dialog:GetEditBox()
+        if editBox then
+            return editBox
+        end
+    end
+
+    return dialog.editBox
+        or dialog.EditBox
+        or dialog.wideEditBox
+        or dialog.WideEditBox
+        or nil
 end
 
 local function GetPopupButton(dialog, buttonIndex)
@@ -62,10 +93,67 @@ local function GetPopupButton(dialog, buttonIndex)
         return nil
     end
 
+    if buttonIndex == 1 and dialog.GetButton1 then
+        local button = dialog:GetButton1()
+        if button then
+            return button
+        end
+    elseif buttonIndex == 2 and dialog.GetButton2 then
+        local button = dialog:GetButton2()
+        if button then
+            return button
+        end
+    end
+
     return dialog["button" .. buttonIndex]
         or dialog["Button" .. buttonIndex]
         or (type(dialog.Buttons) == "table" and dialog.Buttons[buttonIndex])
         or nil
+end
+
+local function GetPopupDialogFromEditBox(editBoxOrDialog)
+    if type(editBoxOrDialog) ~= "table" then
+        return nil
+    end
+
+    if editBoxOrDialog.which then
+        return editBoxOrDialog
+    end
+
+    local parent = editBoxOrDialog.GetParent and editBoxOrDialog:GetParent() or nil
+    if parent and parent.which then
+        return parent
+    end
+
+    local grandParent = parent and parent.GetParent and parent:GetParent() or nil
+    if grandParent and grandParent.which then
+        return grandParent
+    end
+
+    local greatGrandParent = grandParent and grandParent.GetParent and grandParent:GetParent() or nil
+    if greatGrandParent and greatGrandParent.which then
+        return greatGrandParent
+    end
+
+    return nil
+end
+
+local function UpdatePopupPrimaryButtonState(editBoxOrDialog)
+    local dialog = GetPopupDialogFromEditBox(editBoxOrDialog)
+    local editBox = dialog and GetPopupEditBox(dialog) or editBoxOrDialog
+    if type(editBox) ~= "table" then
+        return
+    end
+
+    if type(StaticPopup_StandardNonEmptyTextHandler) == "function" then
+        StaticPopup_StandardNonEmptyTextHandler(editBox)
+        return
+    end
+
+    local button1 = GetPopupButton(dialog, 1)
+    if button1 then
+        button1:SetEnabled(NormalizeGroupName(editBox:GetText()) ~= "")
+    end
 end
 
 local function PrepareCreateFavoriteGroupPopup(dialog)
@@ -97,6 +185,88 @@ local function PrepareRenameFavoriteGroupPopup(dialog, groupName)
     if button1 then
         button1:SetEnabled(normalizedGroupName ~= "")
     end
+end
+
+local function HandleCreateFavoriteGroupAccept(dialog, groupName)
+    if groupName == nil then
+        local editBox = GetPopupEditBox(dialog)
+        groupName = editBox and editBox:GetText() or ""
+    end
+
+    local group, reason = Misc.CreateAuctionHouseFavoriteGroup(groupName)
+
+    if not group then
+        PrintFavoriteGroupMessage(L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_EMPTY"))
+        RequestFavoriteGroupsRefresh()
+        return false
+    end
+
+    if reason == "duplicate" then
+        PrintFavoriteGroupMessage(string.format("%s (%s)", L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_DUPLICATE"), group.name))
+    end
+
+    if pendingCreateFavoriteGroupItemKey then
+        Misc.AssignAuctionHouseFavoriteGroup(pendingCreateFavoriteGroupItemKey, group.id)
+    end
+
+    RequestFavoriteGroupsRefresh()
+    return true
+end
+
+local function HandleRenameFavoriteGroupAccept(dialog, groupName)
+    if groupName == nil then
+        local editBox = GetPopupEditBox(dialog)
+        groupName = editBox and editBox:GetText() or ""
+    end
+
+    local group, reason = Misc.RenameAuctionHouseFavoriteGroup(pendingRenameFavoriteGroupID, groupName)
+
+    if not group then
+        if reason == "duplicate" then
+            PrintFavoriteGroupMessage(L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_DUPLICATE"))
+        else
+            PrintFavoriteGroupMessage(L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_EMPTY"))
+        end
+        RequestFavoriteGroupsRefresh()
+        return false
+    end
+
+    RequestFavoriteGroupsRefresh()
+    return true
+end
+
+local function TriggerFavoriteGroupPopupPrimaryAccept(dialog)
+    if type(dialog) ~= "table" or (dialog.IsShown and not dialog:IsShown()) then
+        return false
+    end
+
+    local dialogInfo = StaticPopupDialogs and StaticPopupDialogs[dialog.which]
+    local onAccept = dialogInfo and (dialogInfo.OnAccept or dialogInfo.OnButton1) or nil
+    if type(onAccept) ~= "function" then
+        return false
+    end
+
+    local which = dialog.which
+    local shouldHide = not onAccept(dialog, dialog.data, dialog.data2)
+    if shouldHide and dialog.IsShown and dialog:IsShown() and dialog.which == which then
+        dialog:Hide()
+    end
+
+    return true
+end
+
+local function HandleFavoriteGroupPopupEnter(editBox)
+    local dialog = GetPopupDialogFromEditBox(editBox)
+    local button1 = GetPopupButton(dialog, 1)
+    if not dialog then
+        return
+    end
+
+    if button1 and button1.IsEnabled and not button1:IsEnabled() then
+        return
+    end
+
+    TriggerFavoriteGroupPopupPrimaryAccept(dialog)
 end
 
 local function CopyItemKey(itemKey)
@@ -265,8 +435,9 @@ function Misc.CreateAuctionHouseFavoriteGroup(name)
         return nil, "empty"
     end
 
-    if FindFavoriteGroupByNormalizedName(NormalizeGroupNameForCompare(groupName)) then
-        return nil, "duplicate"
+    local existingGroup = FindFavoriteGroupByNormalizedName(NormalizeGroupNameForCompare(groupName))
+    if existingGroup then
+        return existingGroup, "duplicate"
     end
 
     local db = Misc.GetMiscDB()
@@ -1412,6 +1583,26 @@ local function InstallVirtualFavoriteGroupRowSupport()
         end
     end
 
+    if type(AuctionHouseTableCellLevelMixin) == "table" and type(AuctionHouseTableCellLevelMixin.Populate) == "function" then
+        local originalPopulate = AuctionHouseTableCellLevelMixin.Populate
+
+        ---@diagnostic disable-next-line: duplicate-set-field
+        AuctionHouseTableCellLevelMixin.Populate = function(self, rowData, dataIndex)
+            self.rowData = rowData
+
+            if IsFavoriteGroupHeaderRow(rowData) then
+                if self.UnregisterEvent then
+                    self:UnregisterEvent("EXTRA_BROWSE_INFO_RECEIVED")
+                end
+
+                self.Text:SetText("")
+                return
+            end
+
+            return originalPopulate(self, rowData, dataIndex)
+        end
+    end
+
     if type(AuctionHouseTableCellFavoriteMixin) == "table" and type(AuctionHouseTableCellFavoriteMixin.Populate) == "function" then
         local originalPopulate = AuctionHouseTableCellFavoriteMixin.Populate
 
@@ -1580,42 +1771,13 @@ local function EnsureFavoriteGroupPopups()
                 pendingCreateFavoriteGroupItemKey = nil
             end,
             EditBoxOnTextChanged = function(editBox)
-                local dialog = editBox:GetParent()
-                local button1 = GetPopupButton(dialog, 1)
-
-                if button1 then
-                    button1:SetEnabled(NormalizeGroupName(editBox:GetText()) ~= "")
-                end
+                UpdatePopupPrimaryButtonState(editBox)
             end,
             EditBoxOnEnterPressed = function(editBox)
-                local dialog = editBox:GetParent()
-                local button1 = GetPopupButton(dialog, 1)
-
-                if button1 and button1:IsEnabled() then
-                    button1:Click()
-                end
+                HandleFavoriteGroupPopupEnter(editBox)
             end,
             OnAccept = function(self)
-                local editBox = GetPopupEditBox(self)
-                local groupName = editBox and editBox:GetText() or ""
-                local group, reason = Misc.CreateAuctionHouseFavoriteGroup(groupName)
-
-                if not group then
-                    if reason == "duplicate" then
-                        PrintFavoriteGroupMessage(L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_DUPLICATE"))
-                    else
-                        PrintFavoriteGroupMessage(L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_EMPTY"))
-                    end
-                    return
-                end
-
-                if pendingCreateFavoriteGroupItemKey then
-                    Misc.AssignAuctionHouseFavoriteGroup(pendingCreateFavoriteGroupItemKey, group.id)
-                end
-
-                if RefreshFavoriteGroupsState then
-                    RefreshFavoriteGroupsState()
-                end
+                HandleCreateFavoriteGroupAccept(self)
             end,
         }
     end
@@ -1640,38 +1802,13 @@ local function EnsureFavoriteGroupPopups()
                 pendingRenameFavoriteGroupID = nil
             end,
             EditBoxOnTextChanged = function(editBox)
-                local dialog = editBox:GetParent()
-                local button1 = GetPopupButton(dialog, 1)
-
-                if button1 then
-                    button1:SetEnabled(NormalizeGroupName(editBox:GetText()) ~= "")
-                end
+                UpdatePopupPrimaryButtonState(editBox)
             end,
             EditBoxOnEnterPressed = function(editBox)
-                local dialog = editBox:GetParent()
-                local button1 = GetPopupButton(dialog, 1)
-
-                if button1 and button1:IsEnabled() then
-                    button1:Click()
-                end
+                HandleFavoriteGroupPopupEnter(editBox)
             end,
             OnAccept = function(self)
-                local editBox = GetPopupEditBox(self)
-                local groupName = editBox and editBox:GetText() or ""
-                local group, reason = Misc.RenameAuctionHouseFavoriteGroup(pendingRenameFavoriteGroupID, groupName)
-
-                if not group then
-                    if reason == "duplicate" then
-                        PrintFavoriteGroupMessage(L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_DUPLICATE"))
-                    else
-                        PrintFavoriteGroupMessage(L("AUCTION_HOUSE_FAVORITE_GROUP_CREATE_EMPTY"))
-                    end
-                    return
-                end
-
-                if RefreshFavoriteGroupsState then
-                    RefreshFavoriteGroupsState()
-                end
+                HandleRenameFavoriteGroupAccept(self)
             end,
         }
     end

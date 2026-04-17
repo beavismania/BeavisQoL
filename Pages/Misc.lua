@@ -1131,12 +1131,46 @@ CurrencySearchHint:SetTextColor(0.78, 0.74, 0.69, 1)
 CurrencySearchHint:SetText(L("CURRENCY_SEARCH_HINT"))
 
 -- ========================================
+-- Bereich: Chat Link Copy
+-- ========================================
+
+local ChatLinkCopyPanel = CreateFrame("Frame", nil, PageMiscContent)
+ChatLinkCopyPanel:SetPoint("TOPLEFT", CurrencySearchPanel, "BOTTOMLEFT", 0, -18)
+ChatLinkCopyPanel:SetPoint("TOPRIGHT", CurrencySearchPanel, "BOTTOMRIGHT", 0, -18)
+ChatLinkCopyPanel:SetHeight(115)
+CreateSectionBackground(ChatLinkCopyPanel)
+
+local ChatLinkCopyTitle = ChatLinkCopyPanel:CreateFontString(nil, "OVERLAY")
+ChatLinkCopyTitle:SetPoint("TOPLEFT", ChatLinkCopyPanel, "TOPLEFT", 18, -14)
+ChatLinkCopyTitle:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+ChatLinkCopyTitle:SetTextColor(1, 0.88, 0.62, 1)
+ChatLinkCopyTitle:SetText(L("CHAT_LINK_COPY"))
+
+local ChatLinkCopyCheckbox = CreateFrame("CheckButton", nil, ChatLinkCopyPanel, "UICheckButtonTemplate")
+ChatLinkCopyCheckbox:SetPoint("TOPLEFT", ChatLinkCopyTitle, "BOTTOMLEFT", -4, -12)
+
+local ChatLinkCopyLabel = ChatLinkCopyPanel:CreateFontString(nil, "OVERLAY")
+ChatLinkCopyLabel:SetPoint("LEFT", ChatLinkCopyCheckbox, "RIGHT", 6, 0)
+ChatLinkCopyLabel:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ChatLinkCopyLabel:SetTextColor(0.95, 0.91, 0.85, 1)
+ChatLinkCopyLabel:SetText(L("ACTIVE"))
+
+local ChatLinkCopyHint = ChatLinkCopyPanel:CreateFontString(nil, "OVERLAY")
+ChatLinkCopyHint:SetPoint("TOPLEFT", ChatLinkCopyCheckbox, "BOTTOMLEFT", 34, -2)
+ChatLinkCopyHint:SetPoint("RIGHT", ChatLinkCopyPanel, "RIGHT", -18, 0)
+ChatLinkCopyHint:SetJustifyH("LEFT")
+ChatLinkCopyHint:SetJustifyV("TOP")
+ChatLinkCopyHint:SetFont("Fonts\\FRIZQT__.TTF", 13, "")
+ChatLinkCopyHint:SetTextColor(0.78, 0.74, 0.69, 1)
+ChatLinkCopyHint:SetText(L("CHAT_LINK_COPY_HINT"))
+
+-- ========================================
 -- Bereich: Prey Hunt Progress
 -- ========================================
 
 local PreyHuntProgressPanel = CreateFrame("Frame", nil, PageMiscContent)
-PreyHuntProgressPanel:SetPoint("TOPLEFT", CurrencySearchPanel, "BOTTOMLEFT", 0, -18)
-PreyHuntProgressPanel:SetPoint("TOPRIGHT", CurrencySearchPanel, "BOTTOMRIGHT", 0, -18)
+PreyHuntProgressPanel:SetPoint("TOPLEFT", ChatLinkCopyPanel, "BOTTOMLEFT", 0, -18)
+PreyHuntProgressPanel:SetPoint("TOPRIGHT", ChatLinkCopyPanel, "BOTTOMRIGHT", 0, -18)
 PreyHuntProgressPanel:SetHeight(115)
 CreateSectionBackground(PreyHuntProgressPanel)
 
@@ -1383,6 +1417,7 @@ local SectionPanels = {
     MinimapHud = MinimapHudPanel,
     ReputationSearch = ReputationSearchPanel,
     CurrencySearch = CurrencySearchPanel,
+    ChatLinkCopy = ChatLinkCopyPanel,
     PreyHuntProgress = PreyHuntProgressPanel,
     KeystoneActions = KeystoneActionsPanel,
     PortalViewer = PortalViewerPanel,
@@ -1405,6 +1440,7 @@ local SectionOrder = {
     "MinimapHud",
     "ReputationSearch",
     "CurrencySearch",
+    "ChatLinkCopy",
     "PreyHuntProgress",
     "KeystoneActions",
     "PortalViewer",
@@ -1427,6 +1463,7 @@ local SectionMeta = {
     MinimapHud = { titleKey = "MINIMAP_HUD", descKey = "MINIMAP_HUD_HINT" },
     ReputationSearch = { titleKey = "REPUTATION_SEARCH", descKey = "REPUTATION_SEARCH_HINT" },
     CurrencySearch = { titleKey = "CURRENCY_SEARCH", descKey = "CURRENCY_SEARCH_HINT" },
+    ChatLinkCopy = { titleKey = "CHAT_LINK_COPY", descKey = "CHAT_LINK_COPY_HINT" },
     PreyHuntProgress = { titleKey = "PREY_HUNT_PROGRESS", descKey = "PREY_HUNT_PROGRESS_HINT" },
     KeystoneActions = { titleKey = "KEYSTONE_ACTIONS", descKey = "KEYSTONE_ACTIONS_HINT" },
     PortalViewer = { titleKey = "PORTAL_VIEWER_TITLE", descKey = "PORTAL_VIEWER_DESC" },
@@ -1578,6 +1615,10 @@ PageMisc.Widgets = {
     CurrencySearchLabel = CurrencySearchLabel,
     CurrencySearchHint = CurrencySearchHint,
     CurrencySearchCheckbox = CurrencySearchCheckbox,
+    ChatLinkCopyTitle = ChatLinkCopyTitle,
+    ChatLinkCopyLabel = ChatLinkCopyLabel,
+    ChatLinkCopyHint = ChatLinkCopyHint,
+    ChatLinkCopyCheckbox = ChatLinkCopyCheckbox,
     PreyHuntProgressTitle = PreyHuntProgressTitle,
     PreyHuntProgressLabel = PreyHuntProgressLabel,
     PreyHuntProgressHint = PreyHuntProgressHint,
@@ -1694,6 +1735,7 @@ function PageMisc:RefreshState()
     local minimapHudMinimapVisible = true
     local reputationSearchEnabled = false
     local currencySearchEnabled = false
+    local chatLinkCopyEnabled = false
     local preyHuntProgressEnabled = false
     local keystoneActionsEnabled = false
     local keystoneActionsGroupLockEnabled = true
@@ -1819,6 +1861,10 @@ function PageMisc:RefreshState()
 
     if Misc.IsCurrencySearchEnabled then
         currencySearchEnabled = Misc.IsCurrencySearchEnabled()
+    end
+
+    if Misc.IsChatLinkCopyEnabled then
+        chatLinkCopyEnabled = Misc.IsChatLinkCopyEnabled()
     end
 
     if Misc.IsPreyHuntProgressEnabled then
@@ -1950,6 +1996,9 @@ function PageMisc:RefreshState()
     widgets.CurrencySearchTitle:SetText(L("CURRENCY_SEARCH"))
     widgets.CurrencySearchLabel:SetText(L("ACTIVE"))
     widgets.CurrencySearchHint:SetText(L("CURRENCY_SEARCH_HINT"))
+    widgets.ChatLinkCopyTitle:SetText(L("CHAT_LINK_COPY"))
+    widgets.ChatLinkCopyLabel:SetText(L("ACTIVE"))
+    widgets.ChatLinkCopyHint:SetText(L("CHAT_LINK_COPY_HINT"))
     widgets.PreyHuntProgressTitle:SetText(L("PREY_HUNT_PROGRESS"))
     widgets.PreyHuntProgressLabel:SetText(L("ACTIVE"))
     widgets.PreyHuntProgressHint:SetText(L("PREY_HUNT_PROGRESS_HINT"))
@@ -2004,6 +2053,7 @@ function PageMisc:RefreshState()
     widgets.MinimapHudMinimapContextCheckbox:SetChecked(minimapHudMinimapVisible)
     widgets.ReputationSearchCheckbox:SetChecked(reputationSearchEnabled)
     widgets.CurrencySearchCheckbox:SetChecked(currencySearchEnabled)
+    widgets.ChatLinkCopyCheckbox:SetChecked(chatLinkCopyEnabled)
     widgets.PreyHuntProgressCheckbox:SetChecked(preyHuntProgressEnabled)
     widgets.KeystoneActionsCheckbox:SetChecked(keystoneActionsEnabled)
     widgets.KeystoneActionsGroupLockCheckbox:SetChecked(keystoneActionsGroupLockEnabled)
@@ -2456,6 +2506,14 @@ end)
 CurrencySearchCheckbox:SetScript("OnClick", function(self)
     if Misc.SetCurrencySearchEnabled then
         Misc.SetCurrencySearchEnabled(self:GetChecked())
+    end
+
+    PageMisc:RefreshState()
+end)
+
+ChatLinkCopyCheckbox:SetScript("OnClick", function(self)
+    if Misc.SetChatLinkCopyEnabled then
+        Misc.SetChatLinkCopyEnabled(self:GetChecked())
     end
 
     PageMisc:RefreshState()

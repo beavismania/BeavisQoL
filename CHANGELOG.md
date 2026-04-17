@@ -2,6 +2,24 @@
 
 ## Unveröffentlicht
 
+## 0.38.0 - 2026-04-17
+
+### Komfort
+
+- `Chat-Link Kopieren` erkennt `http://`- und `https://`-Links im Chat und öffnet sie in einem kopierbaren Popup.
+
+### Hotfix
+
+- `Addon` für `12.0.5` geprüft und angepasst.
+- `Addon-Liste` zeigt für `BeavisQoL` jetzt Symbol und Kategorie `Quality of Life` an.
+- `WeeklyKeys`, `Stats` und `ButtonSammler` speichern nun ihre Position nach manueller Einstellung.
+- `Auktionshaus-Favoriten` bestätigt Gruppen-Popups jetzt wieder robuster, aktualisiert die Liste direkter und zeigt Fehlermeldungen zusätzlich sichtbar an.
+- `Rufsuche` nutzt jetzt eine eigene Trefferliste statt die Blizzard-Reputationszeilen umzubauen, damit Mouseover im Raid keinen Taint-Fehler mehr auslöst.
+- `SmartLFG` verarbeitet Bewerberdaten robuster, damit Sortierung und Anzeige bei ungewohnten API-Werten stabil bleiben.
+- `Talentfenster-Skalierung` wendet gespeicherte Position und Skalierung nach Kampfphasen wieder sauber an.
+- `Tooltip-Itemlevel` cached Mouseover-Spieler jetzt wieder charaktergenau, damit keine Itemlevel-Werte von vorherigen Spielern im Tooltip hängen bleiben.
+- `WeeklyKeys` bewertet Mythic+-Runs jetzt über Laufzeit und Dungeon-Timer statt über ein wackliges API-Flag, damit intime Keys nicht fälschlich rot erscheinen.
+
 ## 0.37.10 - 2026-04-15
 
 ### Hotfix

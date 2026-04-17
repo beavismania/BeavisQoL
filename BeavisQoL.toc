@@ -1,14 +1,17 @@
 ## Title: Beavis Quality of Life
 ## Notes: Beavis QoL
+## IconTexture: Interface\AddOns\BeavisQoL\Media\logo.tga
+## Category: Quality of Life
+## Category-deDE: Quality of Life
 ## Author: Beavis
-## Version: 0.37.10
-## Interface: 120001 
-##X-GameVersion: 120001
-## X-GameVersionLabel: Patch 12.0.1
+## Version: 0.38.0
+## Interface: 120005
+##X-GameVersion: 120005
+## X-GameVersionLabel: Patch 12.0.5
 ## X-ReleaseChannel: beta
 ## SavedVariables: BeavisQoLDB
 ## SavedVariablesPerCharacter: BeavisQoLCharDB
-## X-ReleaseDate: 2026-04-15
+## X-ReleaseDate: 2026-04-17
 
 Localization\Localization.lua
 Localization\deDE.lua
@@ -42,6 +45,7 @@ Pages\Misc\TalentLoadoutReminder.lua
 Pages\Misc\MinimapHud.lua
 Pages\Misc\ReputationSearch.lua
 Pages\Misc\CurrencySearch.lua
+Pages\Misc\ChatLinks.lua
 Pages\Misc\ChonkyLoadoutDropdown.lua
 Pages\Misc\AuctionHouse.lua
 Pages\Misc\AuctionHouseFavorites.lua

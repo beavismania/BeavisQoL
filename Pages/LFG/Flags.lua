@@ -68,6 +68,8 @@ local EASY_LFG_RIO_DIFFICULTY_LABELS = {
     [4] = "M",
 }
 
+local floor = math.floor
+
 local function SafeSecureCall(func, ...)
     if type(func) ~= "function" then
         return false
@@ -101,6 +103,45 @@ local function SafeSecureCallMethod(target, methodName, ...)
 
     local ok = pcall(method, target, ...)
     return ok == true
+end
+
+local function SanitizeInteger(value)
+    local numericValue = tonumber(value)
+    if type(numericValue) ~= "number" then
+        return nil
+    end
+
+    return floor(numericValue + 0.5)
+end
+
+local function SanitizeDecimal(value, decimals)
+    local numericValue = tonumber(value)
+    if type(numericValue) ~= "number" then
+        return nil
+    end
+
+    return tonumber(string.format("%." .. tostring(decimals or 0) .. "f", numericValue))
+end
+
+local function SanitizeApplicantStatus(value)
+    if type(value) ~= "string" or value == "" then
+        return nil
+    end
+
+    return value
+end
+
+local function GetApplicantSortKey(applicantGroup)
+    local primaryMember = applicantGroup and applicantGroup.members and applicantGroup.members[1] or nil
+    if primaryMember and type(primaryMember.fullName) == "string" and primaryMember.fullName ~= "" then
+        return primaryMember.fullName
+    end
+
+    if primaryMember and type(primaryMember.displayName) == "string" and primaryMember.displayName ~= "" then
+        return primaryMember.displayName
+    end
+
+    return ""
 end
 
 local function NormalizeListingPresetLineEndings(text)
@@ -2109,7 +2150,7 @@ local function CreateEasyLFGInactiveApplicantEntry(applicantID, applicantState)
         applicationStatus = "cancelled",
         memberCount = 0,
         isInactivePlaceholder = true,
-        slotOrder = applicantState.order or applicantID or 0,
+        slotOrder = applicantState.order or 0,
         members = {
             {
                 applicantID = applicantID,
@@ -2251,7 +2292,7 @@ local function GetEasyLFGApplicants()
         local applicantData = C_LFGList.GetApplicantInfo(applicantID)
         if type(applicantData) == "table" then
             local applicantState = GetEasyLFGApplicantState(applicantID)
-            local applicationStatus = applicantData.applicationStatus
+            local applicationStatus = SanitizeApplicantStatus(applicantData.applicationStatus)
 
             if not IsEasyLFGVisibleStatus(applicationStatus) then
                 EasyLFGExpandedApplicants[applicantID] = nil
@@ -2261,13 +2302,13 @@ local function GetEasyLFGApplicants()
                     EasyLFGApplicantStates[applicantID] = nil
                 end
             else
-                local numMembers = math.max(0, tonumber(applicantData.numMembers) or 0)
+                local numMembers = math.max(0, SanitizeInteger(applicantData.numMembers) or 0)
                 local applicantEntry = {
                     applicantID = applicantID,
                     applicationStatus = applicationStatus,
                     memberCount = numMembers,
                     members = {},
-                    slotOrder = (applicantState and applicantState.order) or applicantID or 0,
+                    slotOrder = (applicantState and applicantState.order) or 0,
                 }
 
                 applicantState.removedAt = nil
@@ -2279,15 +2320,15 @@ local function GetEasyLFGApplicants()
                     memberCount = memberCount + 1
                     applicantEntry.members[#applicantEntry.members + 1] = {
                         applicantID = applicantID,
-                        memberIndex = memberIndex,
+                        memberIndex = SanitizeInteger(memberIndex) or memberIndex,
                         fullName = fullName,
                         displayName = GetEasyLFGShortName(fullName),
                         classFile = classFile,
                         localizedClass = localizedClass,
-                        itemLevel = itemLevel,
-                        dungeonScore = dungeonScore,
+                        itemLevel = SanitizeDecimal(itemLevel, 1),
+                        dungeonScore = SanitizeDecimal(dungeonScore, 0),
                         assignedRole = assignedRole,
-                        specID = specID,
+                        specID = SanitizeInteger(specID),
                         canTank = canTank,
                         canHealer = canHealer,
                         canDamage = canDamage,
@@ -2338,13 +2379,13 @@ local function GetEasyLFGApplicants()
     end
 
     table.sort(applicantsByGroup, function(left, right)
-        local leftOrder = tonumber(left and left.slotOrder) or tonumber(left and left.applicantID) or 0
-        local rightOrder = tonumber(right and right.slotOrder) or tonumber(right and right.applicantID) or 0
+        local leftOrder = SanitizeInteger(left and left.slotOrder) or 0
+        local rightOrder = SanitizeInteger(right and right.slotOrder) or 0
         if leftOrder ~= rightOrder then
             return leftOrder < rightOrder
         end
 
-        return (tonumber(left and left.applicantID) or 0) < (tonumber(right and right.applicantID) or 0)
+        return GetApplicantSortKey(left) < GetApplicantSortKey(right)
     end)
 
     if nextScheduledRefreshAt ~= nil then

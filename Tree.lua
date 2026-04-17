@@ -764,6 +764,11 @@ local CurrencySearchEntry = RegisterModuleEntry(WindowsSection, "CURRENCY_SEARCH
     searchTextKeys = { "CURRENCY_SEARCH_HINT", "CURRENCY_SEARCH_PLACEHOLDER" },
     searchAliases = "currency currencies search filter token badge crest währung",
 })
+local ChatLinkCopyEntry = RegisterModuleEntry(WindowsSection, "CHAT_LINK_COPY", "ChatLinkCopy", {
+    miscSection = "ChatLinkCopy",
+    searchTextKeys = { "CHAT_LINK_COPY_HINT", "CHAT_LINK_COPY_POPUP_TITLE" },
+    searchAliases = "chat link links url urls https http copy clipboard browser website",
+})
 local PreyHuntProgressEntry = RegisterModuleEntry(WorldSection, "PREY_HUNT_PROGRESS", "PreyHuntProgress", {
     miscSection = "PreyHuntProgress",
     searchTextKeys = { "PREY_HUNT_PROGRESS_HINT" },
@@ -909,6 +914,7 @@ local TreeLocalizedTextTargets = {
     { target = TalentLoadoutReminderEntry.text, textKey = "TALENT_LOADOUT_REMINDER" },
     { target = ReputationSearchEntry.text, textKey = "REPUTATION_SEARCH" },
     { target = CurrencySearchEntry.text, textKey = "CURRENCY_SEARCH" },
+    { target = ChatLinkCopyEntry.text, textKey = "CHAT_LINK_COPY" },
     { target = PreyHuntProgressEntry.text, textKey = "PREY_HUNT_PROGRESS" },
     { target = KeystoneActionsEntry.text, textKey = "KEYSTONE_ACTIONS" },
     { target = PortalViewerEntry.text, textKey = "PORTAL_VIEWER_TITLE" },
@@ -1173,6 +1179,7 @@ function BeavisQoL.OpenMiscSection(sectionKey)
         MacroFrame = "MacroFrame",
         ReputationSearch = "ReputationSearch",
         CurrencySearch = "CurrencySearch",
+        ChatLinkCopy = "ChatLinkCopy",
         PreyHuntProgress = "PreyHuntProgress",
         KeystoneActions = "KeystoneActions",
         PortalViewer = "PortalViewer",

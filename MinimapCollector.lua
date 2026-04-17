@@ -1405,6 +1405,9 @@ local function UpdateLauncherVisibility()
     end
 
     if IsEnabled() then
+        if not LauncherButton:IsShown() then
+            ApplyLauncherPosition()
+        end
         LauncherButton:Show()
         UpdateCollectedButtonHostVisibility()
         return

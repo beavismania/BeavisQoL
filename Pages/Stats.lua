@@ -510,7 +510,13 @@ function StatsModule.RefreshOverlayWindow()
 
     RefreshStatRows(OverlayRows)
 
-    if settings.overlayEnabled and not ShouldHideStatsOverlay() then
+    local shouldShowOverlay = settings.overlayEnabled and not ShouldHideStatsOverlay()
+    local wasShown = OverlayFrame:IsShown()
+
+    if shouldShowOverlay then
+        if not wasShown then
+            ApplyOverlayGeometry()
+        end
         OverlayFrame:Show()
     else
         OverlayFrame:Hide()

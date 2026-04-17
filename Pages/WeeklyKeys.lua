@@ -588,17 +588,49 @@ local function GetDungeonSlotData()
     return slots
 end
 
-local function GetMapNameByChallengeMapID(mapChallengeModeID)
+local challengeMapInfoCache = {}
+
+local function GetMapInfoByChallengeMapID(mapChallengeModeID)
     mapChallengeModeID = tonumber(mapChallengeModeID) or 0
     if mapChallengeModeID <= 0 then
-        return nil
+        return nil, nil
+    end
+
+    local cachedInfo = challengeMapInfoCache[mapChallengeModeID]
+    if cachedInfo ~= nil then
+        if cachedInfo == false then
+            return nil, nil
+        end
+
+        return cachedInfo.name, cachedInfo.timeLimit
     end
 
     if C_ChallengeMode and C_ChallengeMode.GetMapUIInfo then
-        local name = C_ChallengeMode.GetMapUIInfo(mapChallengeModeID)
+        local name, _, timeLimit = C_ChallengeMode.GetMapUIInfo(mapChallengeModeID)
         if name and name ~= "" then
-            return name
+            local info = {
+                name = name,
+                timeLimit = tonumber(timeLimit) or 0,
+            }
+
+            challengeMapInfoCache[mapChallengeModeID] = info
+            return info.name, info.timeLimit
         end
+    end
+
+    challengeMapInfoCache[mapChallengeModeID] = false
+    return nil, nil
+end
+
+local function GetMapNameByChallengeMapID(mapChallengeModeID)
+    local name = GetMapInfoByChallengeMapID(mapChallengeModeID)
+    return name
+end
+
+local function GetMapTimeLimitByChallengeMapID(mapChallengeModeID)
+    local _, timeLimit = GetMapInfoByChallengeMapID(mapChallengeModeID)
+    if timeLimit and timeLimit > 0 then
+        return timeLimit
     end
 
     return nil
@@ -1239,6 +1271,39 @@ local function HandleGroupKeysAddonMessage(prefix, message, channelName, sender)
     return true
 end
 
+local GetMythicPlusRunTimingState
+local IsTimedMythicPlusRun
+
+local function ParseMythicPlusTimedFlag(value)
+    local valueType = type(value)
+
+    if valueType == "boolean" then
+        return value
+    end
+
+    if valueType == "number" then
+        return value > 0
+    end
+
+    if valueType == "string" then
+        local normalizedValue = string.lower(value)
+        if normalizedValue == "true" then
+            return true
+        end
+
+        if normalizedValue == "false" then
+            return false
+        end
+
+        local numericValue = tonumber(value)
+        if numericValue ~= nil then
+            return numericValue > 0
+        end
+    end
+
+    return nil
+end
+
 local function GetWeeklyRunHistory()
     -- Die Rohdaten aus der API werden direkt nach "wichtigster Lauf zuerst"
     -- sortiert: höhere Stufe, dann timed vor depleted, dann Name.
@@ -1246,11 +1311,14 @@ local function GetWeeklyRunHistory()
         return {}
     end
 
-    local rawRunHistory = C_MythicPlus.GetRunHistory(false, true) or {}
+    local rawRunHistory = C_MythicPlus.GetRunHistory(false, false) or {}
     local runHistory = {}
 
     for _, runInfo in ipairs(rawRunHistory) do
-        if runInfo and (runInfo.thisWeek == nil or runInfo.thisWeek == true) then
+        if runInfo
+            and runInfo.completed ~= false
+            and (runInfo.thisWeek == nil or runInfo.thisWeek == true)
+        then
             runHistory[#runHistory + 1] = runInfo
         end
     end
@@ -1262,8 +1330,10 @@ local function GetWeeklyRunHistory()
             return aLevel > bLevel
         end
 
-        local aTimed = tonumber(a and a.completedInTime) or 0
-        local bTimed = tonumber(b and b.completedInTime) or 0
+        local aState = GetMythicPlusRunTimingState(a)
+        local bState = GetMythicPlusRunTimingState(b)
+        local aTimed = aState == "timed" and 2 or (aState == "completed" and 1 or 0)
+        local bTimed = bState == "timed" and 2 or (bState == "completed" and 1 or 0)
         if aTimed ~= bTimed then
             return aTimed > bTimed
         end
@@ -1272,6 +1342,43 @@ local function GetWeeklyRunHistory()
     end)
 
     return runHistory
+end
+
+GetMythicPlusRunTimingState = function(runInfo)
+    if not runInfo then
+        return nil
+    end
+
+    local durationSec = tonumber(runInfo.durationSec)
+    local timeLimit = GetMapTimeLimitByChallengeMapID(runInfo.mapChallengeModeID)
+    if durationSec and durationSec > 0 and timeLimit and timeLimit > 0 then
+        return durationSec <= timeLimit and "timed" or "depleted"
+    end
+
+    local timedFlag = ParseMythicPlusTimedFlag(runInfo.onTime)
+    if timedFlag ~= nil then
+        return timedFlag and "timed" or "depleted"
+    end
+
+    local overTimeFlag = ParseMythicPlusTimedFlag(runInfo.overTime)
+    if overTimeFlag ~= nil then
+        return overTimeFlag and "depleted" or "timed"
+    end
+
+    timedFlag = ParseMythicPlusTimedFlag(runInfo.completedInTime)
+    if timedFlag ~= nil then
+        return timedFlag and "timed" or "depleted"
+    end
+
+    if runInfo.completed == true then
+        return "completed"
+    end
+
+    return nil
+end
+
+IsTimedMythicPlusRun = function(runInfo)
+    return GetMythicPlusRunTimingState(runInfo) == "timed"
 end
 
 local function GetWeeklyDungeonRunCounts(runHistoryCount)
@@ -1837,13 +1944,16 @@ local function BuildDisplayRows()
 
     for _, runInfo in ipairs(runHistory) do
         local keystoneLevel = tonumber(runInfo.level) or 0
-        local timedRun = (tonumber(runInfo.completedInTime) or 0) > 0
+        local timingState = GetMythicPlusRunTimingState(runInfo)
+        local timedRun = timingState == "timed"
+        local depletedRun = timingState == "depleted"
+        local statusPriority = timedRun and 2 or (depletedRun and 0 or 1)
 
         completedEntries[#completedEntries + 1] = {
-            priority = 300000 + (keystoneLevel * 10) + (timedRun and 1 or 0),
+            priority = 300000 + (keystoneLevel * 10) + statusPriority,
             timestamp = 0,
-            status = timedRun and "v" or "x",
-            statusColor = timedRun and { 0.28, 0.92, 0.38 } or { 1.00, 0.28, 0.28 },
+            status = depletedRun and "x" or "v",
+            statusColor = depletedRun and { 1.00, 0.28, 0.28 } or { 0.28, 0.92, 0.38 },
             runText = string.format("+%d %s", keystoneLevel, GetMapName(runInfo.mapChallengeModeID)),
         }
     end
@@ -2138,7 +2248,13 @@ function WeeklyKeysModule.RefreshOverlayWindow()
 
     OverlayFrame:EnableMouse(true)
 
-    if settings.overlayEnabled and not ShouldHideWeeklyKeysOverlay() then
+    local shouldShowOverlay = settings.overlayEnabled and not ShouldHideWeeklyKeysOverlay()
+    local wasShown = OverlayFrame:IsShown()
+
+    if shouldShowOverlay then
+        if not wasShown then
+            ApplyOverlayGeometry()
+        end
         OverlayFrame:Show()
     else
         OverlayFrame:Hide()
