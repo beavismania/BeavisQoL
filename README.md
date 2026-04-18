@@ -9,7 +9,7 @@ Ein World of Warcraft Retail Addon, das mehrere kleine Quality-of-Life-Module in
 - Release-Kanal: `beta`
 - Highlights dieser Version:
   - `Chat-Link Kopieren` erkennt Weblinks im Chat und öffnet ein kopierbares Popup
-  - `Addon` wurde für `12.0.5` geprüft und die Addon-Liste zeigt jetzt Symbol und Kategorie
+  - `Addon` wurde für `12.0.5` geprüft; die ausgelieferten Retail-Metadaten bleiben vorerst auf `12.0.1`, und die Addon-Liste zeigt jetzt Symbol und Kategorie
   - `WeeklyKeys`, `Stats` und `ButtonSammler` merken sich ihre Position nach manueller Einstellung
   - `Rufsuche`, `Tooltip-Itemlevel`, `Auktionshaus-Favoriten` und `Talentfenster-Skalierung` wurden weiter stabilisiert
 

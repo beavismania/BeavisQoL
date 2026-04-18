@@ -10,7 +10,7 @@
 
 ### Hotfix
 
-- `Addon` für `12.0.5` geprüft und angepasst.
+- `Addon` für `12.0.5` geprüft und angepasst; die Retail-Metadaten bleiben vorerst auf `12.0.1`.
 - `Addon-Liste` zeigt für `BeavisQoL` jetzt Symbol und Kategorie `Quality of Life` an.
 - `WeeklyKeys`, `Stats` und `ButtonSammler` speichern nun ihre Position nach manueller Einstellung.
 - `Auktionshaus-Favoriten` bestätigt Gruppen-Popups jetzt wieder robuster, aktualisiert die Liste direkter und zeigt Fehlermeldungen zusätzlich sichtbar an.
